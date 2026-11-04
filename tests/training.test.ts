@@ -46,8 +46,8 @@ test('yorgunluk: bir düşüşte sabit, art arda iki düşüşte %10 deload', ()
 
 test('bağlam: büyük kalori açığı ya da ağrı notu artışı durdurur', () => {
   const h = [sess('d', S(80, 12), S(80, 12))]
-  assert.deepEqual(((r) => [r.kg, r.rule])(suggestNext({ history: h, target: T, kind: 'weight_reps', deficitKcal: 700 })!), [80, 'cautious'])
-  assert.equal(suggestNext({ history: h, target: T, kind: 'weight_reps', deficitKcal: 400 })!.kg, 82.5)
+  assert.deepEqual(((r) => [r.kg, r.reps, r.rule])(suggestNext({ history: h, target: T, kind: 'weight_reps', deficitKcal: 800 })!), [80, 12, 'cautious'])
+  assert.equal(suggestNext({ history: h, target: T, kind: 'weight_reps', deficitKcal: 550 })!.kg, 82.5) // dengeli tempo açığı temkin gerektirmez
   assert.equal(suggestNext({ history: [{ ...h[0], pain: true }], target: T, kind: 'weight_reps' })!.rule, 'cautious')
 })
 
@@ -88,7 +88,7 @@ test('rekorlar: ilk kayıt rekor değil; kırılanlar', () => {
   const prev = sessionRecords([S(100, 5, 1), S(100, 5, 1)], 'weight_reps')
   assert.deepEqual(prev, { kg: 100, e1rm: 120, rm3: 100, rm5: 100, rm10: 0, reps: 5, volume: 1000 })
   const cur = sessionRecords([S(102.5, 3, 1), S(90, 10, 0), S(20, 10, 0, 'warmup')], 'weight_reps')
-  assert.deepEqual(detectPRs(prev, cur, 'weight_reps').map((p) => p.type), ['kg', 'rm3', 'rm10', 'reps', 'volume'])
+  assert.deepEqual(detectPRs(prev, cur, 'weight_reps').map((p) => p.type), ['kg', 'rm10', 'reps', 'volume']) // 3RM = en ağır (102,5) olduğu için tekrar edilmez
   assert.deepEqual(detectPRs(null, cur, 'weight_reps'), [])
 })
 

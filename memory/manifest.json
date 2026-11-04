@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "2b",
+  "phase": "3a",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -89,7 +89,23 @@
     "app/(app)/fit/page.tsx",
     "app/(app)/fit/FitClient.tsx",
     "app/(app)/fit/actions.ts",
-    "app/api/test/fit/route.ts"
+    "app/api/test/fit/route.ts",
+    "lib/training.ts",
+    "lib/programs.ts",
+    "lib/fitness-data.ts",
+    "lib/burn.ts",
+    "lib/exercise-labels.ts",
+    "data/exercises-src.json",
+    "data/exercises-tr.json",
+    "data/exercises-seed.json.gz",
+    "scripts/data/build_exercises.mjs",
+    "tests/training.test.ts",
+    "tests/programs.test.ts",
+    "tests/e2e/fitness.e2e.cjs",
+    "app/(app)/fitness/actions.ts",
+    "app/(app)/fitness/live-store.ts",
+    "app/(app)/fitness/antrenman/LiveWorkout.tsx",
+    ".claude/settings.json"
   ],
   "tables": [
     "users",
@@ -110,7 +126,17 @@
     "foods",
     "meal_items",
     "saved_meals",
-    "kcal_adjustments"
+    "kcal_adjustments",
+    "exercises",
+    "programs",
+    "program_days",
+    "program_exercises",
+    "workouts",
+    "workout_sets",
+    "exercise_records",
+    "personal_records",
+    "cardio_sessions",
+    "gym_settings"
   ],
   "routes": [
     "/",
@@ -140,7 +166,16 @@
     "/api/food/search",
     "/api/food/barcode",
     "/fit",
-    "/api/test/fit"
+    "/api/test/fit",
+    "/fitness/antrenman",
+    "/fitness/antrenman/[id]",
+    "/fitness/ayarlar",
+    "/fitness/hareketler",
+    "/fitness/hareketler/[id]",
+    "/fitness/kardiyo",
+    "/fitness/programlar",
+    "/fitness/programlar/[id]",
+    "/api/exercises/search"
   ],
   "events": [
     "profile.onboarded",
@@ -330,6 +365,43 @@
       "createBankAction",
       "cancelBankAction",
       "applyCheckinAction"
+    ],
+    "lib/training.ts": [
+      "e1rm",
+      "weightFor",
+      "roundTo",
+      "suggestNext",
+      "platesFor",
+      "warmupSets",
+      "setVolume",
+      "sessionRecords",
+      "detectPRs",
+      "mergeRecords",
+      "cardioKcal",
+      "strengthKcal",
+      "workoutWaterBonus"
+    ],
+    "lib/programs.ts": [
+      "TEMPLATES",
+      "instantiate",
+      "generateProgram"
+    ],
+    "lib/burn.ts": [
+      "dayBurned",
+      "waterBonusByDay"
+    ],
+    "lib/fitness-data.ts": [
+      "searchExercises",
+      "getExercise",
+      "exerciseHistory",
+      "createFromTemplate",
+      "createGenerated",
+      "liveSession",
+      "saveWorkout",
+      "workoutSummary",
+      "logCardio",
+      "fitnessHome",
+      "todayTraining"
     ]
   },
   "dependencies": {
@@ -348,6 +420,7 @@
     "0001_water.sql",
     "0002_reminders.sql",
     "0003_food.sql",
-    "0004_fit.sql"
+    "0004_fit.sql",
+    "0005_fitness.sql"
   ]
 }

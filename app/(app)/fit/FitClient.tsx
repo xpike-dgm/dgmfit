@@ -1,5 +1,5 @@
 'use client'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
 import { logWeight } from '@/app/(app)/actions'
@@ -60,16 +60,31 @@ export function DayClose({ day, closed, items, result }: { day: string; closed: 
   )
 }
 
+/** Sayfanın kalıcı bölgesinde duran durum mesajı: kaybolan kartların (ör. istisna) sonucunu gösterir. */
+export function FitFlash() {
+  const [m, setM] = useState<{ ok: boolean; text: string } | null>(null)
+  useEffect(() => {
+    const h = (e: Event) => setM((e as CustomEvent<{ ok: boolean; text: string }>).detail)
+    window.addEventListener('dgfit:flash', h)
+    return () => window.removeEventListener('dgfit:flash', h)
+  }, [])
+  return m ? <div className="card px-4 py-3"><Msg m={m} /></div> : null
+}
+const flash = (ok: boolean, text: string) => window.dispatchEvent(new CustomEvent('dgfit:flash', { detail: { ok, text } }))
+
 export function ExceptionButton({ day }: { day: string }) {
-  const { pending, msg, run } = useAct()
+  const [pending, start] = useTransition()
+  const router = useRouter()
   return (
-    <>
-      <button type="button" className={btn.secondary} disabled={pending}
-        onClick={() => run(() => exceptionAction(day), (r) => Number(r.daysAdded) ? `İstisna sayıldı; hedef tarih ${r.daysAdded} gün uzadı.` : 'İstisna sayıldı.')}>
-        İstisna say
-      </button>
-      <Msg m={msg} />
-    </>
+    <button type="button" className={btn.secondary} disabled={pending}
+      onClick={() => start(async () => {
+        const r = await exceptionAction(day)
+        if (!r.ok) { flash(false, r.error); return }
+        flash(true, r.daysAdded ? `İstisna sayıldı; hedef tarih ${r.daysAdded} gün uzadı.` : 'İstisna sayıldı.')
+        router.refresh()
+      })}>
+      İstisna say
+    </button>
   )
 }
 

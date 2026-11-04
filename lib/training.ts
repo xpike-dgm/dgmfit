@@ -51,12 +51,15 @@ export interface Suggestion {
   reason: string
 }
 
+/** "Büyük" kalori açığı: dengeli tempo (0,5 kg/hafta ≈ 550 kcal) değil, hızlı tempo ve üstü. */
+export const CAUTION_DEFICIT = 750
+
 export interface SuggestInput {
   history: Session[] // eskiden yeniye
   target: Target
   kind: ExKind
   increment?: number // salondaki en küçük artış (iki taraf toplamı), varsayılan 2,5
-  deficitKcal?: number // Fit'ten: plan açığı (tdee − hedef)
+  deficitKcal?: number // Fit'ten: plan açığı (tdee − hedef); > CAUTION_DEFICIT ise artış yok
   feedback?: { tooHeavy: number; tooLight: number } // son reddetme nedenleri
 }
 
@@ -65,7 +68,7 @@ export interface SuggestInput {
  * 1) Yorgunluk: son iki seansta e1RM art arda %3'ten fazla düştüyse %10 deload; bir kez düştüyse ağırlık sabit.
  * 2) Çift aşamalı ilerleme: son seansta tüm çalışma setleri tekrar aralığının üstüne ulaştıysa ağırlık + artış, tekrar alt sınıra.
  * 3) Aksi halde e1RM'den, bir sonraki tekrar hedefi ve hedef RIR için ağırlık (son ağırlığın ± bir artışı içinde).
- * 4) Büyük kalori açığı (> 500 kcal) ya da ağrı notu → artış yapılmaz.
+ * 4) Büyük kalori açığı (> 750 kcal) ya da ağrı notu → artış yapılmaz; son ağırlık ve tekrar korunur.
  * 5) Kullanıcı öneriyi sık sık "çok ağır" bulduysa bir artış aşağı, "çok hafif" bulduysa bir artış yukarı.
  * Güven: ilk 2 kayıtta düşük, 3–5 orta, 6+ yüksek.
  */
@@ -88,7 +91,7 @@ export function suggestNext(i: SuggestInput): Suggestion | null {
   const allTop = workSets(last).every((x) => x.reps >= i.target.repMax)
   const e = hist.map(sessionE1rm)
   const drop = (a: number, b: number) => b < a * 0.97
-  const caution = (i.deficitKcal ?? 0) > 500 || !!last.pain
+  const caution = (i.deficitKcal ?? 0) > CAUTION_DEFICIT || !!last.pain
 
   if (i.kind === 'bodyweight' || i.kind === 'assisted') {
     if (allTop) {
@@ -129,7 +132,7 @@ export function suggestNext(i: SuggestInput): Suggestion | null {
   const fb = i.feedback
   if (fb && fb.tooHeavy >= fb.tooLight + 2) { s.kg = round2(Math.max(0, s.kg - inc)); s.reason += ' Önerileri sık sık ağır bulduğun için bir kademe hafifletildi.' }
   else if (fb && fb.tooLight >= fb.tooHeavy + 2) { s.kg = round2(s.kg + inc); s.reason += ' Önerileri sık sık hafif bulduğun için bir kademe artırıldı.' }
-  if (caution && s.kg > top.kg) return { ...s, kg: top.kg, rule: 'cautious', reason: cautionText(i, last) }
+  if (caution && s.kg > top.kg) return { ...s, kg: top.kg, reps: Math.min(i.target.repMax, Math.max(i.target.repMin, top.reps)), rule: 'cautious', reason: cautionText(i, last) }
   return s
 }
 
@@ -189,8 +192,9 @@ export function detectPRs(prev: Records | null, cur: Records, kind: ExKind): { t
   const keys: PrType[] = kind === 'weight_reps' ? ['kg', 'e1rm', 'rm3', 'rm5', 'rm10', 'reps', 'volume'] : kind === 'time' || kind === 'distance_time' ? [] : ['kg', 'reps', 'volume']
   const out: { type: PrType; value: number; previous: number }[] = []
   for (const k of keys) if (cur[k] > 0 && cur[k] > prev[k] + 1e-9) out.push({ type: k, value: cur[k], previous: prev[k] })
-  // e1RM rekoru yalnızca ağırlık ya da tekrar rekoruyla aynı değilse anlamlı; ikisi de varsa kg öncelikli gösterilir
-  return out
+  // en ağır kilo rekoruyla aynı değerdeki 3/5/10RM rekorları aynı seti tekrar eder: gösterilmez
+  const kg = out.find((r) => r.type === 'kg')
+  return kg ? out.filter((r) => !(['rm3', 'rm5', 'rm10'].includes(r.type) && Math.abs(r.value - kg.value) < 1e-9)) : out
 }
 
 export function mergeRecords(a: Records | null, b: Records): Records {

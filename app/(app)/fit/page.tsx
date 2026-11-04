@@ -7,7 +7,7 @@ import { fmtNum, GOALS, type GoalType } from '@/lib/calc'
 import { dayCap } from '@/lib/fit'
 import { Eyebrow, TopBar } from '@/components/ui'
 import { Calendar, Pulse, Scale, Spark, Trend } from '@/components/icons'
-import { BankForm, CancelBank, CheckinApply, DayClose, ExceptionButton, WeighIn } from './FitClient'
+import { BankForm, CancelBank, CheckinApply, DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
 
 export const metadata = { title: 'Plan · DgFit' }
 
@@ -35,6 +35,7 @@ export default async function FitPage() {
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">
       <TopBar back="/" title="Plan" />
+      <FitFlash />
 
       <section aria-label="Hedef" className="card p-5 flex flex-col gap-3">
         <div className="flex justify-between items-start gap-3">

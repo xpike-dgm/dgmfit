@@ -88,16 +88,20 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await p.getByRole('button', { name: '75 ml ekle' }).click(); await settle()
   await expectTotal(1110, 'yudum')
 
-  // 7) Geçmiş saate özel miktar: 09:00'da 300 ml
+  // 7) Geçmiş saate özel miktar: şimdiden 15 dk önce (gece yarısına yakınsa 00:00) 300 ml — gelecek saat reddedilir
+  const nowMin = await p.evaluate(() => { const t = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()).split(':'); return (Number(t[0]) % 24) * 60 + Number(t[1]) })
+  if (nowMin < 1) await p.waitForTimeout(61000)
+  const pastMin = nowMin >= 16 ? nowMin - 15 : 0
+  const HM = `${String(Math.floor(pastMin / 60)).padStart(2, '0')}:${String(pastMin % 60).padStart(2, '0')}`, HMd = HM.replace(':', '.')
   await p.getByRole('button', { name: 'Özel', exact: true }).click()
-  await p.fill('#c-ml', '300'); await p.fill('#c-time', '09:00')
+  await p.fill('#c-ml', '300'); await p.fill('#c-time', HM)
   await p.getByRole('button', { name: 'Ekle', exact: true }).click(); await settle()
   await expectTotal(1410, 'geçmiş saat')
-  if (!(await p.getByText('09.00', { exact: true }).count())) fail('09.00 kaydı zaman çizelgesinde yok')
+  if (!(await p.getByText(HMd, { exact: true }).count())) fail(HMd + ' kaydı zaman çizelgesinde yok')
   await shot('02-su-ekrani')
 
-  // 8) Düzenle: 09.00 kaydı 350 ml
-  await p.locator('li', { hasText: '09.00' }).getByRole('button').click()
+  // 8) Düzenle: geçmiş saat kaydı 350 ml
+  await p.locator('li', { hasText: HMd }).getByRole('button').click()
   await p.fill('#e-ml', '350')
   await p.getByRole('button', { name: 'Kaydet' }).click(); await p.waitForTimeout(1500)
   await expectTotal(1460, 'düzenle')

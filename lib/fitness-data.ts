@@ -34,13 +34,14 @@ export async function searchExercises(userId: string, f: ExerciseFilter) {
   if (f.pattern) conds.push(eq(schema.exercises.pattern, f.pattern))
   if (f.level) conds.push(eq(schema.exercises.level, f.level))
   if (q) conds.push(sql`(${schema.exercises.search} like ${'%' + q + '%'} or word_similarity(${q}, ${schema.exercises.search}) > 0.45)`)
-  const score = q ? sql`(case when ${schema.exercises.search} like ${q + '%'} then 3 when ${schema.exercises.search} like ${'%' + q + '%'} then 2 else word_similarity(${q}, ${schema.exercises.search}) end)` : sql`0`
+  // arama yokken puan sıralaması eklenmez (sabit "order by 0" sütun numarası sayılıp hata veriyordu)
+  const score = q ? [desc(sql`(case when ${schema.exercises.search} like ${q + '%'} then 3 when ${schema.exercises.search} like ${'%' + q + '%'} then 2 else word_similarity(${q}, ${schema.exercises.search}) end)`)] : []
   return db.select({
     id: schema.exercises.id, key: schema.exercises.key, nameTr: schema.exercises.nameTr, nameEn: schema.exercises.nameEn, equipment: schema.exercises.equipment,
     primary: schema.exercises.primary, kind: schema.exercises.kind, pattern: schema.exercises.pattern, level: schema.exercises.level, images: schema.exercises.images,
     curated: schema.exercises.curated, source: schema.exercises.source, category: schema.exercises.category,
   }).from(schema.exercises).where(and(...conds))
-    .orderBy(desc(score), desc(sql`${schema.exercises.source} = 'user'`), desc(schema.exercises.curated), asc(schema.exercises.nameTr))
+    .orderBy(...score, desc(sql`${schema.exercises.source} = 'user'`), desc(schema.exercises.curated), asc(schema.exercises.nameTr))
     .limit(f.limit ?? 60)
 }
 

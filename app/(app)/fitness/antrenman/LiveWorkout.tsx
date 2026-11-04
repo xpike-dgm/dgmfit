@@ -94,6 +94,9 @@ export default function LiveWorkout(p: Props) {
 
   const complete = (ei: number, si: number) => {
     if (!audio.current) { try { audio.current = new AudioContext() } catch { /* */ } }
+    const s0 = d.exercises[ei].sets[si], k0 = d.exercises[ei].kind
+    if (!s0.done && k0 === 'weight_reps' && s0.kg === '' && !(s0.ph.kg > 0)) { setMsg(`${d.exercises[ei].name}: önce ağırlığı gir (geçmiş kayıt yok).`); return }
+    setMsg(null)
     update((x) => {
       const e = x.exercises[ei], s = e.sets[si]
       if (s.done) { s.done = false; s.completedAt = null; return x }
@@ -147,6 +150,7 @@ export default function LiveWorkout(p: Props) {
           </span>
           <button type="button" className={`${btn.primary} h-11 text-[15px] px-5`} onClick={() => setSheet({ kind: 'finish' })}>Bitir</button>
         </div>
+        {msg ? <p role="status" className="text-[13px] text-orange">{msg}</p> : null}
         <div className="grid grid-cols-4 gap-2 text-center" data-testid="live-stats">
           <Stat label="Süre" value={mmss(Math.floor(stats.min * 60))} />
           <Stat label="Hacim" value={`${fmt(stats.volume)} kg`} />
@@ -217,7 +221,6 @@ export default function LiveWorkout(p: Props) {
         </label>
         <button type="button" className="text-[13px] text-danger self-start py-2" onClick={() => setSheet({ kind: 'discard' })}>Antrenmanı sil</button>
       </section>
-      {msg ? <p role="status" className="text-[13px] text-orange px-1">{msg}</p> : null}
 
       {d.restEndsAt && restLeft > 0 ? (
         <div role="timer" aria-label="Dinlenme" className="fixed inset-x-0 bottom-[84px] z-30 px-4">
@@ -314,7 +317,7 @@ function NumField({ label, unit, value, ph, step, decimal, onChange }: { label: 
       <button type="button" aria-label={`${label} azalt`} className="w-8 text-mute text-lg" onClick={() => bump(-1)}>−</button>
       <label className="flex-1 flex flex-col items-center justify-center min-w-0">
         <span className="sr-only">{label}</span>
-        <input inputMode={decimal ? 'decimal' : 'numeric'} value={value} placeholder={fmt(ph)} onChange={(ev) => onChange(ev.target.value.replace(/[^\d.,]/g, '').slice(0, 6))}
+        <input aria-label={label} inputMode={decimal ? 'decimal' : 'numeric'} value={value} placeholder={fmt(ph)} onChange={(ev) => onChange(ev.target.value.replace(/[^\d.,]/g, '').slice(0, 6))}
           className="w-full bg-transparent text-center num text-[17px] font-bold placeholder:text-faint placeholder:font-semibold outline-none" />
         <span className="text-[9px] text-mute -mt-1">{unit}</span>
       </label>
