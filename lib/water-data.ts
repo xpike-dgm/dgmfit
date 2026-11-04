@@ -272,3 +272,59 @@ export async function getWaterStats(userId: string, range: number): Promise<Wate
     activeDays: withLogs.length,
   }
 }
+
+// ───────── Analiz, rozetler, aylık rapor (Faz 1b) ─────────
+
+/** Gün bazında toplam, kayıt sayısı ve ilk kayıt dakikası. */
+export async function dailyDetail(userId: string, from: string, to: string) {
+  const [start] = dayBounds(from)
+  const [, end] = dayBounds(to)
+  const rows = await db.execute<{ day: string; total: number; count: number; first: number }>(sql`
+    select to_char(logged_at at time zone ${TZ}, 'YYYY-MM-DD') as day, sum(effective_ml)::int as total, count(*)::int as count,
+      min(extract(hour from logged_at at time zone ${TZ}) * 60 + extract(minute from logged_at at time zone ${TZ}))::int as first
+    from water_logs where user_id = ${userId} and deleted_at is null and logged_at >= ${start.toISOString()} and logged_at < ${end.toISOString()}
+    group by 1`)
+  return new Map(rows.map((r) => [r.day, { total: Number(r.total), count: Number(r.count), first: Number(r.first) }]))
+}
+
+export async function getWaterInsights(userId: string) {
+  const { waterInsights, computeBadges } = await import('./water-insights')
+  const { reminderStats } = await import('./scheduler')
+  const today = dayString()
+  const history = await goalHistory(userId)
+  const from = addDays(today, -364)
+  const detail = await dailyDetail(userId, from, today)
+  const all = Array.from({ length: 365 }, (_, i) => {
+    const d = addDays(from, i)
+    const x = detail.get(d)
+    return { day: d, total: x?.total ?? 0, count: x?.count ?? 0, firstAt: x ? x.first : null, goal: goalForDay(history, d) }
+  })
+  const firstIdx = all.findIndex((d) => d.count > 0)
+  const active = firstIdx >= 0 ? all.slice(firstIdx) : all.slice(-1)
+
+  const [[profile]] = await Promise.all([
+    db.select({ wake: schema.profiles.wakeTime, sleep: schema.profiles.sleepTime }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1),
+  ])
+  const wake = parseHm(profile?.wake, 450), sleep = parseHm(profile?.sleep, 1410)
+  const [hStart] = dayBounds(addDays(today, -14))
+  const [tStart] = dayBounds(today)
+  const hourRows = await db.execute<{ h: number; total: number }>(sql`
+    select extract(hour from logged_at at time zone ${TZ})::int as h, sum(effective_ml)::int as total from water_logs
+    where user_id = ${userId} and deleted_at is null and logged_at >= ${hStart.toISOString()} and logged_at < ${tStart.toISOString()} group by 1`)
+  const hourlyAvg14 = Array(24).fill(0)
+  for (const r of hourRows) hourlyAvg14[Number(r.h)] = Math.round(Number(r.total) / 14)
+
+  const insights = waterInsights({ days: all.slice(-29), hourlyAvg14, wake, sleep, reminders: await reminderStats(userId) })
+  const badges = computeBadges(active, wake)
+
+  // Son 6 ay
+  const months: { month: string; avg: number; rate: number; active: number }[] = []
+  for (let k = 5; k >= 0; k--) {
+    const d = new Date(today + 'T12:00:00Z'); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - k)
+    const m = d.toISOString().slice(0, 7)
+    const ds = active.filter((x) => x.day.startsWith(m) && (x.day < today || x.count > 0))
+    const act = ds.filter((x) => x.count > 0)
+    months.push({ month: m, avg: act.length ? Math.round(act.reduce((a, x) => a + x.total, 0) / act.length) : 0, rate: ds.length ? ds.filter((x) => x.total >= x.goal).length / ds.length : 0, active: act.length })
+  }
+  return { insights, badges, months }
+}

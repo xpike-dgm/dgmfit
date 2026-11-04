@@ -7,6 +7,7 @@ import { DEFAULT_BUTTONS, sipMl } from '@/lib/water'
 import { waterTarget } from '@/lib/calc'
 import { TopBar } from '@/components/ui'
 import SettingsForm from './SettingsForm'
+import PushSettings from './PushSettings'
 
 export const metadata: Metadata = { title: 'Su ayarları' }
 
@@ -23,6 +24,9 @@ export default async function Page() {
   return (
     <div className="px-4 pt-4 flex flex-col gap-3">
       <TopBar back="/su" title="Su ayarları" />
+      <div className="mt-2">
+        <PushSettings enabled={settings?.remindersEnabled ?? false} summaryEnabled={settings?.summaryEnabled ?? true} maxPerDay={settings?.maxPerDay ?? 8} quiet={settings?.quiet ?? []} />
+      </div>
       <SettingsForm
         goal={{ baseMl: last?.baseMl ?? 2500, weekday: last?.weekday ?? [null, null, null, null, null, null, null] }}
         suggested={profile ? waterTarget(profile.weightKg) : 2500}

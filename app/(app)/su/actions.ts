@@ -21,7 +21,7 @@ const drinkIds = Object.keys(DRINKS) as [DrinkId, ...DrinkId[]]
 const AddInput = z.object({
   ml: z.number().int().min(1).max(3000),
   drink: z.enum(drinkIds).default('water'),
-  source: z.enum(['button', 'sip', 'container', 'fill', 'finish', 'custom', 'backdate']),
+  source: z.enum(['button', 'sip', 'container', 'fill', 'finish', 'custom', 'backdate', 'voice', 'notification']),
   containerId: z.string().uuid().nullable().optional(),
   fill: z.number().min(0).max(1).optional(),
   /** ISO zaman; yoksa şimdi */
@@ -236,5 +236,23 @@ export async function saveWaterGoal(input: z.input<typeof GoalInput>): Promise<R
   })
   revalidatePath('/')
   revalidatePath('/su')
+  return { ok: true }
+}
+
+const ReminderInput = z.object({
+  enabled: z.boolean(),
+  summaryEnabled: z.boolean(),
+  maxPerDay: z.number().int().min(1).max(16),
+  quiet: z.array(z.tuple([z.number().int().min(0).max(1439), z.number().int().min(0).max(1439)])).max(4),
+})
+
+export async function saveReminderSettings(input: z.input<typeof ReminderInput>): Promise<R> {
+  const userId = await uid()
+  const p = ReminderInput.safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz hatırlatma ayarı' }
+  await ensureWaterSetup(userId)
+  await db.update(schema.waterSettings).set({ remindersEnabled: p.data.enabled, summaryEnabled: p.data.summaryEnabled, maxPerDay: p.data.maxPerDay, quiet: p.data.quiet, updatedAt: new Date() })
+    .where(eq(schema.waterSettings.userId, userId))
+  revalidatePath('/su/ayarlar')
   return { ok: true }
 }

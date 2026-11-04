@@ -4,14 +4,15 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Sheet from '@/components/Sheet'
 import { btn, Ring } from '@/components/ui'
-import { Back, Bottle, Chart, Check, Clock, Cup, Drop, Flame, Gear, Glass, Merge, Next, Thermos, Trash, Trend } from '@/components/icons'
+import { Back, Bottle, Chart, Check, Clock, Cup, Drop, Flame, Gear, Glass, Merge, Mic, Next, Thermos, Trash, Trend } from '@/components/icons'
+import { parseWaterSpeech } from '@/lib/water-speech'
 import { fmtNum } from '@/lib/calc'
 import { DRINKS, distributionScore, effectiveMl, fmtHm, hourlyBuckets, idealAt, isLikelyDuplicate, type DrinkId } from '@/lib/water'
 import type { WaterLogView, WaterScreen as Data, ContainerView } from '@/lib/water-data'
 import { addWater, deleteWater, mergeWater, undoWater, updateWater } from './actions'
 
 type Toast = { kind: 'undo'; id: number; ml: number } | { kind: 'info'; text: string } | null
-type Pending = { ml: number; source: 'button' | 'sip' | 'container' | 'fill' | 'finish' | 'custom' | 'backdate'; containerId?: string | null; fill?: number; at?: string }
+type Pending = { ml: number; source: 'button' | 'sip' | 'container' | 'fill' | 'finish' | 'custom' | 'backdate' | 'voice'; containerId?: string | null; fill?: number; at?: string; drink?: DrinkId }
 
 const KIND_ICON: Record<string, typeof Glass> = { glass: Glass, bottle: Bottle, thermos: Thermos, cup: Cup }
 const SOURCE_LABEL: Record<string, string> = {
@@ -28,7 +29,7 @@ export default function WaterScreen({ data }: { data: Data }) {
   const [drink, setDrink] = useState<DrinkId>('water')
   const [toast, setToast] = useState<Toast>(null)
   const [dup, setDup] = useState<Pending | null>(null)
-  const [sheet, setSheet] = useState<null | 'custom' | 'sip' | { container: ContainerView } | { edit: WaterLogView }>(null)
+  const [sheet, setSheet] = useState<null | 'custom' | 'sip' | 'voice' | { container: ContainerView } | { edit: WaterLogView }>(null)
   const [mergeMode, setMergeMode] = useState(false)
   const [selected, setSelected] = useState<number[]>([])
   const [pop, setPop] = useState(0)
@@ -59,12 +60,13 @@ export default function WaterScreen({ data }: { data: Data }) {
     // Anında çift kayıt kontrolü (henüz sunucuya ulaşmamış kayıtlar dahil); sunucu da ayrıca kontrol eder
     if (!force && isLikelyDuplicate(p.ml, Date.parse(atIso), logs.map((l) => ({ ml: l.ml, atMs: Date.parse(l.atIso) })))) { setDup(p); return }
     const cont = p.containerId ? data.containers.find((c) => c.id === p.containerId) : null
-    const temp: WaterLogView = { id: tempId, atIso, at: minuteFromIso(atIso), ml: p.ml, effectiveMl: effectiveMl(p.ml, drink), drink, containerId: p.containerId ?? null, containerName: cont?.name ?? null, source: p.source, edited: false }
+    const dr = p.drink ?? drink
+    const temp: WaterLogView = { id: tempId, atIso, at: minuteFromIso(atIso), ml: p.ml, effectiveMl: effectiveMl(p.ml, dr), drink: dr, containerId: p.containerId ?? null, containerName: cont?.name ?? null, source: p.source, edited: false }
     setLogs((x) => [...x, temp].sort((a, b) => a.at - b.at))
     setPop((n) => n + 1)
     if (data.feedback && 'vibrate' in navigator) navigator.vibrate?.(12)
     start(async () => {
-      const r = await addWater({ ml: p.ml, drink, source: p.source, containerId: p.containerId ?? null, fill: p.fill, at: p.at ?? (data.isToday ? undefined : atIso), force })
+      const r = await addWater({ ml: p.ml, drink: dr, source: p.source, containerId: p.containerId ?? null, fill: p.fill, at: p.at ?? (data.isToday ? undefined : atIso), force })
       if (!r.ok) {
         setLogs((x) => x.filter((l) => l.id !== tempId))
         if ('duplicate' in r) setDup(p)
@@ -175,12 +177,15 @@ export default function WaterScreen({ data }: { data: Data }) {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
+        <button type="button" onClick={() => setSheet('voice')} className="h-[52px] rounded-[18px] bg-water-bg border border-[#24323D] font-bold text-sm flex items-center justify-center gap-2">
+          <Mic size={18} className="text-water" /> Söyle
+        </button>
         <button type="button" onClick={() => setSheet('sip')} className="h-[52px] rounded-[18px] bg-water-bg border border-[#24323D] font-bold text-sm flex items-center justify-center gap-2">
-          <Drop size={18} className="text-water" /> Yudum ekle
+          <Drop size={18} className="text-water" /> Yudum
         </button>
         <button type="button" onClick={() => setSheet('custom')} className="h-[52px] rounded-[18px] bg-water-bg border border-[#24323D] font-bold text-sm flex items-center justify-center gap-2">
-          <Clock size={18} className="text-water" /> Özel / geçmiş
+          <Clock size={18} className="text-water" /> Özel
         </button>
       </div>
 
@@ -256,6 +261,10 @@ export default function WaterScreen({ data }: { data: Data }) {
       </div>
 
       {/* Alt sayfalar */}
+      <Sheet open={sheet === 'voice'} onClose={() => setSheet(null)} title="Söyle veya yaz">
+        <VoiceForm ctx={{ nowMin: data.isToday ? data.nowMin : 1439, sipMl: data.sipMl, containers: data.containers }}
+          onAdd={(ml, d, atMin) => { setSheet(null); add({ ml, drink: d, source: 'voice', at: atMin !== null ? isoAt(data.day, hmFromMin(atMin)) : undefined }) }} />
+      </Sheet>
       <Sheet open={sheet === 'sip'} onClose={() => setSheet(null)} title="Yudum ekle">
         <SipForm sipMl={data.sipMl} calibrated={data.sipCalibrated} onAdd={(n) => { setSheet(null); add({ ml: n * data.sipMl, source: 'sip' }) }} />
       </Sheet>
@@ -379,6 +388,51 @@ function HourBars({ hourly, wake, sleep, nowMin }: { hourly: number[]; wake: num
         <span>{String(from).padStart(2, '0')}</span><span>{String(Math.round((from + to) / 2)).padStart(2, '0')}</span><span>{String(to).padStart(2, '0')}</span>
       </div>
     </div>
+  )
+}
+
+type Recog = { lang: string; interimResults: boolean; maxAlternatives: number; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: ((e: { error: string }) => void) | null; onend: (() => void) | null }
+
+function VoiceForm({ ctx, onAdd }: { ctx: { nowMin: number; sipMl: number; containers: ContainerView[] }; onAdd: (ml: number, drink: DrinkId, atMin: number | null) => void }) {
+  const [text, setText] = useState('')
+  const [listening, setListening] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const recRef = useRef<Recog | null>(null)
+  const [supported, setSupported] = useState(false)
+  useEffect(() => {
+    const w = window as unknown as { SpeechRecognition?: new () => Recog; webkitSpeechRecognition?: new () => Recog }
+    setSupported(!!(w.SpeechRecognition || w.webkitSpeechRecognition))
+    return () => recRef.current?.stop()
+  }, [])
+  const parsed = useMemo(() => (text.trim() ? parseWaterSpeech(text, ctx) : null), [text, ctx])
+  const listen = () => {
+    const w = window as unknown as { SpeechRecognition?: new () => Recog; webkitSpeechRecognition?: new () => Recog }
+    const C = w.SpeechRecognition || w.webkitSpeechRecognition
+    if (!C) return
+    const r = new C()
+    r.lang = 'tr-TR'; r.interimResults = true; r.maxAlternatives = 1
+    r.onresult = (e) => setText(Array.from(e.results).map((x) => x[0].transcript).join(' '))
+    r.onerror = (e) => { setErr(e.error === 'not-allowed' ? 'Mikrofon izni verilmedi.' : 'Ses anlaşılamadı, yazarak deneyebilirsin.'); setListening(false) }
+    r.onend = () => setListening(false)
+    recRef.current = r; setErr(null); setListening(true); r.start()
+  }
+  return (
+    <form className="flex flex-col gap-4 pb-4" onSubmit={(e) => { e.preventDefault(); if (parsed) onAdd(parsed.ml, parsed.drink, parsed.atMin) }}>
+      {supported ? (
+        <button type="button" onClick={() => (listening ? recRef.current?.stop() : listen())} aria-pressed={listening}
+          className={`self-center w-24 h-24 rounded-full flex items-center justify-center transition ${listening ? 'bg-water text-water-ink animate-pulse' : 'bg-surface-2 text-water'}`} aria-label={listening ? 'Dinlemeyi durdur' : 'Konuşmaya başla'}>
+          <Mic size={36} />
+        </button>
+      ) : <p className="text-[13px] text-mute">Bu tarayıcıda sesli giriş yok; cümleni yazabilirsin.</p>}
+      <label htmlFor="v-text" className="sr-only">Ne içtin?</label>
+      <input id="v-text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Örn: yarım saat önce 2 bardak çay içtim"
+        className="h-14 rounded-2xl bg-surface-2 border border-line px-4 text-[16px] text-ink placeholder:text-faint outline-none focus:border-water" />
+      <div className="min-h-[52px] rounded-2xl px-4 py-3 bg-water-bg text-sm" aria-live="polite">
+        {parsed ? <span>Anladığım: <b className="text-ink">{parsed.label}</b></span> : text.trim() ? <span className="text-orange">Miktarı anlayamadım. "300 ml", "bir bardak", "yarım şişe" gibi söyle.</span> : <span className="text-mute">Örnekler: "300 ml su", "şişemi bitirdim", "saat 2'de bir bardak içmiştim"</span>}
+      </div>
+      {err ? <p className="text-sm text-danger" role="alert">{err}</p> : null}
+      <button type="submit" disabled={!parsed} className="h-14 rounded-full bg-water text-water-ink font-extrabold text-[17px] disabled:opacity-40">{parsed ? `${parsed.ml} ml ekle` : 'Ekle'}</button>
+    </form>
   )
 }
 

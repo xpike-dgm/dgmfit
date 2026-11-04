@@ -140,6 +140,10 @@ export const waterSettings = pgTable('water_settings', {
   progressStyle: text('progress_style').notNull().default('bottle'), // bottle | ring | wave
   simpleMode: boolean('simple_mode').notNull().default(false),
   feedback: boolean('feedback').notNull().default(true), // animasyon + titreşim
+  remindersEnabled: boolean('reminders_enabled').notNull().default(false),
+  quiet: jsonb('quiet').$type<[number, number][]>().notNull().default([]), // sessiz aralıklar (dakika)
+  maxPerDay: integer('max_per_day').notNull().default(8),
+  summaryEnabled: boolean('summary_enabled').notNull().default(true),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -152,3 +156,40 @@ export const waterGoalHistory = pgTable('water_goal_history', {
   weekday: jsonb('weekday').$type<(number | null)[]>(), // 0=Pazar … 6=Cumartesi
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index('water_goal_history_user_idx').on(t.userId, t.effectiveFrom)])
+
+// ───────── Bildirimler (Faz 1b) ─────────
+
+/** Uygulama düzeyi yapılandırma (ör. ilk açılışta üretilen VAPID anahtarları). */
+export const appConfig = pgTable('app_config', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  userAgent: text('user_agent'),
+  failures: integer('failures').notNull().default(0),
+  lastOkAt: timestamp('last_ok_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex('push_subscriptions_endpoint_idx').on(t.endpoint), index('push_subscriptions_user_idx').on(t.userId)])
+
+export const waterReminders = pgTable('water_reminders', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  minute: integer('minute').notNull(),
+  kind: text('kind').notNull(), // remind | summary | test
+  amount: integer('amount').notNull().default(0),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  delivered: integer('delivered').notNull().default(0), // başarılı gönderilen abonelik sayısı
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+  openedAt: timestamp('opened_at', { withTimezone: true }),
+  actedAt: timestamp('acted_at', { withTimezone: true }), // 20 dk içinde su kaydı
+  action: text('action'), // add | snooze | open
+}, (t) => [index('water_reminders_user_day_idx').on(t.userId, t.day)])

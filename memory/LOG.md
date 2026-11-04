@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-04 — Faz 1b başladı
+- Faz başı: memory-check geçti; son commit `7eb8292` STATE ile uyumlu; çalışma ağacı temiz.
+- Next 16 `instrumentation.ts` belgesi okundu (register() sunucu açılışında bir kez çalışır).
+
 ## 2026-11-04 — Faz 1a tamamlandı (Su modülü çekirdeği)
 - Faz başı: memory-check geçti, son commit `0ebd8ed` STATE ile uyumlu.
 - Yapılanlar: 4 yeni tablo (migration 0001_water), `lib/water.ts` + 14 birim test, `lib/water-data.ts`, su aksiyonları, su ekranı / istatistik / ayarlar, Bugün entegrasyonu. Commit `87e936f`.

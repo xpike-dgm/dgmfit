@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { requireUser } from '@/lib/auth'
-import { getWaterStats, getWaterSummary } from '@/lib/water-data'
+import { getWaterInsights, getWaterStats, getWaterSummary } from '@/lib/water-data'
 import { fmtNum } from '@/lib/calc'
 import { fmtHm } from '@/lib/water'
 import { dayString } from '@/lib/time'
@@ -15,7 +15,7 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
   const u = await requireUser()
   const { aralik } = await props.searchParams
   const range = RANGES.includes(Number(aralik) as (typeof RANGES)[number]) ? Number(aralik) : 7
-  const s = await getWaterStats(u.id, range)
+  const [s, ins] = await Promise.all([getWaterStats(u.id, range), getWaterInsights(u.id)])
   const today = dayString()
   const monthStart = today.slice(0, 8) + '01'
   const cal = await getWaterSummary(u.id, monthStart, today)
@@ -79,14 +79,21 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
         </div>
       </section>
 
-      {s.weakest && s.weakest.avg < s.avg * 0.15 ? (
-        <section aria-label="İçgörü" className="rounded-[24px] p-4 flex gap-3 bg-coach border border-coach-line">
-          <Spark size={18} className="text-lime shrink-0 mt-0.5" />
-          <p className="text-sm leading-relaxed text-[#E4E8DC]">
-            Son {range} günde en az su içtiğin zaman dilimi <b>{fmtHm(s.weakest.from)}–{fmtHm(s.weakest.to)}</b> (ortalama {fmtNum(s.weakest.avg)} ml). Bu saatlerde masana bir şişe koymak ya da hatırlatma almak hedefini tamamlamanı kolaylaştırabilir.
-          </p>
+      {ins.insights.length ? (
+        <section aria-label="Koç analizi" className="flex flex-col gap-2">
+          {ins.insights.map((x) => (
+            <div key={x.id} className={`rounded-[24px] p-4 flex gap-3 border ${x.tone === 'warn' ? 'bg-[#22190F] border-[#4A3417]' : x.tone === 'good' ? 'bg-coach border-coach-line' : 'bg-water-bg border-[#24323D]'}`}>
+              <Spark size={18} className={`shrink-0 mt-0.5 ${x.tone === 'warn' ? 'text-orange' : x.tone === 'good' ? 'text-lime' : 'text-water'}`} />
+              <p className="text-sm leading-relaxed text-[#E4E8DC]">{x.text}</p>
+            </div>
+          ))}
         </section>
-      ) : null}
+      ) : (
+        <section aria-label="Koç analizi" className="rounded-[24px] p-4 flex gap-3 bg-water-bg border border-[#24323D]">
+          <Spark size={18} className="text-water shrink-0 mt-0.5" />
+          <p className="text-sm leading-relaxed text-ink-2">Kişisel analizler için birkaç günlük kayıt gerekiyor. 5 gün düzenli kayıttan sonra en çok unuttuğun saatleri ve gelişimini burada göreceksin.</p>
+        </section>
+      )}
 
       <section aria-label="Saatlik ortalama" className="card p-4 flex flex-col gap-2.5">
         <h2 className="font-extrabold text-[15px]">Saatlik ortalama</h2>
@@ -130,6 +137,36 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
         </div>
         <p className="text-xs text-mute">Renk koyulaştıkça hedefe yaklaşılmış demektir; rakamlar litre. Bir güne dokunup kayıtlarını görebilir ve ekleyebilirsin.</p>
       </section>
+      <section aria-label="Aylık rapor" className="card p-4 flex flex-col gap-2">
+        <h2 className="font-extrabold text-[15px]">Aylara göre gelişim</h2>
+        <table className="w-full text-sm">
+          <thead><tr className="text-xs text-mute text-left"><th className="font-semibold py-1.5">Ay</th><th className="font-semibold text-right">Ortalama</th><th className="font-semibold text-right">Hedef</th><th className="font-semibold text-right">Aktif gün</th></tr></thead>
+          <tbody>
+            {ins.months.map((m) => (
+              <tr key={m.month} className="border-t border-surface-2">
+                <td className="py-2.5 capitalize">{new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', month: 'long' }).format(new Date(m.month + '-15T12:00:00Z'))}</td>
+                <td className="text-right num">{m.active ? `${fmtNum(m.avg)} ml` : '—'}</td>
+                <td className="text-right num">{m.active ? `%${Math.round(m.rate * 100)}` : '—'}</td>
+                <td className="text-right num">{m.active}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-label="Rozetler" className="card p-4 flex flex-col gap-3">
+        <h2 className="font-extrabold text-[15px]">Rozetler <span className="text-mute font-semibold num">{ins.badges.filter((b) => b.earnedDay).length}/{ins.badges.length}</span></h2>
+        <ul className="grid grid-cols-2 gap-2">
+          {ins.badges.map((b) => (
+            <li key={b.id} className={`rounded-2xl p-3 flex flex-col gap-0.5 border ${b.earnedDay ? 'bg-coach border-coach-line' : 'bg-surface-2 border-transparent opacity-60'}`}>
+              <span className={`text-sm font-extrabold ${b.earnedDay ? 'text-lime' : 'text-ink-2'}`}>{b.title}</span>
+              <span className="text-xs text-mute leading-snug">{b.desc}</span>
+              <span className="text-[11px] text-ink-2 mt-1">{b.earnedDay ? `Kazanıldı · ${shortDay(b.earnedDay)}` : 'Henüz kazanılmadı'}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section aria-label="Seri" className="card p-4 grid grid-cols-3 gap-2">
         <Mini icon={<Flame size={16} className="text-orange" />} label="Şu anki seri" value={`${s.streak.current} gün`} />
         <Mini label="En uzun seri" value={`${s.streak.best} gün`} />

@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "1",
+  "phase": "1b",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -48,7 +48,18 @@
     "components/Sheet.tsx",
     "components/QuickWaterButton.tsx",
     "tests/water.test.ts",
-    "tests/e2e/water.e2e.cjs"
+    "tests/e2e/water.e2e.cjs",
+    "lib/reminders.ts",
+    "lib/water-speech.ts",
+    "lib/water-insights.ts",
+    "lib/push.ts",
+    "lib/scheduler.ts",
+    "instrumentation.ts",
+    "app/(app)/su/ayarlar/PushSettings.tsx",
+    "tests/reminders.test.ts",
+    "tests/water-speech.test.ts",
+    "tests/water-insights.test.ts",
+    "tests/e2e/push.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -62,7 +73,10 @@
     "water_containers",
     "water_logs",
     "water_settings",
-    "water_goal_history"
+    "water_goal_history",
+    "app_config",
+    "push_subscriptions",
+    "water_reminders"
   ],
   "routes": [
     "/",
@@ -79,7 +93,13 @@
     "/api/health",
     "/api/auth/username",
     "/su/istatistik",
-    "/su/ayarlar"
+    "/su/ayarlar",
+    "/api/push/key",
+    "/api/push/subscribe",
+    "/api/push/unsubscribe",
+    "/api/push/test",
+    "/api/water/notify",
+    "/api/test/reminder"
   ],
   "events": [
     "profile.onboarded",
@@ -152,7 +172,9 @@
       "getWaterSummary",
       "getWaterStats",
       "minuteOfDay",
-      "dayBounds"
+      "dayBounds",
+      "getWaterInsights",
+      "dailyDetail"
     ],
     "app/(app)/su/actions.ts": [
       "addWater",
@@ -164,7 +186,30 @@
       "archiveContainer",
       "saveSipCalibration",
       "saveWaterSettings",
-      "saveWaterGoal"
+      "saveWaterGoal",
+      "saveReminderSettings"
+    ],
+    "lib/reminders.ts": [
+      "decideReminder",
+      "ignoredStreak"
+    ],
+    "lib/water-speech.ts": [
+      "parseWaterSpeech",
+      "wordsToNumbers"
+    ],
+    "lib/water-insights.ts": [
+      "waterInsights",
+      "computeBadges"
+    ],
+    "lib/push.ts": [
+      "vapid",
+      "sendToUser"
+    ],
+    "lib/scheduler.ts": [
+      "startScheduler",
+      "runForUser",
+      "markReminder",
+      "reminderStats"
     ]
   },
   "dependencies": {
@@ -174,10 +219,12 @@
     "postgres": "3",
     "zod": "4",
     "tailwindcss": "4",
-    "typescript": "5"
+    "typescript": "5",
+    "web-push": "3"
   },
   "migrations": [
     "0000_init.sql",
-    "0001_water.sql"
+    "0001_water.sql",
+    "0002_reminders.sql"
   ]
 }

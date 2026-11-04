@@ -1,5 +1,5 @@
 // DgFit service worker — uygulama kabuğu önbelleği + çevrimdışı sayfa.
-const VERSION = 'dgfit-v1'
+const VERSION = 'dgfit-v2'
 const STATIC = `${VERSION}-static`
 const OFFLINE_URL = '/offline.html'
 const PRECACHE = [OFFLINE_URL, '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png']
@@ -42,21 +42,46 @@ self.addEventListener('fetch', (e) => {
   }
 })
 
-// Push bildirimleri (Su modülü ile etkinleşecek)
+// Push bildirimleri (Su hatırlatmaları)
 self.addEventListener('push', (e) => {
   let data = {}
   try { data = e.data ? e.data.json() : {} } catch { data = { title: 'DgFit', body: e.data && e.data.text() } }
   e.waitUntil(self.registration.showNotification(data.title || 'DgFit', {
-    body: data.body || '', icon: '/icons/icon-192.png', badge: '/icons/badge-72.png', tag: data.tag, data: data.data || {},
-    actions: data.actions || [],
+    body: data.body || '', icon: '/icons/icon-192.png', badge: '/icons/badge-72.png', tag: data.tag || 'dgfit', renotify: true,
+    data: { url: data.url || '/su', reminderId: data.reminderId || null },
+    actions: (data.actions || []).slice(0, 2),
   }))
 })
 
+function post(path, body) {
+  return fetch(path, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+}
+
 self.addEventListener('notificationclick', (e) => {
-  e.notification.close()
-  const target = (e.notification.data && e.notification.data.url) || '/'
-  e.waitUntil(self.clients.matchAll({ type: 'window' }).then((list) => {
-    for (const c of list) if ('focus' in c) { c.navigate(target); return c.focus() }
-    return self.clients.openWindow(target)
-  }))
+  const n = e.notification
+  const d = n.data || {}
+  n.close()
+  // Bildirimden doğrudan yanıt (Android): "200 ml içtim" → uygulamayı açmadan kaydet
+  if (e.action && e.action.startsWith('add:')) {
+    const ml = Number(e.action.slice(4))
+    e.waitUntil(post('/api/water/notify', { reminderId: d.reminderId || undefined, action: e.action })
+      .then((r) => r.json())
+      .then((j) => self.registration.showNotification(j.ok ? `${ml} ml eklendi` : 'Eklenemedi', {
+        body: j.ok ? 'Kaydın Su ekranına işlendi.' : (j.error || 'Uygulamayı açıp tekrar dene.'), icon: '/icons/icon-192.png', badge: '/icons/badge-72.png', tag: 'water-ack', silent: true,
+      }))
+      .catch(() => self.clients.openWindow('/su')))
+    return
+  }
+  if (e.action === 'snooze') {
+    e.waitUntil(post('/api/water/notify', { reminderId: d.reminderId || undefined, action: 'snooze' }).catch(() => {}))
+    return
+  }
+  const target = d.url || '/su'
+  e.waitUntil(Promise.all([
+    d.reminderId ? post('/api/water/notify', { reminderId: d.reminderId, action: 'open' }).catch(() => {}) : Promise.resolve(),
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) if ('focus' in c) { c.navigate(target); return c.focus() }
+      return self.clients.openWindow(target)
+    }),
+  ]))
 })

@@ -84,12 +84,12 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await expectTotal(1035, 'termos yarım')
 
   // 6) Yudum: 3 × 25 = 75
-  await p.getByRole('button', { name: 'Yudum ekle' }).click()
+  await p.getByRole('button', { name: 'Yudum', exact: true }).click()
   await p.getByRole('button', { name: '75 ml ekle' }).click(); await settle()
   await expectTotal(1110, 'yudum')
 
   // 7) Geçmiş saate özel miktar: 09:00'da 300 ml
-  await p.getByRole('button', { name: /Özel \/ geçmiş/ }).click()
+  await p.getByRole('button', { name: 'Özel', exact: true }).click()
   await p.fill('#c-ml', '300'); await p.fill('#c-time', '09:00')
   await p.getByRole('button', { name: 'Ekle', exact: true }).click(); await settle()
   await expectTotal(1410, 'geçmiş saat')
@@ -149,6 +149,19 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   else fail('Bugün ekranında çift kayıt sorusu çıkmadı')
   if (!(await p.getByText('1.550', { exact: true }).count())) fail('Bugün ekranından hızlı ekleme çalışmadı')
   await shot('04-bugun')
+
+  // 14) Sesli/yazılı kayıt: "yarım saat önce iki bardak çay içtim" → 400 ml çay (360 ml sayılır)
+  await p.goto(BASE + '/su')
+  await p.getByRole('button', { name: 'Söyle', exact: true }).click()
+  await p.fill('#v-text', 'yarım saat önce iki bardak çay içtim')
+  await p.getByText(/Anladığım: 400 ml çay/).waitFor()
+  await p.getByRole('button', { name: '400 ml ekle' }).click(); await settle()
+  await expectTotal(1910, 'sesli kayıt')
+  // 15) İstatistikte rozet ve aylık rapor bölümleri
+  await p.goto(BASE + '/su/istatistik')
+  await p.getByRole('region', { name: 'Rozetler' }).waitFor()
+  if (!(await p.getByText('Kazanıldı').count())) fail('ilk yudum rozeti kazanılmadı')
+  await p.getByRole('region', { name: 'Aylık rapor' }).waitFor()
 
   console.log('WATER E2E OK user=', u)
   console.log(errors.length ? 'KONSOL HATALARI:\n' + errors.join('\n') : 'no console errors')
