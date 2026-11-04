@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { getToday } from '@/lib/today'
 import { closePendingDays } from '@/lib/fit-data'
+import { todayTraining } from '@/lib/fitness-data'
 import { greeting, longDate, shortDate, addDays } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { Bar, Ring } from '@/components/ui'
@@ -14,6 +15,7 @@ export default async function Today() {
   await closePendingDays(user.id)
   const t = await getToday(user.id)
   if (!t) redirect('/kurulum')
+  const tr = await todayTraining(user.id, t.day)
 
   const budget = t.target.kcal + t.burned
   const left = budget - t.eaten.kcal
@@ -134,13 +136,13 @@ export default async function Today() {
             </Link>
             <QuickWaterButton />
           </section>
-          <Link href="/fitness" aria-label="Antrenman" className="card p-[18px] flex flex-col gap-3 min-h-[196px]">
+          <Link href={tr.workouts || tr.cardio || !tr.next ? '/fitness' : `/fitness/antrenman?gun=${tr.next.id}`} aria-label="Antrenman" className="card p-[18px] flex flex-col gap-3 min-h-[196px]" data-testid="today-training">
             <div className="flex items-center gap-2"><Dumbbell size={18} className="text-orange" /><span className="text-sm font-bold">Antrenman</span></div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-xl font-extrabold">Bugün kayıt yok</span>
-              <span className="text-[13px] text-mute">{t.profile.trainingDays ? `Haftalık hedef · ${t.profile.trainingDays} gün` : 'Program oluşturarak başla'}</span>
+              <span className="text-xl font-extrabold">{tr.workouts || tr.cardio ? `${tr.minutes} dk tamamlandı` : tr.next ? tr.next.name : 'Bugün kayıt yok'}</span>
+              <span className="text-[13px] text-mute">{tr.workouts || tr.cardio ? `+${fmtNum(t.burned)} kcal bütçeye eklendi` : tr.next ? 'Sıradaki program günü' : t.profile.trainingDays ? `Haftalık hedef · ${t.profile.trainingDays} gün` : 'Program oluşturarak başla'}</span>
             </div>
-            <span className="mt-auto h-11 rounded-full border border-line-2 text-ink font-bold text-[15px] flex items-center justify-center">Başlat</span>
+            <span className="mt-auto h-11 rounded-full border border-line-2 text-ink font-bold text-[15px] flex items-center justify-center">{tr.workouts || tr.cardio ? 'Detay' : 'Başlat'}</span>
           </Link>
         </div>
 

@@ -18,6 +18,7 @@ export default function FoodDiary(p: {
   meals: MealBlock[]; totals: { kcal: number; protein: number; carb: number; fat: number }
   target: { kcal: number; protein: number; carb: number; fat: number }; burned: number
   adjust: { base: number; kcal: number; closed: boolean } | null
+  trained?: boolean
   micro: Record<string, number>; suggested: MealId; yesterdayHas: Record<MealId, number>
 }) {
   const router = useRouter()
@@ -130,7 +131,8 @@ export default function FoodDiary(p: {
       <section className="rounded-[24px] p-4 flex gap-3 bg-coach border border-coach-line">
         <Spark size={18} className="text-lime shrink-0 mt-0.5" />
         <p className="text-sm leading-relaxed text-[#E4E8DC]">
-          {p.totals.kcal === 0 ? 'İlk öğününü ekleyerek başla. Son kullandıkların ve kayıtlı öğünlerin tek dokunuşla eklenir.'
+          {p.trained && p.isToday && p.target.protein - p.totals.protein > 20 ? `Bugün antrenman yaptın: toparlanma için önümüzdeki öğünde 25–40 g protein al (kalan hedef ${fmtNum(p.target.protein - p.totals.protein)} g). Yoğurt + yulaf, tavuk, ton balığı ya da yumurta iyi seçenekler.`
+            : p.totals.kcal === 0 ? 'İlk öğününü ekleyerek başla. Son kullandıkların ve kayıtlı öğünlerin tek dokunuşla eklenir.'
             : p.target.protein - p.totals.protein > 25 && left > 150 ? `Kalan ${fmtNum(left)} kcal içinde ${fmtNum(p.target.protein - p.totals.protein)} g protein hedefin var. Tavuk, yoğurt, yumurta ya da baklagil iyi seçenekler.`
               : left < 0 ? `Bugün hedefin ${fmtNum(-left)} kcal üstündesin. Fark, akıllı dengeleme ile sonraki günlere yayılacak (Faz 2b).`
                 : 'Makroların dengeli gidiyor. Akşam öğününü kalan bütçeye göre planlayabilirsin.'}
