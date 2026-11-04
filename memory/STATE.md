@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 2b — Fit: dengeleme, adaptif TDEE, plan ekranı (devam ediyor, başlangıç 2026-11-04)**
+**Şu anki faz: Faz 2b tamamlandı (2026-11-04). Sıradaki: Faz 3 — Fitness (kullanıcı onayı bekleniyor)**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -12,7 +12,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 1a | Su modülü çekirdeği (aşağıda) | tamamlandı | commit `87e936f` + `9e64ee9`; birim test 21/21; verify.sh VERIFY OK (onboarding + su e2e); canlı su e2e OK ve canlı onboarding e2e OK (deploy `2026-11-04T16-01-45-488Z`); test kullanıcıları silindi |
 | 1b | Su: akıllı push hatırlatmaları, sesli kayıt, analiz kartları, rozetler, aylık rapor (aşağıda) | tamamlandı | commit `4fa3fba`; birim test 44/44; verify.sh VERIFY OK (onboarding + push + su e2e); canlı onboarding ve su e2e OK; canlıda test kancası 404, VAPID üretildi, zamanlayıcı logu var (deploy `2026-11-04T17-07-29-132Z`). Gerçek cihazda push teslimi kullanıcı tarafından denenmeli |
 | 2a | Yemek çekirdeği: besin veritabanı, arama, öğün kaydı, porsiyonlar, barkod, özel besin, tarif, kopyalama, Bugün entegrasyonu | tamamlandı | commit `5525b9b` + `e8e5318` + `42d0008`; birim test 53/53; verify.sh VERIFY OK (food + onboarding + push + su e2e); canlı onboarding/su/yemek e2e OK (deploy `2026-11-04T19-11-00-792Z`); canlıda foods: usda 7.793 + dgfit 36; OFF barkod canlıdan çalıştı |
-| 2b | Fit: günlük hedef kaydı (`daily_targets`), akıllı kalori dengeleme, adaptif TDEE, kilo trendi + haftalık check-in, plan ekranı, kalori bankası | devam ediyor | — |
+| 2b | Fit: günlük hedef kaydı (`daily_targets`), akıllı kalori dengeleme, adaptif TDEE, kilo trendi + haftalık check-in, plan ekranı, kalori bankası | tamamlandı | commit `0910d1e` + `6f491b8`; birim test 67/67; verify.sh VERIFY OK (fit tohumlu e2e + food + onboarding + push + su); canlı fit/food/onboarding/su e2e OK, canlıda `/api/test/fit` 404 (deploy `2026-11-04T19-53-42-460Z`); 4 test kullanıcısı silindi |
 | 3 | Fitness (hareket kütüphanesi, program, canlı antrenman, AI ağırlık önerisi, PR) | planlandı | — |
 | 4 | AI katmanı (fotoğraf/ses kaydı, koç, raporlar) | planlandı | — |
 | 5 | Sosyal | planlandı | — |
@@ -65,32 +65,31 @@ Kaynak: spesifikasyon bölüm 6 (Yemek). Veri kaynağı kararı DECISIONS.md'de 
 - [x] Entegrasyon: `meal.logged` olayı; Bugün ekranı yenen kalori/makro gerçek veri; yemekten gelen su (çorba, ayran) isteğe bağlı Su'ya
 - [x] Testler (birim + e2e) + verify.sh + canlı e2e + hafıza
 
-## Faz 2b kapsamı ve kabul kriterleri
+## Faz 2b kapsamı ve kabul kriterleri (tamamlandı)
 
 Kaynak: spesifikasyon bölüm 5 (Fit).
 
-- [ ] Saf motor `lib/fit.ts` (testli): fark dağıtımı (7 gün penceresi, azalan ağırlık, günlük tavan ±%10 / ±250 kcal, kalori tabanı, taşma + kalan), istisna günü (dağıtmak yerine hedef tarihe en fazla 3 gün), kalori bankası (önceki günlerden biriktir, etkinlik günü harca), eksik kayıt kuralı, makro ölçekleme, adaptif TDEE (trend kilo + alınan kalori, güven), hedef tarih tahmini, check-in önerisi (haftalık değişim sınırı)
-- [ ] Veri: `kcal_adjustments` tablosu, `daily_targets` kapanış anlık görüntüsü (yenen, hedef, fark); günün hedefi = plan tabanı + düzeltmeler
-- [ ] Gün kapanışı: zamanlayıcı her gece 03.00 sonrası dünü kapatır; "Günü kapat" düğmesi; kapanmamış geçmiş günler (en fazla 7) toparlanır
-- [ ] Plan ekranı `/fit`: yol haritası grafiği (plan, trend, tartılar, tahmin), istatistikler, önümüzdeki 7 günün hedefleri ve düzeltme gerekçesi, dengeleme kartı + "istisna say", kalori bankası oluştur/iptal, haftalık check-in (öner/uygula), tartı kaydı
-- [ ] Entegrasyon: Bugün ve Yemek ekranlarında hedef = düzeltilmiş günlük hedef + açıklama; hafta halkaları su + kalori uyumu; `day.closed` olayı
-- [ ] Testler + verify.sh + canlı e2e + hafıza
+- [x] Saf motor `lib/fit.ts` (testli): fark dağıtımı (7 gün penceresi, azalan ağırlık, günlük tavan ±%10 / ±250 kcal, kalori tabanı, taşma + kalan), istisna günü (dağıtmak yerine hedef tarihe en fazla 3 gün), kalori bankası (önceki günlerden biriktir, etkinlik günü harca), eksik kayıt kuralı, makro ölçekleme, adaptif TDEE (trend kilo + alınan kalori, güven), hedef tarih tahmini, check-in önerisi (haftalık değişim sınırı)
+- [x] Veri: `kcal_adjustments` tablosu, `daily_targets` kapanış anlık görüntüsü (yenen, hedef, fark); günün hedefi = plan tabanı + düzeltmeler
+- [x] Gün kapanışı: zamanlayıcı her gece 03.00 sonrası dünü kapatır; "Günü kapat" düğmesi; kapanmamış geçmiş günler (en fazla 7) toparlanır
+- [x] Plan ekranı `/fit`: yol haritası grafiği (plan, trend, tartılar, tahmin), istatistikler, önümüzdeki 7 günün hedefleri ve düzeltme gerekçesi, dengeleme kartı + "istisna say", kalori bankası oluştur/iptal, haftalık check-in (öner/uygula), tartı kaydı
+- [x] Entegrasyon: Bugün ve Yemek ekranlarında hedef = düzeltilmiş günlük hedef + açıklama; hafta halkaları su + kalori uyumu; `day.closed` olayı
+- [x] Testler + verify.sh + canlı e2e + hafıza
 
 ## Sıradaki işler
 
-1. Faz 2b'yi kriterlere göre tamamla.
+1. Faz 3 (Fitness): kullanıcı "geç" deyince başlar. Gün kapanışına antrenman kalorisi (`burned`) bağlanacak.
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
 3. E-posta doğrulama kodu (Mailu SMTP) — ertelendi.
 
 ## Bilinen eksikler / borçlar
 
-- `daily_targets` tablosu henüz doldurulmuyor (Faz 2'de kalori dengelemeyle).
-- Bugün ekranındaki seri ve hafta halkaları şimdilik yalnızca suya dayalı; Yemek gelince ortak "mükemmel gün" oranına geçecek.
+- Bugün ekranındaki seri sayacı hâlâ su serisi (hafta halkaları su + kalori uyumu).
 - Canlıda kullanıcının kendi `deneme` hesabı var (2026-11-04 15:04 UTC); test temizliğinde silinmez.
 - E2E'de deploy sonrası ilk isteklerde aralıklı gecikme görüldü; testlerde gezinme zaman aşımı 60 sn.
 - Push teslimi yalnızca sahte HTTPS servisine karşı otomatik test ediliyor; FCM/APNs'e gerçek teslim otomatik testte yok.
 - Yemek: AI fotoğraf/sesli öğün kaydı, AI menü ve alışveriş listesi Faz 4'te; TURKOMP izinsiz kullanılmıyor.
-- Hafta şeridi halkaları hâlâ yalnızca su oranı (Faz 2b'de kalori uyumu eklenecek).
+- Fit: dengeleme e2e'si test kancasıyla tohumlanmış geçmişe dayanıyor; gerçek gece kapanışı canlıda ilk kez 2026-11-05 03.00 sonrası çalışacak (`deneme` planı bugün başladı, kapatılacak geçmiş gün yok). Kapanmış bir günün düzeltmesi sonradan kapanan günlere geri yansımaz (bilinçli sınır). Banka iptalinde geçmiş biriktirme günleri geri verilmez.
 - Analiz kartları kural tabanlı; LLM tabanlı koç Faz 4'te (API anahtarı yok).
 - Yasal metinler TASLAK; hukuk kontrolü gerekli.
 - Bu çalışma ortamında GitHub erişimi yok (GH_TOKEN geçersiz); kod sunucudaki `repo.bundle` ile korunuyor.

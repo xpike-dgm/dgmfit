@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-04 — Faz 2b tamamlandı
+- `lib/fit.ts` saf motor + 14 test; `lib/fit-data.ts` veri katmanı; zamanlayıcıya gece kapanışı; Bugün/Yemek düzeltilmiş hedef; hafta halkaları su + kalori uyumu. Ara commit `0910d1e`.
+- `/fit` ekranı + aksiyonlar + `tests/e2e/fit.e2e.cjs` (beklenen değerler `lib/fit.ts` içe aktarılarak hesaplanır). Commit `6f491b8`.
+- Bulunan kusurlar: (1) eşzamanlı gün kapanışı (zamanlayıcı + düğme) çift düzeltme yazabilirdi → satır `ON CONFLICT … WHERE closed_at IS NULL` ile atomik sahipleniyor; (2) kapalı güne öğün eklenince fark güncellenmiyordu → `refreshClosedDay`; (3) e2e ekran görüntüsünde ölçülen harcama 2.586 (gerçek ≈2.786; EMA gecikmesi) → tartılara doğrusal eğim, 2.781; (4) grafik açıklaması veri çizgisinin üstüne biniyordu → grafiğin altına taşındı.
+- Doğrulama: birim 67/67; verify.sh VERIFY OK; deploy `2026-11-04T19-53-42-460Z`; canlı fit (canlı mod: banka, gün kapat/aç, tartı), food, onboarding, su e2e OK; canlı test kancası 404; 4 test kullanıcısı silindi, `deneme` korundu.
+
 ## 2026-11-04 — Faz 2b başladı
 - Faz başı: memory-check geçti; son commit `2c2e757` STATE ile uyumlu; çalışma ağacı temiz.
 

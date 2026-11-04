@@ -46,3 +46,10 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Tarif kcal'i 100 g başına 1 ondalıkla saklanır; porsiyon değeri malzeme toplamından hesaplanır | Yuvarlama hatası (e2e'de 180 ≠ 179) | Teknik |
 | 2026-11-04 | Yemekten gelen su varsayılan kapalı; yalnızca su oranı ≥ %80 olan çorba/içecek/süt-kefir-ayran | Yoğurt, peynir gibi katı besinler sıvı sayılmasın | Teknik |
 | 2026-11-04 | OFF ürünleri herkese açık önbellek (`source=off`), kullanıcı besinleri yalnızca sahibine | Aynı barkod tekrar sorgulanmasın; gizlilik | Teknik |
+| 2026-11-04 | Dengeleme kuralları: kayıt yoksa ya da hedefin %60'ından azsa dengeleme yok; ±50 kcal "hedefte"; az yemenin en fazla 300 kcal'i eklenir; fark sonraki 7 güne azalan ağırlıkla (1,0…0,4), günlük tavan min(%10, 250) ve cinsiyete göre kalori tabanı | Eksik kayıt yanlış ceza/ödül üretmesin; aşırı açık kas kaybı riskli | Teknik |
+| 2026-11-04 | Dengeleme geçmişe yazılmaz: geç kapanan gün farkı bugünden itibaren dağıtılır | Kapanmış günlerin anlık görüntüsü değişmesin | Teknik |
+| 2026-11-04 | "İstisna say" yalnızca fazla yenen gün için; kalan düzeltmeler silinir, kilo vermede hedef tarih en fazla 3 gün uzar | Özel günde suçluluk yerine şeffaf takas | Ürün |
+| 2026-11-04 | Kalori bankası: etkinlik bugünden 2–14 gün sonra, 100–1500 kcal, etkinlikten önceki en fazla 5 günden eşit biriktirme; iptal yalnızca gelmemiş günleri kaldırır | Toplam plan değişmesin; güvenlik sınırları korunsun | Ürün |
+| 2026-11-04 | Adaptif harcama tartılara uydurulan doğrusal eğimle hesaplanır, EMA trend uç noktalarıyla değil | E2E'de EMA gecikmesi harcamayı 2.586 gösterdi (gerçek ≈2.786); regresyonla 2.781 | Teknik |
+| 2026-11-04 | Check-in en az 14 gün aralık, 10 tam kayıtlı gün, 5 tartı ister; 7 günde bir, en fazla ±150 kcal, protein sabit (fark %60 karb / %40 yağ) | Gürültüye karşı yavaş ve güvenli ayar | Teknik |
+| 2026-11-04 | Egzersiz kalorisi (`burned`) şimdilik 0; Fitness (Faz 3) ile gün kapanışına eklenecek | Antrenman kaydı henüz yok | Teknik |
