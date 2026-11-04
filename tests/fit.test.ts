@@ -85,12 +85,17 @@ test('makro ölçekleme: protein sabit', () => {
 
 test('adaptif harcama', () => {
   // 21 gün, her gün 2100 kcal, trend 80 → 79 kg: harcama = 2100 + 7700/20
-  const days = Array.from({ length: 21 }, (_, i) => ({ day: new Date(Date.parse('2026-10-01T12:00:00Z') + i * 86400000).toISOString().slice(0, 10), intake: 2100, trend: 80 - i / 20 }))
+  const days = Array.from({ length: 21 }, (_, i) => ({ day: new Date(Date.parse('2026-10-01T12:00:00Z') + i * 86400000).toISOString().slice(0, 10), intake: 2100, kg: 80 - i / 20 }))
   const r = adaptiveTdee(days)
   assert.equal(r.spanDays, 20)
   assert.equal(r.tdee, 2100 + 385)
   assert.equal(r.confidence, 'orta')
   assert.equal(adaptiveTdee(days.slice(0, 10)).tdee, null) // yetersiz veri
+  // gürültülü tartılar: ±0,4 kg dalgalanma eğimi bozmamalı (gerçek kayıp 0,08 kg/gün → +616 kcal)
+  const noisy = Array.from({ length: 21 }, (_, i) => ({ day: days[i].day, intake: 2150, kg: 78.4 - i * 0.08 + (i % 2 ? 0.4 : -0.4) }))
+  const n = adaptiveTdee(noisy)
+  assert.ok(Math.abs(n.tdee! - (2150 + 616)) < 60, 'gürültülü: ' + n.tdee)
+  assert.equal(adaptiveTdee(days.map((d, i) => ({ ...d, kg: i % 6 === 0 ? d.kg : null }))).tdee, null) // 5'ten az tartı
 })
 
 test('hedef tarih tahmini', () => {

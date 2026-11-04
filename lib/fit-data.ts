@@ -214,7 +214,7 @@ export async function checkinData(userId: string) {
     db.select().from(schema.events).where(and(eq(schema.events.userId, userId), eq(schema.events.type, 'plan.adjusted'), sql`${schema.events.payload}->>'kind' = 'checkin'`)).orderBy(desc(schema.events.createdAt)).limit(1),
   ])
   const intakeBy = new Map(closed.filter((c) => ['balanced', 'over', 'under', 'exception'].includes(c.closureKind ?? '')).map((c) => [c.day, c.eatenKcal ?? null]))
-  const tdee = adaptiveTdee(series.map((s) => ({ day: s.day, intake: intakeBy.get(s.day) ?? null, trend: s.trend })))
+  const tdee = adaptiveTdee(series.map((s) => ({ day: s.day, intake: intakeBy.get(s.day) ?? null, kg: s.raw })))
   const trendNow = series.filter((s) => s.trend !== null).at(-1)?.trend ?? goal.startWeightKg
   const forecast = forecastDay(series.filter((s) => s.trend !== null).map((s) => ({ day: s.day, kg: s.trend! })), goal.targetWeightKg, today)
   const lastCheckin = lastEvt[0] ? dayString(lastEvt[0].createdAt) : goal.startDate
@@ -230,4 +230,36 @@ export async function applyCheckin(userId: string) {
   await db.update(schema.goals).set({ dailyKcal: m.kcal, carbG: m.carb, fatG: m.fat, tdee: d.tdee.tdee }).where(eq(schema.goals.id, d.goal.id))
   await publish(userId, 'plan.adjusted', { kind: 'checkin', from: d.goal.dailyKcal, to: m.kcal, measuredTdee: d.tdee.tdee, confidence: d.tdee.confidence })
   return { ok: true as const, kcal: m.kcal, delta: d.proposal.delta }
+}
+
+/** /fit ekranı için tüm veriler. Açılışta kapanmamış geçmiş günler toparlanır. */
+export async function getFitScreen(userId: string) {
+  await closePendingDays(userId)
+  const goal = await activeGoal(userId)
+  if (!goal) return null
+  const today = dayString()
+  const [targets, closedRows, series, banks, checkin] = await Promise.all([
+    dayTargets(userId, today, addDays(today, 6), goal),
+    db.select().from(schema.dailyTargets).where(and(eq(schema.dailyTargets.userId, userId), gte(schema.dailyTargets.day, addDays(today, -7)), sql`${schema.dailyTargets.closedAt} is not null`)).orderBy(desc(schema.dailyTargets.day)),
+    weightSeries(userId, goal.startDate, today),
+    upcomingBanks(userId),
+    checkinData(userId),
+  ])
+  const eatenToday = await dayMacros(userId, today)
+  const [{ n }] = await db.execute<{ n: number }>(sql`select count(*)::int as n from meal_items where user_id = ${userId} and day = ${today} and deleted_at is null`)
+  // istisna sayılabilecek son fazla gün: kaynağı o gün olan, bugün ve sonrasında duran negatif düzeltme varsa
+  const pendingFrom = await db.execute<{ day: string; kcal: number }>(sql`
+    select source_day::text as day, sum(kcal)::int as kcal from kcal_adjustments
+    where user_id = ${userId} and reason = 'balance' and deleted_at is null and day >= ${today} and source_day is not null
+    group by source_day order by source_day desc`)
+  const remaining = new Map(pendingFrom.map((r) => [String(r.day), Number(r.kcal)]))
+  const sex = await sexOf(userId)
+  return {
+    today, goal, targets, series, banks, checkin, floor: calorieFloor(sex),
+    todayState: { eaten: eatenToday.kcal, items: Number(n), closed: targets[0].closed, closure: closedRows.find((c) => c.day === today) ?? null },
+    closures: closedRows.filter((c) => c.day < today).map((c) => ({
+      day: c.day, kind: c.closureKind ?? 'untracked', eaten: c.eatenKcal ?? 0, target: c.baseKcal + c.adjustmentKcal,
+      diff: c.diffKcal ?? 0, leftover: c.leftoverKcal ?? 0, remaining: remaining.get(c.day) ?? 0,
+    })),
+  }
 }

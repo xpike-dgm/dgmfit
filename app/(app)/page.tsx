@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { getToday } from '@/lib/today'
+import { closePendingDays } from '@/lib/fit-data'
 import { greeting, longDate, shortDate, addDays } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { Bar, Ring } from '@/components/ui'
@@ -10,6 +11,7 @@ import { Drop, Dumbbell, Flame, Pulse, Spark, User } from '@/components/icons'
 
 export default async function Today() {
   const user = await requireUser()
+  await closePendingDays(user.id)
   const t = await getToday(user.id)
   if (!t) redirect('/kurulum')
 
@@ -86,13 +88,14 @@ export default async function Today() {
             <Pulse size={18} className="text-mute shrink-0 mt-0.5" />
             <span className="text-[13px] leading-relaxed text-ink-2">
               {t.target.adjustment
-                ? <>Akıllı dengeleme bugünkü hedefini <b className="text-ink">{t.target.adjustment > 0 ? '+' : '−'}{fmtNum(Math.abs(t.target.adjustment))} kcal</b> ayarladı.</>
+                ? <>{adjustText(t.target.reasons)} Plan {fmtNum(t.target.base)} kcal → bugün <b className="text-ink">{fmtNum(t.target.kcal)} kcal</b>.</>
                 : <>Bir gün hedefin üstünde ya da altında kalırsan fark, sonraki günlere dengeli şekilde dağıtılır.</>}
+              {' '}<Link href="/fit" className="text-lime font-semibold whitespace-nowrap">Plan ayrıntıları</Link>
             </span>
           </div>
         </section>
 
-        <section aria-label="Kilo hedefi" className="card p-5 flex flex-col gap-3.5">
+        <Link href="/fit" aria-label="Kilo hedefi ve plan" className="card p-5 flex flex-col gap-3.5">
           <div className="flex justify-between items-end">
             <div className="flex flex-col gap-0.5">
               <span className="text-[13px] font-bold tracking-[0.08em] uppercase text-mute">Trend kilo</span>
@@ -117,7 +120,7 @@ export default async function Today() {
           ) : (
             <p className="text-sm text-ink-2">Rekompozisyon: kilonu koruyup kas kazanıyorsun. Haftalık tartı ve ölçüleri takip et.</p>
           )}
-        </section>
+        </Link>
 
         <div className="grid grid-cols-2 gap-3">
           <section aria-label="Su" className="card p-[18px] flex flex-col gap-3 relative overflow-hidden min-h-[196px]">
@@ -148,6 +151,18 @@ export default async function Today() {
       </main>
     </div>
   )
+}
+
+function adjustText(reasons: { kcal: number; reason: string }[]): string {
+  const sum = (r: string) => reasons.filter((x) => x.reason === r).reduce((a, x) => a + x.kcal, 0)
+  const parts: string[] = []
+  const bal = sum('balance'), save = sum('bank-save'), spend = sum('bank-spend')
+  const s = (n: number) => `${n > 0 ? '+' : '−'}${fmtNum(Math.abs(n))} kcal`
+  if (bal) parts.push(`Akıllı dengeleme ${s(bal)}`)
+  if (save) parts.push(`kalori bankası birikimi ${s(save)}`)
+  if (spend) parts.push(`etkinlik günü ${s(spend)}`)
+  const t = parts.join(', ')
+  return t.charAt(0).toUpperCase() + t.slice(1) + '.'
 }
 
 function Mini({ label, value, accent }: { label: string; value: string; accent?: boolean }) {

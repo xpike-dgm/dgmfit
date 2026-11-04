@@ -110,23 +110,33 @@ export function scaleMacros(base: { kcal: number; protein: number; carb: number;
   }
 }
 
-export interface TdeeDay { day: string; intake: number | null; trend: number | null }
+export interface TdeeDay { day: string; intake: number | null; kg: number | null }
+
+/** En küçük kareler eğimi (kg/gün). */
+function slopePerDay(pts: { day: string; kg: number }[]): number {
+  const x0 = Date.parse(pts[0].day)
+  const xs = pts.map((p) => (Date.parse(p.day) - x0) / 86400000)
+  const n = xs.length, mx = xs.reduce((a, b) => a + b, 0) / n, my = pts.reduce((a, p) => a + p.kg, 0) / n
+  const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0)
+  return sxx === 0 ? 0 : xs.reduce((a, x, i) => a + (x - mx) * (pts[i].kg - my), 0) / sxx
+}
 
 /**
- * Adaptif harcama: kaydı tam günlerin ortalama alımı − (trend kilo değişimi × 7.700 / gün).
- * En az 14 günlük aralık, 10 tam kayıtlı gün ve başta/sonda trend kilo gerekir.
+ * Adaptif harcama: kaydı tam günlerin ortalama alımı − (kilo değişimi × 7.700 / gün).
+ * Kilo değişimi tartılara uydurulan doğrusal eğimden gelir (üssel trendin uç noktaları gecikmeli olduğu için
+ * harcamayı olduğundan düşük gösterir). En az 14 günlük aralık, 10 tam kayıtlı gün ve 5 tartı gerekir.
  */
 export function adaptiveTdee(days: TdeeDay[]): { tdee: number | null; confidence: 'yok' | 'düşük' | 'orta' | 'yüksek'; loggedDays: number; spanDays: number; trendChange: number | null } {
-  const withTrend = days.filter((d) => d.trend !== null)
+  const weighed = days.filter((d) => d.kg !== null).map((d) => ({ day: d.day, kg: d.kg! }))
   const logged = days.filter((d) => d.intake !== null)
-  const spanDays = withTrend.length ? Math.round((Date.parse(withTrend.at(-1)!.day) - Date.parse(withTrend[0].day)) / 86400000) : 0
-  if (spanDays < 14 || logged.length < 10) return { tdee: null, confidence: 'yok', loggedDays: logged.length, spanDays, trendChange: null }
+  const spanDays = weighed.length ? Math.round((Date.parse(weighed.at(-1)!.day) - Date.parse(weighed[0].day)) / 86400000) : 0
+  if (spanDays < 14 || logged.length < 10 || weighed.length < 5) return { tdee: null, confidence: 'yok', loggedDays: logged.length, spanDays, trendChange: null }
   const avgIntake = logged.reduce((a, d) => a + d.intake!, 0) / logged.length
-  const trendChange = withTrend.at(-1)!.trend! - withTrend[0].trend!
-  const tdee = Math.round(avgIntake - (trendChange * KCAL_PER_KG) / spanDays)
+  const perDay = slopePerDay(weighed)
+  const tdee = Math.round(avgIntake - perDay * KCAL_PER_KG)
   const ratio = logged.length / Math.max(1, spanDays)
-  const confidence = spanDays >= 28 && ratio >= 0.8 ? 'yüksek' : ratio >= 0.65 ? 'orta' : 'düşük'
-  return { tdee, confidence, loggedDays: logged.length, spanDays, trendChange: Math.round(trendChange * 100) / 100 }
+  const confidence = spanDays >= 28 && ratio >= 0.8 && weighed.length >= 12 ? 'yüksek' : ratio >= 0.65 ? 'orta' : 'düşük'
+  return { tdee, confidence, loggedDays: logged.length, spanDays, trendChange: Math.round(perDay * spanDays * 100) / 100 }
 }
 
 /** Son 21 günün trend kilosuna doğrusal eğim (kg/gün) ile hedef tarih tahmini; yön yanlışsa null. */

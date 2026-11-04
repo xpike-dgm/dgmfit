@@ -17,6 +17,7 @@ export default function FoodDiary(p: {
   day: string; isToday: boolean; prevDay: string; nextDay: string | null; dayLabel: string
   meals: MealBlock[]; totals: { kcal: number; protein: number; carb: number; fat: number }
   target: { kcal: number; protein: number; carb: number; fat: number }; burned: number
+  adjust: { base: number; kcal: number; closed: boolean } | null
   micro: Record<string, number>; suggested: MealId; yesterdayHas: Record<MealId, number>
 }) {
   const router = useRouter()
@@ -55,6 +56,8 @@ export default function FoodDiary(p: {
           <div className="flex flex-col">
             <span className="num text-[30px] font-bold leading-none">{fmtNum(p.totals.kcal)} <span className="text-base text-mute font-semibold">/ {fmtNum(budget)} kcal</span></span>
             {p.burned ? <span className="text-xs text-mute mt-1">Hedef {fmtNum(p.target.kcal)} + egzersiz {fmtNum(p.burned)}</span> : null}
+            {p.adjust?.kcal ? <Link href="/fit" className="text-xs text-mute mt-1" data-testid="adjust-note">Plan {fmtNum(p.adjust.base)} {p.adjust.kcal > 0 ? '+' : '−'} {fmtNum(Math.abs(p.adjust.kcal))} dengeleme = {fmtNum(p.target.kcal)} kcal</Link> : null}
+            {p.adjust?.closed ? <span className="text-xs text-mute mt-1">Gün kapandı · değişiklikler dengelemeyi yeniden hesaplar</span> : null}
           </div>
           <div className="flex flex-col items-end">
             <span className="text-xs text-mute">{left >= 0 ? 'Kalan' : 'Aşım'}</span>

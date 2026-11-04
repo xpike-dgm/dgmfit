@@ -13,6 +13,6 @@ export async function logWeight(kg: number): Promise<{ error?: string }> {
   await db.insert(schema.weightLogs).values({ userId: u.id, loggedAt: new Date(), kg: v, source: 'manual' })
   await db.update(schema.profiles).set({ weightKg: v, updatedAt: new Date() }).where(eq(schema.profiles.userId, u.id))
   await publish(u.id, 'weight.logged', { kg: v, source: 'manual' })
-  revalidatePath('/')
+  revalidatePath('/'); revalidatePath('/fit')
   return {}
 }

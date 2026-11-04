@@ -29,7 +29,7 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
       day={day} isToday={day === today} prevDay={prevDay} nextDay={day < today ? addDays(day, 1) : null} dayLabel={longDate(day)}
       meals={diary.meals} totals={diary.totals} micro={diary.micro}
       target={{ kcal: t?.target.kcal ?? 2000, protein: t?.target.protein ?? 120, carb: t?.target.carb ?? 200, fat: t?.target.fat ?? 65 }}
-      burned={t?.burned ?? 0} suggested={day === today ? mealForTime(minuteOfDay(new Date())) : 'lunch'} yesterdayHas={yesterdayHas}
+      adjust={t ? { base: t.target.base, kcal: t.target.adjustment, closed: t.target.closed } : null} burned={t?.burned ?? 0} suggested={day === today ? mealForTime(minuteOfDay(new Date())) : 'lunch'} yesterdayHas={yesterdayHas}
     />
   )
 }

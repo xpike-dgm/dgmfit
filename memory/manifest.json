@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "2a",
+  "phase": "2b",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -81,7 +81,15 @@
     "app/(app)/yemek/tarif/yeni/RecipeBuilder.tsx",
     "components/FoodSheet.tsx",
     "components/BarcodeScanner.tsx",
-    "app/(app)/su/ayarlar/FoodWaterToggle.tsx"
+    "app/(app)/su/ayarlar/FoodWaterToggle.tsx",
+    "lib/fit.ts",
+    "lib/fit-data.ts",
+    "tests/fit.test.ts",
+    "tests/e2e/fit.e2e.cjs",
+    "app/(app)/fit/page.tsx",
+    "app/(app)/fit/FitClient.tsx",
+    "app/(app)/fit/actions.ts",
+    "app/api/test/fit/route.ts"
   ],
   "tables": [
     "users",
@@ -101,7 +109,8 @@
     "water_reminders",
     "foods",
     "meal_items",
-    "saved_meals"
+    "saved_meals",
+    "kcal_adjustments"
   ],
   "routes": [
     "/",
@@ -129,7 +138,9 @@
     "/yemek/besin/yeni",
     "/yemek/tarif/yeni",
     "/api/food/search",
-    "/api/food/barcode"
+    "/api/food/barcode",
+    "/fit",
+    "/api/test/fit"
   ],
   "events": [
     "profile.onboarded",
@@ -139,7 +150,8 @@
     "workout.finished",
     "pr.achieved",
     "water.logged",
-    "day.closed"
+    "day.closed",
+    "plan.adjusted"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -281,6 +293,43 @@
       "createRecipe",
       "deleteUserFood",
       "setFoodWater"
+    ],
+    "lib/fit.ts": [
+      "dayCap",
+      "closureDiff",
+      "distributeDiff",
+      "exceptionDays",
+      "planBank",
+      "scaleMacros",
+      "adaptiveTdee",
+      "forecastDay",
+      "checkinProposal",
+      "kcalAdherence"
+    ],
+    "lib/fit-data.ts": [
+      "activeGoal",
+      "dayTargets",
+      "dayTarget",
+      "closeDay",
+      "reopenDay",
+      "refreshClosedDay",
+      "closePendingDays",
+      "makeException",
+      "createBank",
+      "cancelBank",
+      "upcomingBanks",
+      "weightSeries",
+      "checkinData",
+      "applyCheckin",
+      "getFitScreen"
+    ],
+    "app/(app)/fit/actions.ts": [
+      "closeDayAction",
+      "reopenDayAction",
+      "exceptionAction",
+      "createBankAction",
+      "cancelBankAction",
+      "applyCheckinAction"
     ]
   },
   "dependencies": {
@@ -298,6 +347,7 @@
     "0000_init.sql",
     "0001_water.sql",
     "0002_reminders.sql",
-    "0003_food.sql"
+    "0003_food.sql",
+    "0004_fit.sql"
   ]
 }
