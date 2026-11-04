@@ -1,0 +1,17 @@
+#!/bin/bash
+# Standalone sürüm paketi: dist/ altında çalıştırılabilir uygulama + release.tgz
+set -euo pipefail
+cd "$(dirname "$0")/.."
+rm -rf dist && mkdir -p dist
+NEXT_TELEMETRY_DISABLED=1 npx next build >/tmp/dgfit-build.log 2>&1 || { tail -50 /tmp/dgfit-build.log; exit 1; }
+cp -a .next/standalone/. dist/
+mkdir -p dist/.next && cp -a .next/static dist/.next/static
+cp -a public dist/public
+cp -a drizzle dist/drizzle
+cp scripts/migrate.mjs dist/migrate.mjs
+rm -rf dist/node_modules/postgres && cp -a node_modules/postgres dist/node_modules/postgres
+# kaynak kod yedeği (sunucuda arşivlenir)
+tar --exclude=node_modules --exclude=.next --exclude=dist --exclude=.git --exclude=release.tgz -czf dist/source.tgz .
+git rev-parse --short HEAD 2>/dev/null > dist/REVISION || date -u +%Y%m%d%H%M > dist/REVISION
+tar -czf release.tgz -C dist .
+ls -la release.tgz | awk '{print "release.tgz", $5, "bytes"}'

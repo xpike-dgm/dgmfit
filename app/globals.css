@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0B0C0A;
+  --color-surface: #161814;
+  --color-surface-2: #1E211A;
+  --color-surface-3: #24271F;
+  --color-line: #2A2E25;
+  --color-line-2: #3A3F33;
+  --color-ink: #F1F3EC;
+  --color-ink-2: #C9CEC1;
+  --color-mute: #A3A99B;
+  --color-faint: #6B7163;
+  --color-lime: #C8F169;
+  --color-lime-ink: #142004;
+  --color-coach: #1A1F12;
+  --color-coach-line: #33401E;
+  --color-water: #6CC7FF;
+  --color-water-ink: #06202E;
+  --color-water-bg: #10151A;
+  --color-orange: #FFB45C;
+  --color-violet: #A99BFF;
+  --color-danger: #FF8A7A;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-num: var(--font-grotesk), var(--font-manrope), system-ui, sans-serif;
+  --radius-card: 28px;
+}
+
+@layer base {
+  html { background: var(--color-bg); color-scheme: dark; -webkit-text-size-adjust: 100%; }
+  body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+  button, a, input, select, textarea { touch-action: manipulation; }
+  :focus-visible { outline: 2px solid var(--color-lime); outline-offset: 2px; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+}
+
+@utility num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+@utility card { background: var(--color-surface); border-radius: var(--radius-card); }
+@utility safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 12px); }
+@utility safe-top { padding-top: max(env(safe-area-inset-top), 16px); }
+@utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
