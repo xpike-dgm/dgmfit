@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-04 — Faz 3a başladı
+- Faz başı: memory-check geçti; son commit `267f03f` (betikler) STATE ile uyumlu; çalışma ağacı temiz.
+- Spesifikasyon bölüm 4 ve 9 Claude Docs bağlayıcısıyla okundu. Faz 3 ikiye bölündü (3a çekirdek, 3b gelişim).
+- Hareket verisi kaynağı: github.com/yuhonas/free-exercise-db — LICENSE.md "public domain" (Unlicense) doğrudan okundu; `dist/exercises.json` 876 hareket (strength 584, stretching 123, plyometrics 61, powerlifting 38, olympic 35, strongman 21, cardio 14); görsel örneği 38.047 bayt jpg.
+
 ## 2026-11-04 — Faz 2b tamamlandı
 - `lib/fit.ts` saf motor + 14 test; `lib/fit-data.ts` veri katmanı; zamanlayıcıya gece kapanışı; Bugün/Yemek düzeltilmiş hedef; hafta halkaları su + kalori uyumu. Ara commit `0910d1e`.
 - `/fit` ekranı + aksiyonlar + `tests/e2e/fit.e2e.cjs` (beklenen değerler `lib/fit.ts` içe aktarılarak hesaplanır). Commit `6f491b8`.

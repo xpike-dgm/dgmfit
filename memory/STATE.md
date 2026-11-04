@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 2b tamamlandı (2026-11-04). Sıradaki: Faz 3 — Fitness (kullanıcı onayı bekleniyor)**
+**Şu anki faz: Faz 3a — Fitness çekirdeği (devam ediyor, başlangıç 2026-11-04)**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -13,7 +13,8 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 1b | Su: akıllı push hatırlatmaları, sesli kayıt, analiz kartları, rozetler, aylık rapor (aşağıda) | tamamlandı | commit `4fa3fba`; birim test 44/44; verify.sh VERIFY OK (onboarding + push + su e2e); canlı onboarding ve su e2e OK; canlıda test kancası 404, VAPID üretildi, zamanlayıcı logu var (deploy `2026-11-04T17-07-29-132Z`). Gerçek cihazda push teslimi kullanıcı tarafından denenmeli |
 | 2a | Yemek çekirdeği: besin veritabanı, arama, öğün kaydı, porsiyonlar, barkod, özel besin, tarif, kopyalama, Bugün entegrasyonu | tamamlandı | commit `5525b9b` + `e8e5318` + `42d0008`; birim test 53/53; verify.sh VERIFY OK (food + onboarding + push + su e2e); canlı onboarding/su/yemek e2e OK (deploy `2026-11-04T19-11-00-792Z`); canlıda foods: usda 7.793 + dgfit 36; OFF barkod canlıdan çalıştı |
 | 2b | Fit: günlük hedef kaydı (`daily_targets`), akıllı kalori dengeleme, adaptif TDEE, kilo trendi + haftalık check-in, plan ekranı, kalori bankası | tamamlandı | commit `0910d1e` + `6f491b8`; birim test 67/67; verify.sh VERIFY OK (fit tohumlu e2e + food + onboarding + push + su); canlı fit/food/onboarding/su e2e OK, canlıda `/api/test/fit` 404 (deploy `2026-11-04T19-53-42-460Z`); 4 test kullanıcısı silindi |
-| 3 | Fitness (hareket kütüphanesi, program, canlı antrenman, AI ağırlık önerisi, PR) | planlandı | — |
+| 3a | Fitness çekirdeği: hareket kütüphanesi, program oluşturucu + şablonlar, canlı antrenman, ağırlık öneri motoru, PR, kardiyo, Fit/Su/Yemek entegrasyonu | devam ediyor | — |
+| 3b | Fitness gelişim: e1RM/hacim grafikleri, kas ısı haritası, plato/yorgunluk ekranı, vücut ölçüleri + ilerleme fotoğrafları, kuvvet standartları, özel hareket fotoğrafı, alternatif hareket, periyodizasyon/deload, tüm hareket açıklamalarının Türkçesi | planlandı | — |
 | 4 | AI katmanı (fotoğraf/ses kaydı, koç, raporlar) | planlandı | — |
 | 5 | Sosyal | planlandı | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı | — |
@@ -76,9 +77,24 @@ Kaynak: spesifikasyon bölüm 5 (Fit).
 - [x] Entegrasyon: Bugün ve Yemek ekranlarında hedef = düzeltilmiş günlük hedef + açıklama; hafta halkaları su + kalori uyumu; `day.closed` olayı
 - [x] Testler + verify.sh + canlı e2e + hafıza
 
+## Faz 3a kapsamı ve kabul kriterleri
+
+Kaynak: spesifikasyon bölüm 4 (Fitness) ve bölüm 9 (entegrasyon tablosu).
+
+- [ ] Hareket verisi: free-exercise-db (876 hareket, kamu malı/Unlicense) içe aktarılır; Türkçe ad, kas, ekipman, tip, zorluk; en sık kullanılan hareketlerde Türkçe teknik adımlar + sık hatalar; görseller sunucuda barındırılır (dış sitelere bağlantı yok)
+- [ ] Kütüphane ekranı: arama (Türkçe/İngilizce, yazım hatasına dayanıklı), kas grubu / ekipman / hareket tipi / zorluk filtreleri, hareket detayı (görsel, kaslar, teknik); kullanıcının özel hareketi
+- [ ] Hareket tipleri: ağırlık × tekrar, vücut ağırlığı + ek yük, destekli, süre, mesafe + süre
+- [ ] Saf motor `lib/training.ts` (testli): e1RM (Epley, tekrar + RIR), sonraki ağırlık önerisi (hedef tekrar/RIR, plaka artışına yuvarlama), çift aşamalı ilerleme, yorgunluk algılama (2 antrenman üst üste e1RM %3+ düşüş → sabit tut), ilk 2 kayıtta düşük güven, büyük kalori açığında temkinli öneri, ağrı notunda temkin, plaka hesaplayıcı, ısınma setleri (%40/%60/%80), hacim, PR tespiti (en ağır, e1RM, 3/5/10RM, seans hacmi, en çok tekrar), kalori (MET × kg × saat)
+- [ ] Program oluşturucu: boş program, hazır şablonlar (Full Body, Upper/Lower, Push/Pull/Legs, Bro Split, GZCLP, 5/3/1), kural tabanlı otomatik program (deneyim, gün sayısı, ekipman, hedef); gün → hareket → set hedefleri (tekrar aralığı, RIR, dinlenme, set tipi); kopyalama
+- [ ] Canlı antrenman: geçen seferin değerleri, tek dokunuşla aynısı / öneriyi kabul, büyük sayı tuşları ve +/−, set tipleri, otomatik dinlenme sayacı (titreşim + ses + bildirim), plaka ve ısınma hesaplayıcı, canlı süre/hacim/set/kalori, not + ağrı işareti, Wake Lock, çevrimdışı kayıt (yerel taslak, bağlantı gelince gönderim), öneriyi reddetme nedeni
+- [ ] Antrenman özeti: süre, hacim, kırılan PR'lar + kutlama, kas grubu dağılımı, önceki aynı günle kıyas
+- [ ] Kardiyo: koşu/bisiklet/yürüyüş/yüzme/HIIT/ip atlama; süre, mesafe, nabız; MET ile kalori
+- [ ] Entegrasyon: `workout.finished` → gün kapanışında yakılan kalori kredisi (Fit) + o gün su hedefi +500 ml/saat (Su) + antrenman sonrası protein önerisi (Yemek); `pr.achieved` olayı; Bugün ekranında antrenman kartı; büyük kalori açığı önerileri temkinli yapar
+- [ ] Testler (birim + e2e) + verify.sh + canlı e2e + hafıza
+
 ## Sıradaki işler
 
-1. Faz 3 (Fitness): kullanıcı "geç" deyince başlar. Gün kapanışına antrenman kalorisi (`burned`) bağlanacak.
+1. Faz 3a'yı kriterlere göre tamamla.
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
 3. E-posta doğrulama kodu (Mailu SMTP) — ertelendi.
 

@@ -53,3 +53,6 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Adaptif harcama tartılara uydurulan doğrusal eğimle hesaplanır, EMA trend uç noktalarıyla değil | E2E'de EMA gecikmesi harcamayı 2.586 gösterdi (gerçek ≈2.786); regresyonla 2.781 | Teknik |
 | 2026-11-04 | Check-in en az 14 gün aralık, 10 tam kayıtlı gün, 5 tartı ister; 7 günde bir, en fazla ±150 kcal, protein sabit (fark %60 karb / %40 yağ) | Gürültüye karşı yavaş ve güvenli ayar | Teknik |
 | 2026-11-04 | Egzersiz kalorisi (`burned`) şimdilik 0; Fitness (Faz 3) ile gün kapanışına eklenecek | Antrenman kaydı henüz yok | Teknik |
+| 2026-11-04 | Faz 3 ikiye bölündü: 3a çekirdek (kütüphane, program, canlı antrenman, öneri, PR, entegrasyon), 3b gelişim (grafik, ısı haritası, ölçü/fotoğraf, standartlar, periyodizasyon) | Kapsam büyüklüğü | Teknik |
+| 2026-11-04 | Hareket verisi: free-exercise-db (Unlicense/kamu malı, 876 hareket + görsel). Görseller VDS'de barındırılır | Lisans temiz; dış siteye istek yok (gizlilik + çevrimdışı) | Kaynak |
+| 2026-11-04 | "AI program oluşturucu" 3a'da kural tabanlı (deneyim/gün/ekipman/hedef); dil modeliyle yazım Faz 4'te | API anahtarı yok; kurallar test edilebilir | Teknik |
