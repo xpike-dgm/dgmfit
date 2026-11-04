@@ -2,7 +2,7 @@
 // Her yuva (slot) ekipmana göre sıralı alternatifler taşır; hareket anahtarları data/exercises-src.json'daki id'lerdir (test doğrular).
 import type { SetType } from './training.ts'
 
-export interface SlotTarget { sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds?: number; type?: SetType }
+export interface SlotTarget { sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds?: number; type?: SetType; scheme?: 'gzclp-t1' | 'gzclp-t2' | 'gzclp-t3' }
 export interface Slot extends SlotTarget { alts: string[]; role: 'ana' | 'yardımcı' | 'izolasyon' | 'core' }
 export interface TemplateDay { name: string; focus: string; slots: Slot[] }
 export interface Template { id: string; name: string; daysPerWeek: number; level: 'new' | 'mid' | 'adv'; description: string; days: TemplateDay[] }
@@ -78,13 +78,13 @@ export const TEMPLATES: Template[] = [
     ],
   },
   {
-    id: 'gzclp', name: 'GZCLP (basitleştirilmiş)', daysPerWeek: 4, level: 'mid',
-    description: 'T1 ağır (5×3), T2 orta (3×10), T3 hafif (3×15+). İlerleme çift aşamalı kuralla; orijinal set düşürme şeması 3b\'de.',
+    id: 'gzclp', name: 'GZCLP', daysPerWeek: 4, level: 'mid',
+    description: 'T1 ağır 5×3 (tutmazsa 6×2 → 10×1), T2 orta 3×10 (→ 3×8 → 3×6), T3 hafif 3×15, son sette 25 tekrar olunca artış. Kademeler otomatik izlenir.',
     days: [
-      { name: 'Gün 1', focus: 'T1 squat · T2 bench', slots: [A('ana', SQUAT, 5, 3, 3, 1, 180), A('yardımcı', BENCH, 3, 10, 10, 2, 120), A('izolasyon', VPULL, 3, 15, 20, 1, 75)] },
-      { name: 'Gün 2', focus: 'T1 OHP · T2 deadlift', slots: [A('ana', OHP, 5, 3, 3, 1, 180), A('yardımcı', DEADLIFT, 3, 10, 10, 2, 150), A('izolasyon', ROW, 3, 15, 20, 1, 75)] },
-      { name: 'Gün 3', focus: 'T1 bench · T2 squat', slots: [A('ana', BENCH, 5, 3, 3, 1, 180), A('yardımcı', SQUAT, 3, 10, 10, 2, 150), A('izolasyon', VPULL, 3, 15, 20, 1, 75)] },
-      { name: 'Gün 4', focus: 'T1 deadlift · T2 OHP', slots: [A('ana', DEADLIFT, 5, 3, 3, 1, 180), A('yardımcı', OHP, 3, 10, 10, 2, 120), A('izolasyon', ROW, 3, 15, 20, 1, 75)] },
+      { name: 'Gün 1', focus: 'T1 squat · T2 bench', slots: [A('ana', SQUAT, 5, 3, 3, 1, 180, { scheme: 'gzclp-t1' }), A('yardımcı', BENCH, 3, 10, 10, 2, 120, { scheme: 'gzclp-t2' }), A('izolasyon', VPULL, 3, 15, 15, 1, 75, { scheme: 'gzclp-t3' })] },
+      { name: 'Gün 2', focus: 'T1 OHP · T2 deadlift', slots: [A('ana', OHP, 5, 3, 3, 1, 180, { scheme: 'gzclp-t1' }), A('yardımcı', DEADLIFT, 3, 10, 10, 2, 150, { scheme: 'gzclp-t2' }), A('izolasyon', ROW, 3, 15, 15, 1, 75, { scheme: 'gzclp-t3' })] },
+      { name: 'Gün 3', focus: 'T1 bench · T2 squat', slots: [A('ana', BENCH, 5, 3, 3, 1, 180, { scheme: 'gzclp-t1' }), A('yardımcı', SQUAT, 3, 10, 10, 2, 150, { scheme: 'gzclp-t2' }), A('izolasyon', VPULL, 3, 15, 15, 1, 75, { scheme: 'gzclp-t3' })] },
+      { name: 'Gün 4', focus: 'T1 deadlift · T2 OHP', slots: [A('ana', DEADLIFT, 5, 3, 3, 1, 180, { scheme: 'gzclp-t1' }), A('yardımcı', OHP, 3, 10, 10, 2, 120, { scheme: 'gzclp-t2' }), A('izolasyon', ROW, 3, 15, 15, 1, 75, { scheme: 'gzclp-t3' })] },
     ],
   },
 ]

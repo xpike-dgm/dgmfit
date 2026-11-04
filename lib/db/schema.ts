@@ -1,7 +1,9 @@
 import { sql } from 'drizzle-orm'
 import {
-  pgTable, uuid, text, timestamp, real, integer, date, jsonb, boolean, bigserial, bigint, index, uniqueIndex, primaryKey,
+  pgTable, uuid, text, timestamp, real, integer, date, jsonb, boolean, bigserial, bigint, index, uniqueIndex, primaryKey, customType,
 } from 'drizzle-orm/pg-core'
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -308,6 +310,7 @@ export const exercises = pgTable('exercises', {
   steps: jsonb('steps').$type<string[]>().notNull().default([]),
   mistakes: jsonb('mistakes').$type<string[]>().notNull().default([]),
   curated: boolean('curated').notNull().default(false),
+  photoId: uuid('photo_id'), // özel hareket fotoğrafı (media_blobs)
   search: text('search').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -325,6 +328,9 @@ export const programs = pgTable('programs', {
   notes: jsonb('notes').$type<string[]>().notNull().default([]),
   active: boolean('active').notNull().default(false),
   nextDayIdx: integer('next_day_idx').notNull().default(0), // sıradaki antrenman günü (döngü)
+  periodization: text('periodization').notNull().default('linear'), // linear | dup | block (Faz 3b)
+  deloadEvery: integer('deload_every').notNull().default(0), // 0 = yok; N = her N. hafta deload
+  startDay: date('start_day').notNull().default(sql`(now() at time zone 'Europe/Istanbul')::date`),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -351,6 +357,8 @@ export const programExercises = pgTable('program_exercises', {
   rest: integer('rest').notNull().default(120), // saniye
   seconds: integer('seconds'), // süreli hareket hedefi
   setType: text('set_type').notNull().default('normal'),
+  scheme: text('scheme'), // gzclp-t1 | gzclp-t2 | gzclp-t3 (Faz 3b); null = çift aşamalı
+  schemeState: jsonb('scheme_state').$type<{ tier: 't1' | 't2' | 't3'; stage: number; kg: number; lastBaseKg: number | null }>(),
 }, (t) => [index('program_exercises_day_idx').on(t.dayId)])
 
 /** Tamamlanmış antrenman. client_id çevrimdışı kaydın iki kez gönderilmesini engeller. */
@@ -442,3 +450,32 @@ export const gymSettings = pgTable('gym_settings', {
   sessionMinutes: integer('session_minutes').notNull().default(60),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// ───────── Fitness gelişim (Faz 3b) ─────────
+
+export const bodyMeasurements = pgTable('body_measurements', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  waistCm: real('waist_cm'), chestCm: real('chest_cm'), hipsCm: real('hips_cm'), armCm: real('arm_cm'),
+  thighCm: real('thigh_cm'), neckCm: real('neck_cm'), calfCm: real('calf_cm'), bodyFatPct: real('body_fat_pct'),
+  note: text('note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('body_measurements_user_day_idx').on(t.userId, t.day)])
+
+/** Şifreli medya (AES-256-GCM, anahtar DGFIT_MEDIA_KEY): ilerleme fotoğrafları ve özel hareket fotoğrafları. Yalnızca sahibi görür. */
+export const mediaBlobs = pgTable('media_blobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // progress | exercise
+  day: date('day').notNull(),
+  pose: text('pose'), // ön | yan | arka
+  mime: text('mime').notNull(),
+  iv: bytea('iv').notNull(),
+  tag: bytea('tag').notNull(),
+  data: bytea('data').notNull(),
+  bytes: integer('bytes').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('media_blobs_user_idx').on(t.userId, t.kind, t.day)])

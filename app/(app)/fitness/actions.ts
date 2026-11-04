@@ -10,8 +10,11 @@ import { CARDIO, SET_TYPES } from '@/lib/training'
 import {
   addDay, addExerciseToDay, copyProgram, createCustomExercise, createEmptyProgram, createFromTemplate, createGenerated, deleteCardio,
   deleteProgram, deleteWorkout, ensureGym, liveSession, logCardio, removeProgramExercise, saveWorkout, setActiveProgram, updateProgramExercise,
+  setSchemeKg, updateProgramSettings,
   type LiveExercise,
 } from '@/lib/fitness-data'
+import { addMeasurement, alternativesFor, deleteMeasurement, MEASURES } from '@/lib/fitness-stats'
+import { deleteMedia } from '@/lib/media'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 const Uuid = z.string().uuid()
@@ -175,4 +178,48 @@ export async function liveExerciseAction(exerciseId: number): Promise<R<{ exerci
   const s = await liveSession(userId, null, [exerciseId])
   const exercise = s.exercises[0]
   return exercise ? { ok: true, exercise } : { ok: false, error: 'Hareket bulunamadı' }
+}
+
+// ───────── Faz 3b ─────────
+const SettingsIn = z.object({ periodization: z.enum(['linear', 'dup', 'block']), deloadEvery: z.number().int().min(0).max(12) })
+export async function updateProgramSettingsAction(id: string, input: z.input<typeof SettingsIn>): Promise<R> {
+  const userId = await uid()
+  const p = SettingsIn.safeParse(input)
+  if (!Uuid.safeParse(id).success || !p.success) return { ok: false, error: 'Geçersiz ayar' }
+  return run(async () => { await updateProgramSettings(userId, id, p.data); return {} })
+}
+export async function setSchemeKgAction(peId: string, kg: number): Promise<R> {
+  const userId = await uid()
+  if (!Uuid.safeParse(peId).success || !(kg >= 0 && kg <= 500)) return { ok: false, error: 'Ağırlık 0–500 kg' }
+  return run(async () => { await setSchemeKg(userId, peId, Math.round(kg * 100) / 100); return {} })
+}
+export async function alternativesAction(exerciseId: number): Promise<R<{ list: { id: number; nameTr: string; equipment: string }[] }>> {
+  const userId = await uid()
+  if (!Number.isInteger(exerciseId)) return { ok: false, error: 'Geçersiz' }
+  return { ok: true, list: await alternativesFor(userId, exerciseId) }
+}
+const cm = z.number().min(10).max(250).nullable()
+const MeasureIn = z.object({
+  day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), waistCm: cm, chestCm: cm, hipsCm: cm, armCm: cm, thighCm: cm, calfCm: cm, neckCm: cm,
+  bodyFatPct: z.number().min(2).max(70).nullable(), note: z.string().trim().max(120).nullable(),
+})
+export async function addMeasurementAction(input: z.input<typeof MeasureIn>): Promise<R> {
+  const userId = await uid()
+  const p = MeasureIn.safeParse(input)
+  if (!p.success) return { ok: false, error: 'Ölçüler 10–250 cm, yağ oranı %2–70 olmalı' }
+  const today = dayString()
+  if (p.data.day > today) return { ok: false, error: 'Gelecek tarih olamaz' }
+  const vals = Object.fromEntries(MEASURES.map((k) => [k, p.data[k]]))
+  if (!MEASURES.some((k) => p.data[k] !== null)) return { ok: false, error: 'En az bir ölçü gir' }
+  return run(async () => { await addMeasurement(userId, p.data.day, vals, p.data.note || null); return {} })
+}
+export async function deleteMeasurementAction(id: number): Promise<R> {
+  const userId = await uid()
+  if (!Number.isInteger(id)) return { ok: false, error: 'Geçersiz' }
+  return run(async () => { await deleteMeasurement(userId, id); return {} })
+}
+export async function deleteMediaAction(id: string): Promise<R> {
+  const userId = await uid()
+  if (!Uuid.safeParse(id).success) return { ok: false, error: 'Geçersiz' }
+  return run(async () => { if (!(await deleteMedia(userId, id))) throw new Error('Fotoğraf bulunamadı'); return {} })
 }

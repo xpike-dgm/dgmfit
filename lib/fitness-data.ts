@@ -6,10 +6,15 @@ import { publish } from './events'
 import { normalizeSearch } from './nutrition'
 import { ageFromBirthDate, type Sex } from './calc'
 import { activeGoal, refreshClosedDay } from './fit-data'
-import { cardioKcal, detectPRs, mergeRecords, sessionRecords, setVolume, strengthKcal, type CardioType, type ExKind, type Intensity, type LoggedSet, type Records, type Session, type SetType } from './training'
+import { cardioKcal, detectPRs, e1rm, mergeRecords, sessionRecords, setVolume, strengthKcal, type CardioType, type ExKind, type Intensity, type LoggedSet, type Records, type Session, type SetType } from './training'
 import { TEMPLATES, generateProgram, instantiate, type ProgramDay } from './programs'
+import { detectPlateau, periodTarget, weekIndex, type Periodization } from './progress'
+import { gzAdvance, gzSets, type GzState, type Tier } from './schemes'
+import { dayMacros } from './food-data'
+import { minuteOfDay } from './water-data'
 
 export type Exercise = typeof schema.exercises.$inferSelect
+const e1rmOf = (x: { kg: number; reps: number; rir: number | null }) => e1rm(x.kg, x.reps, x.rir)
 const MEDIA = '/media/exercises/'
 export const imageUrl = (p: string) => MEDIA + p
 
@@ -138,7 +143,7 @@ async function insertProgram(userId: string, name: string, templateId: string | 
     for (const [i, d] of days.entries()) {
       const [day] = await tx.insert(schema.programDays).values({ programId: p.id, idx: i, name: d.name, focus: d.focus }).returning({ id: schema.programDays.id })
       const rows = d.exercises.filter((e) => ids.has(e.key)).map((e, j) => ({
-        dayId: day.id, idx: j, exerciseId: ids.get(e.key)!, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds ?? null, setType: e.type ?? 'normal',
+        dayId: day.id, idx: j, exerciseId: ids.get(e.key)!, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds ?? null, setType: e.type ?? 'normal', scheme: e.scheme ?? null,
       }))
       if (rows.length) await tx.insert(schema.programExercises).values(rows)
     }
@@ -178,7 +183,7 @@ export async function copyProgram(userId: string, id: string) {
     const [n] = await tx.insert(schema.programs).values({ userId, name: p.name + ' (kopya)', templateId: p.templateId, notes: p.notes, active: false }).returning({ id: schema.programs.id })
     for (const d of p.days) {
       const [day] = await tx.insert(schema.programDays).values({ programId: n.id, idx: d.idx, name: d.name, focus: d.focus }).returning({ id: schema.programDays.id })
-      if (d.exercises.length) await tx.insert(schema.programExercises).values(d.exercises.map((e) => ({ dayId: day.id, idx: e.idx, exerciseId: e.exerciseId, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType })))
+      if (d.exercises.length) await tx.insert(schema.programExercises).values(d.exercises.map((e) => ({ dayId: day.id, idx: e.idx, exerciseId: e.exerciseId, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType, scheme: e.scheme, schemeState: e.schemeState })))
     }
     return n.id
   })
@@ -241,6 +246,10 @@ export interface LiveExercise {
   exerciseId: number; name: string; kind: ExKind; equipment: string; images: string[]; primary: string[]
   sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: SetType
   history: Session[]; records: Records | null; feedback: { tooHeavy: number; tooLight: number }
+  /** Faz 3b: GZCLP kademesi (ağırlık ve setler sabit), periyodizasyon etiketi, plato notu */
+  scheme?: { label: string; sets: { kg: number; reps: number; amrap: boolean }[] } | null
+  period?: { label: string; loadPct: number; deload: boolean } | null
+  plateau?: { weeks: number; tip: string } | null
 }
 
 /** Canlı mod verisi: hedefler + her hareketin geçmişi (öneri istemcide lib/training.ts ile hesaplanır, çevrimdışı da çalışır). */
@@ -249,7 +258,9 @@ export async function liveSession(userId: string, programDayId: string | null, e
   const [profile] = await db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
   const goal = await activeGoal(userId)
   let name = 'Serbest antrenman'
-  let rows: Omit<LiveExercise, 'history' | 'records' | 'feedback'>[] = []
+  let meta: { periodization: Periodization; deloadEvery: number; startDay: string } | null = null
+  type Row = Omit<LiveExercise, 'history' | 'records' | 'feedback'> & { schemeKey?: string | null; schemeState?: GzState | null }
+  let rows: Row[] = []
   if (programDayId) {
     const d = await ownsDay(userId, programDayId)
     if (d) {
@@ -257,7 +268,8 @@ export async function liveSession(userId: string, programDayId: string | null, e
       const day = p?.days.find((x) => x.id === programDayId)
       if (day) {
         name = day.name
-        rows = day.exercises.map((e) => ({ exerciseId: e.exerciseId, name: e.name, kind: e.kind, equipment: e.equipment, images: e.images, primary: e.primary, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType as SetType }))
+        meta = { periodization: p!.periodization as Periodization, deloadEvery: p!.deloadEvery, startDay: p!.startDay }
+        rows = day.exercises.map((e) => ({ exerciseId: e.exerciseId, name: e.name, kind: e.kind, equipment: e.equipment, images: e.images, primary: e.primary, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType as SetType, schemeKey: e.scheme, schemeState: e.schemeState }))
       }
     }
   }
@@ -272,10 +284,40 @@ export async function liveSession(userId: string, programDayId: string | null, e
     feedbackCounts(userId, ids),
   ])
   const recBy = new Map(recs.map((r) => [r.exerciseId, r.records as unknown as Records]))
+  const today = dayString()
+  const week = meta ? weekIndex(meta.startDay, today) : 0
+  const TIER_LABEL: Record<Tier, string> = { t1: 'T1', t2: 'T2', t3: 'T3' }
+  const exercises = rows.map(({ schemeKey, schemeState, ...r }) => {
+    const history = hist.get(r.exerciseId) ?? []
+    const out: LiveExercise = { ...r, history, records: recBy.get(r.exerciseId) ?? null, feedback: fb.get(r.exerciseId) ?? { tooHeavy: 0, tooLight: 0 }, scheme: null, period: null, plateau: null }
+    if (schemeKey?.startsWith('gzclp-')) {
+      const tier = schemeKey.slice(6) as Tier
+      if (schemeState) {
+        const sets = gzSets(schemeState)
+        out.scheme = { label: `GZCLP ${TIER_LABEL[tier]} · ${sets.length}×${sets[0].reps}${sets.some((x) => x.amrap) ? '+' : ''}`, sets }
+        out.sets = sets.length; out.repMin = out.repMax = sets[0].reps
+      } else out.scheme = { label: `GZCLP ${TIER_LABEL[tier]} · ilk seans: çalışma ağırlığını belirle`, sets: [] }
+    } else if (meta) {
+      const t = periodTarget({ scheme: meta.periodization, week, session: history.length, base: { sets: r.sets, repMin: r.repMin, repMax: r.repMax, rir: r.rir }, deloadEvery: meta.deloadEvery })
+      out.sets = t.sets; out.repMin = t.repMin; out.repMax = t.repMax; out.rir = t.rir
+      if (meta.periodization !== 'linear' || t.deload) out.period = { label: t.label, loadPct: t.loadPct, deload: t.deload }
+    }
+    const series = history.map((h) => ({ day: h.day, e1rm: Math.max(0, ...h.sets.filter((x) => x.type !== 'warmup').map((x) => e1rmOf(x))) }))
+    const pl = detectPlateau(series, today, { repMin: r.repMin, repMax: r.repMax })
+    if (pl.plateau) out.plateau = { weeks: pl.weeks, tip: pl.suggestions[1] }
+    return out
+  })
+  // antrenman öncesi yakıt: bugün hedefin %30'undan az yendiyse ve son 4 saatte öğün yoksa uyarı
+  const eaten = await dayMacros(userId, today)
+  const [lastMeal] = await db.select({ at: schema.mealItems.loggedAt }).from(schema.mealItems).where(and(eq(schema.mealItems.userId, userId), eq(schema.mealItems.day, today), isNull(schema.mealItems.deletedAt))).orderBy(desc(schema.mealItems.loggedAt)).limit(1)
+  const target = goal?.dailyKcal ?? 2000
+  const nowMin = minuteOfDay(new Date())
+  const fuel = eaten.kcal < target * 0.3 && (!lastMeal || Date.now() - lastMeal.at.getTime() > 4 * 3600_000) && nowMin >= 6 * 60
+    ? `Bugün ${Math.round(eaten.kcal)} kcal yedin${lastMeal ? ', son öğün 4 saatten önce' : ''}. Antrenmandan 1–2 saat önce karbonhidrat + protein içeren hafif bir öğün performansı artırır.` : null
   return {
     name, programDayId, bodyKg: profile?.weightKg ?? 70, deficitKcal: goal ? Math.max(0, goal.tdee - goal.dailyKcal) : 0,
-    gym: { barKg: gym.barKg, plates: gym.plates, increment: gym.increment },
-    exercises: rows.map((r) => ({ ...r, history: hist.get(r.exerciseId) ?? [], records: recBy.get(r.exerciseId) ?? null, feedback: fb.get(r.exerciseId) ?? { tooHeavy: 0, tooLight: 0 } })) as LiveExercise[],
+    gym: { barKg: gym.barKg, plates: gym.plates, increment: gym.increment }, week: meta ? week + 1 : null, periodization: meta?.periodization ?? null, fuel,
+    exercises,
   }
 }
 
@@ -334,10 +376,28 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
     return w.id
   })
   if (!id) { const [d2] = await db.select({ id: schema.workouts.id }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), eq(schema.workouts.clientId, p.clientId))).limit(1); return { id: d2.id, duplicate: true, prs: [] } }
+  if (p.programDayId) await advanceSchemes(userId, p.programDayId, exs)
   await publish(userId, 'workout.finished', { id, kind: 'strength', day, minutes: Math.round(durationSec / 60), kcalNet: kcal.net, volume, workSets })
   for (const pr of prs) await publish(userId, 'pr.achieved', { workoutId: id, ...pr })
   await refreshClosedDay(userId, day)
   return { id, duplicate: false, prs }
+}
+
+/** GZCLP: seans sonrası kademe/ağırlık durumunu ilerletir. İlk seansta durum, yapılan çalışma ağırlığından başlar. */
+async function advanceSchemes(userId: string, dayId: string, exs: { exerciseId: number; sets: LoggedSet[] }[]) {
+  const pes = await db.select({ pe: schema.programExercises, pattern: schema.exercises.pattern }).from(schema.programExercises)
+    .innerJoin(schema.exercises, eq(schema.exercises.id, schema.programExercises.exerciseId))
+    .where(and(eq(schema.programExercises.dayId, dayId), sql`${schema.programExercises.scheme} like 'gzclp-%'`))
+  const gym = await ensureGym(userId)
+  for (const { pe, pattern } of pes) {
+    const e = exs.find((x) => x.exerciseId === pe.exerciseId)
+    const work = e?.sets.filter((x) => x.type !== 'warmup' && x.reps > 0) ?? []
+    if (!work.length) continue
+    const tier = pe.scheme!.slice(6) as Tier
+    const state: GzState = pe.schemeState ?? { tier, stage: 0, kg: Math.max(...work.map((x) => x.kg)), lastBaseKg: null }
+    const r = gzAdvance(state, work.map((x) => ({ kg: x.kg, reps: x.reps })), pattern === 'legs', gym.increment)
+    await db.update(schema.programExercises).set({ schemeState: r.next }).where(eq(schema.programExercises.id, pe.id))
+  }
 }
 
 export async function workoutSummary(userId: string, id: string) {
@@ -426,4 +486,19 @@ export async function todayTraining(userId: string, day: string) {
     if (days.length) next = days[p.nextDayIdx % days.length]
   }
   return { workouts: Number(w?.n ?? 0), minutes: Math.round(Number(w?.min ?? 0)) + Math.round(Number(c?.min ?? 0)), cardio: Number(c?.n ?? 0), next }
+}
+
+// ───────── Faz 3b: program ayarları ─────────
+export async function updateProgramSettings(userId: string, id: string, v: { periodization: Periodization; deloadEvery: number }) {
+  const r = await db.update(schema.programs).set({ ...v, updatedAt: new Date() }).where(and(eq(schema.programs.id, id), eq(schema.programs.userId, userId), isNull(schema.programs.deletedAt))).returning({ id: schema.programs.id })
+  if (!r.length) throw new Error('Program yok')
+}
+/** GZCLP çalışma ağırlığını elle düzelt (kademe korunur; durum yoksa kademe 1'den başlar). */
+export async function setSchemeKg(userId: string, peId: string, kg: number) {
+  const r = await ownsProgramExercise(userId, peId)
+  if (!r) throw new Error('Kayıt yok')
+  const [pe] = await db.select().from(schema.programExercises).where(eq(schema.programExercises.id, peId)).limit(1)
+  if (!pe?.scheme?.startsWith('gzclp-')) throw new Error('Bu hareket GZCLP değil')
+  const tier = pe.scheme.slice(6) as Tier
+  await db.update(schema.programExercises).set({ schemeState: { ...(pe.schemeState ?? { tier, stage: 0, lastBaseKg: null }), kg } }).where(eq(schema.programExercises.id, peId))
 }
