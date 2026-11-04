@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/verify.sh)",
+      "Bash(./scripts/bundle.sh)",
+      "Bash(./scripts/deploy.sh)",
+      "Bash(./scripts/release.sh)",
+      "Bash(./scripts/release.sh *)",
+      "Bash(npm test*)",
+      "Bash(npm ci*)",
+      "Bash(npx tsc --noEmit*)",
+      "Bash(npx drizzle-kit generate*)",
+      "Bash(node scripts/memory-check.mjs*)",
+      "Bash(node --test *)",
+      "Bash(node tests/e2e/*)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git add *)",
+      "Bash(git pull*)",
+      "Bash(git push -u origin *)",
+      "mcp__vds_sabit__execute_command",
+      "mcp__vds_sabit__start_command",
+      "mcp__vds_sabit__command_status",
+      "mcp__vds_sabit__read_file",
+      "mcp__vds_sabit__list_directory",
+      "mcp__vds_sabit__server_info"
+    ]
+  }
+}
