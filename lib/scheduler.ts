@@ -8,6 +8,7 @@ import { goalForDay, parseHm } from './water'
 import { dayBounds, goalHistory, minuteOfDay } from './water-data'
 import { addDays, dayString, TZ } from './time'
 import { closePendingDays } from './fit-data'
+import { waterBonusByDay } from './burn'
 
 const ACT_WINDOW_MIN = 20
 const g = globalThis as unknown as { __dgfitScheduler?: { timer: ReturnType<typeof setInterval>; running: boolean; closedFor?: string } }
@@ -95,7 +96,7 @@ export async function runForUser(userId: string, nowDate = new Date()) {
   for (let h = Math.ceil(wake / 60); h < Math.floor(sleep / 60) - 1; h++) if (weakestHour === null || habit[h] < habit[weakestHour]) weakestHour = h
 
   const d = decideReminder({
-    now, wake, sleep, goal: goalForDay(history, day), total, lastDrink, sentToday, habit, hourStats,
+    now, wake, sleep, goal: goalForDay(history, day) + ((await waterBonusByDay(userId, day, day)).get(day) ?? 0), total, lastDrink, sentToday, habit, hourStats,
     maxPerDay: settings.maxPerDay, quiet: settings.quiet ?? [], summaryEnabled: settings.summaryEnabled, weakestHour,
   })
   if (!d.send) return { sent: false, reason: d.reason }

@@ -283,3 +283,162 @@ export const kcalAdjustments = pgTable('kcal_adjustments', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [index('kcal_adjustments_user_day_idx').on(t.userId, t.day)])
+
+// ───────── Fitness (Faz 3a) ─────────
+
+/** Hareket kütüphanesi: free-exercise-db (source=fedb, Unlicense) + kullanıcının özel hareketleri (source=user). */
+export const exercises = pgTable('exercises', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  key: text('key').notNull(), // fedb: veri setindeki id; user: u-<uuid>
+  source: text('source').notNull(), // fedb | user
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  nameTr: text('name_tr').notNull(),
+  nameEn: text('name_en'),
+  aliases: jsonb('aliases').$type<string[]>().notNull().default([]),
+  category: text('category').notNull(),
+  equipment: text('equipment').notNull(),
+  level: text('level'),
+  force: text('force'),
+  mechanic: text('mechanic'),
+  primary: jsonb('primary_muscles').$type<string[]>().notNull().default([]),
+  secondary: jsonb('secondary_muscles').$type<string[]>().notNull().default([]),
+  kind: text('kind').notNull(), // weight_reps | bodyweight | assisted | time | distance_time
+  pattern: text('pattern').notNull(), // push | pull | legs | core | cardio | other
+  images: jsonb('images').$type<string[]>().notNull().default([]),
+  steps: jsonb('steps').$type<string[]>().notNull().default([]),
+  mistakes: jsonb('mistakes').$type<string[]>().notNull().default([]),
+  curated: boolean('curated').notNull().default(false),
+  search: text('search').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  uniqueIndex('exercises_key_idx').on(t.key),
+  index('exercises_user_idx').on(t.userId),
+  index('exercises_search_trgm_idx').using('gin', sql`${t.search} gin_trgm_ops`),
+])
+
+export const programs = pgTable('programs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  templateId: text('template_id'), // fullbody | upperlower | ppl | brosplit | gzclp | generated | null (boş)
+  notes: jsonb('notes').$type<string[]>().notNull().default([]),
+  active: boolean('active').notNull().default(false),
+  nextDayIdx: integer('next_day_idx').notNull().default(0), // sıradaki antrenman günü (döngü)
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('programs_user_idx').on(t.userId)])
+
+export const programDays = pgTable('program_days', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  programId: uuid('program_id').notNull().references(() => programs.id, { onDelete: 'cascade' }),
+  idx: integer('idx').notNull(),
+  name: text('name').notNull(),
+  focus: text('focus'),
+}, (t) => [index('program_days_program_idx').on(t.programId)])
+
+export const programExercises = pgTable('program_exercises', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  dayId: uuid('day_id').notNull().references(() => programDays.id, { onDelete: 'cascade' }),
+  idx: integer('idx').notNull(),
+  exerciseId: bigint('exercise_id', { mode: 'number' }).notNull().references(() => exercises.id),
+  role: text('role').notNull().default('yardımcı'),
+  sets: integer('sets').notNull(),
+  repMin: integer('rep_min').notNull(),
+  repMax: integer('rep_max').notNull(),
+  rir: integer('rir').notNull().default(2),
+  rest: integer('rest').notNull().default(120), // saniye
+  seconds: integer('seconds'), // süreli hareket hedefi
+  setType: text('set_type').notNull().default('normal'),
+}, (t) => [index('program_exercises_day_idx').on(t.dayId)])
+
+/** Tamamlanmış antrenman. client_id çevrimdışı kaydın iki kez gönderilmesini engeller. */
+export const workouts = pgTable('workouts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  clientId: text('client_id').notNull(),
+  programDayId: uuid('program_day_id').references(() => programDays.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  day: date('day').notNull(),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+  endedAt: timestamp('ended_at', { withTimezone: true }).notNull(),
+  durationSec: integer('duration_sec').notNull(),
+  volumeKg: real('volume_kg').notNull().default(0),
+  workSets: integer('work_sets').notNull().default(0),
+  kcalGross: integer('kcal_gross').notNull().default(0),
+  kcalNet: integer('kcal_net').notNull().default(0),
+  bodyKg: real('body_kg'),
+  notes: text('notes'),
+  pain: boolean('pain').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [uniqueIndex('workouts_client_idx').on(t.userId, t.clientId), index('workouts_user_day_idx').on(t.userId, t.day)])
+
+export const workoutSets = pgTable('workout_sets', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  workoutId: uuid('workout_id').notNull().references(() => workouts.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  exerciseId: bigint('exercise_id', { mode: 'number' }).notNull().references(() => exercises.id),
+  exIdx: integer('ex_idx').notNull(),
+  setIdx: integer('set_idx').notNull(),
+  type: text('type').notNull().default('normal'),
+  kg: real('kg').notNull().default(0),
+  reps: integer('reps').notNull().default(0),
+  rir: integer('rir'),
+  seconds: integer('seconds'),
+  distanceM: real('distance_m'),
+  suggestedKg: real('suggested_kg'),
+  suggestedReps: integer('suggested_reps'),
+  feedback: text('feedback'), // too_heavy | too_light | no_equipment
+  note: text('note'),
+  completedAt: timestamp('completed_at', { withTimezone: true }).notNull(),
+}, (t) => [index('workout_sets_user_ex_idx').on(t.userId, t.exerciseId, t.completedAt), index('workout_sets_workout_idx').on(t.workoutId)])
+
+/** Hareket başına güncel rekorlar (lib/training.ts Records). */
+export const exerciseRecords = pgTable('exercise_records', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  exerciseId: bigint('exercise_id', { mode: 'number' }).notNull().references(() => exercises.id),
+  records: jsonb('records').$type<Record<string, number>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.userId, t.exerciseId] })])
+
+/** Kırılan rekorların kaydı (vitrin ve Sosyal için). */
+export const personalRecords = pgTable('personal_records', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  exerciseId: bigint('exercise_id', { mode: 'number' }).notNull().references(() => exercises.id),
+  workoutId: uuid('workout_id').references(() => workouts.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(),
+  value: real('value').notNull(),
+  previous: real('previous'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('personal_records_user_idx').on(t.userId, t.createdAt)])
+
+export const cardioSessions = pgTable('cardio_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  type: text('type').notNull(), // run | walk | bike | swim | hiit | rope | row | elliptical | stairs
+  minutes: real('minutes').notNull(),
+  distanceKm: real('distance_km'),
+  avgHr: integer('avg_hr'),
+  intensity: text('intensity').notNull().default('orta'),
+  kcalGross: integer('kcal_gross').notNull(),
+  kcalNet: integer('kcal_net').notNull(),
+  method: text('method').notNull(), // met | acsm | nabız
+  note: text('note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('cardio_user_day_idx').on(t.userId, t.day)])
+
+/** Salon ayarları: bar, plakalar, en küçük artış, mevcut ekipman, varsayılan seans süresi. */
+export const gymSettings = pgTable('gym_settings', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  barKg: real('bar_kg').notNull().default(20),
+  plates: jsonb('plates').$type<number[]>().notNull().default([25, 20, 15, 10, 5, 2.5, 1.25]),
+  increment: real('increment').notNull().default(2.5),
+  equipment: jsonb('equipment').$type<string[]>().notNull().default(['barbell', 'dumbbell', 'cable', 'machine', 'kettlebells', 'bands', 'e-z curl bar', 'body only', 'other']),
+  sessionMinutes: integer('session_minutes').notNull().default(60),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

@@ -21,6 +21,7 @@ try {
     console.log('migration uygulandı:', f)
   }
   await seedFoods(sql)
+  await seedExercises(sql)
   await sql`select pg_advisory_unlock(778899)`
   console.log('migration tamam')
 } finally {
@@ -57,4 +58,34 @@ async function seedFoods(sql) {
       on conflict (key) do update set value = excluded.value`
   })
   console.log('besin verisi yüklendi:', rows.length, 'satır, sürüm', seed.version)
+}
+
+/** data/exercises-seed.json.gz sürümü değiştiyse free-exercise-db hareketlerini yükler (kullanıcı hareketlerine dokunmaz). */
+async function seedExercises(sql) {
+  const file = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'exercises-seed.json.gz')
+  if (!fs.existsSync(file)) { console.log('hareket verisi yok, atlandı'); return }
+  const zlib = await import('node:zlib')
+  const seed = JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString())
+  const [cur] = await sql`select value from app_config where key = 'exercises_seed'`
+  if (cur?.value?.version === seed.version) { console.log('hareket verisi güncel', seed.version); return }
+  const cols = ['key', 'source', 'name_tr', 'name_en', 'aliases', 'category', 'equipment', 'level', 'force', 'mechanic', 'primary_muscles', 'secondary_muscles', 'kind', 'pattern', 'images', 'steps', 'mistakes', 'curated', 'search']
+  await sql.begin(async (tx) => {
+    for (let i = 0; i < seed.items.length; i += 300) {
+      const batch = seed.items.slice(i, i + 300).map((x) => ({
+        key: x.key, source: 'fedb', name_tr: x.nameTr, name_en: x.nameEn, aliases: tx.json(x.aliases), category: x.category, equipment: x.equipment,
+        level: x.level ?? null, force: x.force, mechanic: x.mechanic, primary_muscles: tx.json(x.primary), secondary_muscles: tx.json(x.secondary),
+        kind: x.kind, pattern: x.pattern, images: tx.json(x.images), steps: tx.json(x.steps), mistakes: tx.json(x.mistakes), curated: x.curated, search: x.search,
+      }))
+      await tx`insert into exercises ${tx(batch, ...cols)} on conflict (key) do update set
+        name_tr = excluded.name_tr, name_en = excluded.name_en, aliases = excluded.aliases, category = excluded.category, equipment = excluded.equipment,
+        level = excluded.level, force = excluded.force, mechanic = excluded.mechanic, primary_muscles = excluded.primary_muscles,
+        secondary_muscles = excluded.secondary_muscles, kind = excluded.kind, pattern = excluded.pattern, images = excluded.images,
+        steps = excluded.steps, mistakes = excluded.mistakes, curated = excluded.curated, search = excluded.search, deleted_at = null`
+    }
+    const keys = seed.items.map((x) => x.key)
+    await tx`update exercises set deleted_at = now() where source = 'fedb' and deleted_at is null and key <> all(${keys})`
+    await tx`insert into app_config (key, value) values ('exercises_seed', ${tx.json({ version: seed.version, count: seed.items.length })})
+      on conflict (key) do update set value = excluded.value`
+  })
+  console.log('hareket verisi yüklendi:', seed.items.length, 'sürüm', seed.version)
 }

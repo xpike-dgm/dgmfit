@@ -9,7 +9,7 @@ mkdir -p dist/.next && cp -a .next/static dist/.next/static
 cp -a public dist/public
 cp -a drizzle dist/drizzle
 cp scripts/migrate.mjs dist/migrate.mjs
-mkdir -p dist/data && cp data/foods-seed.json.gz dist/data/foods-seed.json.gz
+mkdir -p dist/data && cp data/foods-seed.json.gz data/exercises-seed.json.gz dist/data/
 rm -rf dist/node_modules/postgres && cp -a node_modules/postgres dist/node_modules/postgres
 # kaynak kod yedeği (sunucuda arşivlenir)
 tar --exclude=node_modules --exclude=.next --exclude=dist --exclude=.git --exclude=release.tgz -czf dist/source.tgz .

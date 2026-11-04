@@ -8,6 +8,7 @@ import { adaptiveTdee, checkinProposal, closureDiff, distributeDiff, exceptionDa
 import { dayMacros } from './food-data'
 import { publish } from './events'
 import { minuteOfDay } from './water-data'
+import { dayBurned } from './burn'
 
 type Goal = typeof schema.goals.$inferSelect
 
@@ -79,7 +80,7 @@ export async function closeDay(userId: string, day: string): Promise<{ kind: str
   if (t.closed) return null
   const eaten = await dayMacros(userId, day)
   const [{ n }] = await db.execute<{ n: number }>(sql`select count(*)::int as n from meal_items where user_id = ${userId} and day = ${day} and deleted_at is null`)
-  const burned = 0 // Fitness modülüyle (Faz 3) antrenman kredisi eklenecek
+  const burned = await dayBurned(userId, day) // antrenman + kardiyo net kalorisi (Faz 3a)
   const c = closureDiff({ eaten: eaten.kcal, target: t.kcal, burned, items: Number(n) })
   const row = {
     userId, day, baseKcal: t.base, adjustmentKcal: t.adjustment, proteinG: t.protein, carbG: t.carb, fatG: t.fat, waterMl: goal.waterMl,

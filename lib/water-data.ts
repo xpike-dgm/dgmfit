@@ -1,4 +1,5 @@
 import 'server-only'
+import { waterBonusByDay } from './burn'
 import { and, asc, eq, gte, isNull, lt, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString, TZ } from './time'
@@ -117,7 +118,8 @@ export async function getWaterScreen(userId: string, day: string = dayString()):
   ])
   const wake = parseHm(profile?.wake, 7 * 60 + 30)
   const sleep = parseHm(profile?.sleep, 23 * 60 + 30)
-  const goal = goalForDay(history, day)
+  const bonusToday = (await waterBonusByDay(userId, day, day)).get(day) ?? 0
+  const goal = goalForDay(history, day) + bonusToday
 
   const [start, end] = dayBounds(day)
   const rows = await logsBetween(userId, start, end)
@@ -147,10 +149,10 @@ export async function getWaterScreen(userId: string, day: string = dayString()):
 
   // seri: son 120 gün
   const sFrom = addDays(today, -119)
-  const totals = await dailyTotals(userId, sFrom, today)
+  const [totals, sBonus] = await Promise.all([dailyTotals(userId, sFrom, today), waterBonusByDay(userId, sFrom, today)])
   const days = Array.from({ length: 120 }, (_, i) => {
     const d = addDays(sFrom, i)
-    return { day: d, total: totals.get(d)?.total ?? 0, goal: goalForDay(history, d) }
+    return { day: d, total: totals.get(d)?.total ?? 0, goal: goalForDay(history, d) + (sBonus.get(d) ?? 0) }
   })
   // hesabı açılmadan önceki günleri seriye katma
   const firstActive = days.findIndex((d) => d.total > 0)
@@ -176,11 +178,11 @@ export async function getWaterScreen(userId: string, day: string = dayString()):
 
 /** Bugün ekranı ve hafta şeridi için hafif özet. */
 export async function getWaterSummary(userId: string, from: string, to: string) {
-  const [history, totals] = await Promise.all([goalHistory(userId), dailyTotals(userId, from, to)])
   const today = dayString()
-  const todayGoal = goalForDay(history, today)
+  const [history, totals, bonus] = await Promise.all([goalHistory(userId), dailyTotals(userId, from, to), waterBonusByDay(userId, from < today ? from : today, to > today ? to : today)])
+  const todayGoal = goalForDay(history, today) + (bonus.get(today) ?? 0)
   const out = new Map<string, { total: number; goal: number }>()
-  for (let d = from; d <= to; d = addDays(d, 1)) out.set(d, { total: totals.get(d)?.total ?? 0, goal: goalForDay(history, d) })
+  for (let d = from; d <= to; d = addDays(d, 1)) out.set(d, { total: totals.get(d)?.total ?? 0, goal: goalForDay(history, d) + (bonus.get(d) ?? 0) })
   return { days: out, todayGoal, hasSetup: history.length > 0 }
 }
 
@@ -209,11 +211,11 @@ export async function getWaterStats(userId: string, range: number): Promise<Wate
   const from = addDays(today, -(range - 1))
   const prevFrom = addDays(from, -range)
   const history = await goalHistory(userId)
-  const totals = await dailyTotals(userId, prevFrom, today)
+  const [totals, bonus] = await Promise.all([dailyTotals(userId, prevFrom, today), waterBonusByDay(userId, prevFrom, today)])
   const all = Array.from({ length: range * 2 }, (_, i) => {
     const d = addDays(prevFrom, i)
     const t = totals.get(d)
-    return { day: d, total: t?.total ?? 0, count: t?.count ?? 0, goal: goalForDay(history, d) }
+    return { day: d, total: t?.total ?? 0, count: t?.count ?? 0, goal: goalForDay(history, d) + (bonus.get(d) ?? 0) }
   })
   // ilk kayıttan önceki günleri hesaba katma
   const firstIdx = all.findIndex((d) => d.count > 0)

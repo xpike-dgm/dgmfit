@@ -8,6 +8,7 @@ import { dayMacros } from './food-data'
 import { computeStreak, goalForDay } from './water'
 import { dayTargets, type DayTarget } from './fit-data'
 import { kcalAdherence } from './fit'
+import { dayBurned, waterBonusByDay } from './burn'
 
 export interface TodayData {
   day: string
@@ -77,8 +78,9 @@ export async function getToday(userId: string, day: string = dayString()): Promi
   // Su: hedef tarihçesi + gün toplamları (hafta halkaları ve seri için son 120 gün)
   const wHistory = await goalHistory(userId)
   const sFrom = addDays(day, -119)
-  const wTotals = await dailyTotals(userId, sFrom < monday ? sFrom : monday, day)
-  const wGoal = (d: string) => (wHistory.length ? goalForDay(wHistory, d) : goal?.waterMl ?? 2500)
+  const wFrom = sFrom < monday ? sFrom : monday
+  const [wTotals, wBonus] = await Promise.all([dailyTotals(userId, wFrom, day), waterBonusByDay(userId, wFrom, day)])
+  const wGoal = (d: string) => (wHistory.length ? goalForDay(wHistory, d) : goal?.waterMl ?? 2500) + (wBonus.get(d) ?? 0)
   const waterMl = wTotals.get(day)?.total ?? 0
   target.water = wGoal(day)
   const sDays = Array.from({ length: 120 }, (_, i) => { const d = addDays(sFrom, i); return { day: d, total: wTotals.get(d)?.total ?? 0, goal: wGoal(d) } })
@@ -103,7 +105,7 @@ export async function getToday(userId: string, day: string = dayString()): Promi
 
   return {
     day, profile, age: ageFromBirthDate(profile.birthDate), goal: goal ?? null, dayIndex, totalDays, target,
-    eaten: await dayMacros(userId, day), burned: 0, waterMl, streak,
+    eaten: await dayMacros(userId, day), burned: await dayBurned(userId, day), waterMl, streak,
     weight: { latest, trend, start, target: tgt, progress, planned, history },
     week,
   }
