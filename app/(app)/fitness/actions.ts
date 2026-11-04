@@ -9,7 +9,8 @@ import { TEMPLATES, ALL_EQUIPMENT } from '@/lib/programs'
 import { CARDIO, SET_TYPES } from '@/lib/training'
 import {
   addDay, addExerciseToDay, copyProgram, createCustomExercise, createEmptyProgram, createFromTemplate, createGenerated, deleteCardio,
-  deleteProgram, deleteWorkout, ensureGym, logCardio, removeProgramExercise, saveWorkout, setActiveProgram, updateProgramExercise,
+  deleteProgram, deleteWorkout, ensureGym, liveSession, logCardio, removeProgramExercise, saveWorkout, setActiveProgram, updateProgramExercise,
+  type LiveExercise,
 } from '@/lib/fitness-data'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
@@ -165,4 +166,13 @@ export async function updateGymAction(input: z.input<typeof GymIn>): Promise<R> 
     await db.update(schema.gymSettings).set({ ...p.data, plates: [...new Set(p.data.plates)].sort((a, b) => b - a), updatedAt: new Date() }).where(eq(schema.gymSettings.userId, userId))
     return {}
   })
+}
+
+/** Canlı moda sonradan eklenen hareketin hedefi + geçmişi (öneri istemcide hesaplanır). */
+export async function liveExerciseAction(exerciseId: number): Promise<R<{ exercise: LiveExercise }>> {
+  const userId = await uid()
+  if (!Number.isInteger(exerciseId)) return { ok: false, error: 'Geçersiz' }
+  const s = await liveSession(userId, null, [exerciseId])
+  const exercise = s.exercises[0]
+  return exercise ? { ok: true, exercise } : { ok: false, error: 'Hareket bulunamadı' }
 }

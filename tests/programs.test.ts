@@ -45,3 +45,10 @@ test('üretici: ekipmana uyar, süre hareket sayısını sınırlar', () => {
   assert.ok(short.days.every((d) => d.exercises.length <= 3))
   assert.ok(short.notes.some((n) => /çıkarıldı/.test(n)))
 })
+
+test('Türkçe etiketler sözlükle aynı', async () => {
+  const L = await import('../lib/exercise-labels.ts')
+  const tr = JSON.parse(fs.readFileSync(new URL('../data/exercises-tr.json', import.meta.url), 'utf8'))
+  assert.deepEqual(L.MUSCLES, tr.muscles); assert.deepEqual(L.EQUIPMENT, tr.equipment); assert.deepEqual(L.LEVEL, tr.level); assert.deepEqual(L.CATEGORY, tr.category)
+  assert.deepEqual([...L.MUSCLE_ORDER].sort(), Object.keys(tr.muscles).sort())
+})

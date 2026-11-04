@@ -1,0 +1,9 @@
+// Hareket kütüphanesi Türkçe etiketleri (data/exercises-tr.json ile aynı olmalı; tests/programs.test.ts doğrular).
+export const MUSCLES: Record<string, string> = { 'abdominals': 'Karın', 'abductors': 'Kalça dışı (abdüktör)', 'adductors': 'İç bacak (addüktör)', 'biceps': 'Biceps', 'calves': 'Baldır', 'chest': 'Göğüs', 'forearms': 'Ön kol', 'glutes': 'Kalça', 'hamstrings': 'Arka bacak', 'lats': 'Sırt (lat)', 'lower back': 'Bel', 'middle back': 'Orta sırt', 'neck': 'Boyun', 'quadriceps': 'Ön bacak (quadriceps)', 'shoulders': 'Omuz', 'traps': 'Trapez', 'triceps': 'Triceps' }
+export const EQUIPMENT: Record<string, string> = { 'barbell': 'Barbell', 'dumbbell': 'Dumbbell', 'cable': 'Kablo', 'machine': 'Makine', 'body only': 'Vücut ağırlığı', 'kettlebells': 'Kettlebell', 'bands': 'Direnç bandı', 'medicine ball': 'Sağlık topu', 'exercise ball': 'Pilates topu', 'foam roll': 'Köpük rulo', 'e-z curl bar': 'EZ bar', 'other': 'Diğer' }
+export const CATEGORY: Record<string, string> = { 'strength': 'Kuvvet', 'stretching': 'Esneme', 'plyometrics': 'Pliometrik', 'powerlifting': 'Powerlifting', 'olympic weightlifting': 'Olimpik halter', 'strongman': 'Strongman', 'cardio': 'Kardiyo' }
+export const LEVEL: Record<string, string> = { 'beginner': 'Başlangıç', 'intermediate': 'Orta', 'expert': 'İleri' }
+export const PATTERN: Record<string, string> = { push: 'İtme', pull: 'Çekme', legs: 'Bacak', core: 'Core', cardio: 'Kardiyo', other: 'Diğer' }
+export const KIND: Record<string, string> = { weight_reps: 'Ağırlık × tekrar', bodyweight: 'Vücut ağırlığı (+ ek yük)', assisted: 'Destekli', time: 'Süre', distance_time: 'Mesafe + süre' }
+/** Kas haritası için gruplama (ısı haritası 3b'de). */
+export const MUSCLE_ORDER = ['chest', 'shoulders', 'triceps', 'lats', 'middle back', 'traps', 'biceps', 'forearms', 'lower back', 'abdominals', 'quadriceps', 'hamstrings', 'glutes', 'calves', 'adductors', 'abductors', 'neck']
