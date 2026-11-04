@@ -7,9 +7,10 @@ import { decideReminder, type SentReminder } from './reminders'
 import { goalForDay, parseHm } from './water'
 import { dayBounds, goalHistory, minuteOfDay } from './water-data'
 import { addDays, dayString, TZ } from './time'
+import { closePendingDays } from './fit-data'
 
 const ACT_WINDOW_MIN = 20
-const g = globalThis as unknown as { __dgfitScheduler?: { timer: ReturnType<typeof setInterval>; running: boolean } }
+const g = globalThis as unknown as { __dgfitScheduler?: { timer: ReturnType<typeof setInterval>; running: boolean; closedFor?: string } }
 
 /** Sunucu açılışında bir kez çağrılır (instrumentation.ts). Tek süreçte tek zamanlayıcı. */
 export function startScheduler() {
@@ -31,6 +32,17 @@ async function tick() {
   if (!s || s.running) return
   s.running = true
   try {
+    // Fit: her gün 03.00'ten sonra dünü (ve kapanmamış son 7 günü) kapat
+    const now = new Date(), today = dayString(now)
+    if (s.closedFor !== today && minuteOfDay(now) >= 180) {
+      s.closedFor = today
+      const active = await db.selectDistinct({ userId: schema.goals.userId }).from(schema.goals).where(eq(schema.goals.active, true))
+      let n = 0
+      for (const u of active) {
+        try { n += await closePendingDays(u.userId, now) } catch (e) { console.error('[dgfit] gün kapanış hatası', e) }
+      }
+      if (n) console.log(`[dgfit] ${n} gün kapatıldı`)
+    }
     const users = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
       .innerJoin(schema.waterSettings, eq(schema.waterSettings.userId, schema.pushSubscriptions.userId))
       .where(eq(schema.waterSettings.remindersEnabled, true))

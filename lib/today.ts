@@ -1,11 +1,13 @@
 import 'server-only'
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString, diffDays } from './time'
 import { ageFromBirthDate } from './calc'
 import { dailyTotals, goalHistory } from './water-data'
 import { dayMacros } from './food-data'
 import { computeStreak, goalForDay } from './water'
+import { dayTargets, type DayTarget } from './fit-data'
+import { kcalAdherence } from './fit'
 
 export interface TodayData {
   day: string
@@ -14,13 +16,13 @@ export interface TodayData {
   goal: typeof schema.goals.$inferSelect | null
   dayIndex: number
   totalDays: number
-  target: { kcal: number; protein: number; carb: number; fat: number; water: number; adjustment: number }
+  target: { kcal: number; protein: number; carb: number; fat: number; water: number; adjustment: number; base: number; reasons: DayTarget['reasons']; closed: boolean }
   eaten: { kcal: number; protein: number; carb: number; fat: number }
   burned: number
   waterMl: number
   streak: number
   weight: { latest: number; trend: number; start: number; target: number; progress: number; planned: number; history: { day: string; kg: number }[] }
-  week: { day: string; label: string; num: string; frac: number; today: boolean; future: boolean }[]
+  week: { day: string; label: string; num: string; frac: number; water: number; kcal: number; today: boolean; future: boolean }[]
 }
 
 const DAY_LABELS = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct']
@@ -59,16 +61,14 @@ export async function getToday(userId: string, day: string = dayString()): Promi
   const progress = span === 0 ? 1 : Math.max(0, Math.min(1, (trend - start) / span))
   const planned = span === 0 ? 1 : Math.max(0, Math.min(1, (dayIndex - 1) / Math.max(1, totalDays - 1)))
 
-  const [dt] = await db.select().from(schema.dailyTargets)
-    .where(and(eq(schema.dailyTargets.userId, userId), eq(schema.dailyTargets.day, day))).limit(1)
-  const target = {
-    kcal: (dt?.baseKcal ?? goal?.dailyKcal ?? 2000) + (dt?.adjustmentKcal ?? 0),
-    protein: dt?.proteinG ?? goal?.proteinG ?? 120,
-    carb: dt?.carbG ?? goal?.carbG ?? 200,
-    fat: dt?.fatG ?? goal?.fatG ?? 65,
-    water: dt?.waterMl ?? goal?.waterMl ?? 2500,
-    adjustment: dt?.adjustmentKcal ?? 0,
-  }
+  // Bu haftanın günleri (Pazartesi başlangıçlı)
+  const dow0 = new Date(day + 'T12:00:00Z').getUTCDay()
+  const monday0 = addDays(day, -((dow0 + 6) % 7))
+  const weekTargets = await dayTargets(userId, monday0, addDays(monday0, 6), goal ?? null)
+  const dt = weekTargets.find((t) => t.day === day)!
+  const target = { kcal: dt.kcal, protein: dt.protein, carb: dt.carb, fat: dt.fat, water: goal?.waterMl ?? 2500, adjustment: dt.adjustment, base: dt.base, reasons: dt.reasons, closed: dt.closed }
+  const eatenRows = await db.execute<{ day: string; kcal: number }>(sql`select day::text as day, coalesce(sum(kcal),0)::float as kcal from meal_items where user_id = ${userId} and day >= ${monday0} and day <= ${day} and deleted_at is null group by day`)
+  const eatenBy = new Map(eatenRows.map((r) => [String(r.day), Number(r.kcal)]))
 
   // Bu haftanın günleri (Pazartesi başlangıçlı)
   const dow = new Date(day + 'T12:00:00Z').getUTCDay()
@@ -90,8 +90,12 @@ export async function getToday(userId: string, day: string = dayString()): Promi
       day: d,
       label: DAY_LABELS[new Date(d + 'T12:00:00Z').getUTCDay()],
       num: String(Number(d.slice(8, 10))),
-      // şimdilik su ilerlemesi; Yemek modülüyle birlikte kalori + su ortak oranı olacak
-      frac: d > day ? 0 : Math.min(1, (wTotals.get(d)?.total ?? 0) / Math.max(1, wGoal(d))),
+      ...(() => {
+        if (d > day) return { frac: 0, water: 0, kcal: 0 }
+        const water = Math.min(1, (wTotals.get(d)?.total ?? 0) / Math.max(1, wGoal(d)))
+        const kcal = kcalAdherence(eatenBy.get(d) ?? 0, weekTargets[i].kcal)
+        return { frac: Math.round(((water + kcal) / 2) * 100) / 100, water, kcal } // su + kalori uyumu ortalaması
+      })(),
       today: d === day,
       future: d > day,
     }

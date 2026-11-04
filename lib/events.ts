@@ -15,6 +15,7 @@ export type EventType =
   | 'pr.achieved'
   | 'water.logged'
   | 'day.closed'
+  | 'plan.adjusted'
 
 type Handler = (userId: string, payload: Record<string, unknown>) => Promise<void> | void
 

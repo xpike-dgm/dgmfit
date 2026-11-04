@@ -29,6 +29,13 @@
       "when": 1793815534630,
       "tag": "0003_food",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793820237716,
+      "tag": "0004_fit",
+      "breakpoints": true
     }
   ]
 }

@@ -9,6 +9,7 @@ import { dayString } from '@/lib/time'
 import { macrosFor } from '@/lib/food'
 import { computeRecipe, normalizeSearch, NUTRIENT_KEYS, type Nutrients } from '@/lib/nutrition'
 import { ensureWaterSetup } from '@/lib/water-data'
+import { refreshClosedDay } from '@/lib/fit-data'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 const Meal = z.enum(['breakfast', 'lunch', 'dinner', 'snack'])
@@ -65,6 +66,7 @@ export async function addMealItem(input: z.input<typeof AddInput>): Promise<R<{ 
   }).returning({ id: schema.mealItems.id })
   await maybeFoodWater(userId, row.id, f.per100, p.data.grams, f.category, f.nameTr ?? f.nameEn ?? '', day)
   await publish(userId, 'meal.logged', { id: row.id, day, meal: p.data.meal, ...m })
+  await refreshClosedDay(userId, day)
   revalidatePath('/'); revalidatePath('/yemek')
   return { ok: true, id: row.id, kcal: m.kcal }
 }
@@ -79,14 +81,16 @@ export async function updateMealItem(input: z.input<typeof EditInput>): Promise<
   if (!it) return { ok: false, error: 'Kayıt bulunamadı' }
   const m = it.per100 ? macrosFor(it.per100, p.data.grams) : { kcal: it.kcal, protein: it.protein, carb: it.carb, fat: it.fat }
   await db.update(schema.mealItems).set({ grams: p.data.grams, portionLabel: p.data.portionLabel, portionQty: p.data.portionQty, meal: p.data.meal, ...m }).where(eq(schema.mealItems.id, it.id))
+  await refreshClosedDay(userId, it.day)
   revalidatePath('/'); revalidatePath('/yemek')
   return { ok: true }
 }
 
 export async function deleteMealItem(id: number): Promise<R> {
   const userId = await uid()
-  const res = await db.update(schema.mealItems).set({ deletedAt: new Date() }).where(and(eq(schema.mealItems.id, id), eq(schema.mealItems.userId, userId), isNull(schema.mealItems.deletedAt))).returning({ id: schema.mealItems.id })
+  const res = await db.update(schema.mealItems).set({ deletedAt: new Date() }).where(and(eq(schema.mealItems.id, id), eq(schema.mealItems.userId, userId), isNull(schema.mealItems.deletedAt))).returning({ id: schema.mealItems.id, day: schema.mealItems.day })
   if (!res.length) return { ok: false, error: 'Kayıt bulunamadı' }
+  await refreshClosedDay(userId, res[0].day)
   // bu yemekten Su'ya aktarılmış kayıt varsa onu da kaldır
   await db.update(schema.waterLogs).set({ deletedAt: new Date() }).where(and(eq(schema.waterLogs.userId, userId), eq(schema.waterLogs.note, `meal_item:${id}`), isNull(schema.waterLogs.deletedAt)))
   revalidatePath('/'); revalidatePath('/yemek')
@@ -103,6 +107,7 @@ export async function addQuickCalories(input: z.input<typeof QuickInput>): Promi
   try { day = checkDay(p.data.day) } catch (e) { return { ok: false, error: (e as Error).message } }
   const [row] = await db.insert(schema.mealItems).values({ userId, day, meal: p.data.meal, name: p.data.name || 'Hızlı kalori', grams: 0, kcal: p.data.kcal, protein: p.data.protein ?? 0, carb: p.data.carb ?? 0, fat: p.data.fat ?? 0, source: 'quick' }).returning({ id: schema.mealItems.id })
   await publish(userId, 'meal.logged', { id: row.id, day, meal: p.data.meal, kcal: p.data.kcal, quick: true })
+  await refreshClosedDay(userId, day)
   revalidatePath('/'); revalidatePath('/yemek')
   return { ok: true }
 }
@@ -119,6 +124,7 @@ export async function copyMeal(input: z.input<typeof CopyInput>): Promise<R<{ co
   if (!items.length) return { ok: false, error: 'Kopyalanacak kayıt yok' }
   await db.insert(schema.mealItems).values(items.map((i) => ({ userId, day: p.data.toDay, meal: p.data.toMeal, foodId: i.foodId, name: i.name, grams: i.grams, portionLabel: i.portionLabel, portionQty: i.portionQty, per100: i.per100, kcal: i.kcal, protein: i.protein, carb: i.carb, fat: i.fat, source: 'copy' })))
   await publish(userId, 'meal.logged', { day: p.data.toDay, meal: p.data.toMeal, copied: items.length })
+  await refreshClosedDay(userId, p.data.toDay)
   revalidatePath('/'); revalidatePath('/yemek')
   return { ok: true, count: items.length }
 }

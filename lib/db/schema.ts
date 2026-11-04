@@ -99,6 +99,13 @@ export const dailyTargets = pgTable('daily_targets', {
   fatG: integer('fat_g').notNull(),
   waterMl: integer('water_ml').notNull(),
   closedAt: timestamp('closed_at', { withTimezone: true }),
+  // kapanış anlık görüntüsü (Faz 2b)
+  eatenKcal: integer('eaten_kcal'),
+  burnedKcal: integer('burned_kcal'),
+  items: integer('items'),
+  closureKind: text('closure_kind'), // untracked | incomplete | balanced | over | under
+  diffKcal: integer('diff_kcal'), // dağıtılan fark
+  leftoverKcal: integer('leftover_kcal'),
 }, (t) => [primaryKey({ columns: [t.userId, t.day] })])
 
 // ───────────── Su modülü (Faz 1a) ─────────────
@@ -260,3 +267,19 @@ export const savedMeals = pgTable('saved_meals', {
   items: jsonb('items').$type<{ foodId: number; grams: number; portionLabel: string | null; portionQty: number | null }[]>().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index('saved_meals_user_idx').on(t.userId)])
+
+// ───────── Fit (Faz 2b) ─────────
+
+/** Günlük hedef düzeltmeleri: dengeleme, kalori bankası. Bir günün hedefi = plan tabanı + bu günün düzeltmeleri. */
+export const kcalAdjustments = pgTable('kcal_adjustments', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  kcal: integer('kcal').notNull(),
+  reason: text('reason').notNull(), // balance | bank-save | bank-spend
+  sourceDay: date('source_day'), // dengelemenin kaynağı olan gün
+  bankId: uuid('bank_id'),
+  note: text('note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('kcal_adjustments_user_day_idx').on(t.userId, t.day)])

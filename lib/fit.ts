@@ -1,0 +1,179 @@
+// Fit motoru — kalori dengeleme, kalori bankası, adaptif harcama, tahmin. Saf ve testli (tests/fit.test.ts).
+// Spesifikasyon 5.3 (dengeleme), 5.4 (adaptif TDEE), 5.5 (kilo trendi/tahmin).
+import { KCAL_PER_KG } from './calc.ts'
+
+export const WINDOW_DAYS = 7
+export const MAX_UNDER_CREDIT = 300 // eksik yenen günden en fazla bu kadar kalori sonraki günlere eklenir
+export const INCOMPLETE_RATIO = 0.6 // hedefin %60'ından az kayıt = eksik kayıt sayılır
+export const BALANCED_BAND = 50
+export const CHECKIN_MAX_STEP = 150
+
+/** Bir günün dengeleme yüzünden en fazla oynayabileceği miktar: tabanın %10'u ile 250 kcal'in küçüğü. */
+export function dayCap(base: number): number {
+  return Math.max(50, Math.min(Math.round(base * 0.1), 250))
+}
+
+export type ClosureKind = 'untracked' | 'incomplete' | 'balanced' | 'over' | 'under'
+
+/**
+ * Gün kapanışı: dağıtılacak fark. Hiç kayıt yoksa ya da kayıt hedefin %60'ının altındaysa
+ * (büyük olasılıkla eksik kayıt) dengeleme yapılmaz. Az yenen günün yalnızca 300 kcal'i sonraki günlere eklenir.
+ * diff > 0: fazla yendi (sonraki günlerden düşülür), diff < 0: az yendi (eklenir).
+ */
+export function closureDiff(i: { eaten: number; target: number; burned: number; items: number }): { kind: ClosureKind; diff: number; raw: number } {
+  const budget = i.target + i.burned
+  const raw = Math.round(i.eaten - budget)
+  if (i.items === 0) return { kind: 'untracked', diff: 0, raw }
+  if (i.eaten < budget * INCOMPLETE_RATIO) return { kind: 'incomplete', diff: 0, raw }
+  if (Math.abs(raw) <= BALANCED_BAND) return { kind: 'balanced', diff: 0, raw }
+  if (raw > 0) return { kind: 'over', diff: raw, raw }
+  return { kind: 'under', diff: -Math.min(-raw, MAX_UNDER_CREDIT), raw }
+}
+
+export interface PlanDay { day: string; base: number; current: number; protected?: boolean }
+export interface Adjustment { day: string; kcal: number }
+
+/**
+ * Farkı sonraki günlere dağıtır: yakın günler daha fazla pay alır (1,0 / 0,9 / 0,8 …), hiçbir gün
+ * tavanı aşmaz, hedef kalori tabanının altına inmez. Sığmayan kısım `leftover` olarak döner.
+ */
+export function distributeDiff(diff: number, days: PlanDay[], floor: number): { adjustments: Adjustment[]; leftover: number } {
+  const sign = diff > 0 ? -1 : 1
+  let remaining = Math.abs(Math.round(diff))
+  const alloc = days.map(() => 0)
+  const weight = (i: number) => (days[i].protected ? 0 : Math.max(0.4, 1 - 0.1 * i))
+  const capacity = (i: number) => {
+    const d = days[i]
+    const cap = dayCap(d.base)
+    const used = sign * (d.current) // aynı yöndeki mevcut düzeltme kapasiteyi azaltır
+    let c = cap - Math.max(0, used) - alloc[i]
+    if (sign < 0) c = Math.min(c, d.base + d.current - alloc[i] - floor)
+    return Math.max(0, c)
+  }
+  for (let pass = 0; pass < 20 && remaining > 0.5; pass++) {
+    const open = days.map((_, i) => i).filter((i) => weight(i) > 0 && capacity(i) > 0.5)
+    if (!open.length) break
+    const wsum = open.reduce((a, i) => a + weight(i), 0)
+    let given = 0
+    for (const i of open) {
+      const want = (remaining * weight(i)) / wsum
+      const g = Math.min(want, capacity(i))
+      alloc[i] += g
+      given += g
+    }
+    remaining -= given
+    if (given < 0.5) break
+  }
+  // tamsayıya yuvarla, toplamı koru (en büyük kalan yöntemi)
+  const total = Math.round(Math.abs(diff) - Math.max(0, remaining))
+  const floors = alloc.map(Math.floor)
+  let rest = total - floors.reduce((a, b) => a + b, 0)
+  const order = alloc.map((v, i) => ({ i, r: v - Math.floor(v) })).sort((a, b) => b.r - a.r)
+  for (const o of order) { if (rest <= 0) break; if (capacity(o.i) >= 0 && alloc[o.i] > 0) { floors[o.i]++; rest-- } }
+  const adjustments = days.map((d, i) => ({ day: d.day, kcal: sign * floors[i] })).filter((a) => a.kcal !== 0)
+  return { adjustments, leftover: Math.round(sign * -Math.max(0, Math.abs(diff) - total)) }
+}
+
+/** İstisna günü: dağıtmak yerine kalan fazla, hedef tarihe gün olarak eklenir (en fazla 3). */
+export function exceptionDays(excessKcal: number, dailyDeficit: number): number {
+  if (excessKcal <= 0 || dailyDeficit <= 0) return 0
+  return Math.min(3, Math.ceil(excessKcal / dailyDeficit))
+}
+
+/**
+ * Kalori bankası: etkinlik gününe ekstra kalori için, yarından etkinlikten önceki güne kadar (en fazla 5 gün)
+ * her günden eşit miktar biriktirilir. Toplam sıfırdır.
+ */
+export function planBank(i: { today: string; eventDay: string; extra: number; days: PlanDay[]; floor: number }): { adjustments: Adjustment[]; perDay: number } | { error: string } {
+  if (i.eventDay <= i.today) return { error: 'Etkinlik günü yarından sonra olmalı' }
+  if (!(i.extra >= 100 && i.extra <= 1500)) return { error: 'Ekstra kalori 100–1500 arasında olmalı' }
+  const save = i.days.filter((d) => d.day > i.today && d.day < i.eventDay).slice(-5)
+  if (!save.length) return { error: 'Biriktirmek için en az 1 gün olmalı (etkinlik en erken yarından sonraki gün)' }
+  const perDay = Math.ceil(i.extra / save.length)
+  for (const d of save) {
+    if (perDay > dayCap(d.base) - Math.max(0, -d.current)) return { error: `Günlük birikim ${perDay} kcal, ${dayCap(d.base)} kcal sınırını aşıyor. Daha az ekstra seç ya da etkinliği daha ileri bir güne koy.` }
+    if (d.base + d.current - perDay < i.floor) return { error: 'Biriktirme günlerinde hedef kalori güvenli tabanın altına iner.' }
+  }
+  const adjustments = save.map((d) => ({ day: d.day, kcal: -perDay }))
+  adjustments.push({ day: i.eventDay, kcal: perDay * save.length })
+  return { adjustments, perDay }
+}
+
+/** Günlük hedef değişince protein sabit kalır; fark %60 karbonhidrat, %40 yağ olarak dağıtılır. */
+export function scaleMacros(base: { kcal: number; protein: number; carb: number; fat: number }, kcal: number) {
+  const d = kcal - base.kcal
+  return {
+    kcal,
+    protein: base.protein,
+    carb: Math.max(0, Math.round(base.carb + (d * 0.6) / 4)),
+    fat: Math.max(0, Math.round(base.fat + (d * 0.4) / 9)),
+  }
+}
+
+export interface TdeeDay { day: string; intake: number | null; trend: number | null }
+
+/**
+ * Adaptif harcama: kaydı tam günlerin ortalama alımı − (trend kilo değişimi × 7.700 / gün).
+ * En az 14 günlük aralık, 10 tam kayıtlı gün ve başta/sonda trend kilo gerekir.
+ */
+export function adaptiveTdee(days: TdeeDay[]): { tdee: number | null; confidence: 'yok' | 'düşük' | 'orta' | 'yüksek'; loggedDays: number; spanDays: number; trendChange: number | null } {
+  const withTrend = days.filter((d) => d.trend !== null)
+  const logged = days.filter((d) => d.intake !== null)
+  const spanDays = withTrend.length ? Math.round((Date.parse(withTrend.at(-1)!.day) - Date.parse(withTrend[0].day)) / 86400000) : 0
+  if (spanDays < 14 || logged.length < 10) return { tdee: null, confidence: 'yok', loggedDays: logged.length, spanDays, trendChange: null }
+  const avgIntake = logged.reduce((a, d) => a + d.intake!, 0) / logged.length
+  const trendChange = withTrend.at(-1)!.trend! - withTrend[0].trend!
+  const tdee = Math.round(avgIntake - (trendChange * KCAL_PER_KG) / spanDays)
+  const ratio = logged.length / Math.max(1, spanDays)
+  const confidence = spanDays >= 28 && ratio >= 0.8 ? 'yüksek' : ratio >= 0.65 ? 'orta' : 'düşük'
+  return { tdee, confidence, loggedDays: logged.length, spanDays, trendChange: Math.round(trendChange * 100) / 100 }
+}
+
+/** Son 21 günün trend kilosuna doğrusal eğim (kg/gün) ile hedef tarih tahmini; yön yanlışsa null. */
+export function forecastDay(series: { day: string; kg: number }[], targetKg: number, today: string): { day: string | null; kgPerWeek: number | null } {
+  const pts = series.filter((p) => p.day <= today).slice(-21)
+  if (pts.length < 5) return { day: null, kgPerWeek: null }
+  const x0 = Date.parse(pts[0].day)
+  const xs = pts.map((p) => (Date.parse(p.day) - x0) / 86400000)
+  const ys = pts.map((p) => p.kg)
+  const n = xs.length, mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n
+  const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0)
+  if (sxx === 0) return { day: null, kgPerWeek: null }
+  const slope = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / sxx
+  const last = ys.at(-1)!
+  const kgPerWeek = Math.round(slope * 7 * 100) / 100
+  const need = targetKg - last
+  if (Math.abs(need) < 0.05) return { day: today, kgPerWeek }
+  if (slope === 0 || Math.sign(slope) !== Math.sign(need)) return { day: null, kgPerWeek }
+  const daysLeft = Math.ceil(need / slope)
+  if (daysLeft > 1500) return { day: null, kgPerWeek }
+  const d = new Date(Date.parse(today + 'T12:00:00Z') + daysLeft * 86400000)
+  return { day: d.toISOString().slice(0, 10), kgPerWeek }
+}
+
+/**
+ * Haftalık check-in: ölçülen harcamaya ve kalan hedefe göre yeni günlük kalori. Bir check-in'de en fazla
+ * ±150 kcal değişir ve kalori tabanının altına inmez.
+ */
+export function checkinProposal(i: { currentKcal: number; measuredTdee: number; trendKg: number; targetKg: number; daysLeft: number; floor: number; goal: 'lose' | 'gain' | 'recomp' }): { kcal: number; delta: number; reason: string } {
+  let wanted: number
+  if (i.goal === 'recomp' || i.daysLeft <= 0) wanted = Math.round(i.measuredTdee * (i.goal === 'recomp' ? 0.95 : 1))
+  else wanted = Math.round(i.measuredTdee + ((i.targetKg - i.trendKg) * KCAL_PER_KG) / i.daysLeft)
+  const clamped = Math.max(i.floor, Math.min(i.currentKcal + CHECKIN_MAX_STEP, Math.max(i.currentKcal - CHECKIN_MAX_STEP, wanted)))
+  const kcal = Math.round(clamped / 5) * 5
+  const delta = kcal - i.currentKcal
+  const reason = Math.abs(delta) < 5 ? 'Planın ölçülen harcamanla uyumlu; değişiklik gerekmiyor.'
+    : `Ölçülen harcaman ${i.measuredTdee.toLocaleString('tr-TR')} kcal. Hedef tarihe yetişmek için günlük hedef ${delta > 0 ? '+' : '−'}${Math.abs(delta)} kcal${Math.abs(wanted - i.currentKcal) > CHECKIN_MAX_STEP ? ' (haftalık en fazla 150 kcal değişir)' : ''}.`
+  return { kcal, delta, reason }
+}
+
+/**
+ * Kalori uyumu (hafta halkaları için): hedefin ±%10'u tam puan, dışına çıktıkça doğrusal azalır
+ * (±%60'ta sıfır). Hiç kayıt yoksa 0.
+ */
+export function kcalAdherence(eaten: number, target: number): number {
+  if (eaten <= 0 || target <= 0) return 0
+  const off = Math.abs(eaten / target - 1)
+  if (off <= 0.1) return 1
+  return Math.max(0, Math.round((1 - (off - 0.1) * 2) * 100) / 100)
+}
