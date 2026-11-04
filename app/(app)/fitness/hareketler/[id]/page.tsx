@@ -46,8 +46,9 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
             <Eyebrow className="mt-2">Sık yapılan hatalar</Eyebrow>
             <ul className="list-disc pl-5 flex flex-col gap-1 text-[14px] text-ink-2">{x.mistakes.map((s) => <li key={s}>{s}</li>)}</ul>
           </> : null}
+          {!x.curated && x.source === 'fedb' ? <p className="text-[11px] text-mute mt-1">Kaynak talimatlardan (free-exercise-db) Türkçe özet.</p> : null}
         </section>
-      ) : <p className="card p-5 text-[13px] text-mute">Bu hareketin Türkçe teknik açıklaması henüz yok (Faz 3b). Görseller başlangıç ve bitiş pozisyonunu gösteriyor.</p>}
+      ) : <p className="card p-5 text-[13px] text-mute">{x.source === 'user' ? 'Kendi hareketin: teknik notu yok.' : 'Bu hareketin kaynakta adım adım talimatı yok. Görseller başlangıç ve bitiş pozisyonunu gösteriyor.'}</p>}
       {pr.series.length >= 2 ? <E1rmChart series={pr.series} /> : null}
       {pr.plateau.plateau ? (
         <section className="card p-5 flex flex-col gap-2 border border-coach-line" aria-label="Plato" data-testid="plateau">

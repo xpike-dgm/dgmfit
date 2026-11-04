@@ -11,6 +11,20 @@ const errors = []
 const byName = new Map(src.map((x) => [x.name, x]))
 for (const k of Object.keys(tr.curated)) if (!byName.has(k)) errors.push(`curated adı kaynakta yok: ${k}`)
 
+// Faz 3b: küratörlü olmayan hareketlerin Türkçe adı + kısa adımları (kaynak talimatın özeti) data/exercises-tr-auto/part*.json
+const autoDir = 'data/exercises-tr-auto'
+const auto = {}
+if (fs.existsSync(autoDir)) for (const f of fs.readdirSync(autoDir).filter((f) => /^part\d+\.json$/.test(f)).sort()) Object.assign(auto, JSON.parse(fs.readFileSync(`${autoDir}/${f}`, 'utf8')))
+const byId = new Map(src.map((x) => [x.id, x]))
+for (const [id, a] of Object.entries(auto)) {
+  const x = byId.get(id)
+  if (!x) { errors.push(`çeviri: kaynakta olmayan id ${id}`); continue }
+  if (tr.curated[x.name]) errors.push(`çeviri: küratörlü hareketin üzerine yazılıyor ${id}`)
+  if (!a.name || a.name.length > 60) errors.push(`çeviri: ad boş ya da 60+ karakter ${id}`)
+  if (!Array.isArray(a.steps) || a.steps.length > 5 || a.steps.some((t) => typeof t !== 'string' || !t.trim() || t.length > 160)) errors.push(`çeviri: adımlar geçersiz ${id}`)
+  if (x.instructions.length && !a.steps.length) errors.push(`çeviri: kaynakta talimat var ama adım yok ${id}`)
+}
+
 const gloss = [...tr.glossary].sort((a, b) => b[0].length - a[0].length)
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 function autoName(en) {
@@ -52,12 +66,13 @@ for (const x of src) {
   if (x.equipment && !tr.equipment[x.equipment]) errors.push(`ekipman çevirisi yok: ${x.equipment}`)
   if (!tr.category[x.category]) errors.push(`kategori çevirisi yok: ${x.category}`)
   const c = tr.curated[x.name]
-  const nameTr = c?.name ?? autoName(x.name)
+  const a = auto[x.id]
+  const nameTr = c?.name ?? a?.name ?? autoName(x.name)
   const aliases = c?.aliases ?? []
   items.push({
     key: x.id, nameEn: x.name, nameTr, aliases, category: x.category, equipment: x.equipment ?? 'body only', level: x.level,
     force: x.force ?? null, mechanic: x.mechanic ?? null, primary: x.primaryMuscles, secondary: x.secondaryMuscles,
-    kind: kindOf(x), pattern: patternOf(x), images: x.images, steps: c?.steps ?? [], mistakes: c?.mistakes ?? [], curated: !!c,
+    kind: kindOf(x), pattern: patternOf(x), images: x.images, steps: c?.steps ?? a?.steps ?? [], mistakes: c?.mistakes ?? [], curated: !!c,
     search: normalizeSearch([nameTr, x.name, ...aliases].join(' ')),
   })
 }
@@ -66,6 +81,7 @@ const body = JSON.stringify(items)
 const version = crypto.createHash('sha256').update(body).digest('hex').slice(0, 12)
 fs.writeFileSync('data/exercises-seed.json.gz', zlib.gzipSync(JSON.stringify({ version, items })))
 const curatedN = items.filter((i) => i.curated).length
-console.log(`hareket: ${items.length}, küratörlü: ${curatedN}, sürüm ${version}`)
+const withSteps = items.filter((i) => i.steps.length).length
+console.log(`hareket: ${items.length}, küratörlü: ${curatedN}, Türkçe adımlı: ${withSteps}, çeviri dosyasından: ${Object.keys(auto).length}, sürüm ${version}`)
 console.log('tür dağılımı:', JSON.stringify(Object.entries(items.reduce((a, i) => ((a[i.kind] = (a[i.kind] ?? 0) + 1), a), {}))))
 console.log('örnek otomatik adlar:', items.filter((i) => !i.curated).slice(0, 12).map((i) => `${i.nameEn} → ${i.nameTr}`).join(' | '))
