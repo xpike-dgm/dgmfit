@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'drizzle')
-const sql = postgres(process.env.DATABASE_URL, { max: 1 })
+const sql = postgres(process.env.DATABASE_URL, { max: 1, onnotice: () => {} })
 try {
   await sql`create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())`
   await sql`select pg_advisory_lock(778899)`
