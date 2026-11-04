@@ -47,13 +47,7 @@ export async function addWater(input: z.input<typeof AddInput>): Promise<R<{ log
   if (at.getTime() > Date.now() + 5 * 60000) return { ok: false, error: 'Gelecekteki bir zamana kayıt eklenemez' }
   await ensureWaterSetup(userId)
 
-  const recent = await db.select({ ml: schema.waterLogs.ml, loggedAt: schema.waterLogs.loggedAt }).from(schema.waterLogs)
-    .where(and(eq(schema.waterLogs.userId, userId), isNull(schema.waterLogs.deletedAt), gte(schema.waterLogs.loggedAt, new Date(at.getTime() - 3600000))))
-  const rec = recent.map((r) => ({ ml: r.ml, atMs: r.loggedAt.getTime() }))
-  if (!d.force && isLikelyDuplicate(d.ml, at.getTime(), rec)) {
-    return { ok: false, duplicate: true, error: `${d.ml} ml az önce de eklendi. Tekrar eklemek istiyor musun?` }
-  }
-
+  const hydration = DRINKS[d.drink].hydration
   let containerName: string | null = null
   if (d.containerId) {
     const [c] = await db.select().from(schema.waterContainers).where(and(eq(schema.waterContainers.id, d.containerId), eq(schema.waterContainers.userId, userId))).limit(1)
@@ -62,15 +56,25 @@ export async function addWater(input: z.input<typeof AddInput>): Promise<R<{ log
     if (d.fill !== undefined) await db.update(schema.waterContainers).set({ lastFill: d.fill }).where(eq(schema.waterContainers.id, c.id))
   }
 
-  const hydration = DRINKS[d.drink].hydration
-  const [row] = await db.insert(schema.waterLogs).values({
-    userId, loggedAt: at, ml: d.ml, drink: d.drink, hydration, effectiveMl: effectiveMl(d.ml, d.drink),
-    containerId: d.containerId ?? null, source: d.at && Math.abs(at.getTime() - Date.now()) > 10 * 60000 ? 'backdate' : d.source,
-    history: [{ at: new Date().toISOString(), action: 'create' }],
-  }).returning()
+  // Kontrol + kayıt kullanıcı başına kilitli tek işlemde: hızlı çift dokunuşta yarış olmaz
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'water:' + userId}))`)
+    const recent = await tx.select({ ml: schema.waterLogs.ml, loggedAt: schema.waterLogs.loggedAt }).from(schema.waterLogs)
+      .where(and(eq(schema.waterLogs.userId, userId), isNull(schema.waterLogs.deletedAt), gte(schema.waterLogs.loggedAt, new Date(at.getTime() - 3600000))))
+    const rec = recent.map((r) => ({ ml: r.ml, atMs: r.loggedAt.getTime() }))
+    if (!d.force && isLikelyDuplicate(d.ml, at.getTime(), rec)) return { duplicate: true as const }
+    const [row] = await tx.insert(schema.waterLogs).values({
+      userId, loggedAt: at, ml: d.ml, drink: d.drink, hydration, effectiveMl: effectiveMl(d.ml, d.drink),
+      containerId: d.containerId ?? null, source: d.at && Math.abs(at.getTime() - Date.now()) > 10 * 60000 ? 'backdate' : d.source,
+      history: [{ at: new Date().toISOString(), action: 'create' }],
+    }).returning()
+    return { row, over: overHourlyLimit(d.ml, at.getTime(), rec) }
+  })
+  if ('duplicate' in result) return { ok: false, duplicate: true, error: `${d.ml} ml az önce de eklendi. Tekrar eklemek istiyor musun?` }
+  const { row } = result
   await publish(userId, 'water.logged', { id: row.id, ml: row.ml, effectiveMl: row.effectiveMl, drink: row.drink, day: dayString(at) })
   revalidatePath('/')
-  const warning = overHourlyLimit(d.ml, at.getTime(), rec)
+  const warning = result.over
     ? 'Son bir saatte 1 litreden fazla içtin. Suyu gün içine yaymak daha sağlıklı.' : undefined
   return { ok: true, log: toView(row, containerName), warning }
 }

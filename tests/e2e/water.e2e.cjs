@@ -29,6 +29,8 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await p.waitForTimeout(500)
   await p.getByRole('button', { name: 'Hesabı oluştur' }).click()
   await p.waitForURL('**/kurulum')
+  // sihirbaz hidrasyonu bitsin; yoksa kendi ilk durumunu kaydedip bizimkini ezer
+  await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
   await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({
     step: 10, sex: 'male', birthDate: '1995-05-05', heightCm: 177, weightKg: 78.4, activity: 'moderate', goal: 'lose',
     targetWeightKg: 72, tempo: 'balanced', customDays: 90, experience: null, trainingDays: 4, dietPref: null, allergies: [], wakeTime: '07:30', sleepTime: '23:30',
@@ -56,6 +58,17 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await shot('01-cift-kayit')
   await p.getByRole('button', { name: 'Evet, ekle' }).click(); await settle()
   await expectTotal(500, 'çift kayıt onayı')
+
+  // 3b) Regresyon: beklemeden art arda iki dokunuş → tek kayıt + soru (canlıda yakalanan yarış hatası)
+  await p.getByRole('button', { name: /^100 ml ekle/ }).click()
+  await p.getByRole('button', { name: /^100 ml ekle/ }).click()
+  await p.getByRole('alertdialog').waitFor({ timeout: 3000 }).catch(() => fail('hızlı çift dokunuşta soru çıkmadı'))
+  await p.getByRole('button', { name: 'Hayır, çift kayıt' }).click(); await p.waitForTimeout(1500)
+  await p.reload(); await expectTotal(600, 'hızlı çift dokunuş tek kayıt')
+  // sonraki adımların beklenen toplamları için 100 ml'yi sil
+  await p.locator('li', { hasText: '+100' }).getByRole('button').click()
+  await p.getByRole('button', { name: 'Kaydı sil' }).click(); await p.waitForTimeout(1500)
+  await p.reload(); await expectTotal(500, 'regresyon temizliği')
 
   // 4) İçecek türü: kahve 200 ml → 160 ml sayılır
   await p.getByRole('button', { name: /^Kahve/ }).click()

@@ -6,7 +6,7 @@ import Sheet from '@/components/Sheet'
 import { btn, Ring } from '@/components/ui'
 import { Back, Bottle, Chart, Check, Clock, Cup, Drop, Flame, Gear, Glass, Merge, Next, Thermos, Trash, Trend } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
-import { DRINKS, distributionScore, effectiveMl, fmtHm, hourlyBuckets, idealAt, type DrinkId } from '@/lib/water'
+import { DRINKS, distributionScore, effectiveMl, fmtHm, hourlyBuckets, idealAt, isLikelyDuplicate, type DrinkId } from '@/lib/water'
 import type { WaterLogView, WaterScreen as Data, ContainerView } from '@/lib/water-data'
 import { addWater, deleteWater, mergeWater, undoWater, updateWater } from './actions'
 
@@ -56,6 +56,8 @@ export default function WaterScreen({ data }: { data: Data }) {
   const add = (p: Pending, force = false) => {
     const tempId = -Date.now()
     const atIso = p.at ?? (data.isToday ? new Date().toISOString() : isoAt(data.day, pastTime))
+    // Anında çift kayıt kontrolü (henüz sunucuya ulaşmamış kayıtlar dahil); sunucu da ayrıca kontrol eder
+    if (!force && isLikelyDuplicate(p.ml, Date.parse(atIso), logs.map((l) => ({ ml: l.ml, atMs: Date.parse(l.atIso) })))) { setDup(p); return }
     const cont = p.containerId ? data.containers.find((c) => c.id === p.containerId) : null
     const temp: WaterLogView = { id: tempId, atIso, at: minuteFromIso(atIso), ml: p.ml, effectiveMl: effectiveMl(p.ml, drink), drink, containerId: p.containerId ?? null, containerName: cont?.name ?? null, source: p.source, edited: false }
     setLogs((x) => [...x, temp].sort((a, b) => a.at - b.at))
