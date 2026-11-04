@@ -41,6 +41,8 @@ Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 - `lib/water-speech.ts` — Türkçe cümle → `{ml, drink, atMin}`. `lib/water-insights.ts` — `waterInsights` (kural tabanlı kartlar) ve `computeBadges` (veriden türetilir, tablo yok).
 - API: `/api/push/key|subscribe|unsubscribe|test`, `/api/water/notify` (SW'den, çerezle), `/api/test/reminder` (yalnızca `DGFIT_TEST_HOOKS=1`, canlıda 404).
 - `public/sw.js` (v2): push → bildirim (en fazla 2 buton); `add:<ml>` ve `snooze` aksiyonları `/api/water/notify`'a POST; normal dokunuş su ekranını açar.
+- Yemek: `lib/nutrition.ts` (100 g başına besin anahtarları, `computeRecipe`, `normalizeSearch`), `lib/food.ts` (öğünler, makro/porsiyon, bütçe etkisi, EAN, OFF eşleme), `lib/food-data.ts` (arama: `search like` + `word_similarity`, Türkçe adlar +2, kullanıcı besini +3, İngilizce adlar eşik 0,7; günlük; barkod yerel → OFF önbellek). `app/(app)/yemek/` günlük, `ekle/`, `besin/yeni/`, `tarif/yeni/`, `actions.ts`. `components/FoodSheet.tsx`, `BarcodeScanner.tsx` (BarcodeDetector → ZXing dinamik).
+- Besin verisi hattı: `scripts/data/build_usda.py` (CSV → `data/usda-sr.json.gz`), `data/tr-foods.json` + `data/tr-dishes.json` → `scripts/data/build_foods.mjs` → `data/foods-seed.json.gz` (sürüm hash'i); `scripts/migrate.mjs` sürüm farklıysa toplu yükler (`app_config.foods_seed`). `check_tr.py` küratörlü listeyi USDA'ya karşı doğrular; `find_usda.py` aday bulur.
 - `components/` — `ui.tsx` (btn sınıfları, Ring, Bar, TopBar, FieldError), `icons.tsx` (satır içi SVG), `Ruler.tsx` (kaydırmalı cetvel), `BottomNav.tsx`, `QuickAdd.tsx` (dialog), `Sheet.tsx` (genel alt sayfa, native dialog), `QuickWaterButton.tsx` (Bugün ekranında +250 ml), `ModuleSoon.tsx`, `SwRegister.tsx`.
 - `public/` — `manifest.webmanifest`, `sw.js` (statik önbellek + çevrimdışı sayfa + push iskeleti), `offline.html`, `icons/` (`scripts/icons.cjs` ile Playwright'tan üretilir).
 - `drizzle/` — SQL migration'lar (drizzle-kit üretir); `scripts/migrate.mjs` bunları container açılışında uygular (`_migrations` tablosu, advisory lock).
@@ -65,6 +67,8 @@ Faz 0: `users` · `sessions` · `profiles` (1:1 kullanıcı) · `profile_history
 Faz 1a (Su): `water_logs` (ham `ml` + `effective_ml` = ml × hidrasyon; `source`; `history` jsonb: create/edit/merge/delete/undo; yumuşak silme) · `water_containers` (kapasite, son doluluk, varsayılan, arşiv) · `water_settings` (butonlar, yudum ml, görünüm, geri bildirim) · `water_goal_history` (`effective_from` ile; günün hedefi = o güne kadarki son kayıt, haftanın günü özel hedefleri `weekday[0=Pazar]`).
 
 Faz 1b: `app_config` · `push_subscriptions` (endpoint benzersiz) · `water_reminders` (gün, dakika, tür remind/summary/test, öneri ml, teslim sayısı, açılma, etkili olma, aksiyon) · `water_settings`'e `reminders_enabled`, `quiet`, `max_per_day`, `summary_enabled`.
+
+Faz 2a: `foods` (kaynak usda/dgfit/off/user/user-recipe; 100 g başına `per100` jsonb + kcal/protein/carb/fat sütunları; `search` trigram GIN) · `meal_items` (günlük kayıt, besin değeri anlık kopya `per100`; hızlı kalori `source=quick`) · `saved_meals`; `water_settings.food_water`. Olay: `meal.logged`.
 
 Su kuralları: hedefe `effective_ml` sayılır; Bugün ekranının su hedefi `water_goal_history`'den gelir (yoksa `goals.water_ml`); hafta şeridi halkaları şimdilik yalnızca su oranıdır; seri sayacı su serisidir.
 

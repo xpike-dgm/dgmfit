@@ -42,3 +42,7 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Barkodlu ürünler: Open Food Facts API (ODbL); ürün bazında sorgu + önbellek, kaynak etiketi `off`, ekranda "© Open Food Facts katkıcıları"; özel User-Agent | ODbL atıf + paylaşım koşulu; OFF verisi ayrı işaretlenir | Kaynak |
 | 2026-11-04 | Türk yemeklerinin besin değerleri tarif gramajından USDA malzemeleriyle hesaplanır; ezberden değer yazılmaz | Halüsinasyon önleme kuralı 6 | Teknik |
 | 2026-11-04 | Faz 2 ikiye bölündü: 2a Yemek, 2b Fit | Kapsam büyüklüğü | Teknik |
+| 2026-11-04 | Öğün kaydı besin değerlerini anlık kopyalar (`meal_items.per100`) | Besin sonradan düzeltilse de geçmiş günler değişmez | Teknik |
+| 2026-11-04 | Tarif kcal'i 100 g başına 1 ondalıkla saklanır; porsiyon değeri malzeme toplamından hesaplanır | Yuvarlama hatası (e2e'de 180 ≠ 179) | Teknik |
+| 2026-11-04 | Yemekten gelen su varsayılan kapalı; yalnızca su oranı ≥ %80 olan çorba/içecek/süt-kefir-ayran | Yoğurt, peynir gibi katı besinler sıvı sayılmasın | Teknik |
+| 2026-11-04 | OFF ürünleri herkese açık önbellek (`source=off`), kullanıcı besinleri yalnızca sahibine | Aynı barkod tekrar sorgulanmasın; gizlilik | Teknik |

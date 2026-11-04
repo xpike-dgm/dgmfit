@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-04 — Faz 2a tamamlandı
+- Besin verisi: USDA SR Legacy (7.793) + 149 Türkçe küratörlü (ilk denemede 138/146 USDA açıklaması birebir eşleşti, 8'i aday bulucuyla düzeltildi) + 36 Türk yemeği tariften hesaplandı (Atwater ve verim kontrolleri). Builder ilk çalıştırmada yanlış malzeme anahtarını yakaladı (`kirmizi-mercimek-kuru`). Commit `5525b9b`.
+- Veri katmanı + aksiyonlar + arama/barkod API, commit `e8e5318`. Arama denemesi: "simit"te alakasız İngilizce sonuç → İngilizce adlar için eşik 0,7.
+- Ekranlar commit `42d0008`. E2E ile bulunan gerçek hatalar: (1) gram modunda son kullanılan miktar 50 g → 0,5 g'a dönüşüyordu; (2) gram miktarı (portionQty) 100 üstünde doğrulamadan geçemiyordu; (3) tarif porsiyon kalorisi yuvarlanmış 100 g değerinden hesaplanıyordu (180 ≠ 179) → kcal 1 ondalık + toplamdan hesap; (4) yemekten gelen su kuralı yoğurdu da sayacaktı → yalnızca çorba/içecek/süt-kefir-ayran. Test kaynaklı hatalar: sil düğmesiyle çift eşleşen seçici, son miktar varsayılanı değişince kopyalama beklentisi.
+- Doğrulama: birim 53/53; verify.sh VERIFY OK; canlı onboarding + su + yemek e2e OK (OFF barkod canlıda çalıştı); deploy `2026-11-04T19-11-00-792Z`; 4 test kullanıcısı silindi.
+
 ## 2026-11-04 — Faz 2a başladı
 - Faz başı: memory-check geçti; son commit `9d57f8d` STATE ile uyumlu; çalışma ağacı temiz.
 - Veri kaynağı araştırması: TURKOMP yazılı izin/ücretli (resmi sayfa 503, arama alıntıları) → kullanılmadı; USDA FDC CC0 (resmi ana sayfa); OFF ODbL (resmi dokümantasyon). USDA SR Legacy zip (6.074.592 bayt) ve OFF API bu ortamdan erişilebilir.
