@@ -16,8 +16,8 @@ export default async function ProgramPage(props: { params: Promise<{ id: string 
     <div className="flex flex-col gap-3 px-4 pt-5">
       <TopBar back="/fitness/programlar" title="Program" />
       <ProgramEditor program={{
-        id: p.id, name: p.name, active: p.active, notes: p.notes, nextDayIdx: p.nextDayIdx,
-        days: p.days.map((d) => ({ id: d.id, name: d.name, focus: d.focus ?? '', exercises: d.exercises.map((e) => ({ id: e.id, exerciseId: e.exerciseId, name: e.name, kind: e.kind, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType })) })),
+        id: p.id, name: p.name, active: p.active, notes: p.notes, nextDayIdx: p.nextDayIdx, periodization: p.periodization, deloadEvery: p.deloadEvery, startDay: p.startDay,
+        days: p.days.map((d) => ({ id: d.id, name: d.name, focus: d.focus ?? '', exercises: d.exercises.map((e) => ({ id: e.id, exerciseId: e.exerciseId, name: e.name, kind: e.kind, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType, scheme: e.scheme, schemeState: e.schemeState })) })),
       }} />
     </div>
   )

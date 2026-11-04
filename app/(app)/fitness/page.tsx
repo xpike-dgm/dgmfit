@@ -5,7 +5,7 @@ import { addDays, shortDate } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { PR_LABEL, CARDIO, type PrType } from '@/lib/training'
 import { btn, Eyebrow } from '@/components/ui'
-import { Chart, Clock, Dumbbell, Flame, Gear, Next, Pulse, Spark } from '@/components/icons'
+import { Chart, Clock, Dumbbell, Flame, Gear, Next, Pulse, Scale, Spark } from '@/components/icons'
 import PendingSync from './PendingSync'
 
 export const metadata = { title: 'Fitness · DgFit' }
@@ -22,7 +22,6 @@ export default async function FitnessPage() {
       <header className="px-1 flex items-center justify-between">
         <h1 className="text-[26px] font-extrabold tracking-tight">Fitness</h1>
         <div className="flex gap-2">
-          <Link href="/fitness/hareketler" className={btn.icon} aria-label="Hareket kütüphanesi"><Chart size={20} /></Link>
           <Link href="/fitness/ayarlar" className={btn.icon} aria-label="Salon ayarları"><Gear size={20} /></Link>
         </div>
       </header>
@@ -67,6 +66,12 @@ export default async function FitnessPage() {
           <span className="text-[12px] text-mute">Koşu, bisiklet, yüzme…</span>
         </Link>
       </div>
+
+      <nav aria-label="Fitness bölümleri" className="grid grid-cols-3 gap-2">
+        <Link href="/fitness/istatistik" className="card px-3 py-3 flex flex-col items-center gap-1 text-[13px] font-bold"><Chart size={18} className="text-orange" />İstatistik</Link>
+        <Link href="/fitness/olcumler" className="card px-3 py-3 flex flex-col items-center gap-1 text-[13px] font-bold"><Scale size={18} className="text-violet" />Ölçüler</Link>
+        <Link href="/fitness/hareketler" className="card px-3 py-3 flex flex-col items-center gap-1 text-[13px] font-bold"><Dumbbell size={18} className="text-lime" />Hareketler</Link>
+      </nav>
 
       <section aria-label="Bu hafta" className="card p-5 flex flex-col gap-3">
         <div className="flex justify-between items-center">

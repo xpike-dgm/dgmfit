@@ -6,13 +6,15 @@ import Sheet from '@/components/Sheet'
 import { btn, Eyebrow } from '@/components/ui'
 import { Dumbbell, Plus, Trash } from '@/components/icons'
 import { SET_TYPES, type SetType } from '@/lib/training'
-import { addDayAction, addExerciseToDayAction, removeProgramExerciseAction, setActiveProgramAction, updateProgramExerciseAction } from '../../actions'
+import { PERIODIZATION, weekIndex, isDeloadWeek, type Periodization } from '@/lib/progress'
+import { gzSets, type GzState } from '@/lib/schemes'
+import { addDayAction, addExerciseToDayAction, removeProgramExerciseAction, setActiveProgramAction, setSchemeKgAction, updateProgramExerciseAction, updateProgramSettingsAction } from '../../actions'
 import { ExercisePicker } from '../../antrenman/LiveWorkout'
 
-type Ex = { id: string; exerciseId: number; name: string; kind: string; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string }
+type Ex = { id: string; exerciseId: number; name: string; kind: string; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null }
 type Day = { id: string; name: string; focus: string; exercises: Ex[] }
 
-export default function ProgramEditor({ program }: { program: { id: string; name: string; active: boolean; notes: string[]; nextDayIdx: number; days: Day[] } }) {
+export default function ProgramEditor({ program }: { program: { id: string; name: string; active: boolean; notes: string[]; nextDayIdx: number; periodization: string; deloadEvery: number; startDay: string; days: Day[] } }) {
   const [edit, setEdit] = useState<Ex | null>(null)
   const [pick, setPick] = useState<string | null>(null)
   const [dayName, setDayName] = useState('')
@@ -29,6 +31,7 @@ export default function ProgramEditor({ program }: { program: { id: string; name
           : <button type="button" className={btn.secondary} disabled={pending} onClick={() => go(() => setActiveProgramAction(program.id))}>Aktif program yap</button>}
         {program.notes.map((n) => <p key={n} className="text-[12px] text-mute">{n}</p>)}
       </section>
+      {program.days.some((d) => d.exercises.some((e) => !e.scheme)) ? <PeriodSettings program={program} pending={pending} go={go} /> : null}
       {program.days.map((d, di) => (
         <section key={d.id} aria-label={d.name} className="card p-5 flex flex-col gap-2" data-testid="program-day">
           <div className="flex justify-between items-center gap-2">
@@ -38,7 +41,8 @@ export default function ProgramEditor({ program }: { program: { id: string; name
           {d.exercises.map((e) => (
             <button key={e.id} type="button" onClick={() => setEdit(e)} className="flex justify-between items-center min-h-[48px] text-left border-b border-line last:border-0">
               <span className="font-semibold text-[15px]">{e.name}</span>
-              <span className="num text-[13px] text-mute whitespace-nowrap">{e.sets} × {e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}{e.seconds ? '' : ` @${e.rir}`}</span>
+              {e.scheme ? <span className="num text-[13px] text-mute whitespace-nowrap" data-testid="gz-row">{schemeLine(e)}</span>
+                : <span className="num text-[13px] text-mute whitespace-nowrap">{e.sets} × {e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}{e.seconds ? '' : ` @${e.rir}`}</span>}
             </button>
           ))}
           <button type="button" className="h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5" onClick={() => setPick(d.id)}><Plus size={16} />Hareket ekle</button>
@@ -55,7 +59,8 @@ export default function ProgramEditor({ program }: { program: { id: string; name
         <ExercisePicker onPick={async (id) => { const r = await addExerciseToDayAction(pick!, id); if (!r.ok) { setErr(r.error); return } setPick(null); router.refresh() }} />
       </Sheet>
       <Sheet open={!!edit} onClose={() => setEdit(null)} title={edit?.name ?? ''}>
-        {edit ? <EditTarget ex={edit} pending={pending} onSave={(v) => go(() => updateProgramExerciseAction(edit.id, v), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} /> : null}
+        {edit?.scheme ? <SchemeEdit ex={edit} pending={pending} onSave={(kg) => go(() => setSchemeKgAction(edit.id, kg), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} />
+          : edit ? <EditTarget ex={edit} pending={pending} onSave={(v) => go(() => updateProgramExerciseAction(edit.id, v), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} /> : null}
       </Sheet>
     </>
   )
@@ -91,5 +96,52 @@ function EditTarget({ ex, pending, onSave, onRemove }: { ex: Ex; pending: boolea
       <button type="button" className={btn.primary + ' mt-3'} disabled={pending || (!time && v.repMax < v.repMin)} onClick={() => onSave({ ...v, setType: v.setType as SetType, seconds: time ? v.seconds ?? 45 : null })}>Kaydet</button>
       <button type="button" className={`${btn.ghost} text-danger mt-1`} disabled={pending} onClick={onRemove}><Trash size={18} />Programdan çıkar</button>
     </div>
+  )
+}
+
+function schemeLine(e: Ex) {
+  const tier = (e.scheme ?? '').slice(6).toUpperCase()
+  if (!e.schemeState) return `${tier} · ilk seans`
+  const s = gzSets(e.schemeState)
+  return `${tier} · ${s.length}×${s[0].reps}${s.some((x) => x.amrap) ? '+' : ''} · ${String(e.schemeState.kg).replace('.', ',')} kg`
+}
+
+function SchemeEdit({ ex, pending, onSave, onRemove }: { ex: Ex; pending: boolean; onSave: (kg: number) => void; onRemove: () => void }) {
+  const [kg, setKg] = useState(String(ex.schemeState?.kg ?? ''))
+  const tier = (ex.scheme ?? '').slice(6)
+  return (
+    <div className="flex flex-col gap-3 pb-4">
+      <p className="text-[14px] text-ink-2 leading-relaxed">{schemeLine(ex)}. {tier === 't1' ? 'T1: 5×3 tutmazsa aynı ağırlıkla 6×2, sonra 10×1; o da tutmazsa %85 ile yeniden 5×3.' : tier === 't2' ? 'T2: 3×10 → 3×8 → 3×6; sonra son başarılı 3×10 ağırlığının bir kademe üstüyle 3×10.' : 'T3: 3×15, son sette 25 tekrar yapınca en küçük artış.'} Kademeler antrenmandan sonra otomatik ilerler.</p>
+      <label htmlFor="gz-kg" className="flex items-center justify-between text-sm font-semibold">Çalışma ağırlığı (kg)
+        <input id="gz-kg" inputMode="decimal" value={kg} onChange={(e) => setKg(e.target.value)} className="w-28 h-12 rounded-xl bg-surface-2 border border-line px-3 num text-lg text-right" />
+      </label>
+      <button type="button" className={btn.primary} disabled={pending || !(Number(kg.replace(',', '.')) >= 0) || !kg.trim()} onClick={() => onSave(Number(kg.replace(',', '.')))}>Kaydet</button>
+      <button type="button" className={`${btn.ghost} text-danger`} disabled={pending} onClick={onRemove}><Trash size={18} />Programdan çıkar</button>
+    </div>
+  )
+}
+
+function PeriodSettings({ program, pending, go }: { program: { id: string; periodization: string; deloadEvery: number; startDay: string }; pending: boolean; go: (fn: () => Promise<{ ok: boolean; error?: string }>) => void }) {
+  const [p, setP] = useState(program.periodization as Periodization)
+  const [every, setEvery] = useState(program.deloadEvery)
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date())
+  const week = weekIndex(program.startDay, today)
+  const changed = p !== program.periodization || every !== program.deloadEvery
+  return (
+    <section className="card p-5 flex flex-col gap-3" aria-label="Periyodizasyon" data-testid="period-settings">
+      <div className="flex justify-between items-center"><Eyebrow>Periyodizasyon</Eyebrow><span className="text-[12px] text-mute">{week + 1}. hafta{isDeloadWeek(week, program.deloadEvery) ? ' · deload' : ''}</span></div>
+      <div className="flex flex-col gap-1.5">
+        {(Object.keys(PERIODIZATION) as Periodization[]).map((k) => (
+          <button key={k} type="button" aria-pressed={p === k} onClick={() => setP(k)} className={`text-left rounded-2xl px-4 py-2.5 ${p === k ? 'bg-surface-3 border border-lime' : 'bg-surface-2 border border-transparent'}`}>
+            <span className="font-bold text-[14px]">{PERIODIZATION[k].label}</span><br /><span className="text-[12px] text-mute">{PERIODIZATION[k].hint}</span>
+          </button>
+        ))}
+      </div>
+      <fieldset className="flex gap-1.5"><legend className="text-sm font-semibold mb-1.5">Deload haftası</legend>
+        {[0, 4, 5, 6, 8].map((n) => <button key={n} type="button" aria-pressed={every === n} onClick={() => setEvery(n)} className={`flex-1 h-10 rounded-xl text-[13px] font-bold ${every === n ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{n ? `${n}. hafta` : 'Yok'}</button>)}
+      </fieldset>
+      <p className="text-[11px] text-mute">Deload haftasında set sayısı yarıya iner, RIR 2 artar, önerilen ağırlık %90 olur. GZCLP hareketleri kendi kademeleriyle ilerler.</p>
+      {changed ? <button type="button" className={btn.primary} disabled={pending} onClick={() => go(() => updateProgramSettingsAction(program.id, { periodization: p, deloadEvery: every }))}>Kaydet</button> : null}
+    </section>
   )
 }

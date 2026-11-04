@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { getExercise, imageUrl } from '@/lib/fitness-data'
+import { exerciseProgress } from '@/lib/fitness-stats'
+import { LEVELS } from '@/lib/progress'
+import ExercisePhoto from './ExercisePhoto'
 import { CATEGORY, EQUIPMENT, KIND, LEVEL, MUSCLES } from '@/lib/exercise-labels'
 import { e1rm, PR_LABEL, type PrType } from '@/lib/training'
 import { shortDate } from '@/lib/time'
@@ -13,8 +16,8 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
   const u = await requireUser()
   const { id } = await props.params
   if (!/^\d+$/.test(id)) notFound()
-  const x = await getExercise(u.id, Number(id))
-  if (!x) notFound()
+  const [x, pr] = await Promise.all([getExercise(u.id, Number(id)), exerciseProgress(u.id, Number(id))])
+  if (!x || !pr) notFound()
   const recs = x.records ? (Object.entries(x.records) as [PrType, number][]).filter(([, v]) => v > 0) : []
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">
@@ -22,6 +25,8 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
       <section className="card p-5 flex flex-col gap-3">
         <h1 className="text-[22px] font-extrabold leading-tight">{x.nameTr}</h1>
         {x.nameEn && x.nameEn !== x.nameTr ? <span className="text-[13px] text-mute -mt-2">{x.nameEn}</span> : null}
+        {x.photoId ? <img src={`/api/media/${x.photoId}`} alt={x.nameTr} className="w-full aspect-[4/3] object-cover rounded-2xl bg-surface-2" /> : null}
+        {x.source === 'user' ? <ExercisePhoto exerciseId={x.id} has={!!x.photoId} /> : null}
         {x.images.length ? (
           <div className="grid grid-cols-2 gap-2">
             {x.images.slice(0, 2).map((im, i) => <img key={im} src={imageUrl(im)} alt={`${x.nameTr} ${i === 0 ? 'başlangıç' : 'bitiş'} pozisyonu`} width={300} height={300} className="w-full aspect-square object-cover rounded-2xl bg-surface-2" />)}
@@ -43,6 +48,28 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
           </> : null}
         </section>
       ) : <p className="card p-5 text-[13px] text-mute">Bu hareketin Türkçe teknik açıklaması henüz yok (Faz 3b). Görseller başlangıç ve bitiş pozisyonunu gösteriyor.</p>}
+      {pr.series.length >= 2 ? <E1rmChart series={pr.series} /> : null}
+      {pr.plateau.plateau ? (
+        <section className="card p-5 flex flex-col gap-2 border border-coach-line" aria-label="Plato" data-testid="plateau">
+          <Eyebrow className="text-orange">Plato · {pr.plateau.weeks} haftadır ilerleme yok</Eyebrow>
+          <ul className="list-disc pl-5 text-[14px] text-ink-2 flex flex-col gap-1">{pr.plateau.suggestions.map((t) => <li key={t}>{t}</li>)}</ul>
+        </section>
+      ) : null}
+      {pr.level ? (
+        <section className="card p-5 flex flex-col gap-2" aria-label="Kuvvet seviyesi" data-testid="strength-level">
+          <Eyebrow>Kuvvet seviyesi (yaklaşık)</Eyebrow>
+          <span className="text-[20px] font-extrabold">{pr.level.level} <span className="text-[14px] text-mute font-normal num">· e1RM {fmtNum(pr.best, 1)} kg = vücut ağırlığının {String(pr.level.ratio).replace('.', ',')} katı</span></span>
+          <div className="grid grid-cols-4 gap-1 text-center">{LEVELS.map((l, i) => <span key={l} className={`rounded-lg py-1.5 text-[11px] ${pr.level!.level === l ? 'bg-lime text-lime-ink font-bold' : 'bg-surface-2 text-mute'}`}>{l}<br /><span className="num">{pr.level!.thresholds[i]} kg</span></span>)}</div>
+          {pr.level.next ? <p className="text-[13px] text-ink-2">{pr.level.next.level} için tahmini maksimum ~{fmtNum(pr.level.next.kg, 1)} kg.</p> : null}
+          <p className="text-[11px] text-mute">DgFit'in kaba rehberidir (e1RM / vücut ağırlığı); yayımlanmış bir standart tablosu değildir.</p>
+        </section>
+      ) : null}
+      {pr.alternatives.length ? (
+        <section className="card p-5 flex flex-col gap-1" aria-label="Alternatifler" data-testid="alternatives">
+          <Eyebrow>Alternatifler (istasyon doluysa)</Eyebrow>
+          {pr.alternatives.map((a) => <Link key={a.id} href={`/fitness/hareketler/${a.id}`} className="flex justify-between min-h-[44px] items-center text-[14px]"><span className="font-semibold">{a.nameTr}</span><span className="text-mute text-[12px]">{EQUIPMENT[a.equipment] ?? a.equipment}</span></Link>)}
+        </section>
+      ) : null}
       {recs.length ? (
         <section className="card p-5 flex flex-col gap-2" aria-label="Rekorlar">
           <Eyebrow>Rekorların</Eyebrow>
@@ -60,5 +87,27 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
         </section>
       ) : null}
     </div>
+  )
+}
+
+function E1rmChart({ series }: { series: { day: string; e1rm: number }[] }) {
+  const W = 320, H = 150, L = 34, R = 10, T = 12, B = 22
+  const pts = series.filter((s) => s.e1rm > 0)
+  const t0 = Date.parse(pts[0].day), t1 = Math.max(t0 + 86400000, Date.parse(pts.at(-1)!.day))
+  const lo = Math.floor(Math.min(...pts.map((p) => p.e1rm)) * 0.95), hi = Math.ceil(Math.max(...pts.map((p) => p.e1rm)) * 1.03)
+  const x = (d: string) => L + ((Date.parse(d) - t0) / (t1 - t0)) * (W - L - R)
+  const y = (v: number) => T + ((hi - v) / Math.max(1, hi - lo)) * (H - T - B)
+  const best = pts.reduce((a, b) => (b.e1rm > a.e1rm ? b : a))
+  return (
+    <section className="card p-5 flex flex-col gap-2" aria-label="e1RM gelişimi">
+      <Eyebrow>Tahmini maksimum (e1RM)</Eyebrow>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={`${pts.length} seans; en iyi ${fmtNum(best.e1rm, 1)} kg (${shortDate(best.day)}), son ${fmtNum(pts.at(-1)!.e1rm, 1)} kg`} data-testid="e1rm-chart">
+        {[lo, (lo + hi) / 2, hi].map((v) => <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="var(--color-line)" /><text x={L - 6} y={y(v) + 4} fontSize={10} textAnchor="end" fill="var(--color-mute)" className="num">{fmtNum(v, 0)}</text></g>)}
+        <polyline points={pts.map((p) => `${x(p.day).toFixed(1)},${y(p.e1rm).toFixed(1)}`).join(' ')} fill="none" stroke="var(--color-lime)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        {pts.map((p) => <circle key={p.day} cx={x(p.day)} cy={y(p.e1rm)} r={4} fill="var(--color-lime)" stroke="var(--color-surface)" strokeWidth={2}><title>{`${shortDate(p.day)}: ${fmtNum(p.e1rm, 1)} kg`}</title></circle>)}
+        <text x={L} y={H - 6} fontSize={10} fill="var(--color-mute)">{shortDate(pts[0].day)}</text>
+        <text x={W - R} y={H - 6} fontSize={10} fill="var(--color-mute)" textAnchor="end">{shortDate(pts.at(-1)!.day)}</text>
+      </svg>
+    </section>
   )
 }

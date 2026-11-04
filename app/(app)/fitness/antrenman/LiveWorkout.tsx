@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation'
 import Sheet from '@/components/Sheet'
 import { btn } from '@/components/ui'
 import { Check, Clock, Dots, Info, Plus, Trash } from '@/components/icons'
-import { platesFor, SET_TYPES, setVolume, strengthKcal, suggestNext, warmupSets, type ExKind, type LoggedSet, type SetType, type Suggestion } from '@/lib/training'
+import { platesFor, roundTo, SET_TYPES, setVolume, strengthKcal, suggestNext, warmupSets, type ExKind, type LoggedSet, type SetType, type Suggestion } from '@/lib/training'
 import type { LiveExercise } from '@/lib/fitness-data'
-import { liveExerciseAction, saveWorkoutAction } from '../actions'
+import { alternativesAction, liveExerciseAction, saveWorkoutAction } from '../actions'
 import { LIVE_KEY, queuePending, readJson, writeJson } from '../live-store'
 import { EQUIPMENT } from '@/lib/exercise-labels'
 
 type LSet = { kg: string; reps: string; rir: number | null; type: SetType; seconds: string; done: boolean; completedAt: string | null; feedback: string | null; ph: { kg: number; reps: number; seconds: number } }
 type LEx = Omit<LiveExercise, 'sets'> & { targetSets: number; sets: LSet[]; suggestion: Suggestion | null }
-type Draft = { v: 1; clientId: string; programDayId: string | null; name: string; startedAt: string; exercises: LEx[]; notes: string; pain: boolean; restEndsAt: number | null; restTotal: number; restFor: string }
-interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[] }
+type Draft = { v: 1; clientId: string; programDayId: string | null; name: string; startedAt: string; exercises: LEx[]; notes: string; pain: boolean; restEndsAt: number | null; restTotal: number; restFor: string; restPush?: boolean }
+interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[]; week?: number | null; fuel?: string | null }
 
 const TYPE_CYCLE: SetType[] = ['normal', 'warmup', 'drop', 'failure', 'amrap', 'restpause', 'myorep', 'superset', 'giant']
 const n = (s: string) => { const v = Number(String(s).replace(',', '.')); return Number.isFinite(v) ? v : NaN }
@@ -22,7 +22,14 @@ const fmt = (v: number) => (Math.round(v * 100) / 100).toLocaleString('tr-TR')
 const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.max(0, sec % 60)).padStart(2, '0')}`
 
 function buildExercise(e: LiveExercise, inc: number, deficitKcal: number): LEx {
-  const suggestion = suggestNext({ history: e.history, target: { repMin: e.repMin, repMax: e.repMax, rir: e.rir }, kind: e.kind, increment: inc, deficitKcal, feedback: e.feedback })
+  if (e.scheme?.sets.length) {
+    // GZCLP: ağırlık ve tekrar kademeden gelir, son set AMRAP
+    const sets: LSet[] = e.scheme.sets.map((x) => ({ kg: '', reps: '', seconds: '', rir: null, type: x.amrap ? 'amrap' : 'normal', done: false, completedAt: null, feedback: null, ph: { kg: x.kg, reps: x.reps, seconds: 0 } }))
+    const { sets: _t, ...rest } = e
+    return { ...rest, targetSets: sets.length, sets, suggestion: null }
+  }
+  let suggestion = suggestNext({ history: e.history, target: { repMin: e.repMin, repMax: e.repMax, rir: e.rir }, kind: e.kind, increment: inc, deficitKcal, feedback: e.feedback })
+  if (suggestion && e.period && e.period.loadPct < 1 && e.kind === 'weight_reps') suggestion = { ...suggestion, kg: roundTo(suggestion.kg * e.period.loadPct, inc, 'down'), reason: suggestion.reason + ' Deload haftası: ağırlık %90.' }
   const last = e.history.at(-1)?.sets.filter((s) => s.type !== 'warmup') ?? []
   const sets: LSet[] = Array.from({ length: e.sets }, (_, i) => {
     const l = last[i] ?? last.at(-1)
@@ -40,7 +47,7 @@ export default function LiveWorkout(p: Props) {
   const [d, setD] = useState<Draft | null>(null)
   const [resumed, setResumed] = useState(false)
   const [now, setNow] = useState(() => Date.now())
-  const [sheet, setSheet] = useState<null | { kind: 'plates' | 'reject' | 'menu'; ex: number } | { kind: 'add' } | { kind: 'finish' } | { kind: 'discard' }>(null)
+  const [sheet, setSheet] = useState<null | { kind: 'plates' | 'reject' | 'menu' | 'alts'; ex: number } | { kind: 'add' } | { kind: 'finish' } | { kind: 'discard' }>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const audio = useRef<AudioContext | null>(null)
@@ -76,12 +83,20 @@ export default function LiveWorkout(p: Props) {
       const a = audio.current
       if (a) { const o = a.createOscillator(), g = a.createGain(); o.frequency.value = 880; g.gain.value = 0.15; o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + 0.35) }
     } catch { /* */ }
-    if (document.visibilityState === 'hidden' && 'Notification' in window && Notification.permission === 'granted') {
+    if (!d.restPush && document.visibilityState === 'hidden' && 'Notification' in window && Notification.permission === 'granted') {
       void navigator.serviceWorker?.getRegistration().then((r) => r?.showNotification('Dinlenme bitti', { body: d.restFor ? `Sıradaki: ${d.restFor}` : 'Sıradaki sete geç', tag: 'dgfit-rest' }))
     }
   }, [restLeft, d])
 
   const update = useCallback((fn: (x: Draft) => Draft) => setD((x) => (x ? fn(structuredClone(x)) : x)), [])
+  // kilit ekranı: dinlenme bitişinde sunucudan push (bildirim izni ve abonelik varsa)
+  const pushRest = (seconds: number, next: string) => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return
+    void fetch('/api/push/rest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seconds, next, url: location.pathname + location.search }) })
+      .then((r) => r.json()).then((j) => { if (j.scheduled) update((x) => { x.restPush = true; return x }) }).catch(() => {})
+  }
+  const cancelPush = () => { if (d?.restPush) { void fetch('/api/push/rest', { method: 'DELETE' }).catch(() => {}); update((x) => { x.restPush = false; return x }) } }
+  const [alts, setAlts] = useState<{ id: number; nameTr: string; equipment: string }[] | null>(null)
   const stats = useMemo(() => {
     if (!d) return { volume: 0, sets: 0, kcal: 0, min: 0 }
     let volume = 0, sets = 0
@@ -109,9 +124,11 @@ export default function LiveWorkout(p: Props) {
       const nextSet = e.sets.find((t) => !t.done)
       const nextEx = nextSet ? e : x.exercises.slice(ei + 1).find((y) => y.sets.some((t) => !t.done))
       const rest = s.type === 'warmup' ? Math.min(60, e.rest) : e.rest
-      x.restEndsAt = Date.now() + rest * 1000; x.restTotal = rest; x.restFor = nextEx ? nextEx.name : ''
+      x.restEndsAt = Date.now() + rest * 1000; x.restTotal = rest; x.restFor = nextEx ? nextEx.name : ''; x.restPush = false
       return x
     })
+    const e0 = d.exercises[ei]
+    if (!s0.done) pushRest(s0.type === 'warmup' ? Math.min(60, e0.rest) : e0.rest, e0.sets.some((t, i) => i !== si && !t.done) ? e0.name : (d.exercises.slice(ei + 1).find((y) => y.sets.some((t) => !t.done))?.name ?? ''))
   }
 
   const finish = async () => {
@@ -146,11 +163,12 @@ export default function LiveWorkout(p: Props) {
         <div className="flex items-center justify-between gap-2">
           <span className="flex flex-col min-w-0">
             <span className="text-[18px] font-extrabold truncate">{d.name}</span>
-            {resumed ? <span className="text-[12px] text-lime">Kaldığın yerden devam ediyorsun</span> : null}
+            {resumed ? <span className="text-[12px] text-lime">Kaldığın yerden devam ediyorsun</span> : p.week ? <span className="text-[12px] text-mute">Programın {p.week}. haftası</span> : null}
           </span>
           <button type="button" className={`${btn.primary} h-11 text-[15px] px-5`} onClick={() => setSheet({ kind: 'finish' })}>Bitir</button>
         </div>
         {msg ? <p role="status" className="text-[13px] text-orange">{msg}</p> : null}
+        {p.fuel && !resumed ? <p className="text-[12px] text-ink-2 rounded-xl bg-surface-2 px-3 py-2" data-testid="fuel">{p.fuel}</p> : null}
         <div className="grid grid-cols-4 gap-2 text-center" data-testid="live-stats">
           <Stat label="Süre" value={mmss(Math.floor(stats.min * 60))} />
           <Stat label="Hacim" value={`${fmt(stats.volume)} kg`} />
@@ -168,6 +186,8 @@ export default function LiveWorkout(p: Props) {
             </span>
             <button type="button" className={btn.icon} aria-label={`${e.name} seçenekleri`} onClick={() => setSheet({ kind: 'menu', ex: ei })}><Dots size={20} /></button>
           </div>
+          {e.scheme || e.period ? <span className={`self-start text-[12px] font-bold px-2.5 h-7 rounded-full flex items-center ${e.period?.deload ? 'bg-water/20 text-water' : 'bg-surface-2 text-ink-2'}`} data-testid="target-chip">{e.scheme?.label ?? e.period?.label}</span> : null}
+          {e.plateau ? <p className="text-[12px] text-orange" data-testid="plateau-note">{e.plateau.weeks} haftadır ilerleme yok. {e.plateau.tip}</p> : null}
           {e.history.length ? <p className="text-[13px] text-mute" data-testid="last-time">Geçen ({e.history.at(-1)!.day.slice(8)}.{e.history.at(-1)!.day.slice(5, 7)}): {lastLine(e)}</p> : <p className="text-[13px] text-mute">İlk kez yapıyorsun: rahat bir ağırlıkla başla, RIR'ı dürüst gir.</p>}
           {e.suggestion ? (
             <div className="rounded-2xl bg-coach border border-coach-line px-3.5 py-3 flex flex-col gap-2" data-testid="suggestion">
@@ -230,9 +250,9 @@ export default function LiveWorkout(p: Props) {
               <span className="num text-[22px] font-bold leading-none">{mmss(restLeft)}</span>
               <span className="text-[12px] text-mute truncate">{d.restFor ? `Sıradaki: ${d.restFor}` : 'Dinlenme'}</span>
             </span>
-            <button type="button" className="h-10 px-3 rounded-full bg-surface-2 text-[13px] font-bold" onClick={() => update((x) => { x.restEndsAt = Math.max(Date.now(), (x.restEndsAt ?? 0) - 15000); return x })}>−15</button>
-            <button type="button" className="h-10 px-3 rounded-full bg-surface-2 text-[13px] font-bold" onClick={() => update((x) => { x.restEndsAt = (x.restEndsAt ?? Date.now()) + 15000; return x })}>+15</button>
-            <button type="button" className="h-10 px-3 rounded-full bg-lime text-lime-ink text-[13px] font-bold" onClick={() => update((x) => { x.restEndsAt = null; return x })}>Atla</button>
+            <button type="button" className="h-10 px-3 rounded-full bg-surface-2 text-[13px] font-bold" onClick={() => { const left = Math.max(5, restLeft - 15); update((x) => { x.restEndsAt = Math.max(Date.now(), (x.restEndsAt ?? 0) - 15000); return x }); if (d.restPush) pushRest(left, d.restFor) }}>−15</button>
+            <button type="button" className="h-10 px-3 rounded-full bg-surface-2 text-[13px] font-bold" onClick={() => { update((x) => { x.restEndsAt = (x.restEndsAt ?? Date.now()) + 15000; return x }); if (d.restPush) pushRest(restLeft + 15, d.restFor) }}>+15</button>
+            <button type="button" className="h-10 px-3 rounded-full bg-lime text-lime-ink text-[13px] font-bold" onClick={() => { cancelPush(); update((x) => { x.restEndsAt = null; return x }) }}>Atla</button>
           </div>
         </div>
       ) : null}
@@ -242,8 +262,27 @@ export default function LiveWorkout(p: Props) {
           <div className="flex flex-col gap-2 pb-4">
             <button type="button" className={btn.secondary} onClick={() => setSheet({ kind: 'plates', ex: sheet.ex })}>Plaka hesapla</button>
             {cur.kind === 'weight_reps' ? <button type="button" className={btn.secondary} onClick={() => { update((x) => { const ex = x.exercises[sheet.ex]; const work = n(ex.sets.find((s) => s.type !== 'warmup')?.kg ?? '') || ex.sets.find((s) => s.type !== 'warmup')?.ph.kg || 0; const ws = warmupSets(work, p.gym.barKg, p.gym.increment); ex.sets = [...ws.map((w) => ({ kg: String(w.kg), reps: String(w.reps), seconds: '', rir: null, type: 'warmup' as SetType, done: false, completedAt: null, feedback: null, ph: { kg: w.kg, reps: w.reps, seconds: 0 } })), ...ex.sets.filter((s) => s.type !== 'warmup' || s.done)]; return x }); setSheet(null) }}>Isınma setleri ekle (%40 / %60 / %80)</button> : null}
+            <button type="button" className={btn.secondary} onClick={async () => { setAlts(null); const ex = sheet.ex; setSheet({ kind: 'alts', ex }); const r = await alternativesAction(cur.exerciseId); setAlts(r.ok ? r.list : []) }}>İstasyon dolu: alternatifle değiştir</button>
             <Link href={`/fitness/hareketler/${cur.exerciseId}`} className={btn.secondary}><Info size={18} />Teknik ve geçmiş</Link>
             <button type="button" className={`${btn.ghost} text-danger`} onClick={() => { update((x) => { x.exercises.splice(sheet.ex, 1); return x }); setSheet(null) }}><Trash size={18} />Hareketi çıkar</button>
+          </div>
+        ) : null}
+      </Sheet>
+
+      <Sheet open={sheet?.kind === 'alts'} onClose={() => setSheet(null)} title="Alternatif hareketler">
+        {cur && sheet && 'ex' in sheet ? (
+          <div className="flex flex-col pb-4" data-testid="alt-list">
+            {alts === null ? <p className="text-mute text-sm">Yükleniyor…</p> : alts.length ? alts.map((a) => (
+              <button key={a.id} type="button" className="flex justify-between items-center min-h-[52px] text-left border-b border-line last:border-0" onClick={async () => {
+                const r = await liveExerciseAction(a.id)
+                if (!r.ok) { setMsg(r.error); return }
+                const old = d.exercises[sheet.ex]
+                // hedefler korunur, yeni hareketin geçmişi ve önerisi gelir; tamamlanmış setler eski harekette kalır
+                const nx = buildExercise({ ...r.exercise, sets: old.targetSets, repMin: old.repMin, repMax: old.repMax, rir: old.rir, rest: old.rest }, p.gym.increment, p.deficitKcal)
+                update((x) => { const o = x.exercises[sheet.ex]; if (o.sets.some((t) => t.done)) { o.sets = o.sets.filter((t) => t.done); x.exercises.splice(sheet.ex + 1, 0, nx) } else x.exercises[sheet.ex] = nx; return x })
+                setSheet(null)
+              }}><span className="font-semibold">{a.nameTr}</span><span className="text-[12px] text-mute">{EQUIPMENT[a.equipment] ?? a.equipment}</span></button>
+            )) : <p className="text-mute text-sm">Uygun alternatif bulunamadı.</p>}
           </div>
         ) : null}
       </Sheet>
