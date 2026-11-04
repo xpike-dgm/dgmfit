@@ -37,7 +37,18 @@
     "scripts/verify.sh",
     "scripts/memory-check.mjs",
     "tests/calc.test.ts",
-    "tests/e2e/onboarding.e2e.cjs"
+    "tests/e2e/onboarding.e2e.cjs",
+    "lib/water.ts",
+    "lib/water-data.ts",
+    "app/(app)/su/actions.ts",
+    "app/(app)/su/WaterScreen.tsx",
+    "app/(app)/su/istatistik/page.tsx",
+    "app/(app)/su/ayarlar/page.tsx",
+    "app/(app)/su/ayarlar/SettingsForm.tsx",
+    "components/Sheet.tsx",
+    "components/QuickWaterButton.tsx",
+    "tests/water.test.ts",
+    "tests/e2e/water.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -47,7 +58,11 @@
     "goals",
     "weight_logs",
     "events",
-    "daily_targets"
+    "daily_targets",
+    "water_containers",
+    "water_logs",
+    "water_settings",
+    "water_goal_history"
   ],
   "routes": [
     "/",
@@ -62,7 +77,9 @@
     "/yasal/kosullar",
     "/yasal/kvkk",
     "/api/health",
-    "/api/auth/username"
+    "/api/auth/username",
+    "/su/istatistik",
+    "/su/ayarlar"
   ],
   "events": [
     "profile.onboarded",
@@ -75,11 +92,80 @@
     "day.closed"
   ],
   "exports": {
-    "lib/calc.ts": ["bmr", "tdee", "computePlan", "waterTarget", "daysForTempo", "healthyWeightRange", "ageFromBirthDate", "bmi", "fmtNum"],
-    "lib/auth.ts": ["hashPassword", "verifyPassword", "createSession", "destroySession", "getUser", "requireUser", "rateLimit"],
-    "lib/events.ts": ["publish", "on"],
-    "lib/today.ts": ["getToday", "trendWeight"],
-    "lib/time.ts": ["dayString", "addDays", "diffDays", "longDate", "shortDate", "greeting"]
+    "lib/calc.ts": [
+      "bmr",
+      "tdee",
+      "computePlan",
+      "waterTarget",
+      "daysForTempo",
+      "healthyWeightRange",
+      "ageFromBirthDate",
+      "bmi",
+      "fmtNum"
+    ],
+    "lib/auth.ts": [
+      "hashPassword",
+      "verifyPassword",
+      "createSession",
+      "destroySession",
+      "getUser",
+      "requireUser",
+      "rateLimit"
+    ],
+    "lib/events.ts": [
+      "publish",
+      "on"
+    ],
+    "lib/today.ts": [
+      "getToday",
+      "trendWeight"
+    ],
+    "lib/time.ts": [
+      "dayString",
+      "addDays",
+      "diffDays",
+      "longDate",
+      "shortDate",
+      "greeting"
+    ],
+    "lib/water.ts": [
+      "DRINKS",
+      "effectiveMl",
+      "idealAt",
+      "predict",
+      "distributionScore",
+      "frequentAmounts",
+      "isLikelyDuplicate",
+      "overHourlyLimit",
+      "computeStreak",
+      "longestGap",
+      "hourlyBuckets",
+      "goalForDay",
+      "calibrateSip",
+      "sipMl"
+    ],
+    "lib/water-data.ts": [
+      "ensureWaterSetup",
+      "goalHistory",
+      "dailyTotals",
+      "getWaterScreen",
+      "getWaterSummary",
+      "getWaterStats",
+      "minuteOfDay",
+      "dayBounds"
+    ],
+    "app/(app)/su/actions.ts": [
+      "addWater",
+      "undoWater",
+      "deleteWater",
+      "updateWater",
+      "mergeWater",
+      "saveContainer",
+      "archiveContainer",
+      "saveSipCalibration",
+      "saveWaterSettings",
+      "saveWaterGoal"
+    ]
   },
   "dependencies": {
     "next": "16",
@@ -90,5 +176,8 @@
     "tailwindcss": "4",
     "typescript": "5"
   },
-  "migrations": ["0000_init.sql"]
+  "migrations": [
+    "0000_init.sql",
+    "0001_water.sql"
+  ]
 }

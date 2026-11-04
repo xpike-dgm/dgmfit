@@ -3,6 +3,8 @@ import { and, desc, eq, isNull } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString, diffDays } from './time'
 import { ageFromBirthDate } from './calc'
+import { dailyTotals, goalHistory } from './water-data'
+import { computeStreak, goalForDay } from './water'
 
 export interface TodayData {
   day: string
@@ -15,6 +17,7 @@ export interface TodayData {
   eaten: { kcal: number; protein: number; carb: number; fat: number }
   burned: number
   waterMl: number
+  streak: number
   weight: { latest: number; trend: number; start: number; target: number; progress: number; planned: number; history: { day: string; kg: number }[] }
   week: { day: string; label: string; num: string; frac: number; today: boolean; future: boolean }[]
 }
@@ -70,13 +73,25 @@ export async function getToday(userId: string): Promise<TodayData | null> {
   // Bu haftanın günleri (Pazartesi başlangıçlı)
   const dow = new Date(day + 'T12:00:00Z').getUTCDay()
   const monday = addDays(day, -((dow + 6) % 7))
+
+  // Su: hedef tarihçesi + gün toplamları (hafta halkaları ve seri için son 120 gün)
+  const wHistory = await goalHistory(userId)
+  const sFrom = addDays(day, -119)
+  const wTotals = await dailyTotals(userId, sFrom < monday ? sFrom : monday, day)
+  const wGoal = (d: string) => (wHistory.length ? goalForDay(wHistory, d) : goal?.waterMl ?? 2500)
+  const waterMl = wTotals.get(day)?.total ?? 0
+  target.water = wGoal(day)
+  const sDays = Array.from({ length: 120 }, (_, i) => { const d = addDays(sFrom, i); return { day: d, total: wTotals.get(d)?.total ?? 0, goal: wGoal(d) } })
+  const fa = sDays.findIndex((d) => d.total > 0)
+  const streak = fa >= 0 ? computeStreak(sDays.slice(fa)).current : 0
   const week = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(monday, i)
     return {
       day: d,
       label: DAY_LABELS[new Date(d + 'T12:00:00Z').getUTCDay()],
       num: String(Number(d.slice(8, 10))),
-      frac: 0, // yemek ve su modülleri gelince günlük tamamlama oranı
+      // şimdilik su ilerlemesi; Yemek modülüyle birlikte kalori + su ortak oranı olacak
+      frac: d > day ? 0 : Math.min(1, (wTotals.get(d)?.total ?? 0) / Math.max(1, wGoal(d))),
       today: d === day,
       future: d > day,
     }
@@ -84,7 +99,7 @@ export async function getToday(userId: string): Promise<TodayData | null> {
 
   return {
     day, profile, age: ageFromBirthDate(profile.birthDate), goal: goal ?? null, dayIndex, totalDays, target,
-    eaten: { kcal: 0, protein: 0, carb: 0, fat: 0 }, burned: 0, waterMl: 0,
+    eaten: { kcal: 0, protein: 0, carb: 0, fat: 0 }, burned: 0, waterMl, streak,
     weight: { latest, trend, start, target: tgt, progress, planned, history },
     week,
   }

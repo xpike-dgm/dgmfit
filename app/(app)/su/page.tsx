@@ -1,8 +1,16 @@
-import ModuleSoon from '@/components/ModuleSoon'
-import { Drop } from '@/components/icons'
-export const metadata = { title: 'Su' }
-export default function Page() {
-  return <ModuleSoon title="Su" icon={<Drop size={22} />} color="var(--color-water)" phase="Sıradaki modül"
-    lead="Su modülü geliştirme sırasında ilk sırada. Tek dokunuşla kayıt, kendi şişelerin ve davranışını öğrenen hatırlatmalar geliyor."
-    features={['Tek dokunuşla 50–500 ml ve özelleştirilebilir miktarlar', 'Yudum kaydı ve kişisel yudum kalibrasyonu', 'Bardak, termos ve şişe tanımlama; doluluk seçerek ekleme', 'Sesli kayıt: “Az önce 300 ml su içtim”', 'Davranışını öğrenen akıllı hatırlatmalar', 'Saatlik, haftalık, aylık ve yıllık istatistikler', 'Tahmin: gün sonu toplamı ve hedefe ulaşma saati']} />
+import type { Metadata } from 'next'
+import { requireUser } from '@/lib/auth'
+import { getWaterScreen } from '@/lib/water-data'
+import { addDays, dayString } from '@/lib/time'
+import WaterScreen from './WaterScreen'
+
+export const metadata: Metadata = { title: 'Su' }
+
+export default async function Page(props: { searchParams: Promise<{ gun?: string }> }) {
+  const u = await requireUser()
+  const { gun } = await props.searchParams
+  const today = dayString()
+  const day = gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) && gun < today && gun >= addDays(today, -365) ? gun : today
+  const data = await getWaterScreen(u.id, day)
+  return <WaterScreen key={day} data={data} />
 }

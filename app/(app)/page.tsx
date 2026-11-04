@@ -5,6 +5,7 @@ import { getToday } from '@/lib/today'
 import { greeting, longDate, shortDate, addDays } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { Bar, Ring } from '@/components/ui'
+import QuickWaterButton from '@/components/QuickWaterButton'
 import { Drop, Dumbbell, Flame, Pulse, Spark, User } from '@/components/icons'
 
 export default async function Today() {
@@ -35,9 +36,9 @@ export default async function Today() {
           <h1 className="mt-0.5 text-[26px] leading-tight font-extrabold tracking-tight">{greeting()}, {user.username}</h1>
         </div>
         <div className="flex gap-2 items-center pt-1">
-          <span className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-surface-2 text-sm font-bold" aria-label="Seri: 0 gün">
-            <Flame size={16} className="text-orange" />0
-          </span>
+          <Link href="/su/istatistik" className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-surface-2 text-sm font-bold" aria-label={`Su serisi: ${t.streak} gün`}>
+            <Flame size={16} className="text-orange" />{t.streak}
+          </Link>
           <Link href="/profil" aria-label="Profil" className="w-11 h-11 rounded-full border border-line bg-surface flex items-center justify-center"><User size={20} /></Link>
         </div>
       </header>
@@ -119,15 +120,17 @@ export default async function Today() {
         </section>
 
         <div className="grid grid-cols-2 gap-3">
-          <Link href="/su" aria-label="Su" className="card p-[18px] flex flex-col gap-3 relative overflow-hidden min-h-[196px]">
+          <section aria-label="Su" className="card p-[18px] flex flex-col gap-3 relative overflow-hidden min-h-[196px]">
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-water/20 to-water/[0.08] transition-[height] duration-700" style={{ height: `${Math.min(1, waterFrac) * 100}%` }} />
-            <div className="relative flex items-center gap-2"><Drop size={18} className="text-water" /><span className="text-sm font-bold">Su</span></div>
-            <div className="relative flex flex-col">
-              <span className="num text-[30px] font-bold tracking-[-0.02em]">{fmtNum(t.waterMl)}</span>
-              <span className="text-[13px] text-ink-2">/ {fmtNum(t.target.water)} ml · %{Math.round(waterFrac * 100)}</span>
-            </div>
-            <span className="relative mt-auto h-11 rounded-full bg-water text-water-ink font-extrabold text-[15px] flex items-center justify-center">+ Su ekle</span>
-          </Link>
+            <Link href="/su" className="relative flex flex-col gap-3">
+              <span className="flex items-center gap-2"><Drop size={18} className="text-water" /><span className="text-sm font-bold">Su</span></span>
+              <span className="flex flex-col">
+                <span className="num text-[30px] font-bold tracking-[-0.02em]">{fmtNum(t.waterMl)}</span>
+                <span className="text-[13px] text-ink-2">/ {fmtNum(t.target.water)} ml · %{Math.round(waterFrac * 100)}</span>
+              </span>
+            </Link>
+            <QuickWaterButton />
+          </section>
           <Link href="/fitness" aria-label="Antrenman" className="card p-[18px] flex flex-col gap-3 min-h-[196px]">
             <div className="flex items-center gap-2"><Dumbbell size={18} className="text-orange" /><span className="text-sm font-bold">Antrenman</span></div>
             <div className="flex flex-col gap-0.5">

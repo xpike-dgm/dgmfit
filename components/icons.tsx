@@ -35,3 +35,13 @@ export const Scale = (p: P) => <svg {...base(p)}><rect x="3" y="3" width="18" he
 export const Calendar = (p: P) => <svg {...base(p)}><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
 export const Lock = (p: P) => <svg {...base(p)}><rect x="4" y="10" width="16" height="11" rx="3" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
 export const Bolt = (p: P) => <svg {...base(p)}><path d="M13 2L4 14h7l-1 8 9-12h-7z" /></svg>
+export const Bottle = (p: P) => <svg {...base(p)}><path d="M10 2h4M10.5 2v3.2c0 .5-.3 1-.7 1.3C8.7 7.3 8 8.6 8 10v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V10c0-1.4-.7-2.7-1.8-3.5-.4-.3-.7-.8-.7-1.3V2" /></svg>
+export const Glass = (p: P) => <svg {...base(p)}><path d="M5 3h14l-1.6 16.2A2 2 0 0 1 15.4 21H8.6a2 2 0 0 1-2-1.8z" /><path d="M6 9h12" /></svg>
+export const Thermos = (p: P) => <svg {...base(p)}><path d="M9 2h6M10 2v3M14 2v3M8 5h8v15a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z" /></svg>
+export const Cup = (p: P) => <svg {...base(p)}><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z" /><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17" /></svg>
+export const Dots = (p: P) => <svg {...base(p)}><circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" /></svg>
+export const Clock = (p: P) => <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+export const Chart = (p: P) => <svg {...base(p)}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+export const Gear = (p: P) => <svg {...base(p)}><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
+export const Merge = (p: P) => <svg {...base(p)}><path d="M6 3v6a6 6 0 0 0 6 6h6M18 15l-3-3M18 15l-3 3M6 21v-3" /></svg>
+export const Trash = (p: P) => <svg {...base(p)}><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M9 7V4h6v3" /></svg>

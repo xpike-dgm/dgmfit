@@ -22,3 +22,11 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Gün sınırı Europe/Istanbul saatine göre | Kullanıcılar Türkiye'de | Teknik |
 | 2026-11-04 | Su hedefi taban formülü 33 ml × kg, 50 ml'ye yuvarlanır | Spesifikasyon 7.3 | Spesifikasyon |
 | 2026-11-04 | Kilo verme güvenlik sınırı haftalık %1, kalori tabanı K 1.200 / E 1.500; kilo alma haftalık %0,5 | Spesifikasyon 3.3 | Spesifikasyon |
+| 2026-11-04 | Hidrasyon katsayıları: su/maden suyu 1, çay 0,9, ayran 0,9, meyve suyu 0,85, kahve 0,8, diğer 0,8 | Spesifikasyonda "örnek kahve %80"; diğerleri yaklaşık değer, ileride ayarlanabilir | Teknik |
+| 2026-11-04 | Çift kayıt: aynı ml, ±2 dakika → onay sorusu (otomatik reddetme yok) | Gerçekten iki bardak içilmiş olabilir | Teknik |
+| 2026-11-04 | Saatlik uyarı eşiği 1.000 ml (yalnızca uyarı) | Spesifikasyon 7.3 "güvenlik üst sınırı" | Spesifikasyon |
+| 2026-11-04 | İdeal eğri: uyanıştan uykudan 1 saat öncesine kadar doğrusal | Basit ve açıklanabilir; Faz 1b'de kişisel profile göre şekillenebilir | Teknik |
+| 2026-11-04 | Tahmin: ≥3 geçmiş gün varsa "bu saatten sonra geçmişte içilen ortalama", yoksa tempo × kalan süre × 0,8; güven <7 düşük, 7–21 orta, ≥21 yüksek | Spesifikasyon 7.5 | Spesifikasyon |
+| 2026-11-04 | Esnek seri: ayda 2 dondurma, otomatik uygulanır; bugün seriyi kırmaz | Spesifikasyon 7.10 | Spesifikasyon |
+| 2026-11-04 | Su hedef değişikliği bugünden itibaren geçerli (aynı gün ikinci değişiklik öncekinin yerine geçer) | Geçmiş istatistikler bozulmasın | Spesifikasyon |
+| 2026-11-04 | Varsayılan kaplar: Bardak 200, Şişe 500 (varsayılan), Termos 750 | İlk kullanımda boş ekran olmasın | Teknik |

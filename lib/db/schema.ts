@@ -100,3 +100,55 @@ export const dailyTargets = pgTable('daily_targets', {
   waterMl: integer('water_ml').notNull(),
   closedAt: timestamp('closed_at', { withTimezone: true }),
 }, (t) => [primaryKey({ columns: [t.userId, t.day] })])
+
+// ───────────── Su modülü (Faz 1a) ─────────────
+
+export const waterContainers = pgTable('water_containers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  kind: text('kind').notNull().default('glass'), // glass | bottle | thermos | cup
+  capacityMl: integer('capacity_ml').notNull(),
+  lastFill: real('last_fill').notNull().default(1), // son seçilen doluluk oranı
+  isDefault: boolean('is_default').notNull().default(false),
+  sort: integer('sort').notNull().default(0),
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('water_containers_user_idx').on(t.userId)])
+
+export const waterLogs = pgTable('water_logs', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  loggedAt: timestamp('logged_at', { withTimezone: true }).notNull(),
+  ml: integer('ml').notNull(), // ham hacim
+  drink: text('drink').notNull().default('water'),
+  hydration: real('hydration').notNull().default(1),
+  effectiveMl: integer('effective_ml').notNull(), // hedefe sayılan
+  containerId: uuid('container_id').references(() => waterContainers.id, { onDelete: 'set null' }),
+  source: text('source').notNull(), // button | sip | container | fill | finish | custom | backdate | meal | voice | notification
+  note: text('note'),
+  history: jsonb('history').$type<{ at: string; action: string; before?: unknown }[]>().notNull().default([]),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('water_logs_user_time_idx').on(t.userId, t.loggedAt)])
+
+export const waterSettings = pgTable('water_settings', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  buttons: jsonb('buttons').$type<number[]>().notNull().default([50, 100, 150, 200, 250, 500]),
+  sipMl: integer('sip_ml'),
+  progressStyle: text('progress_style').notNull().default('bottle'), // bottle | ring | wave
+  simpleMode: boolean('simple_mode').notNull().default(false),
+  feedback: boolean('feedback').notNull().default(true), // animasyon + titreşim
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+/** Hedef değişiklikleri: bir günün hedefi = o güne kadarki en son kayıt. Geçmiş istatistikler bozulmaz. */
+export const waterGoalHistory = pgTable('water_goal_history', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  effectiveFrom: date('effective_from').notNull(),
+  baseMl: integer('base_ml').notNull(),
+  weekday: jsonb('weekday').$type<(number | null)[]>(), // 0=Pazar … 6=Cumartesi
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('water_goal_history_user_idx').on(t.userId, t.effectiveFrom)])

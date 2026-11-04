@@ -1,6 +1,6 @@
 # Mimari
 
-Son doğrulama: 2026-11-04, commit `dce73c0` (memory-check ile).
+Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 
 ## Yığın (package.json'dan)
 
@@ -32,7 +32,10 @@ Son doğrulama: 2026-11-04, commit `dce73c0` (memory-check ile).
 - `lib/today.ts` — Bugün ekranının verisi (`getToday`), `trendWeight` (EMA α=0.15).
 - `lib/time.ts` — tüm günler **Europe/Istanbul** saatine göre (`dayString`, `addDays`, `diffDays`, `longDate`, `greeting`).
 - `lib/validation.ts` — istemci+sunucu ortak kurallar (kullanıcı adı, e-posta, şifre gücü, e-posta yazım önerisi).
-- `components/` — `ui.tsx` (btn sınıfları, Ring, Bar, TopBar, FieldError), `icons.tsx` (satır içi SVG), `Ruler.tsx` (kaydırmalı cetvel), `BottomNav.tsx`, `QuickAdd.tsx` (dialog), `ModuleSoon.tsx`, `SwRegister.tsx`.
+- `lib/water.ts` — Su hesap motoru (saf, isomorfik; istemci ve sunucu aynı fonksiyonu kullanır): içecek türleri + hidrasyon katsayısı, ideal eğri, tempo, tahmin, dağılım skoru, sık miktarlar, çift kayıt, saatlik sınır, esnek seri, en uzun ara, hedef tarihçesi. Testleri `tests/water.test.ts`.
+- `lib/water-data.ts` — Su veri katmanı (server-only): `ensureWaterSetup` (ilk kullanımda ayarlar + hedef tarihçesi + 3 varsayılan kap), `dailyTotals` (SQL, Europe/Istanbul gün grubu), `getWaterScreen`, `getWaterStats`, `getWaterSummary`.
+- `app/(app)/su/` — `page.tsx` (`?gun=YYYY-MM-DD` ile geçmiş gün, en fazla 365 gün), `WaterScreen.tsx` (istemci; iyimser güncelleme, geri al çubuğu, çift kayıt onayı, alt sayfalar), `actions.ts`, `istatistik/` (`?aralik=7|30|90|365`), `ayarlar/`.
+- `components/` — `ui.tsx` (btn sınıfları, Ring, Bar, TopBar, FieldError), `icons.tsx` (satır içi SVG), `Ruler.tsx` (kaydırmalı cetvel), `BottomNav.tsx`, `QuickAdd.tsx` (dialog), `Sheet.tsx` (genel alt sayfa, native dialog), `QuickWaterButton.tsx` (Bugün ekranında +250 ml), `ModuleSoon.tsx`, `SwRegister.tsx`.
 - `public/` — `manifest.webmanifest`, `sw.js` (statik önbellek + çevrimdışı sayfa + push iskeleti), `offline.html`, `icons/` (`scripts/icons.cjs` ile Playwright'tan üretilir).
 - `drizzle/` — SQL migration'lar (drizzle-kit üretir); `scripts/migrate.mjs` bunları container açılışında uygular (`_migrations` tablosu, advisory lock).
 - `scripts/` — `bundle.sh`, `deploy.sh`, `migrate.mjs`, `icons.cjs`, `memory-check.mjs`, `verify.sh`.
@@ -49,10 +52,14 @@ Son doğrulama: 2026-11-04, commit `dce73c0` (memory-check ile).
 - Profil değişiklikleri `profile_history`'ye yazılır; geçmiş günlerin hedefleri değiştirilmez.
 - Yumuşak silme (`deleted_at`) kayıt tablolarında kullanılır.
 
-## Veri modeli (Faz 0)
+## Veri modeli
 
-`users` · `sessions` · `profiles` (1:1 kullanıcı) · `profile_history` · `goals` (aktif tek hedef, `active`) · `weight_logs` · `events` · `daily_targets` (gün bazlı hedef + dengeleme; henüz yazılmıyor, Faz 2'de dolacak).
+Faz 0: `users` · `sessions` · `profiles` (1:1 kullanıcı) · `profile_history` · `goals` (aktif tek hedef, `active`) · `weight_logs` · `events` · `daily_targets` (henüz yazılmıyor, Faz 2'de dolacak).
+
+Faz 1a (Su): `water_logs` (ham `ml` + `effective_ml` = ml × hidrasyon; `source`; `history` jsonb: create/edit/merge/delete/undo; yumuşak silme) · `water_containers` (kapasite, son doluluk, varsayılan, arşiv) · `water_settings` (butonlar, yudum ml, görünüm, geri bildirim) · `water_goal_history` (`effective_from` ile; günün hedefi = o güne kadarki son kayıt, haftanın günü özel hedefleri `weekday[0=Pazar]`).
+
+Su kuralları: hedefe `effective_ml` sayılır; Bugün ekranının su hedefi `water_goal_history`'den gelir (yoksa `goals.water_ml`); hafta şeridi halkaları şimdilik yalnızca su oranıdır; seri sayacı su serisidir.
 
 ## Olay türleri (`lib/events.ts`)
 
-`profile.onboarded`, `profile.updated`, `weight.logged`, `meal.logged`, `workout.finished`, `pr.achieved`, `water.logged`, `day.closed`. Şu an yayınlananlar: `profile.onboarded`, `weight.logged`. Henüz dinleyici (`on`) kaydı yok.
+`profile.onboarded`, `profile.updated`, `weight.logged`, `meal.logged`, `workout.finished`, `pr.achieved`, `water.logged`, `day.closed`. Şu an yayınlananlar: `profile.onboarded`, `weight.logged`, `water.logged` (addWater). Henüz dinleyici (`on`) kaydı yok.
