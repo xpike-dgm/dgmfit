@@ -4,6 +4,7 @@ import { db, schema } from './db'
 import { addDays, dayString, diffDays } from './time'
 import { ageFromBirthDate } from './calc'
 import { dailyTotals, goalHistory } from './water-data'
+import { dayMacros } from './food-data'
 import { computeStreak, goalForDay } from './water'
 
 export interface TodayData {
@@ -32,8 +33,7 @@ export function trendWeight(points: { day: string; kg: number }[], alpha = 0.15)
   return Math.round(t * 10) / 10
 }
 
-export async function getToday(userId: string): Promise<TodayData | null> {
-  const day = dayString()
+export async function getToday(userId: string, day: string = dayString()): Promise<TodayData | null> {
   const [profile] = await db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
   if (!profile) return null
   const [goal] = await db.select().from(schema.goals)
@@ -99,7 +99,7 @@ export async function getToday(userId: string): Promise<TodayData | null> {
 
   return {
     day, profile, age: ageFromBirthDate(profile.birthDate), goal: goal ?? null, dayIndex, totalDays, target,
-    eaten: { kcal: 0, protein: 0, carb: 0, fat: 0 }, burned: 0, waterMl, streak,
+    eaten: await dayMacros(userId, day), burned: 0, waterMl, streak,
     weight: { latest, trend, start, target: tgt, progress, planned, history },
     week,
   }

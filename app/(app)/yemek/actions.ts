@@ -28,9 +28,9 @@ function checkDay(day: string | undefined) {
 }
 
 /** Çorba, ayran gibi su oranı yüksek yemeklerden gelen suyu (ayar açıksa) Su modülüne ekler. */
-async function maybeFoodWater(userId: string, itemId: number, per100: Nutrients, grams: number, category: string | null, day: string) {
+async function maybeFoodWater(userId: string, itemId: number, per100: Nutrients, grams: number, category: string | null, name: string, day: string) {
   const water = ((per100.water ?? 0) * grams) / 100
-  const liquid = (per100.water ?? 0) >= 80 && /Çorba|İçecek|Süt/i.test(category ?? '')
+  const liquid = (per100.water ?? 0) >= 80 && (/Çorba|İçecek/i.test(category ?? '') || /(^|\s)(süt|kefir|ayran)/i.test(name))
   if (!liquid || water < 50) return
   await ensureWaterSetup(userId)
   const [s] = await db.select({ on: schema.waterSettings.foodWater }).from(schema.waterSettings).where(eq(schema.waterSettings.userId, userId)).limit(1)
@@ -44,7 +44,7 @@ const AddInput = z.object({
   foodId: z.number().int().positive(),
   grams: z.number().min(1).max(5000),
   portionLabel: z.string().max(80).nullable().optional(),
-  portionQty: z.number().min(0.05).max(100).nullable().optional(),
+  portionQty: z.number().min(0.05).max(5000).nullable().optional(),
   meal: Meal,
   day: Day.optional(),
   source: z.enum(['search', 'recent', 'barcode', 'saved', 'recipe']).default('search'),
@@ -63,13 +63,13 @@ export async function addMealItem(input: z.input<typeof AddInput>): Promise<R<{ 
     userId, day, meal: p.data.meal, foodId: f.id, name: f.nameTr ?? f.nameEn ?? 'Besin', grams: p.data.grams,
     portionLabel: p.data.portionLabel ?? null, portionQty: p.data.portionQty ?? null, per100: f.per100, ...m, source: p.data.source,
   }).returning({ id: schema.mealItems.id })
-  await maybeFoodWater(userId, row.id, f.per100, p.data.grams, f.category, day)
+  await maybeFoodWater(userId, row.id, f.per100, p.data.grams, f.category, f.nameTr ?? f.nameEn ?? '', day)
   await publish(userId, 'meal.logged', { id: row.id, day, meal: p.data.meal, ...m })
   revalidatePath('/'); revalidatePath('/yemek')
   return { ok: true, id: row.id, kcal: m.kcal }
 }
 
-const EditInput = z.object({ id: z.number().int(), grams: z.number().min(1).max(5000), portionLabel: z.string().max(80).nullable(), portionQty: z.number().min(0.05).max(100).nullable(), meal: Meal })
+const EditInput = z.object({ id: z.number().int(), grams: z.number().min(1).max(5000), portionLabel: z.string().max(80).nullable(), portionQty: z.number().min(0.05).max(5000).nullable(), meal: Meal })
 
 export async function updateMealItem(input: z.input<typeof EditInput>): Promise<R> {
   const userId = await uid()

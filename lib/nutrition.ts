@@ -32,17 +32,17 @@ export interface RecipeIngredient { per100: Nutrients; grams: number }
  * yieldGrams verilmezse çiğ toplam ağırlık kullanılır. Bir besin, malzemelerden birinde eksikse sonuçta da
  * "bilinmiyor" sayılmaz; yalnızca tüm malzemelerde bulunan anahtarlar kesin kabul edilir (missing listesi döner).
  */
-export function computeRecipe(ings: RecipeIngredient[], yieldGrams?: number): { per100: Nutrients; rawGrams: number; yieldGrams: number; missing: NutrientKey[] } {
+export function computeRecipe(ings: RecipeIngredient[], yieldGrams?: number): { per100: Nutrients; total: Nutrients; rawGrams: number; yieldGrams: number; missing: NutrientKey[] } {
   const rawGrams = ings.reduce((a, i) => a + i.grams, 0)
   const y = yieldGrams && yieldGrams > 0 ? yieldGrams : rawGrams
   if (!(y > 0)) throw new Error('tarif ağırlığı 0')
   const total = sumNutrients(ings.map((i) => forGrams(i.per100, i.grams)))
   const missing = NUTRIENT_KEYS.filter((k) => ings.some((i) => i.grams > 0 && i.per100[k] === undefined && k !== 'water'))
   const per100: Nutrients = {}
-  for (const k of NUTRIENT_KEYS) if (total[k] !== undefined) per100[k] = round((total[k]! * 100) / y, k === 'kcal' || k === 'sodium' ? 0 : 2)
+  for (const k of NUTRIENT_KEYS) if (total[k] !== undefined) per100[k] = round((total[k]! * 100) / y, k === 'sodium' ? 0 : k === 'kcal' ? 1 : 2)
   // su: pişirmede kaybolan ağırlık sudur
   if (total.water !== undefined) per100.water = round(((total.water - (rawGrams - y)) * 100) / y, 1)
-  return { per100, rawGrams, yieldGrams: y, missing }
+  return { per100, total, rawGrams, yieldGrams: y, missing }
 }
 
 /** Atwater (4/4/9) ile makrolardan kalori — veri tutarlılık kontrolü için. */

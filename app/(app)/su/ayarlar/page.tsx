@@ -8,6 +8,7 @@ import { waterTarget } from '@/lib/calc'
 import { TopBar } from '@/components/ui'
 import SettingsForm from './SettingsForm'
 import PushSettings from './PushSettings'
+import FoodWaterToggle from './FoodWaterToggle'
 
 export const metadata: Metadata = { title: 'Su ayarları' }
 
@@ -27,6 +28,7 @@ export default async function Page() {
       <div className="mt-2">
         <PushSettings enabled={settings?.remindersEnabled ?? false} summaryEnabled={settings?.summaryEnabled ?? true} maxPerDay={settings?.maxPerDay ?? 8} quiet={settings?.quiet ?? []} />
       </div>
+      <FoodWaterToggle on={settings?.foodWater ?? false} />
       <SettingsForm
         goal={{ baseMl: last?.baseMl ?? 2500, weekday: last?.weekday ?? [null, null, null, null, null, null, null] }}
         suggested={profile ? waterTarget(profile.weightKg) : 2500}

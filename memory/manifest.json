@@ -69,7 +69,19 @@
     "scripts/data/build_usda.py",
     "scripts/data/build_foods.mjs",
     "scripts/data/check_tr.py",
-    "scripts/data/find_usda.py"
+    "scripts/data/find_usda.py",
+    "lib/food.ts",
+    "lib/food-data.ts",
+    "tests/food.test.ts",
+    "tests/e2e/food.e2e.cjs",
+    "app/(app)/yemek/actions.ts",
+    "app/(app)/yemek/FoodDiary.tsx",
+    "app/(app)/yemek/ekle/AddFood.tsx",
+    "app/(app)/yemek/besin/yeni/CreateFood.tsx",
+    "app/(app)/yemek/tarif/yeni/RecipeBuilder.tsx",
+    "components/FoodSheet.tsx",
+    "components/BarcodeScanner.tsx",
+    "app/(app)/su/ayarlar/FoodWaterToggle.tsx"
   ],
   "tables": [
     "users",
@@ -112,7 +124,12 @@
     "/api/push/unsubscribe",
     "/api/push/test",
     "/api/water/notify",
-    "/api/test/reminder"
+    "/api/test/reminder",
+    "/yemek/ekle",
+    "/yemek/besin/yeni",
+    "/yemek/tarif/yeni",
+    "/api/food/search",
+    "/api/food/barcode"
   ],
   "events": [
     "profile.onboarded",
@@ -231,6 +248,39 @@
       "atwaterKcal",
       "normalizeSearch",
       "NUTRIENT_KEYS"
+    ],
+    "lib/food.ts": [
+      "mealForTime",
+      "macrosFor",
+      "sumMacros",
+      "portionGrams",
+      "budgetImpact",
+      "mapOffProduct",
+      "isValidBarcode",
+      "MEALS"
+    ],
+    "lib/food-data.ts": [
+      "searchFoods",
+      "recentFoods",
+      "getFood",
+      "getDiary",
+      "dayMacros",
+      "savedMealsFor",
+      "userFoods",
+      "lookupBarcode"
+    ],
+    "app/(app)/yemek/actions.ts": [
+      "addMealItem",
+      "updateMealItem",
+      "deleteMealItem",
+      "addQuickCalories",
+      "copyMeal",
+      "saveMealAsTemplate",
+      "addSavedMeal",
+      "createFood",
+      "createRecipe",
+      "deleteUserFood",
+      "setFoodWater"
     ]
   },
   "dependencies": {
@@ -241,7 +291,8 @@
     "zod": "4",
     "tailwindcss": "4",
     "typescript": "5",
-    "web-push": "3"
+    "web-push": "3",
+    "@zxing/browser": "0"
   },
   "migrations": [
     "0000_init.sql",
