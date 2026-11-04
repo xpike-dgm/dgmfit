@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "1b",
+  "phase": "2a",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -59,7 +59,17 @@
     "tests/reminders.test.ts",
     "tests/water-speech.test.ts",
     "tests/water-insights.test.ts",
-    "tests/e2e/push.e2e.cjs"
+    "tests/e2e/push.e2e.cjs",
+    "lib/nutrition.ts",
+    "tests/nutrition.test.ts",
+    "data/usda-sr.json.gz",
+    "data/tr-foods.json",
+    "data/tr-dishes.json",
+    "data/foods-seed.json.gz",
+    "scripts/data/build_usda.py",
+    "scripts/data/build_foods.mjs",
+    "scripts/data/check_tr.py",
+    "scripts/data/find_usda.py"
   ],
   "tables": [
     "users",
@@ -76,7 +86,10 @@
     "water_goal_history",
     "app_config",
     "push_subscriptions",
-    "water_reminders"
+    "water_reminders",
+    "foods",
+    "meal_items",
+    "saved_meals"
   ],
   "routes": [
     "/",
@@ -210,6 +223,14 @@
       "runForUser",
       "markReminder",
       "reminderStats"
+    ],
+    "lib/nutrition.ts": [
+      "computeRecipe",
+      "forGrams",
+      "sumNutrients",
+      "atwaterKcal",
+      "normalizeSearch",
+      "NUTRIENT_KEYS"
     ]
   },
   "dependencies": {
@@ -225,6 +246,7 @@
   "migrations": [
     "0000_init.sql",
     "0001_water.sql",
-    "0002_reminders.sql"
+    "0002_reminders.sql",
+    "0003_food.sql"
   ]
 }

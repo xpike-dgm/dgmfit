@@ -55,8 +55,8 @@ Kapsam dışı (not): hava durumu ve antrenmana bağlı hatırlatma (Faz 3 / dı
 
 Kaynak: spesifikasyon bölüm 6 (Yemek). Veri kaynağı kararı DECISIONS.md'de (TURKOMP kullanılmıyor).
 
-- [ ] Besin verisi: USDA SR Legacy (CC0) içe aktarma betiği → `foods` + `food_portions`; makro + lif, şeker, doymuş yağ, sodyum, su; Türkçe adlar (küratörlü liste) + İngilizce arama yedeği
-- [ ] Türk yemekleri: malzeme gramajlarıyla tarif → besin değerleri USDA malzemelerinden HESAPLANIR (elle yazılmaz), "hesaplanmış" etiketi; birim testi toplamları doğrular
+- [x] Besin verisi (commit `5525b9b`): USDA SR Legacy (CC0) içe aktarma betiği → `foods` + `food_portions`; makro + lif, şeker, doymuş yağ, sodyum, su; Türkçe adlar (küratörlü liste) + İngilizce arama yedeği
+- [x] Türk yemekleri (36 tarif, commit `5525b9b`): malzeme gramajlarıyla tarif → besin değerleri USDA malzemelerinden HESAPLANIR (elle yazılmaz), "hesaplanmış" etiketi; birim testi toplamları doğrular
 - [ ] Arama: Türkçe karakter duyarsız, yazım hatasına dayanıklı (trigram), son kullanılan ve sık yenenler üstte
 - [ ] Öğün kaydı: kahvaltı/öğle/akşam/ara; porsiyon birimleri (g, adet, dilim, su bardağı, yemek kaşığı, porsiyon); kayıt anında kalan bütçe etkisi; düzenle/sil/taşı; geçmiş güne kayıt
 - [ ] Barkod: kamera ile okuma (BarcodeDetector varsa, yoksa ZXing) + elle giriş; Open Food Facts'ten çekip önbelleğe alma, "© Open Food Facts katkıcıları" atfı; bulunamazsa özel ürün ekleme
