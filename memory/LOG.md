@@ -2,6 +2,14 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 3a tamamlandı
+- Depo GitHub'a taşındı: `xpike-dgm/dgmfit` (kullanıcı onayıyla push; geçmişte token/sır taraması temiz). Proje izin kuralları `.claude/settings.json` (commit `9456bb2`). Kullanıcı ayar dosyasına izin ekleme denemem otomatik mod güvenlik kontrolünce engellendi (öz-değişiklik) — doğru davranış, etrafından dolaşılmadı.
+- Veri: free-exercise-db 876 hareket + 93 küratörlü Türkçe teknik; builder kaynak adla eşleşmeyeni durdurur. Görseller VDS `/srv/dgfit-media` + Caddy `/media/*` (diğer site 200, dizin dışı 404). Commit `52efebb`.
+- Motor `lib/training.ts` (14 test), şablonlar + üretici `lib/programs.ts` (5 test; tüm anahtarlar veri setinde). Kendi incelememde bulunanlar: "aynı ağırlık + 1 tekrar" adımında e1RM ağırlığı düşürüyordu → ağırlık düşmez; vücut ağırlığı squat/şınav 6–10 tekrarda kalıyordu → 15–25 / 8–20; kettlebell etiketli goblet squat evde dumbbell ile atlanıyordu → eşdeğer ekipman.
+- Şema 0005 + veri katmanı + aksiyonlar (`900c804`), ekranlar (`e0d3e53`, `e6bb8da`).
+- E2E ile bulunan gerçek hatalar (`673afef`): (1) aramasız kütüphane filtresi `ORDER BY 0` ile çöküyordu; (2) alt sayfadan alt sayfaya geçişte yenisi de kapanıyordu (Sheet onClose); (3) Fit "İstisna say" onayı kartla birlikte siliniyordu (önceki fazda yarış nedeniyle tesadüfen geçmişti); (4) sayı alanının erişilebilir adına birim karışıyordu; (5) geçmişsiz harekette boş alanla 0 kg set kaydı → engellendi; (6) dengeli tempo açığı (~550 kcal) ağırlık artışını tamamen durduruyordu → eşik 750; (7) aynı set 3 rekor olarak sayılıyordu (kg = 3RM = 5RM). Test kaynaklı: Su e2e sabit 09:00 gece yarısından sonra gelecekte kalıyordu; Next rota duyurucusuyla çift metin eşleşmesi; yerelde `/media` 404.
+- Doğrulama: birim 86/86; verify.sh VERIFY OK; release.sh RELEASE OK (deploy `2026-11-04T21-27-04-578Z`); canlı DB exercises 876/93; 5 test kullanıcısı silindi.
+
 ## 2026-11-04 — Faz 3a başladı
 - Faz başı: memory-check geçti; son commit `267f03f` (betikler) STATE ile uyumlu; çalışma ağacı temiz.
 - Spesifikasyon bölüm 4 ve 9 Claude Docs bağlayıcısıyla okundu. Faz 3 ikiye bölündü (3a çekirdek, 3b gelişim).

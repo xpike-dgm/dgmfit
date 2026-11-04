@@ -35,19 +35,24 @@ Portlar: app `127.0.0.1:3930`, deploy alıcısı `127.0.0.1:3931`.
 
 - Site bloğu: `/etc/caddy/dgfit-pwa.caddy` (izin **644** olmalı; 600 iken reload başarısız oldu).
 - Ana Caddyfile'a yalnızca `import /etc/caddy/dgfit-pwa.caddy` eklendi; yedek: `/etc/caddy/Caddyfile.pre-dgfit-pwa-<zaman>`.
-- `/_deploy*` → 3931 (300 MB gövde, 10 dk zaman aşımı); diğer her şey → 3930.
+- `/_deploy*` → 3931 (300 MB gövde, 10 dk zaman aşımı); `/media/*` → `/srv/dgfit-media` dosya sunucusu (1 yıl önbellek); diğer her şey → 3930.
+- Hareket görselleri (Faz 3a): `/srv/dgfit-media/exercises/<id>/0.jpg|1.jpg` (free-exercise-db, 1.746 jpg, 102 MB, kaynak commit `/srv/dgfit-media/exercises.REVISION`). `/opt/dgfit-pwa` 700 olduğu için Caddy oradan okuyamaz; görseller bu yüzden `/srv` altında. Caddy yedeği: `/etc/caddy/dgfit-pwa.caddy.pre-media-<zaman>`. Görseller yerel testte yoktur (e2e `/media/` 404'lerini yok sayar).
 - Değişiklikten önce: `caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile`, sonra `systemctl reload caddy`.
 
 ## Deploy akışı
 
-1. Yerelde: `./scripts/bundle.sh` → `release.tgz` (~25 MB; standalone + static + public + drizzle + migrate.mjs + source.tgz + repo.bundle).
-2. `DGFIT_DEPLOY_TOKEN=<token> ./scripts/deploy.sh` → `POST https://dgfit.dgmcraft.online/_deploy`.
+1. Yerelde: `./scripts/bundle.sh` → `release.tgz` (~30 MB; standalone + static + public + drizzle + migrate.mjs + besin ve hareket tohumu + source.tgz + repo.bundle).
+2. `./scripts/deploy.sh` → `POST https://dgfit.dgmcraft.online/_deploy`. Token `DGFIT_DEPLOY_TOKEN` ortam değişkeninden ya da `~/.config/dgfit/deploy-token` dosyasından (repo dışında; pakete girmez) okunur.
+   Tek komut: `./scripts/release.sh [e2e adları]` = paket + deploy + sağlık + test kancası 404 kontrolü + canlı e2e (push hariç).
 3. Yanıt `DEPLOY OK <id>` olmalı. Bağlantı koparsa: `curl -H "Authorization: Bearer <token>" https://dgfit.dgmcraft.online/_deploy/log`.
 4. Token'ı almak için (MCP): `cat /opt/dgfit-pwa/deploy/token`.
 
 ## Hafızayı / kodu geri yükleme (yeni oturumda)
 
-Bu çalışma ortamı geçicidir. Kod ve hafıza sunucuda her sürümün `repo.bundle` dosyasındadır:
+Asıl kaynak GitHub: **https://github.com/xpike-dgm/dgmfit** (dal `main`; 2026-11-04'ten beri her commit push edilir). Oturumda klon yolu `/home/user/dgmfit` (eski yerel klasör `/home/user/dgfit` artık kullanılmıyor). Proje izin kuralları `.claude/settings.json`'da.
+Yeni bulut oturumunda deploy token'ı `~/.config/dgfit/deploy-token` dosyasına MCP ile alınır (`cat /opt/dgfit-pwa/deploy/token`).
+
+Yedek yol: kod ve hafıza sunucuda her sürümün `repo.bundle` dosyasındadır:
 
 ```bash
 TOKEN=<MCP ile: cat /opt/dgfit-pwa/deploy/token>

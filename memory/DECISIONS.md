@@ -56,3 +56,12 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Faz 3 ikiye bölündü: 3a çekirdek (kütüphane, program, canlı antrenman, öneri, PR, entegrasyon), 3b gelişim (grafik, ısı haritası, ölçü/fotoğraf, standartlar, periyodizasyon) | Kapsam büyüklüğü | Teknik |
 | 2026-11-04 | Hareket verisi: free-exercise-db (Unlicense/kamu malı, 876 hareket + görsel). Görseller VDS'de barındırılır | Lisans temiz; dış siteye istek yok (gizlilik + çevrimdışı) | Kaynak |
 | 2026-11-04 | "AI program oluşturucu" 3a'da kural tabanlı (deneyim/gün/ekipman/hedef); dil modeliyle yazım Faz 4'te | API anahtarı yok; kurallar test edilebilir | Teknik |
+| 2026-11-04 | Kod GitHub'da (`xpike-dgm/dgmfit`, kullanıcı oluşturdu ve push onayı verdi); oturum klonu `/home/user/dgmfit` | Kalıcılık + proje izin kuralları | Altyapı |
+| 2026-11-04 | Öneri motoru: Epley (tekrar + RIR) e1RM; çift aşamalı ilerleme; ağırlık "aynı + 1 tekrar" adımında düşmez; yorgunluk 1 düşüş = sabit, 2 ardışık %3+ düşüş = %10 deload; ilk 2 kayıt düşük güven | Spesifikasyon 4.4; geri adım hissi vermesin | Teknik |
+| 2026-11-04 | Temkinli öneri eşiği: plan açığı > 750 kcal ya da ağrı notu (dengeli 0,5 kg/hafta ≈ 550 kcal temkin tetiklemez) | 500 eşiği varsayılan planda artışı tamamen durduruyordu | Ürün |
+| 2026-11-04 | Egzersiz kalorisi Fit'e **net** eklenir: (MET − 1) × kg × saat; koşu/yürüyüşte ACSM hız denklemi, nabız varsa Keytel (2005); ağırlıkta MET 3,5 / 6,0 (dakikada 0,4+ set) | Dinlenme harcaması TDEE'de zaten var; çift sayım olmasın | Teknik |
+| 2026-11-04 | Antrenman günü su hedefi: antrenman + kardiyo dakikası × 500 ml/saat (50 ml'ye yuvarlı); Su ekranı, istatistik, Bugün ve hatırlatmalar aynı eki kullanır | Spesifikasyon 9 entegrasyon tablosu | Teknik |
+| 2026-11-04 | Öneri canlı modda istemcide hesaplanır (geçmiş sayfayla gelir) | Salonda bağlantı kopsa da çalışsın | Teknik |
+| 2026-11-04 | Çevrimdışı: canlı taslak localStorage'da, bitirilen antrenman kuyruğa; `client_id` ile sunucuda tekrar kaydı engellenir | Spesifikasyon 4.3 "çevrimdışı çalışır"ın 3a kapsamı | Teknik |
+| 2026-11-04 | En ağır kiloyla aynı değerdeki 3/5/10RM rekorları ayrıca gösterilmez; hareketin ilk kaydı rekor sayılmaz | Rekor gürültüsü | Ürün |
+| 2026-11-04 | 5/3/1 ve nSuns (yüzdelik TM şemaları) 3b'ye; GZCLP 3a'da basitleştirilmiş (çift aşamalı ilerleme) | Periyodizasyonla birlikte doğru yapılsın | Kapsam |
