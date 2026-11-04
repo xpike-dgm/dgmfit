@@ -12,6 +12,7 @@ cp scripts/migrate.mjs dist/migrate.mjs
 rm -rf dist/node_modules/postgres && cp -a node_modules/postgres dist/node_modules/postgres
 # kaynak kod yedeği (sunucuda arşivlenir)
 tar --exclude=node_modules --exclude=.next --exclude=dist --exclude=.git --exclude=release.tgz -czf dist/source.tgz .
+git bundle create dist/repo.bundle --all >/dev/null 2>&1 || true
 git rev-parse --short HEAD 2>/dev/null > dist/REVISION || date -u +%Y%m%d%H%M > dist/REVISION
 tar -czf release.tgz -C dist .
 ls -la release.tgz | awk '{print "release.tgz", $5, "bytes"}'
