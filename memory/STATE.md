@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 3a tamamlandı (2026-11-05 00:30). Sıradaki: Faz 3b — Fitness gelişim (kullanıcı onayı bekleniyor)**
+**Şu anki faz: Faz 3b — Fitness gelişim (devam ediyor, başlangıç 2026-11-05)**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -14,7 +14,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 2a | Yemek çekirdeği: besin veritabanı, arama, öğün kaydı, porsiyonlar, barkod, özel besin, tarif, kopyalama, Bugün entegrasyonu | tamamlandı | commit `5525b9b` + `e8e5318` + `42d0008`; birim test 53/53; verify.sh VERIFY OK (food + onboarding + push + su e2e); canlı onboarding/su/yemek e2e OK (deploy `2026-11-04T19-11-00-792Z`); canlıda foods: usda 7.793 + dgfit 36; OFF barkod canlıdan çalıştı |
 | 2b | Fit: günlük hedef kaydı (`daily_targets`), akıllı kalori dengeleme, adaptif TDEE, kilo trendi + haftalık check-in, plan ekranı, kalori bankası | tamamlandı | commit `0910d1e` + `6f491b8`; birim test 67/67; verify.sh VERIFY OK (fit tohumlu e2e + food + onboarding + push + su); canlı fit/food/onboarding/su e2e OK, canlıda `/api/test/fit` 404 (deploy `2026-11-04T19-53-42-460Z`); 4 test kullanıcısı silindi |
 | 3a | Fitness çekirdeği: hareket kütüphanesi, program oluşturucu + şablonlar, canlı antrenman, ağırlık öneri motoru, PR, kardiyo, Fit/Su/Yemek entegrasyonu | tamamlandı | commit `52efebb` + `900c804` + `e0d3e53` + `e6bb8da` + `673afef`; birim test 86/86; verify.sh VERIFY OK (fitness + fit + food + onboarding + push + su e2e); `release.sh` RELEASE OK: canlı fitness/fit/food/onboarding/su e2e (deploy `2026-11-04T21-27-04-578Z`); canlıda exercises 876 (93 küratörlü), görsel 200, çevrimdışı kuyruktaki antrenman canlıda kaydedildi; 5 test kullanıcısı silindi |
-| 3b | Fitness gelişim: e1RM/hacim grafikleri, kas ısı haritası, plato tespiti, vücut ölçüleri + ilerleme fotoğrafları, kuvvet standartları, özel hareket fotoğrafı, alternatif hareket önerisi, periyodizasyon/deload, 5/3/1 + nSuns + GZCLP tam şeması, tüm hareket açıklamalarının Türkçesi (783 hareket), kilit ekranında güvenilir dinlenme bildirimi | planlandı | — |
+| 3b | Fitness gelişim: e1RM/hacim grafikleri, kas ısı haritası, plato tespiti, vücut ölçüleri + ilerleme fotoğrafları, kuvvet standartları, özel hareket fotoğrafı, alternatif hareket önerisi, periyodizasyon/deload, 5/3/1 + nSuns + GZCLP tam şeması, tüm hareket açıklamalarının Türkçesi (783 hareket), kilit ekranında güvenilir dinlenme bildirimi | devam ediyor | — |
 | 4 | AI katmanı (fotoğraf/ses kaydı, koç, raporlar) | planlandı | — |
 | 5 | Sosyal | planlandı | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı | — |
@@ -94,9 +94,25 @@ Kaynak: spesifikasyon bölüm 4 (Fitness) ve bölüm 9 (entegrasyon tablosu).
 
 Kanıt: e2e `tests/e2e/fitness.e2e.cjs` — program üretimi (3 gün, Full Body), set düzenleme, boş ağırlık koruması, 4×60×10 + 3×40×8 = 3.360 kg hacim, plaka 100 kg = 25 + 15, sayfa yenilemede taslak, ikinci seansta öneriler (`lib/training.ts` ile hesaplanan değer = ekrandaki), bench rekorları, önceki günle kıyas, kardiyo net kcal (ACSM), Bugün egzersiz kredisi + antrenman kartı, su hedefi +250–400 ml, Yemek protein önerisi, kütüphane arama/filtre/detay, özel hareket, çevrimdışı bitir → kuyruk → gönderim.
 
+## Faz 3b kapsamı ve kabul kriterleri
+
+Kaynak: spesifikasyon 4.1, 4.2, 4.4, 4.5, 9 ve 3a'dan devredilenler.
+
+- [ ] Saf fonksiyonlar (testli): plato tespiti (3+ hafta e1RM ilerlemesi yok → varyasyon / tekrar aralığı / hacim önerisi), alternatif hareket (aynı kas + tip, farklı ekipman), kuvvet standartları (e1RM / vücut ağırlığı, cinsiyete göre 4 seviye — DgFit yaklaşık rehberi, kaynaklı değilse açıkça belirtilir), kas başına haftalık set (10–20 bandı), kas toparlanma durumu (yeşil/sarı/kırmızı), periyodizasyon (lineer, DUP, blok) ve otomatik deload haftası, yüzdelik şemalar (5/3/1, GZCLP tam, nSuns — yüzdeler doğrulanmış kaynaktan)
+- [ ] İstatistik ekranı: hareket bazında e1RM eğrisi, haftalık hacim, kas başına haftalık set, antrenman sıklığı takvimi, kas ısı haritası (son 7 gün + toparlanma)
+- [ ] Hareket detayı: e1RM grafiği, plato uyarısı, kuvvet seviyesi, alternatifler
+- [ ] Vücut ölçüleri (bel, göğüs, kalça, kol, uyluk vb.) + ilerleme fotoğrafları: yalnızca sahibine, sunucuda şifreli saklama (AES-256-GCM), yan yana kıyas
+- [ ] Özel harekete fotoğraf
+- [ ] Program: periyodizasyon seçimi + deload sıklığı; canlı modda deload/DUP hedefleri; 5/3/1, GZCLP (tam), nSuns şablonları (training max)
+- [ ] Canlı mod: alternatif hareketle değiştir ("istasyon dolu"), antrenman öncesi yakıt uyarısı (Yemek), plato bilgisi
+- [ ] Kilit ekranında dinlenme bildirimi: sunucudan zamanlı Web Push (abonelik varsa)
+- [ ] Çevrimdışı: canlı antrenman sayfası service worker önbelleğinden açılır
+- [ ] Türkçe: kalan hareketlerin teknik açıklaması ve adları (kaynak metnin çevirisi, uydurma yok)
+- [ ] Testler (birim + e2e) + verify.sh + canlı e2e + hafıza
+
 ## Sıradaki işler
 
-1. Faz 3b (Fitness gelişim) — kullanıcı "geç" deyince. Ardından Faz 4 (AI), Faz 5 (Sosyal).
+1. Faz 3b'yi kriterlere göre tamamla. Ardından Faz 4 (AI), Faz 5 (Sosyal).
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
 3. E-posta doğrulama kodu (Mailu SMTP) — ertelendi.
 

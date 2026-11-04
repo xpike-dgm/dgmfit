@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 3b başladı
+- Faz başı: memory-check geçti; son commit `dc60bb7` STATE ile uyumlu; çalışma ağacı temiz, `origin/main` ile eşit.
+
 ## 2026-11-05 — Faz 3a tamamlandı
 - Depo GitHub'a taşındı: `xpike-dgm/dgmfit` (kullanıcı onayıyla push; geçmişte token/sır taraması temiz). Proje izin kuralları `.claude/settings.json` (commit `9456bb2`). Kullanıcı ayar dosyasına izin ekleme denemem otomatik mod güvenlik kontrolünce engellendi (öz-değişiklik) — doğru davranış, etrafından dolaşılmadı.
 - Veri: free-exercise-db 876 hareket + 93 küratörlü Türkçe teknik; builder kaynak adla eşleşmeyeni durdurur. Görseller VDS `/srv/dgfit-media` + Caddy `/media/*` (diğer site 200, dizin dışı 404). Commit `52efebb`.
