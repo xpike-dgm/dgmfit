@@ -5,6 +5,7 @@ const OUT = process.env.OUT || require('os').tmpdir()
   const b = await chromium.launch()
   const ctx = await b.newContext({ ...devices['iPhone 14'], locale: 'tr-TR', timezoneId: 'Europe/Istanbul' })
   const p = await ctx.newPage()
+  p.setDefaultNavigationTimeout(60000)
   const errors = []
   p.on('pageerror', (e) => errors.push('pageerror: ' + e.message))
   p.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()) })
