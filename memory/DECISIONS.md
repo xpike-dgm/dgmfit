@@ -37,3 +37,8 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Rozetler veriden hesaplanır (ayrı tablo yok); kazanılma günü koşulun ilk sağlandığı gün | Tutarlı ve geri alınabilir | Teknik |
 | 2026-11-04 | Bildirimde en fazla 2 buton: "<öneri> ml içtim" + "Sonra" | Android 2 aksiyonu güvenle gösteriyor; iOS buton göstermez | Teknik |
 | 2026-11-04 | Test kancaları yalnızca `DGFIT_TEST_HOOKS=1` ile; canlı compose'da tanımlı değil | Üretimde dışarıya açık test ucu olmasın | Teknik |
+| 2026-11-04 | **TURKOMP kullanılmıyor** | Resmi sitenin "Veri kullanımı" sayfası (arama sonuçlarındaki alıntılar) yazılı izin olmadan kopyalama/kullanımı yasaklıyor, ticari kullanım ücretli. Resmi sayfa 2026-11-04'te 503 verdi, metin doğrudan okunamadı. İzin alınırsa yeniden değerlendirilir | Kaynak: turkomp.tarimorman.gov.tr/useofdata |
+| 2026-11-04 | Ana besin verisi: USDA FoodData Central SR Legacy (CC0, izin gerekmez; FDC'ye atıf yapılır) | fdc.nal.usda.gov | Kaynak |
+| 2026-11-04 | Barkodlu ürünler: Open Food Facts API (ODbL); ürün bazında sorgu + önbellek, kaynak etiketi `off`, ekranda "© Open Food Facts katkıcıları"; özel User-Agent | ODbL atıf + paylaşım koşulu; OFF verisi ayrı işaretlenir | Kaynak |
+| 2026-11-04 | Türk yemeklerinin besin değerleri tarif gramajından USDA malzemeleriyle hesaplanır; ezberden değer yazılmaz | Halüsinasyon önleme kuralı 6 | Teknik |
+| 2026-11-04 | Faz 2 ikiye bölündü: 2a Yemek, 2b Fit | Kapsam büyüklüğü | Teknik |

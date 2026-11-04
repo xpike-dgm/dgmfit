@@ -1,0 +1,2134 @@
+{
+ "$comment": "Türkçe küratörlü besin listesi. 'usda' = USDA SR Legacy açıklaması (birebir); besin değerleri oradan gelir. Porsiyon: [etiket, gram] veya [etiket, '@usda-porsiyon-kelimesi'] (USDA porsiyon gramajı kullanılır). Derleme: scripts/data/build_foods.mjs",
+ "foods": [
+  {
+   "k": "sut-tam",
+   "tr": "Süt (tam yağlı)",
+   "c": "Süt ürünleri",
+   "usda": "Milk, whole, 3.25% milkfat, with added vitamin D",
+   "p": [
+    [
+     "1 su bardağı",
+     206
+    ],
+    [
+     "1 çay bardağı",
+     103
+    ]
+   ],
+   "a": [
+    "süt"
+   ]
+  },
+  {
+   "k": "sut-yarim",
+   "tr": "Süt (yarım yağlı)",
+   "c": "Süt ürünleri",
+   "usda": "Milk, reduced fat, fluid, 2% milkfat, with added vitamin A and vitamin D",
+   "p": [
+    [
+     "1 su bardağı",
+     206
+    ]
+   ],
+   "a": [
+    "süt light"
+   ]
+  },
+  {
+   "k": "sut-yagsiz",
+   "tr": "Süt (yağsız)",
+   "c": "Süt ürünleri",
+   "usda": "Milk, nonfat, fluid, with added vitamin A and vitamin D (fat free or skim)",
+   "p": [
+    [
+     "1 su bardağı",
+     206
+    ]
+   ]
+  },
+  {
+   "k": "yogurt-tam",
+   "tr": "Yoğurt (tam yağlı)",
+   "c": "Süt ürünleri",
+   "usda": "Yogurt, plain, whole milk",
+   "p": [
+    [
+     "1 kase",
+     200
+    ],
+    [
+     "1 yemek kaşığı",
+     20
+    ]
+   ]
+  },
+  {
+   "k": "yogurt-az",
+   "tr": "Yoğurt (az yağlı)",
+   "c": "Süt ürünleri",
+   "usda": "Yogurt, plain, low fat",
+   "p": [
+    [
+     "1 kase",
+     200
+    ],
+    [
+     "1 yemek kaşığı",
+     20
+    ]
+   ]
+  },
+  {
+   "k": "yogurt-suzme",
+   "tr": "Süzme yoğurt",
+   "c": "Süt ürünleri",
+   "usda": "Yogurt, Greek, plain, whole milk",
+   "p": [
+    [
+     "1 kase",
+     170
+    ],
+    [
+     "1 yemek kaşığı",
+     25
+    ]
+   ],
+   "a": [
+    "greek yoğurt"
+   ]
+  },
+  {
+   "k": "yogurt-suzme-az",
+   "tr": "Süzme yoğurt (az yağlı)",
+   "c": "Süt ürünleri",
+   "usda": "Yogurt, Greek, plain, lowfat",
+   "p": [
+    [
+     "1 kase",
+     170
+    ],
+    [
+     "1 yemek kaşığı",
+     25
+    ]
+   ]
+  },
+  {
+   "k": "beyaz-peynir",
+   "tr": "Beyaz peynir",
+   "c": "Süt ürünleri",
+   "usda": "Cheese, feta",
+   "p": [
+    [
+     "1 dilim (30 g)",
+     30
+    ],
+    [
+     "1 kibrit kutusu",
+     30
+    ]
+   ],
+   "a": [
+    "feta",
+    "peynir"
+   ],
+   "approx": true
+  },
+  {
+   "k": "kasar",
+   "tr": "Kaşar peyniri",
+   "c": "Süt ürünleri",
+   "usda": "Cheese, mozzarella, whole milk, low moisture",
+   "p": [
+    [
+     "1 dilim (20 g)",
+     20
+    ],
+    [
+     "1 avuç rendelenmiş",
+     30
+    ]
+   ],
+   "a": [
+    "kaşar",
+    "tost peyniri"
+   ],
+   "approx": true
+  },
+  {
+   "k": "cheddar",
+   "tr": "Cheddar peyniri",
+   "c": "Süt ürünleri",
+   "usda": "Cheese, cheddar, sharp, sliced",
+   "p": [
+    [
+     "1 dilim (20 g)",
+     20
+    ]
+   ]
+  },
+  {
+   "k": "lor",
+   "tr": "Lor peyniri",
+   "c": "Süt ürünleri",
+   "usda": "Cheese, cottage, lowfat, 2% milkfat",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     25
+    ],
+    [
+     "1 kase",
+     150
+    ]
+   ],
+   "a": [
+    "çökelek"
+   ],
+   "approx": true
+  },
+  {
+   "k": "krem-peynir",
+   "tr": "Krem peynir",
+   "c": "Süt ürünleri",
+   "usda": "Cheese, cream",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     15
+    ]
+   ],
+   "a": [
+    "labne"
+   ],
+   "approx": true
+  },
+  {
+   "k": "tereyagi",
+   "tr": "Tereyağı",
+   "c": "Yağlar",
+   "usda": "Butter, salted",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     5
+    ],
+    [
+     "1 yemek kaşığı",
+     14
+    ]
+   ]
+  },
+  {
+   "k": "kefir",
+   "tr": "Kefir",
+   "c": "Süt ürünleri",
+   "usda": "Kefir, lowfat, plain, LIFEWAY",
+   "p": [
+    [
+     "1 su bardağı",
+     200
+    ]
+   ]
+  },
+  {
+   "k": "krema",
+   "tr": "Krema (sıvı)",
+   "c": "Süt ürünleri",
+   "usda": "Cream, fluid, heavy whipping",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     15
+    ]
+   ]
+  },
+  {
+   "k": "yumurta",
+   "tr": "Yumurta",
+   "c": "Yumurta",
+   "usda": "Egg, whole, raw, fresh",
+   "p": [
+    [
+     "1 adet (büyük)",
+     "@large"
+    ],
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ],
+   "a": [
+    "çiğ yumurta"
+   ]
+  },
+  {
+   "k": "yumurta-haslama",
+   "tr": "Haşlanmış yumurta",
+   "c": "Yumurta",
+   "usda": "Egg, whole, cooked, hard-boiled",
+   "p": [
+    [
+     "1 adet (büyük)",
+     "@large"
+    ]
+   ],
+   "a": [
+    "haşlama yumurta",
+    "katı yumurta"
+   ]
+  },
+  {
+   "k": "yumurta-sahanda",
+   "tr": "Sahanda yumurta",
+   "c": "Yumurta",
+   "usda": "Egg, whole, cooked, fried",
+   "p": [
+    [
+     "1 adet (büyük)",
+     "@large"
+    ]
+   ],
+   "a": [
+    "yağda yumurta"
+   ]
+  },
+  {
+   "k": "yumurta-beyazi",
+   "tr": "Yumurta beyazı",
+   "c": "Yumurta",
+   "usda": "Egg, white, raw, fresh",
+   "p": [
+    [
+     "1 adet (büyük)",
+     "@large"
+    ]
+   ]
+  },
+  {
+   "k": "tavuk-gogus",
+   "tr": "Tavuk göğsü (pişmiş)",
+   "c": "Et, tavuk, balık",
+   "usda": "Chicken, broilers or fryers, breast, meat only, cooked, roasted",
+   "p": [
+    [
+     "1 porsiyon (150 g)",
+     150
+    ],
+    [
+     "100 g",
+     100
+    ]
+   ],
+   "a": [
+    "tavuk",
+    "ızgara tavuk"
+   ]
+  },
+  {
+   "k": "tavuk-gogus-cig",
+   "tr": "Tavuk göğsü (çiğ)",
+   "c": "Et, tavuk, balık",
+   "usda": "Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw",
+   "p": [
+    [
+     "100 g",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "tavuk-but",
+   "tr": "Tavuk but (pişmiş, derisiz)",
+   "c": "Et, tavuk, balık",
+   "usda": "Chicken, broilers or fryers, thigh, meat only, cooked, roasted",
+   "p": [
+    [
+     "1 adet",
+     "@thigh"
+    ],
+    [
+     "100 g",
+     100
+    ]
+   ],
+   "a": [
+    "tavuk baget",
+    "pirzola tavuk"
+   ]
+  },
+  {
+   "k": "kiyma-dana",
+   "tr": "Dana kıyma (%15 yağlı, çiğ)",
+   "c": "Et, tavuk, balık",
+   "usda": "Beef, ground, 85% lean meat / 15% fat, raw (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "100 g",
+     100
+    ]
+   ],
+   "a": [
+    "kıyma"
+   ]
+  },
+  {
+   "k": "kiyma-dana-pismis",
+   "tr": "Dana kıyma (pişmiş)",
+   "c": "Et, tavuk, balık",
+   "usda": "Beef, ground, 80% lean meat / 20% fat, crumbles, cooked, pan-browned",
+   "p": [
+    [
+     "100 g",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "kofte",
+   "tr": "Izgara köfte",
+   "c": "Et, tavuk, balık",
+   "usda": "Beef, ground, 80% lean meat / 20% fat, patty, cooked, broiled",
+   "p": [
+    [
+     "1 adet (35 g)",
+     35
+    ],
+    [
+     "1 porsiyon (6 adet)",
+     210
+    ]
+   ],
+   "a": [
+    "köfte",
+    "kasap köfte"
+   ],
+   "approx": true
+  },
+  {
+   "k": "kuzu-kiyma",
+   "tr": "Kuzu kıyma (çiğ)",
+   "c": "Et, tavuk, balık",
+   "usda": "Lamb, ground, raw",
+   "p": [
+    [
+     "100 g",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "kuzu-but",
+   "tr": "Kuzu but (pişmiş)",
+   "c": "Et, tavuk, balık",
+   "usda": "Lamb, leg, shank half, separable lean only, trimmed to 1/4\" fat, choice, cooked, roasted",
+   "p": [
+    [
+     "1 porsiyon (150 g)",
+     150
+    ]
+   ],
+   "a": [
+    "kuzu eti"
+   ]
+  },
+  {
+   "k": "hindi-fume",
+   "tr": "Hindi füme (dilimli)",
+   "c": "Et, tavuk, balık",
+   "usda": "Turkey breast, sliced, prepackaged",
+   "p": [
+    [
+     "1 dilim (10 g)",
+     10
+    ]
+   ],
+   "a": [
+    "hindi"
+   ]
+  },
+  {
+   "k": "somon",
+   "tr": "Somon (pişmiş)",
+   "c": "Et, tavuk, balık",
+   "usda": "Fish, salmon, Atlantic, farmed, cooked, dry heat",
+   "p": [
+    [
+     "1 porsiyon (150 g)",
+     150
+    ]
+   ],
+   "a": [
+    "fırın somon"
+   ]
+  },
+  {
+   "k": "ton-baligi",
+   "tr": "Ton balığı (suda konserve)",
+   "c": "Et, tavuk, balık",
+   "usda": "Fish, tuna, light, canned in water, drained solids (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "1 kutu (süzülmüş 120 g)",
+     120
+    ]
+   ],
+   "a": [
+    "ton"
+   ]
+  },
+  {
+   "k": "hamsi",
+   "tr": "Hamsi (çiğ)",
+   "c": "Et, tavuk, balık",
+   "usda": "Fish, anchovy, european, raw",
+   "p": [
+    [
+     "100 g",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "alabalik",
+   "tr": "Alabalık (pişmiş)",
+   "c": "Et, tavuk, balık",
+   "usda": "Fish, trout, rainbow, farmed, cooked, dry heat",
+   "p": [
+    [
+     "1 porsiyon (150 g)",
+     150
+    ]
+   ]
+  },
+  {
+   "k": "karides",
+   "tr": "Karides (pişmiş)",
+   "c": "Et, tavuk, balık",
+   "usda": "Crustaceans, shrimp, cooked",
+   "p": [
+    [
+     "100 g",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "sucuk",
+   "tr": "Sucuk",
+   "c": "Et, tavuk, balık",
+   "usda": "Sausage, pork and beef, fresh, cooked",
+   "p": [
+    [
+     "1 dilim (8 g)",
+     8
+    ],
+    [
+     "4 dilim",
+     32
+    ]
+   ],
+   "approx": true
+  },
+  {
+   "k": "kirmizi-mercimek",
+   "tr": "Kırmızı mercimek (kuru)",
+   "c": "Bakliyat",
+   "usda": "Lentils, pink or red, raw",
+   "p": [
+    [
+     "1 su bardağı",
+     "@cup"
+    ],
+    [
+     "1 yemek kaşığı",
+     12
+    ]
+   ]
+  },
+  {
+   "k": "yesil-mercimek",
+   "tr": "Yeşil mercimek (haşlanmış)",
+   "c": "Bakliyat",
+   "usda": "Lentils, mature seeds, cooked, boiled, without salt",
+   "p": [
+    [
+     "1 kase",
+     200
+    ]
+   ]
+  },
+  {
+   "k": "yesil-mercimek-kuru",
+   "tr": "Yeşil mercimek (kuru)",
+   "c": "Bakliyat",
+   "usda": "Lentils, raw",
+   "p": [
+    [
+     "1 su bardağı",
+     "@cup"
+    ]
+   ]
+  },
+  {
+   "k": "nohut",
+   "tr": "Nohut (haşlanmış)",
+   "c": "Bakliyat",
+   "usda": "Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt",
+   "p": [
+    [
+     "1 kase",
+     160
+    ],
+    [
+     "1 yemek kaşığı",
+     15
+    ]
+   ]
+  },
+  {
+   "k": "nohut-kuru",
+   "tr": "Nohut (kuru)",
+   "c": "Bakliyat",
+   "usda": "Chickpeas (garbanzo beans, bengal gram), mature seeds, raw",
+   "p": [
+    [
+     "1 su bardağı",
+     "@cup"
+    ]
+   ]
+  },
+  {
+   "k": "kuru-fasulye",
+   "tr": "Kuru fasulye (haşlanmış)",
+   "c": "Bakliyat",
+   "usda": "Beans, white, mature seeds, cooked, boiled, without salt",
+   "p": [
+    [
+     "1 kase",
+     180
+    ]
+   ],
+   "a": [
+    "beyaz fasulye"
+   ]
+  },
+  {
+   "k": "kuru-fasulye-kuru",
+   "tr": "Kuru fasulye (kuru)",
+   "c": "Bakliyat",
+   "usda": "Beans, white, mature seeds, raw",
+   "p": [
+    [
+     "1 su bardağı",
+     "@cup"
+    ]
+   ]
+  },
+  {
+   "k": "barbunya",
+   "tr": "Barbunya (haşlanmış)",
+   "c": "Bakliyat",
+   "usda": "Beans, cranberry (roman), mature seeds, cooked, boiled, without salt",
+   "p": [
+    [
+     "1 kase",
+     180
+    ]
+   ]
+  },
+  {
+   "k": "bulgur-kuru",
+   "tr": "Bulgur (kuru)",
+   "c": "Tahıllar",
+   "usda": "Bulgur, dry",
+   "p": [
+    [
+     "1 su bardağı",
+     180
+    ],
+    [
+     "1 yemek kaşığı",
+     12
+    ]
+   ]
+  },
+  {
+   "k": "bulgur-pismis",
+   "tr": "Bulgur (haşlanmış, sade)",
+   "c": "Tahıllar",
+   "usda": "Bulgur, cooked",
+   "p": [
+    [
+     "1 kase",
+     180
+    ]
+   ]
+  },
+  {
+   "k": "pirinc-kuru",
+   "tr": "Pirinç (kuru)",
+   "c": "Tahıllar",
+   "usda": "Rice, white, long-grain, regular, raw, enriched",
+   "p": [
+    [
+     "1 su bardağı",
+     185
+    ],
+    [
+     "1 yemek kaşığı",
+     12
+    ]
+   ]
+  },
+  {
+   "k": "pirinc-pismis",
+   "tr": "Pirinç (haşlanmış, sade)",
+   "c": "Tahıllar",
+   "usda": "Rice, white, long-grain, regular, enriched, cooked",
+   "p": [
+    [
+     "1 kase",
+     160
+    ]
+   ]
+  },
+  {
+   "k": "esmer-pirinc",
+   "tr": "Esmer pirinç (pişmiş)",
+   "c": "Tahıllar",
+   "usda": "Rice, brown, long-grain, cooked (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "1 kase",
+     160
+    ]
+   ]
+  },
+  {
+   "k": "makarna-kuru",
+   "tr": "Makarna (kuru)",
+   "c": "Tahıllar",
+   "usda": "Pasta, dry, enriched",
+   "p": [
+    [
+     "1 porsiyon (100 g)",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "makarna-pismis",
+   "tr": "Makarna (haşlanmış, sade)",
+   "c": "Tahıllar",
+   "usda": "Pasta, cooked, enriched, without added salt",
+   "p": [
+    [
+     "1 tabak",
+     200
+    ],
+    [
+     "1 kase",
+     140
+    ]
+   ]
+  },
+  {
+   "k": "tam-bugday-makarna",
+   "tr": "Tam buğday makarna (pişmiş)",
+   "c": "Tahıllar",
+   "usda": "Pasta, whole-wheat, cooked (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "1 tabak",
+     200
+    ]
+   ]
+  },
+  {
+   "k": "yulaf",
+   "tr": "Yulaf ezmesi",
+   "c": "Tahıllar",
+   "usda": "Cereals, oats, regular and quick, not fortified, dry",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     8
+    ],
+    [
+     "1 kase (40 g)",
+     40
+    ]
+   ],
+   "a": [
+    "yulaf"
+   ]
+  },
+  {
+   "k": "kinoa",
+   "tr": "Kinoa (pişmiş)",
+   "c": "Tahıllar",
+   "usda": "Quinoa, cooked",
+   "p": [
+    [
+     "1 kase",
+     185
+    ]
+   ]
+  },
+  {
+   "k": "un",
+   "tr": "Buğday unu",
+   "c": "Tahıllar",
+   "usda": "Wheat flour, white, all-purpose, enriched, bleached",
+   "p": [
+    [
+     "1 su bardağı",
+     125
+    ],
+    [
+     "1 yemek kaşığı",
+     8
+    ]
+   ],
+   "a": [
+    "un"
+   ]
+  },
+  {
+   "k": "ekmek-beyaz",
+   "tr": "Beyaz ekmek",
+   "c": "Ekmek ve hamur işi",
+   "usda": "Bread, white, commercially prepared (includes soft bread crumbs)",
+   "p": [
+    [
+     "1 dilim (25 g)",
+     25
+    ],
+    [
+     "1 ince dilim",
+     20
+    ]
+   ],
+   "a": [
+    "ekmek",
+    "somun"
+   ]
+  },
+  {
+   "k": "ekmek-tam",
+   "tr": "Tam buğday ekmeği",
+   "c": "Ekmek ve hamur işi",
+   "usda": "Bread, whole-wheat, commercially prepared",
+   "p": [
+    [
+     "1 dilim (30 g)",
+     30
+    ]
+   ],
+   "a": [
+    "kepekli ekmek"
+   ]
+  },
+  {
+   "k": "cavdar-ekmek",
+   "tr": "Çavdar ekmeği",
+   "c": "Ekmek ve hamur işi",
+   "usda": "Bread, rye",
+   "p": [
+    [
+     "1 dilim (30 g)",
+     30
+    ]
+   ]
+  },
+  {
+   "k": "lavas",
+   "tr": "Lavaş / tortilla",
+   "c": "Ekmek ve hamur işi",
+   "usda": "Tortillas, ready-to-bake or -fry, flour, refrigerated",
+   "p": [
+    [
+     "1 adet (orta)",
+     45
+    ]
+   ],
+   "a": [
+    "dürüm ekmeği",
+    "tortilla"
+   ],
+   "approx": true
+  },
+  {
+   "k": "pide-ekmek",
+   "tr": "Pide ekmeği",
+   "c": "Ekmek ve hamur işi",
+   "usda": "Bread, pita, white, enriched",
+   "p": [
+    [
+     "1 dilim (40 g)",
+     40
+    ]
+   ],
+   "a": [
+    "ramazan pidesi"
+   ],
+   "approx": true
+  },
+  {
+   "k": "galeta",
+   "tr": "Galeta",
+   "c": "Ekmek ve hamur işi",
+   "usda": "Crackers, melba toast, plain",
+   "p": [
+    [
+     "1 adet",
+     5
+    ]
+   ],
+   "approx": true
+  },
+  {
+   "k": "domates",
+   "tr": "Domates",
+   "c": "Sebzeler",
+   "usda": "Tomatoes, red, ripe, raw, year round average",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ],
+    [
+     "1 dilim",
+     20
+    ]
+   ]
+  },
+  {
+   "k": "salatalik",
+   "tr": "Salatalık",
+   "c": "Sebzeler",
+   "usda": "Cucumber, with peel, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     120
+    ],
+    [
+     "1 dilim",
+     7
+    ]
+   ],
+   "a": [
+    "hıyar"
+   ]
+  },
+  {
+   "k": "sogan",
+   "tr": "Kuru soğan",
+   "c": "Sebzeler",
+   "usda": "Onions, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ],
+    [
+     "1 yemek kaşığı doğranmış",
+     10
+    ]
+   ],
+   "a": [
+    "soğan"
+   ]
+  },
+  {
+   "k": "sarimsak",
+   "tr": "Sarımsak",
+   "c": "Sebzeler",
+   "usda": "Garlic, raw",
+   "p": [
+    [
+     "1 diş",
+     3
+    ]
+   ]
+  },
+  {
+   "k": "biber-yesil",
+   "tr": "Yeşil biber",
+   "c": "Sebzeler",
+   "usda": "Peppers, sweet, green, raw",
+   "p": [
+    [
+     "1 adet (sivri, orta)",
+     20
+    ],
+    [
+     "1 adet (dolmalık)",
+     120
+    ]
+   ],
+   "a": [
+    "sivri biber",
+    "dolmalık biber",
+    "çarliston"
+   ]
+  },
+  {
+   "k": "biber-kirmizi",
+   "tr": "Kırmızı biber (tatlı)",
+   "c": "Sebzeler",
+   "usda": "Peppers, sweet, red, raw",
+   "p": [
+    [
+     "1 adet",
+     120
+    ]
+   ],
+   "a": [
+    "kapya"
+   ]
+  },
+  {
+   "k": "patlican",
+   "tr": "Patlıcan",
+   "c": "Sebzeler",
+   "usda": "Eggplant, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     250
+    ]
+   ]
+  },
+  {
+   "k": "kabak",
+   "tr": "Kabak",
+   "c": "Sebzeler",
+   "usda": "Squash, summer, zucchini, includes skin, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     200
+    ]
+   ],
+   "a": [
+    "sakız kabağı"
+   ]
+  },
+  {
+   "k": "havuc",
+   "tr": "Havuç",
+   "c": "Sebzeler",
+   "usda": "Carrots, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "patates",
+   "tr": "Patates (çiğ)",
+   "c": "Sebzeler",
+   "usda": "Potatoes, flesh and skin, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "patates-haslama",
+   "tr": "Haşlanmış patates",
+   "c": "Sebzeler",
+   "usda": "Potatoes, boiled, cooked in skin, flesh, without salt",
+   "p": [
+    [
+     "1 adet (orta)",
+     150
+    ]
+   ]
+  },
+  {
+   "k": "patates-kizartma",
+   "tr": "Patates kızartması",
+   "c": "Sebzeler",
+   "usda": "Potatoes, french fried, all types, salt added in processing, frozen, home-prepared, oven heated",
+   "p": [
+    [
+     "1 porsiyon (orta)",
+     120
+    ],
+    [
+     "1 küçük porsiyon",
+     70
+    ]
+   ],
+   "a": [
+    "kızartma"
+   ],
+   "approx": true
+  },
+  {
+   "k": "tatli-patates",
+   "tr": "Tatlı patates (fırında)",
+   "c": "Sebzeler",
+   "usda": "Sweet potato, cooked, baked in skin, flesh, without salt",
+   "p": [
+    [
+     "1 adet (orta)",
+     150
+    ]
+   ]
+  },
+  {
+   "k": "ispanak",
+   "tr": "Ispanak (çiğ)",
+   "c": "Sebzeler",
+   "usda": "Spinach, raw",
+   "p": [
+    [
+     "1 kase",
+     30
+    ]
+   ]
+  },
+  {
+   "k": "marul",
+   "tr": "Marul",
+   "c": "Sebzeler",
+   "usda": "Lettuce, cos or romaine, raw",
+   "p": [
+    [
+     "1 kase doğranmış",
+     50
+    ]
+   ],
+   "a": [
+    "göbek marul",
+    "salata"
+   ]
+  },
+  {
+   "k": "roka",
+   "tr": "Roka",
+   "c": "Sebzeler",
+   "usda": "Arugula, raw",
+   "p": [
+    [
+     "1 avuç",
+     20
+    ]
+   ]
+  },
+  {
+   "k": "maydanoz",
+   "tr": "Maydanoz",
+   "c": "Sebzeler",
+   "usda": "Parsley, fresh",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     4
+    ],
+    [
+     "1 demet",
+     50
+    ]
+   ]
+  },
+  {
+   "k": "brokoli",
+   "tr": "Brokoli",
+   "c": "Sebzeler",
+   "usda": "Broccoli, raw",
+   "p": [
+    [
+     "1 kase",
+     90
+    ]
+   ]
+  },
+  {
+   "k": "karnabahar",
+   "tr": "Karnabahar",
+   "c": "Sebzeler",
+   "usda": "Cauliflower, raw",
+   "p": [
+    [
+     "1 kase",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "lahana",
+   "tr": "Lahana",
+   "c": "Sebzeler",
+   "usda": "Cabbage, raw",
+   "p": [
+    [
+     "1 kase doğranmış",
+     90
+    ]
+   ]
+  },
+  {
+   "k": "taze-fasulye",
+   "tr": "Taze fasulye",
+   "c": "Sebzeler",
+   "usda": "Beans, snap, green, raw",
+   "p": [
+    [
+     "1 kase",
+     110
+    ]
+   ]
+  },
+  {
+   "k": "bezelye",
+   "tr": "Bezelye",
+   "c": "Sebzeler",
+   "usda": "Peas, green, raw",
+   "p": [
+    [
+     "1 kase",
+     145
+    ]
+   ]
+  },
+  {
+   "k": "misir",
+   "tr": "Mısır (konserve)",
+   "c": "Sebzeler",
+   "usda": "Corn, sweet, yellow, canned, whole kernel, drained solids",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     15
+    ]
+   ]
+  },
+  {
+   "k": "mantar",
+   "tr": "Mantar",
+   "c": "Sebzeler",
+   "usda": "Mushrooms, white, raw",
+   "p": [
+    [
+     "1 kase",
+     70
+    ]
+   ]
+  },
+  {
+   "k": "pirasa",
+   "tr": "Pırasa",
+   "c": "Sebzeler",
+   "usda": "Leeks, (bulb and lower leaf-portion), raw",
+   "p": [
+    [
+     "1 adet",
+     90
+    ]
+   ]
+  },
+  {
+   "k": "bamya",
+   "tr": "Bamya",
+   "c": "Sebzeler",
+   "usda": "Okra, raw",
+   "p": [
+    [
+     "1 kase",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "enginar",
+   "tr": "Enginar",
+   "c": "Sebzeler",
+   "usda": "Artichokes, (globe or french), raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     128
+    ]
+   ]
+  },
+  {
+   "k": "zeytin-siyah",
+   "tr": "Siyah zeytin",
+   "c": "Kahvaltılık",
+   "usda": "Olives, ripe, canned (small-extra large)",
+   "p": [
+    [
+     "1 adet",
+     4
+    ],
+    [
+     "5 adet",
+     20
+    ]
+   ],
+   "a": [
+    "zeytin"
+   ]
+  },
+  {
+   "k": "zeytin-yesil",
+   "tr": "Yeşil zeytin",
+   "c": "Kahvaltılık",
+   "usda": "Olives, pickled, canned or bottled, green",
+   "p": [
+    [
+     "1 adet",
+     3
+    ],
+    [
+     "5 adet",
+     15
+    ]
+   ]
+  },
+  {
+   "k": "elma",
+   "tr": "Elma",
+   "c": "Meyveler",
+   "usda": "Apples, raw, with skin (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "muz",
+   "tr": "Muz",
+   "c": "Meyveler",
+   "usda": "Bananas, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "portakal",
+   "tr": "Portakal",
+   "c": "Meyveler",
+   "usda": "Oranges, raw, all commercial varieties",
+   "p": [
+    [
+     "1 adet (orta)",
+     130
+    ]
+   ]
+  },
+  {
+   "k": "mandalina",
+   "tr": "Mandalina",
+   "c": "Meyveler",
+   "usda": "Tangerines, (mandarin oranges), raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "cilek",
+   "tr": "Çilek",
+   "c": "Meyveler",
+   "usda": "Strawberries, raw",
+   "p": [
+    [
+     "1 kase",
+     150
+    ],
+    [
+     "1 adet",
+     12
+    ]
+   ]
+  },
+  {
+   "k": "uzum",
+   "tr": "Üzüm",
+   "c": "Meyveler",
+   "usda": "Grapes, red or green (European type, such as Thompson seedless), raw",
+   "p": [
+    [
+     "1 kase",
+     150
+    ],
+    [
+     "1 salkım (küçük)",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "karpuz",
+   "tr": "Karpuz",
+   "c": "Meyveler",
+   "usda": "Watermelon, raw",
+   "p": [
+    [
+     "1 dilim",
+     280
+    ]
+   ]
+  },
+  {
+   "k": "kavun",
+   "tr": "Kavun",
+   "c": "Meyveler",
+   "usda": "Melons, cantaloupe, raw",
+   "p": [
+    [
+     "1 dilim",
+     130
+    ]
+   ],
+   "approx": true
+  },
+  {
+   "k": "seftali",
+   "tr": "Şeftali",
+   "c": "Meyveler",
+   "usda": "Peaches, yellow, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "armut",
+   "tr": "Armut",
+   "c": "Meyveler",
+   "usda": "Pears, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "kiraz",
+   "tr": "Kiraz",
+   "c": "Meyveler",
+   "usda": "Cherries, sweet, raw",
+   "p": [
+    [
+     "1 kase",
+     140
+    ]
+   ]
+  },
+  {
+   "k": "kayisi",
+   "tr": "Kayısı",
+   "c": "Meyveler",
+   "usda": "Apricots, raw",
+   "p": [
+    [
+     "1 adet",
+     35
+    ]
+   ]
+  },
+  {
+   "k": "kuru-kayisi",
+   "tr": "Kuru kayısı",
+   "c": "Meyveler",
+   "usda": "Apricots, dried, sulfured, uncooked",
+   "p": [
+    [
+     "1 adet",
+     8
+    ]
+   ]
+  },
+  {
+   "k": "incir",
+   "tr": "İncir",
+   "c": "Meyveler",
+   "usda": "Figs, raw",
+   "p": [
+    [
+     "1 adet (orta)",
+     "@medium"
+    ]
+   ]
+  },
+  {
+   "k": "kuru-incir",
+   "tr": "Kuru incir",
+   "c": "Meyveler",
+   "usda": "Figs, dried, uncooked",
+   "p": [
+    [
+     "1 adet",
+     8
+    ]
+   ]
+  },
+  {
+   "k": "hurma",
+   "tr": "Hurma",
+   "c": "Meyveler",
+   "usda": "Dates, medjool",
+   "p": [
+    [
+     "1 adet",
+     24
+    ]
+   ]
+  },
+  {
+   "k": "nar",
+   "tr": "Nar",
+   "c": "Meyveler",
+   "usda": "Pomegranates, raw",
+   "p": [
+    [
+     "1 kase taneli",
+     90
+    ]
+   ]
+  },
+  {
+   "k": "kivi",
+   "tr": "Kivi",
+   "c": "Meyveler",
+   "usda": "Kiwifruit, green, raw",
+   "p": [
+    [
+     "1 adet",
+     70
+    ]
+   ]
+  },
+  {
+   "k": "limon",
+   "tr": "Limon suyu",
+   "c": "Meyveler",
+   "usda": "Lemon juice, raw",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     15
+    ]
+   ]
+  },
+  {
+   "k": "avokado",
+   "tr": "Avokado",
+   "c": "Meyveler",
+   "usda": "Avocados, raw, all commercial varieties",
+   "p": [
+    [
+     "1 adet",
+     200
+    ],
+    [
+     "yarım",
+     100
+    ]
+   ]
+  },
+  {
+   "k": "ceviz",
+   "tr": "Ceviz",
+   "c": "Kuruyemiş",
+   "usda": "Nuts, walnuts, english",
+   "p": [
+    [
+     "1 adet (iç)",
+     4
+    ],
+    [
+     "1 avuç",
+     28
+    ]
+   ]
+  },
+  {
+   "k": "badem",
+   "tr": "Badem",
+   "c": "Kuruyemiş",
+   "usda": "Nuts, almonds",
+   "p": [
+    [
+     "1 adet",
+     1.2
+    ],
+    [
+     "1 avuç",
+     28
+    ]
+   ]
+  },
+  {
+   "k": "findik",
+   "tr": "Fındık",
+   "c": "Kuruyemiş",
+   "usda": "Nuts, hazelnuts or filberts",
+   "p": [
+    [
+     "1 avuç",
+     28
+    ]
+   ]
+  },
+  {
+   "k": "fistik-yer",
+   "tr": "Yer fıstığı",
+   "c": "Kuruyemiş",
+   "usda": "Peanuts, all types, dry-roasted, without salt",
+   "p": [
+    [
+     "1 avuç",
+     28
+    ]
+   ]
+  },
+  {
+   "k": "antep-fistigi",
+   "tr": "Antep fıstığı",
+   "c": "Kuruyemiş",
+   "usda": "Nuts, pistachio nuts, dry roasted, without salt added",
+   "p": [
+    [
+     "1 avuç",
+     28
+    ]
+   ]
+  },
+  {
+   "k": "kaju",
+   "tr": "Kaju",
+   "c": "Kuruyemiş",
+   "usda": "Nuts, cashew nuts, raw",
+   "p": [
+    [
+     "1 avuç",
+     28
+    ]
+   ]
+  },
+  {
+   "k": "ay-cekirdegi",
+   "tr": "Ay çekirdeği (iç)",
+   "c": "Kuruyemiş",
+   "usda": "Seeds, sunflower seed kernels, dry roasted, without salt",
+   "p": [
+    [
+     "1 avuç",
+     28
+    ]
+   ],
+   "a": [
+    "çekirdek"
+   ]
+  },
+  {
+   "k": "kabak-cekirdegi",
+   "tr": "Kabak çekirdeği (iç)",
+   "c": "Kuruyemiş",
+   "usda": "Seeds, pumpkin and squash seed kernels, dried",
+   "p": [
+    [
+     "1 avuç",
+     28
+    ]
+   ]
+  },
+  {
+   "k": "chia",
+   "tr": "Chia tohumu",
+   "c": "Kuruyemiş",
+   "usda": "Seeds, chia seeds, dried",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     12
+    ]
+   ]
+  },
+  {
+   "k": "keten",
+   "tr": "Keten tohumu",
+   "c": "Kuruyemiş",
+   "usda": "Seeds, flaxseed",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     10
+    ]
+   ]
+  },
+  {
+   "k": "kuru-uzum",
+   "tr": "Kuru üzüm",
+   "c": "Kuruyemiş",
+   "usda": "Raisins, dark, seedless (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     10
+    ],
+    [
+     "1 avuç",
+     30
+    ]
+   ]
+  },
+  {
+   "k": "tahin",
+   "tr": "Tahin",
+   "c": "Kahvaltılık",
+   "usda": "Seeds, sesame butter, tahini, from roasted and toasted kernels (most common type)",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     15
+    ]
+   ]
+  },
+  {
+   "k": "fistik-ezmesi",
+   "tr": "Fıstık ezmesi",
+   "c": "Kahvaltılık",
+   "usda": "Peanut butter, smooth style, without salt",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     16
+    ]
+   ]
+  },
+  {
+   "k": "bal",
+   "tr": "Bal",
+   "c": "Kahvaltılık",
+   "usda": "Honey",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     7
+    ],
+    [
+     "1 yemek kaşığı",
+     21
+    ]
+   ]
+  },
+  {
+   "k": "pekmez",
+   "tr": "Pekmez",
+   "c": "Kahvaltılık",
+   "usda": "Molasses",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     20
+    ]
+   ],
+   "approx": true
+  },
+  {
+   "k": "recel",
+   "tr": "Reçel",
+   "c": "Kahvaltılık",
+   "usda": "Jams and preserves",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     20
+    ],
+    [
+     "1 tatlı kaşığı",
+     7
+    ]
+   ]
+  },
+  {
+   "k": "seker",
+   "tr": "Toz şeker",
+   "c": "Tatlandırıcılar",
+   "usda": "Sugars, granulated",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     4
+    ],
+    [
+     "1 küp şeker",
+     3
+    ],
+    [
+     "1 yemek kaşığı",
+     12
+    ]
+   ],
+   "a": [
+    "şeker"
+   ]
+  },
+  {
+   "k": "zeytinyagi",
+   "tr": "Zeytinyağı",
+   "c": "Yağlar",
+   "usda": "Oil, olive, salad or cooking",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     4.5
+    ],
+    [
+     "1 yemek kaşığı",
+     13.5
+    ]
+   ]
+  },
+  {
+   "k": "aycicek-yagi",
+   "tr": "Ayçiçek yağı",
+   "c": "Yağlar",
+   "usda": "Oil, sunflower, linoleic, (approx. 65%)",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     4.5
+    ],
+    [
+     "1 yemek kaşığı",
+     13.6
+    ]
+   ],
+   "a": [
+    "sıvı yağ",
+    "yağ"
+   ]
+  },
+  {
+   "k": "mayonez",
+   "tr": "Mayonez",
+   "c": "Soslar",
+   "usda": "Salad dressing, mayonnaise, regular",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     14
+    ]
+   ]
+  },
+  {
+   "k": "ketcap",
+   "tr": "Ketçap",
+   "c": "Soslar",
+   "usda": "Catsup",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     17
+    ]
+   ]
+  },
+  {
+   "k": "salca-domates",
+   "tr": "Domates salçası",
+   "c": "Soslar",
+   "usda": "Tomato products, canned, paste, without salt added (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     16
+    ]
+   ],
+   "a": [
+    "salça"
+   ]
+  },
+  {
+   "k": "cay",
+   "tr": "Çay (demlenmiş, şekersiz)",
+   "c": "İçecekler",
+   "usda": "Beverages, tea, black, brewed, prepared with tap water",
+   "p": [
+    [
+     "1 çay bardağı",
+     100
+    ],
+    [
+     "1 kupa",
+     250
+    ]
+   ],
+   "a": [
+    "çay"
+   ]
+  },
+  {
+   "k": "kahve",
+   "tr": "Filtre kahve (sade)",
+   "c": "İçecekler",
+   "usda": "Beverages, coffee, brewed, prepared with tap water",
+   "p": [
+    [
+     "1 kupa",
+     240
+    ]
+   ],
+   "a": [
+    "kahve",
+    "americano"
+   ]
+  },
+  {
+   "k": "espresso",
+   "tr": "Espresso",
+   "c": "İçecekler",
+   "usda": "Beverages, coffee, brewed, espresso, restaurant-prepared",
+   "p": [
+    [
+     "1 shot",
+     30
+    ]
+   ]
+  },
+  {
+   "k": "portakal-suyu",
+   "tr": "Portakal suyu",
+   "c": "İçecekler",
+   "usda": "Orange juice, raw (Includes foods for USDA's Food Distribution Program)",
+   "p": [
+    [
+     "1 su bardağı",
+     200
+    ]
+   ],
+   "a": [
+    "meyve suyu"
+   ]
+  },
+  {
+   "k": "kola",
+   "tr": "Kola",
+   "c": "İçecekler",
+   "usda": "Beverages, carbonated, cola, regular",
+   "p": [
+    [
+     "1 kutu (330 ml)",
+     340
+    ],
+    [
+     "1 su bardağı",
+     200
+    ]
+   ],
+   "a": [
+    "gazlı içecek"
+   ]
+  },
+  {
+   "k": "bitter-cikolata",
+   "tr": "Bitter çikolata (%70–85)",
+   "c": "Atıştırmalık",
+   "usda": "Chocolate, dark, 70-85% cacao solids",
+   "p": [
+    [
+     "1 kare (10 g)",
+     10
+    ]
+   ]
+  },
+  {
+   "k": "sutlu-cikolata",
+   "tr": "Sütlü çikolata",
+   "c": "Atıştırmalık",
+   "usda": "Candies, milk chocolate",
+   "p": [
+    [
+     "1 kare (10 g)",
+     10
+    ],
+    [
+     "1 tablet (80 g)",
+     80
+    ]
+   ],
+   "a": [
+    "çikolata"
+   ]
+  },
+  {
+   "k": "patlamis-misir",
+   "tr": "Patlamış mısır",
+   "c": "Atıştırmalık",
+   "usda": "Snacks, popcorn, air-popped",
+   "p": [
+    [
+     "1 kase",
+     8
+    ]
+   ]
+  },
+  {
+   "k": "cips",
+   "tr": "Patates cipsi",
+   "c": "Atıştırmalık",
+   "usda": "Snacks, potato chips, plain, salted",
+   "p": [
+    [
+     "1 küçük paket (40 g)",
+     40
+    ]
+   ],
+   "a": [
+    "cips"
+   ]
+  },
+  {
+   "k": "biskuvi",
+   "tr": "Bisküvi (sade)",
+   "c": "Atıştırmalık",
+   "usda": "Cookies, butter, commercially prepared, enriched",
+   "p": [
+    [
+     "1 adet",
+     5
+    ]
+   ],
+   "approx": true
+  },
+  {
+   "k": "dondurma",
+   "tr": "Dondurma (vanilyalı)",
+   "c": "Tatlılar",
+   "usda": "Ice creams, vanilla",
+   "p": [
+    [
+     "1 top",
+     66
+    ]
+   ]
+  },
+  {
+   "k": "tuz",
+   "tr": "Tuz",
+   "c": "Baharat",
+   "usda": "Salt, table",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     6
+    ],
+    [
+     "1 tutam",
+     0.4
+    ]
+   ]
+  },
+  {
+   "k": "pul-biber",
+   "tr": "Pul biber",
+   "c": "Baharat",
+   "usda": "Spices, pepper, red or cayenne",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     1.8
+    ]
+   ],
+   "approx": true
+  },
+  {
+   "k": "kimyon",
+   "tr": "Kimyon",
+   "c": "Baharat",
+   "usda": "Spices, cumin seed",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     2.1
+    ]
+   ]
+  },
+  {
+   "k": "nane-kuru",
+   "tr": "Kuru nane",
+   "c": "Baharat",
+   "usda": "Spearmint, dried",
+   "p": [
+    [
+     "1 tatlı kaşığı",
+     0.5
+    ]
+   ]
+  },
+  {
+   "k": "su",
+   "tr": "Su",
+   "c": "İçecekler",
+   "usda": "Beverages, water, tap, drinking",
+   "p": [
+    [
+     "1 su bardağı",
+     200
+    ]
+   ]
+  },
+  {
+   "k": "susam",
+   "tr": "Susam",
+   "c": "Kuruyemiş",
+   "usda": "Seeds, sesame seeds, whole, dried",
+   "p": [
+    [
+     "1 yemek kaşığı",
+     9
+    ]
+   ]
+  },
+  {
+   "k": "asma-yapragi",
+   "tr": "Asma yaprağı (salamura)",
+   "c": "Sebzeler",
+   "usda": "Grape leaves, canned",
+   "p": [
+    [
+     "1 adet",
+     4
+    ]
+   ]
+  },
+  {
+   "k": "yufka",
+   "tr": "Yufka",
+   "c": "Ekmek ve hamur işi",
+   "usda": "Phyllo dough",
+   "p": [
+    [
+     "1 adet (büyük)",
+     120
+    ]
+   ],
+   "approx": true
+  }
+ ]
+}

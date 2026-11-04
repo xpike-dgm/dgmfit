@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
-  pgTable, uuid, text, timestamp, real, integer, date, jsonb, boolean, bigserial, index, uniqueIndex, primaryKey,
+  pgTable, uuid, text, timestamp, real, integer, date, jsonb, boolean, bigserial, bigint, index, uniqueIndex, primaryKey,
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
@@ -144,6 +144,7 @@ export const waterSettings = pgTable('water_settings', {
   quiet: jsonb('quiet').$type<[number, number][]>().notNull().default([]), // sessiz aralıklar (dakika)
   maxPerDay: integer('max_per_day').notNull().default(8),
   summaryEnabled: boolean('summary_enabled').notNull().default(true),
+  foodWater: boolean('food_water').notNull().default(false), // çorba, ayran gibi yemeklerden gelen suyu say
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -193,3 +194,69 @@ export const waterReminders = pgTable('water_reminders', {
   actedAt: timestamp('acted_at', { withTimezone: true }), // 20 dk içinde su kaydı
   action: text('action'), // add | snooze | open
 }, (t) => [index('water_reminders_user_day_idx').on(t.userId, t.day)])
+
+// ───────── Yemek (Faz 2a) ─────────
+
+/** Besinler: USDA (CC0), DgFit tarifleri (hesaplanmış), Open Food Facts (ODbL), kullanıcı besinleri/tarifleri. Değerler 100 g başına. */
+export const foods = pgTable('foods', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  source: text('source').notNull(), // usda | dgfit | off | user | user-recipe
+  sourceId: text('source_id').notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }), // yalnızca kullanıcı besinleri
+  key: text('key'),
+  nameTr: text('name_tr'),
+  nameEn: text('name_en'),
+  brand: text('brand'),
+  barcode: text('barcode'),
+  category: text('category'),
+  per100: jsonb('per100').$type<Record<string, number>>().notNull(),
+  kcal: real('kcal').notNull(),
+  protein: real('protein').notNull(),
+  carb: real('carb').notNull(),
+  fat: real('fat').notNull(),
+  portions: jsonb('portions').$type<{ label: string; g: number }[]>().notNull().default([]),
+  approx: boolean('approx').notNull().default(false),
+  aliases: jsonb('aliases').$type<string[]>().notNull().default([]),
+  recipe: jsonb('recipe'),
+  search: text('search').notNull(),
+  attribution: text('attribution'),
+  imageUrl: text('image_url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  uniqueIndex('foods_source_idx').on(t.source, t.sourceId),
+  index('foods_barcode_idx').on(t.barcode),
+  index('foods_user_idx').on(t.userId),
+  index('foods_search_trgm_idx').using('gin', sql`${t.search} gin_trgm_ops`),
+])
+
+/** Öğün kaydı. Besin değerleri kayıt anında kopyalanır; besin sonradan değişse de geçmiş bozulmaz. */
+export const mealItems = pgTable('meal_items', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  meal: text('meal').notNull(), // breakfast | lunch | dinner | snack
+  loggedAt: timestamp('logged_at', { withTimezone: true }).notNull().defaultNow(),
+  foodId: bigint('food_id', { mode: 'number' }).references(() => foods.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  grams: real('grams').notNull().default(0),
+  portionLabel: text('portion_label'),
+  portionQty: real('portion_qty'),
+  per100: jsonb('per100').$type<Record<string, number>>(),
+  kcal: real('kcal').notNull(),
+  protein: real('protein').notNull().default(0),
+  carb: real('carb').notNull().default(0),
+  fat: real('fat').notNull().default(0),
+  source: text('source').notNull(), // search | recent | barcode | copy | saved | quick | recipe
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('meal_items_user_day_idx').on(t.userId, t.day)])
+
+export const savedMeals = pgTable('saved_meals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  items: jsonb('items').$type<{ foodId: number; grams: number; portionLabel: string | null; portionQty: number | null }[]>().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('saved_meals_user_idx').on(t.userId)])

@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 1b tamamlandı · sıradaki: Faz 2 (Yemek + Fit)**
+**Şu anki faz: Faz 2a — Yemek çekirdeği (devam ediyor, başlangıç 2026-11-04)**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -11,7 +11,8 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 0 | PWA kabuğu, tasarım token'ları, kayıt/giriş, 11 adımlı profil sihirbazı, plan hesapları, Bugün ekranı, profil, kilo girişi, modül yer tutucuları, sunucu altyapısı | tamamlandı | commit `2c7f978` + `dce73c0`; birim test 7/7; yerel e2e OK; canlı e2e OK (test kullanıcısı silindi); deploy `2026-11-04T15-10-22-113Z` DEPLOY OK; SW kayıtlı + çevrimdışı sayfa doğrulandı |
 | 1a | Su modülü çekirdeği (aşağıda) | tamamlandı | commit `87e936f` + `9e64ee9`; birim test 21/21; verify.sh VERIFY OK (onboarding + su e2e); canlı su e2e OK ve canlı onboarding e2e OK (deploy `2026-11-04T16-01-45-488Z`); test kullanıcıları silindi |
 | 1b | Su: akıllı push hatırlatmaları, sesli kayıt, analiz kartları, rozetler, aylık rapor (aşağıda) | tamamlandı | commit `4fa3fba`; birim test 44/44; verify.sh VERIFY OK (onboarding + push + su e2e); canlı onboarding ve su e2e OK; canlıda test kancası 404, VAPID üretildi, zamanlayıcı logu var (deploy `2026-11-04T17-07-29-132Z`). Gerçek cihazda push teslimi kullanıcı tarafından denenmeli |
-| 2 | Yemek + Fit (besin veritabanı, öğün kaydı, kalori dengeleme, adaptif TDEE) | planlandı | — |
+| 2a | Yemek çekirdeği: besin veritabanı, arama, öğün kaydı, porsiyonlar, barkod, özel besin, tarif, kopyalama, Bugün entegrasyonu | devam ediyor | — |
+| 2b | Fit: günlük hedef kaydı (`daily_targets`), akıllı kalori dengeleme, adaptif TDEE, kilo trendi + haftalık check-in, plan ekranı, kalori bankası | planlandı | — |
 | 3 | Fitness (hareket kütüphanesi, program, canlı antrenman, AI ağırlık önerisi, PR) | planlandı | — |
 | 4 | AI katmanı (fotoğraf/ses kaydı, koç, raporlar) | planlandı | — |
 | 5 | Sosyal | planlandı | — |
@@ -50,9 +51,23 @@ Kaynak: spesifikasyon 7.2 (akıllı hatırlatma), 7.4 (analiz), 7.10 (rozet, ayl
 
 Kapsam dışı (not): hava durumu ve antrenmana bağlı hatırlatma (Faz 3 / dış API), özel bildirim sesleri (Web Push sistem sesini kullanır), NFC ve Bluetooth (ayrı iş), açık tema.
 
+## Faz 2a kapsamı ve kabul kriterleri
+
+Kaynak: spesifikasyon bölüm 6 (Yemek). Veri kaynağı kararı DECISIONS.md'de (TURKOMP kullanılmıyor).
+
+- [ ] Besin verisi: USDA SR Legacy (CC0) içe aktarma betiği → `foods` + `food_portions`; makro + lif, şeker, doymuş yağ, sodyum, su; Türkçe adlar (küratörlü liste) + İngilizce arama yedeği
+- [ ] Türk yemekleri: malzeme gramajlarıyla tarif → besin değerleri USDA malzemelerinden HESAPLANIR (elle yazılmaz), "hesaplanmış" etiketi; birim testi toplamları doğrular
+- [ ] Arama: Türkçe karakter duyarsız, yazım hatasına dayanıklı (trigram), son kullanılan ve sık yenenler üstte
+- [ ] Öğün kaydı: kahvaltı/öğle/akşam/ara; porsiyon birimleri (g, adet, dilim, su bardağı, yemek kaşığı, porsiyon); kayıt anında kalan bütçe etkisi; düzenle/sil/taşı; geçmiş güne kayıt
+- [ ] Barkod: kamera ile okuma (BarcodeDetector varsa, yoksa ZXing) + elle giriş; Open Food Facts'ten çekip önbelleğe alma, "© Open Food Facts katkıcıları" atfı; bulunamazsa özel ürün ekleme
+- [ ] Özel besin ve tarif: kullanıcı kendi besinini/tarifini ekler; pişmiş ağırlık ile porsiyon hesabı
+- [ ] Hızlı işlemler: dünkü öğünü kopyala, kayıtlı öğün, hızlı kalori
+- [ ] Entegrasyon: `meal.logged` olayı; Bugün ekranı yenen kalori/makro gerçek veri; yemekten gelen su (çorba, ayran) isteğe bağlı Su'ya
+- [ ] Testler (birim + e2e) + verify.sh + canlı e2e + hafıza
+
 ## Sıradaki işler
 
-1. Faz 2: Yemek + Fit (besin veritabanı — TURKOMP lisansı kontrolü, USDA, Open Food Facts; öğün kaydı; barkod; tarif; kalori dengeleme; adaptif TDEE; `daily_targets`).
+1. Faz 2a'yı kriterlere göre tamamla, ardından Faz 2b.
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
 3. E-posta doğrulama kodu (Mailu SMTP) — ertelendi.
 
