@@ -145,9 +145,9 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   if (!(await p.getByText('1.300', { exact: true }).count())) fail('Bugün ekranında su toplamı 1.300 değil')
   await p.getByRole('button', { name: '250 ml su ekle' }).click(); await p.waitForTimeout(1200)
   // testte 2 dk içinde başka 250 ml kaydı olduğu için çift kayıt sorusu beklenir
-  if (await p.getByRole('button', { name: 'Yine ekle' }).count()) { await p.getByRole('button', { name: 'Yine ekle' }).click(); await p.waitForTimeout(1500) }
-  else fail('Bugün ekranında çift kayıt sorusu çıkmadı')
-  if (!(await p.getByText('1.550', { exact: true }).count())) fail('Bugün ekranından hızlı ekleme çalışmadı')
+  if (await p.getByRole('button', { name: 'Yine ekle' }).count()) await p.getByRole('button', { name: 'Yine ekle' }).click()
+  // canlıda son 250 ml kaydı 2 dk'dan eskiyse soru çıkmaz; ikisi de doğru davranış
+  await p.getByText('1.550', { exact: true }).waitFor({ timeout: 10000 }).catch(() => fail('Bugün ekranından hızlı ekleme çalışmadı'))
   await shot('04-bugun')
 
   // 14) Sesli/yazılı kayıt: "yarım saat önce iki bardak çay içtim" → 400 ml çay (360 ml sayılır)

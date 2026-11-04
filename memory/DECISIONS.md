@@ -30,3 +30,10 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Esnek seri: ayda 2 dondurma, otomatik uygulanır; bugün seriyi kırmaz | Spesifikasyon 7.10 | Spesifikasyon |
 | 2026-11-04 | Su hedef değişikliği bugünden itibaren geçerli (aynı gün ikinci değişiklik öncekinin yerine geçer) | Geçmiş istatistikler bozulmasın | Spesifikasyon |
 | 2026-11-04 | Varsayılan kaplar: Bardak 200, Şişe 500 (varsayılan), Termos 750 | İlk kullanımda boş ekran olmasın | Teknik |
+| 2026-11-04 | VAPID anahtarları uygulama tarafından üretilip DB'de (`app_config`) saklanır | Gizli anahtar hiçbir zaman sohbet/çalışma ortamından geçmez; yeniden deploy'da değişmez | Teknik |
+| 2026-11-04 | Hatırlatma zamanlayıcısı uygulama süreci içinde (instrumentation), ayrı worker yok | Tek container; birden fazla örnek olursa advisory lock eklenmeli | Teknik |
+| 2026-11-04 | Test bildirimleri hatırlatma aralık hesabına girmez | Kullanıcının denemesi gerçek hatırlatmayı bastırmasın | Teknik |
+| 2026-11-04 | Analiz kartları şimdilik kural tabanlı; LLM (Claude API) Faz 4'te | API anahtarı yok; kurallar test edilebilir | Teknik |
+| 2026-11-04 | Rozetler veriden hesaplanır (ayrı tablo yok); kazanılma günü koşulun ilk sağlandığı gün | Tutarlı ve geri alınabilir | Teknik |
+| 2026-11-04 | Bildirimde en fazla 2 buton: "<öneri> ml içtim" + "Sonra" | Android 2 aksiyonu güvenle gösteriyor; iOS buton göstermez | Teknik |
+| 2026-11-04 | Test kancaları yalnızca `DGFIT_TEST_HOOKS=1` ile; canlı compose'da tanımlı değil | Üretimde dışarıya açık test ucu olmasın | Teknik |

@@ -57,7 +57,13 @@ git clone /tmp/repo.bundle /home/user/dgfit && cd /home/user/dgfit && npm ci
 
 Yerel test DB'si: `apt-get install -y postgresql && service postgresql start`, ardından `dgfit/dgfit` kullanıcı ve veritabanı (bkz. `scripts/verify.sh`).
 
+## Bildirimler
+
+- VAPID anahtarı DB'de: `select value->>'publicKey' from app_config where key='vapid'` (özel anahtarı yazdırma).
+- Zamanlayıcı logu: `docker compose logs app | grep zamanlayıcı`.
+- Push e2e yalnızca yerelde (`TEST_CA_DIR` + `NODE_EXTRA_CA_CERTS`, `verify.sh` kurar). `DGFIT_TEST_HOOKS` canlıda asla açılmaz.
+
 ## Kullanıcı verisi temizliği
 
-Test kullanıcıları `test_` / `dbg_` önekiyle açılır ve testten sonra silinir:
+Test kullanıcıları `test_` / `dbg_` önekiyle açılır ve testten sonra silinir (kullanıcının `deneme` hesabı korunur):
 `docker compose exec -T db psql -U dgfit -d dgfit -c "delete from users where username like 'test\_%' or username like 'dbg\_%'"`

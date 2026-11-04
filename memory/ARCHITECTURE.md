@@ -35,6 +35,12 @@ Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 - `lib/water.ts` — Su hesap motoru (saf, isomorfik; istemci ve sunucu aynı fonksiyonu kullanır): içecek türleri + hidrasyon katsayısı, ideal eğri, tempo, tahmin, dağılım skoru, sık miktarlar, çift kayıt, saatlik sınır, esnek seri, en uzun ara, hedef tarihçesi. Testleri `tests/water.test.ts`.
 - `lib/water-data.ts` — Su veri katmanı (server-only): `ensureWaterSetup` (ilk kullanımda ayarlar + hedef tarihçesi + 3 varsayılan kap), `dailyTotals` (SQL, Europe/Istanbul gün grubu), `getWaterScreen`, `getWaterStats`, `getWaterSummary`.
 - `app/(app)/su/` — `page.tsx` (`?gun=YYYY-MM-DD` ile geçmiş gün, en fazla 365 gün), `WaterScreen.tsx` (istemci; iyimser güncelleme, geri al çubuğu, çift kayıt onayı, alt sayfalar), `actions.ts`, `istatistik/` (`?aralik=7|30|90|365`), `ayarlar/`.
+- `lib/reminders.ts` — hatırlatma karar motoru (saf): `decideReminder(input)` → gönder/gönderme + gerekçe. Kurallar: uyanık pencere (uyanış+30 dk … uyku−60 dk), sessiz aralıklar, hedef tamamsa yok, günlük tavan, son bildirimden ≥45 dk, 3 ardışık yok sayılanda 2 sa sessizlik, idealin %10 önündeyse yok, aralık 60/90/150 dk (gerilik derecesine göre), unutulan saatte ×0,75, alışkanlık saatinde ×1,2, yok sayılan saatte ×1,5, öneri 150–400 ml, gün sonu özeti uyku−60 dk.
+- `lib/scheduler.ts` — `instrumentation.ts` → `startScheduler()` (60 sn `setInterval`, tek süreç bayrağı). Aboneliği olan ve hatırlatması açık kullanıcılar için `runForUser`. `water.logged` olayında son 20 dk'daki hatırlatma `acted_at` alır. `DGFIT_SCHEDULER=off` ile kapatılır.
+- `lib/push.ts` — `web-push`; VAPID anahtarları ilk kullanımda üretilip `app_config('vapid')`'e yazılır. 404/410 dönen abonelik silinir.
+- `lib/water-speech.ts` — Türkçe cümle → `{ml, drink, atMin}`. `lib/water-insights.ts` — `waterInsights` (kural tabanlı kartlar) ve `computeBadges` (veriden türetilir, tablo yok).
+- API: `/api/push/key|subscribe|unsubscribe|test`, `/api/water/notify` (SW'den, çerezle), `/api/test/reminder` (yalnızca `DGFIT_TEST_HOOKS=1`, canlıda 404).
+- `public/sw.js` (v2): push → bildirim (en fazla 2 buton); `add:<ml>` ve `snooze` aksiyonları `/api/water/notify`'a POST; normal dokunuş su ekranını açar.
 - `components/` — `ui.tsx` (btn sınıfları, Ring, Bar, TopBar, FieldError), `icons.tsx` (satır içi SVG), `Ruler.tsx` (kaydırmalı cetvel), `BottomNav.tsx`, `QuickAdd.tsx` (dialog), `Sheet.tsx` (genel alt sayfa, native dialog), `QuickWaterButton.tsx` (Bugün ekranında +250 ml), `ModuleSoon.tsx`, `SwRegister.tsx`.
 - `public/` — `manifest.webmanifest`, `sw.js` (statik önbellek + çevrimdışı sayfa + push iskeleti), `offline.html`, `icons/` (`scripts/icons.cjs` ile Playwright'tan üretilir).
 - `drizzle/` — SQL migration'lar (drizzle-kit üretir); `scripts/migrate.mjs` bunları container açılışında uygular (`_migrations` tablosu, advisory lock).
@@ -57,6 +63,8 @@ Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 Faz 0: `users` · `sessions` · `profiles` (1:1 kullanıcı) · `profile_history` · `goals` (aktif tek hedef, `active`) · `weight_logs` · `events` · `daily_targets` (henüz yazılmıyor, Faz 2'de dolacak).
 
 Faz 1a (Su): `water_logs` (ham `ml` + `effective_ml` = ml × hidrasyon; `source`; `history` jsonb: create/edit/merge/delete/undo; yumuşak silme) · `water_containers` (kapasite, son doluluk, varsayılan, arşiv) · `water_settings` (butonlar, yudum ml, görünüm, geri bildirim) · `water_goal_history` (`effective_from` ile; günün hedefi = o güne kadarki son kayıt, haftanın günü özel hedefleri `weekday[0=Pazar]`).
+
+Faz 1b: `app_config` · `push_subscriptions` (endpoint benzersiz) · `water_reminders` (gün, dakika, tür remind/summary/test, öneri ml, teslim sayısı, açılma, etkili olma, aksiyon) · `water_settings`'e `reminders_enabled`, `quiet`, `max_per_day`, `summary_enabled`.
 
 Su kuralları: hedefe `effective_ml` sayılır; Bugün ekranının su hedefi `water_goal_history`'den gelir (yoksa `goals.water_ml`); hafta şeridi halkaları şimdilik yalnızca su oranıdır; seri sayacı su serisidir.
 
