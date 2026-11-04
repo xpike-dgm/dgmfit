@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "3a",
+  "phase": "3b",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -105,7 +105,16 @@
     "app/(app)/fitness/actions.ts",
     "app/(app)/fitness/live-store.ts",
     "app/(app)/fitness/antrenman/LiveWorkout.tsx",
-    ".claude/settings.json"
+    ".claude/settings.json",
+    "lib/progress.ts",
+    "lib/schemes.ts",
+    "lib/fitness-stats.ts",
+    "lib/media.ts",
+    "lib/rest-push.ts",
+    "tests/progress.test.ts",
+    "tests/e2e/progress.e2e.cjs",
+    "app/(app)/fitness/istatistik/BodyMap.tsx",
+    "app/(app)/fitness/olcumler/MeasureClient.tsx"
   ],
   "tables": [
     "users",
@@ -136,7 +145,9 @@
     "exercise_records",
     "personal_records",
     "cardio_sessions",
-    "gym_settings"
+    "gym_settings",
+    "body_measurements",
+    "media_blobs"
   ],
   "routes": [
     "/",
@@ -175,7 +186,13 @@
     "/fitness/kardiyo",
     "/fitness/programlar",
     "/fitness/programlar/[id]",
-    "/api/exercises/search"
+    "/api/exercises/search",
+    "/fitness/istatistik",
+    "/fitness/olcumler",
+    "/api/media",
+    "/api/media/[id]",
+    "/api/push/rest",
+    "/api/test/fitness"
   ],
   "events": [
     "profile.onboarded",
@@ -402,6 +419,37 @@
       "logCardio",
       "fitnessHome",
       "todayTraining"
+    ],
+    "lib/progress.ts": [
+      "detectPlateau",
+      "alternatives",
+      "strengthLevel",
+      "liftOf",
+      "setsByMuscle",
+      "setBandStatus",
+      "recovery",
+      "periodTarget",
+      "weekIndex",
+      "isDeloadWeek"
+    ],
+    "lib/schemes.ts": [
+      "gzSets",
+      "gzAdvance"
+    ],
+    "lib/media.ts": [
+      "saveMedia",
+      "readMedia",
+      "deleteMedia",
+      "listProgressPhotos",
+      "mediaEnabled",
+      "sniff"
+    ],
+    "lib/fitness-stats.ts": [
+      "statsOverview",
+      "exerciseProgress",
+      "alternativesFor",
+      "listMeasurements",
+      "addMeasurement"
     ]
   },
   "dependencies": {
@@ -421,6 +469,7 @@
     "0002_reminders.sql",
     "0003_food.sql",
     "0004_fit.sql",
-    "0005_fitness.sql"
+    "0005_fitness.sql",
+    "0006_fitness_progress.sql"
   ]
 }

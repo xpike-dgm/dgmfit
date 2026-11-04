@@ -46,7 +46,12 @@ export async function exerciseProgress(userId: string, exerciseId: number) {
   const hist = (await exerciseHistory(userId, [exerciseId], 60)).get(exerciseId) ?? []
   const series = hist.map((h) => ({ day: h.day, e1rm: Math.max(0, ...h.sets.filter((s) => s.type !== ('warmup' as SetType)).map((s) => e1rm(s.kg, s.reps, s.rir))) }))
   const today = dayString()
-  const [pe] = await db.select({ repMin: schema.programExercises.repMin, repMax: schema.programExercises.repMax }).from(schema.programExercises).where(eq(schema.programExercises.exerciseId, exerciseId)).limit(1)
+  // tekrar aralığı yalnızca bu kullanıcının (silinmemiş) programlarından
+  const [pe] = await db.select({ repMin: schema.programExercises.repMin, repMax: schema.programExercises.repMax }).from(schema.programExercises)
+    .innerJoin(schema.programDays, eq(schema.programDays.id, schema.programExercises.dayId))
+    .innerJoin(schema.programs, eq(schema.programs.id, schema.programDays.programId))
+    .where(and(eq(schema.programExercises.exerciseId, exerciseId), eq(schema.programs.userId, userId), isNull(schema.programs.deletedAt)))
+    .orderBy(desc(schema.programs.active)).limit(1)
   const plateau = detectPlateau(series, today, pe)
   const [profile] = await db.select({ weightKg: schema.profiles.weightKg, sex: schema.profiles.sex }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
   const lift = liftOf(x.key)

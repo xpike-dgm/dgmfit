@@ -328,6 +328,8 @@ export interface WorkoutPayload {
 
 /** Antrenmanı kaydeder (client_id ile idempotent), rekorları günceller, olayları yayınlar, programı ilerletir. */
 export async function saveWorkout(userId: string, p: WorkoutPayload) {
+  // istemcinin bildirdiği program günü bu kullanıcıya ait değilse yok sayılır (başkasının programı ilerletilemez)
+  if (p.programDayId && !(await ownsDay(userId, p.programDayId))) p = { ...p, programDayId: null }
   const [dup] = await db.select({ id: schema.workouts.id }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), eq(schema.workouts.clientId, p.clientId))).limit(1)
   if (dup) return { id: dup.id, duplicate: true, prs: [] as { exerciseId: number; type: string; value: number; previous: number }[] }
   const [profile] = await db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
@@ -385,6 +387,7 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
 
 /** GZCLP: seans sonrası kademe/ağırlık durumunu ilerletir. İlk seansta durum, yapılan çalışma ağırlığından başlar. */
 async function advanceSchemes(userId: string, dayId: string, exs: { exerciseId: number; sets: LoggedSet[] }[]) {
+  if (!(await ownsDay(userId, dayId))) return
   const pes = await db.select({ pe: schema.programExercises, pattern: schema.exercises.pattern }).from(schema.programExercises)
     .innerJoin(schema.exercises, eq(schema.exercises.id, schema.programExercises.exerciseId))
     .where(and(eq(schema.programExercises.dayId, dayId), sql`${schema.programExercises.scheme} like 'gzclp-%'`))
