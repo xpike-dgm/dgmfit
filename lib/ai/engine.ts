@@ -20,6 +20,10 @@ export const PRICES: Record<string, [number, number]> = {
 export const modelFor = (p: { model: string; taskModels: Record<string, string> | null }, task: Task) => (p.taskModels ?? {})[task] || p.model
 /** Sunucu tarafı yedek (refusal → başka model) bu modellerde var; Haiku'da yok. */
 const SERVER_FALLBACK = /^claude-(opus|fable|sonnet-5-5)/
+/** Görev başına çıktı sınırı: 7 günlük menü ve program uzun JSON üretir (4.000 token'da yarıda kesiliyordu). */
+const MAX_OUT: Partial<Record<Task, number>> = { menu: 16000, program: 10000, pantry: 6000 }
+export const maxTokensFor = (task: Task, model: string) => Math.max(MAX_OUT[task] ?? 4000, SERVER_FALLBACK.test(model) ? 8000 : 4000)
+const timeoutFor = (task: Task) => ((MAX_OUT[task] ?? 0) > 8000 ? 180_000 : 60_000)
 export const PROVIDER_LABEL: Record<ProviderId, string> = { claude: 'Claude (Anthropic)', openai: 'OpenAI' }
 
 export class AiError extends Error {
@@ -81,13 +85,13 @@ class ProviderError extends Error { constructor(message: string, readonly status
 
 async function callClaude(key: string, model: string, task: Task, input: CallInput): Promise<CallOut> {
   // authToken: null → ortamdaki ANTHROPIC_AUTH_TOKEN ya da profil devreye girmez; yalnızca şifreli saklanan anahtar (SDK 1.x: Authorization: Bearer)
-  const client = new Anthropic({ apiKey: key, authToken: null, baseURL: baseUrl('claude'), maxRetries: 0, timeout: 60_000 })
+  const client = new Anthropic({ apiKey: key, authToken: null, baseURL: baseUrl('claude'), maxRetries: 0, timeout: timeoutFor(task) })
   try {
     const content: Anthropic.ContentBlockParam[] = []
     if (input.image) content.push({ type: 'image', source: { type: 'base64', media_type: input.image.mime as 'image/jpeg', data: input.image.data.toString('base64') } })
     content.push({ type: 'text', text: input.text })
     const params = {
-      model, max_tokens: SERVER_FALLBACK.test(model) ? 8000 : 4000, system: systemFor(task, input),
+      model, max_tokens: maxTokensFor(task, model), system: systemFor(task, input),
       output_config: { effort: 'low' as const, format: { type: 'json_schema' as const, schema: jsonSchemaFor(task) } },
       messages: [...(input.history ?? []).map((h) => ({ role: h.role, content: h.text })), { role: 'user' as const, content }],
     }
@@ -107,7 +111,7 @@ async function callClaude(key: string, model: string, task: Task, input: CallInp
 }
 
 async function callOpenAI(key: string, model: string, task: Task, input: CallInput): Promise<CallOut> {
-  const client = new OpenAI({ apiKey: key, baseURL: baseUrl('openai'), maxRetries: 0, timeout: 60_000 })
+  const client = new OpenAI({ apiKey: key, baseURL: baseUrl('openai'), maxRetries: 0, timeout: timeoutFor(task) })
   try {
     const content: OpenAI.Responses.ResponseInputContent[] = [{ type: 'input_text', text: input.text }]
     if (input.image) content.push({ type: 'input_image', image_url: `data:${input.image.mime};base64,${input.image.data.toString('base64')}`, detail: 'auto' })

@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5f: takviyeler + AI menü düzeltmesi
+- Kullanıcı önerisi: takviyeyi kullanıcı tanımlasın (porsiyon değerleri), sonra yalnızca porsiyon işaretlesin. Hazır TR veritabanı yerine bu yol (DECISIONS). 0015 `foods.supplement`; `meal_items.meal='supplement'`; `lib/supplements.ts` + 5 birim test; Yemek'te Takviyeler kartı, `/yemek/takviyeler` (+ yeni, [id]).
+- Canlı ilk denemede `supplement.e2e` kafein uyarısının geri alınca kalkmasını sunucu yenilemesinden önce bekliyordu → uyarı ve ek içerik toplamı istemcide anlık sayaçtan.
+- Canlı AI hatası (kullanıcı ekran görüntüsü, AI menü 7 gün): `ai_calls` `menu … bad_output 200: Yanıt yarıda kesildi` (Haiku, 4.000 token çıktı sınırı). Düzeltme: görev başına çıktı sınırı (menü 16.000, program 10.000, elimdekiler 6.000) ve uzun görevlerde 180 sn zaman aşımı (`lib/ai/engine.ts` `maxTokensFor`).
+- Doğrulama: commit `a49d70e`; verify.sh VERIFY OK (144 birim, 15 e2e) ×2; release `2026-11-05T16-41-25-230Z` RELEASE OK; AI düzeltmesi aşağıdaki release ile.
+
 ## 2026-11-05 — Faz 5e: geri bildirim, beyaz liste, yönetim paneli
 - Başlangıç: kullanıcı isteği (ayarlara geri bildirim düğmesi + sayfası; whitelist — kayıtlar yönetim paneline düşsün, onaylanınca girsin; panoda yarı ekran özet + tıklanabilir kartlar; kullanıcıları görme, veri sıfırlama, kişiye özel AI kotası).
 - Şema 0014: `users.status/status_at/status_by/ai_daily/admin_note/invite_code/last_seen_at`, `feedback`, `invites`; eski hesaplar approved. Erişim katmanı `getSessionUser` → `getUser` (onaylı/yönetici) → `requireUser` (→ `/beklemede`). Kayıt: davet kodu geçerliyse onaylı (koşullu kullanım artışı), değilse pending + yöneticilere push.
