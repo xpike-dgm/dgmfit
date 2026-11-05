@@ -12,7 +12,7 @@ export default function FoodWaterToggle({ on }: { on: boolean }) {
           <span className="font-extrabold">Yemeklerden gelen su</span>
           <span className="text-[13px] text-mute leading-snug">Çorba, ayran, süt gibi sıvı yemeklerdeki suyu günlük suya ekle.</span>
         </span>
-        <input type="checkbox" checked={v} onChange={(e) => { const x = e.target.checked; setV(x); start(async () => { await setFoodWater(x) }) }} className="w-6 h-6 accent-[#6CC7FF] shrink-0" />
+        <input type="checkbox" checked={v} onChange={(e) => { const x = e.target.checked; setV(x); start(async () => { await setFoodWater(x) }) }} className="w-6 h-6 shrink-0" />
       </label>
     </section>
   )

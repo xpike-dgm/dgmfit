@@ -9,7 +9,7 @@ import { createRecipe } from '../../actions'
 
 interface Hit { id: number; name: string; sub: string | null; per100: Record<string, number>; kcal: number }
 interface Ing extends Hit { grams: number }
-const input = 'h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink outline-none focus:border-lime'
+const input = 'h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink outline-none focus:border-acc'
 
 export default function RecipeBuilder({ back }: { back: string }) {
   const router = useRouter()
@@ -51,7 +51,7 @@ export default function RecipeBuilder({ back }: { back: string }) {
   }
 
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3 pb-8">
+    <div className="px-4 flex flex-col gap-3 pb-8">
       <TopBar back={back} title="Yeni tarif" />
       <section className="card p-5 flex flex-col gap-3 mt-2">
         <div className="flex flex-col gap-1"><label htmlFor="rb-name" className="text-xs text-mute">Tarif adı</label><input id="rb-name" value={name} onChange={(e) => setName(e.target.value.slice(0, 80))} className={input + ' w-full'} placeholder="Ör. Annemin mercimek köftesi" /></div>
@@ -99,7 +99,7 @@ export default function RecipeBuilder({ back }: { back: string }) {
         </section>
       ) : null}
       {err ? <p role="alert" className="text-sm font-semibold text-danger px-1">{err}</p> : null}
-      <button type="button" disabled={pending || !name.trim() || !ings.some((i) => i.grams > 0)} onClick={save} className="h-14 rounded-full bg-lime text-lime-ink font-extrabold disabled:opacity-40">{pending ? 'Kaydediliyor…' : 'Tarifi kaydet'}</button>
+      <button type="button" disabled={pending || !name.trim() || !ings.some((i) => i.grams > 0)} onClick={save} className="h-14 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40">{pending ? 'Kaydediliyor…' : 'Tarifi kaydet'}</button>
     </div>
   )
 }

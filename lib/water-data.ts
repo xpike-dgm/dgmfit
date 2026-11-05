@@ -171,7 +171,7 @@ export async function getWaterScreen(userId: string, day: string = dayString()):
     gap: isToday ? longestGap(dayLogs, wake, nowMin) : null,
     hourly: hourlyBuckets(dayLogs),
     streak,
-    progressStyle: settings?.progressStyle ?? 'bottle',
+    progressStyle: settings?.progressStyle ?? 'ring',
     feedback: settings?.feedback ?? true,
   }
 }

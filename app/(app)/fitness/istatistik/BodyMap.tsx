@@ -1,7 +1,7 @@
 import { MUSCLES } from '@/lib/exercise-labels'
 
 type Heat = { muscle: string; sets: number; status: 'yeşil' | 'sarı' | 'kırmızı' }
-const RING = { 'yeşil': 'var(--color-lime)', 'sarı': 'var(--color-orange)', 'kırmızı': 'var(--color-danger)' }
+const RING = { 'yeşil': 'var(--color-good)', 'sarı': 'var(--color-orange)', 'kırmızı': 'var(--color-danger)' }
 
 // Basit gövde şeması (100 × 210 birim): ön ve arka. Her bölge bir kas grubudur.
 type Shape = { m: string; d: string }

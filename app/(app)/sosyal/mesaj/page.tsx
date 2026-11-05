@@ -14,7 +14,7 @@ export default async function Page(props: { searchParams: Promise<{ paylas?: str
   const [ts, fr] = await Promise.all([threads(u.id), friendsOverview(u.id)])
   const postId = paylas && /^[0-9a-f-]{36}$/.test(paylas) ? paylas : null
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/sosyal" title="Mesajlar" />
       {postId ? <SharePost postId={postId} friends={fr.friends.map((f) => f.username)} /> : null}
       <section className="card p-4 flex flex-col" data-testid="threads">

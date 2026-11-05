@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { logWeight } from '@/app/(app)/actions'
 import { btn } from './ui'
-import { Dumbbell, Drop, Fork, Scale } from './icons'
+import { Dumbbell, Drop, Fork, Pulse, Scale } from './icons'
 
 export default function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -32,9 +32,10 @@ export default function QuickAdd({ open, onClose }: { open: boolean; onClose: ()
   }
 
   const items = [
-    { href: '/su', label: 'Su ekle', sub: 'Tek dokunuşla', Icon: Drop, color: 'var(--color-water)' },
-    { href: '/yemek', label: 'Öğün ekle', sub: 'Arama, barkod, fotoğraf', Icon: Fork, color: 'var(--color-lime)' },
-    { href: '/fitness', label: 'Antrenman başlat', sub: 'Programından seç', Icon: Dumbbell, color: 'var(--color-orange)' },
+    { href: '/su', label: 'Su ekle', sub: 'Tek dokunuşla', Icon: Drop, mod: 'water' },
+    { href: '/yemek/ekle', label: 'Öğün ekle', sub: 'Arama, barkod, fotoğraf', Icon: Fork, mod: 'food' },
+    { href: '/fitness', label: 'Antrenman başlat', sub: 'Programından seç', Icon: Dumbbell, mod: 'fitness' },
+    { href: '/fitness/kardiyo', label: 'Kardiyo ekle', sub: 'Koşu, yürüyüş, bisiklet…', Icon: Pulse, mod: 'fitness' },
   ]
 
   return (
@@ -46,13 +47,13 @@ export default function QuickAdd({ open, onClose }: { open: boolean; onClose: ()
           <div className="flex flex-col gap-2 pb-4">
             <h2 className="text-lg font-extrabold mb-2 px-1">Hızlı ekle</h2>
             {items.map((it) => (
-              <Link key={it.href} href={it.href} onClick={onClose} className="flex items-center gap-4 min-h-[64px] px-4 rounded-[20px] bg-surface-2">
-                <span className="w-10 h-10 rounded-full bg-surface-3 flex items-center justify-center" style={{ color: it.color }}><it.Icon size={20} /></span>
+              <Link key={it.href} href={it.href} onClick={onClose} data-mod={it.mod} className="flex items-center gap-4 min-h-[64px] px-4 rounded-[20px] bg-surface-2">
+                <span className="w-10 h-10 rounded-full bg-acc text-acc-ink flex items-center justify-center"><it.Icon size={20} /></span>
                 <span className="flex flex-col"><span className="font-bold">{it.label}</span><span className="text-[13px] text-mute">{it.sub}</span></span>
               </Link>
             ))}
-            <button type="button" onClick={() => setMode('weight')} className="flex items-center gap-4 min-h-[64px] px-4 rounded-[20px] bg-surface-2 text-left">
-              <span className="w-10 h-10 rounded-full bg-surface-3 flex items-center justify-center text-violet"><Scale size={20} /></span>
+            <button type="button" onClick={() => setMode('weight')} data-mod="plan" className="flex items-center gap-4 min-h-[64px] px-4 rounded-[20px] bg-surface-2 text-left">
+              <span className="w-10 h-10 rounded-full bg-acc text-acc-ink flex items-center justify-center"><Scale size={20} /></span>
               <span className="flex flex-col"><span className="font-bold">Kilo gir</span><span className="text-[13px] text-mute">Trend kilon ve planın güncellenir</span></span>
             </button>
           </div>

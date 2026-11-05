@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Elimde bunlar var · DgFit' }
 export default async function Page() {
   await requireUser()
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/yemek" title="Elimde bunlar var" />
       <PantryClient aiOn={await aiAvailable()} meal={mealForTime(minuteOfDay(new Date()))} />
     </div>

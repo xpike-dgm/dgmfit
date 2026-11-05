@@ -13,7 +13,7 @@ export default async function Page() {
   await requireAdmin()
   const [q, proofs] = await Promise.all([moderationQueue(), proofQueue()])
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3" data-testid="moderation">
+    <div className="px-4 flex flex-col gap-3" data-testid="moderation">
       <TopBar back="/profil" title="Moderasyon" />
       <section className="card p-4 flex flex-col gap-2"><span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Bekleyen / gizlenen gönderiler ({q.posts.length})</span>
         {q.posts.map((p) => (

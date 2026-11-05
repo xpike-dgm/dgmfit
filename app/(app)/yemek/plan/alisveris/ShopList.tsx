@@ -17,7 +17,7 @@ export default function ShopList({ groups }: { groups: G[] }) {
           <span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute mb-1">{g.aisle}</span>
           {g.items.map((x) => (
             <label key={x.id} className="flex items-center gap-3 min-h-11 border-b border-line last:border-0">
-              <input type="checkbox" checked={state.get(x.id) ?? false} className="w-5 h-5 accent-[var(--color-lime)]"
+              <input type="checkbox" checked={state.get(x.id) ?? false} className="w-5 h-5"
                 onChange={(e) => { const c = e.target.checked; setState(new Map(state).set(x.id, c)); void toggleShoppingAction(x.id, c) }} />
               <span className={`flex-1 text-[14px] ${state.get(x.id) ? 'line-through text-mute' : ''}`}>{x.name}</span>
               <span className="num text-[13px] text-mute">{amount(x.grams)}</span>

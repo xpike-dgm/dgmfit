@@ -158,12 +158,12 @@ export default function LiveWorkout(p: Props) {
 
   const cur = sheet && 'ex' in sheet ? d.exercises[sheet.ex] : null
   return (
-    <div className="flex flex-col gap-3 px-4 pt-4 pb-40">
-      <header className="sticky top-0 z-20 -mx-4 px-4 pt-2 pb-3 bg-bg/95 backdrop-blur flex flex-col gap-2 border-b border-surface-2">
+    <div className="flex flex-col gap-3 px-4 pb-40">
+      <header className="sticky top-0 z-20 -mx-4 px-4 safe-top pb-3 bg-surface/95 backdrop-blur flex flex-col gap-2 border-b border-line">
         <div className="flex items-center justify-between gap-2">
           <span className="flex flex-col min-w-0">
             <span className="text-[18px] font-extrabold truncate">{d.name}</span>
-            {resumed ? <span className="text-[12px] text-lime">Kaldığın yerden devam ediyorsun</span> : p.week ? <span className="text-[12px] text-mute">Programın {p.week}. haftası</span> : null}
+            {resumed ? <span className="text-[12px] text-acc">Kaldığın yerden devam ediyorsun</span> : p.week ? <span className="text-[12px] text-mute">Programın {p.week}. haftası</span> : null}
           </span>
           <button type="button" className={`${btn.primary} h-11 text-[15px] px-5`} onClick={() => setSheet({ kind: 'finish' })}>Bitir</button>
         </div>
@@ -191,10 +191,10 @@ export default function LiveWorkout(p: Props) {
           {e.history.length ? <p className="text-[13px] text-mute" data-testid="last-time">Geçen ({e.history.at(-1)!.day.slice(8)}.{e.history.at(-1)!.day.slice(5, 7)}): {lastLine(e)}</p> : <p className="text-[13px] text-mute">İlk kez yapıyorsun: rahat bir ağırlıkla başla, RIR'ı dürüst gir.</p>}
           {e.suggestion ? (
             <div className="rounded-2xl bg-coach border border-coach-line px-3.5 py-3 flex flex-col gap-2" data-testid="suggestion">
-              <span className="text-[14px]"><b className="text-lime">Öneri: {e.kind === 'time' ? e.suggestion.reason : `${fmt(e.suggestion.kg)} kg × ${e.suggestion.reps}`}</b> <span className="text-[12px] text-mute">· güven {e.suggestion.confidence}</span></span>
+              <span className="text-[14px]"><b className="text-acc">Öneri: {e.kind === 'time' ? e.suggestion.reason : `${fmt(e.suggestion.kg)} kg × ${e.suggestion.reps}`}</b> <span className="text-[12px] text-mute">· güven {e.suggestion.confidence}</span></span>
               {e.kind !== 'time' ? <span className="text-[12px] text-ink-2 leading-relaxed">{e.suggestion.reason}</span> : null}
               <div className="flex gap-2">
-                <button type="button" className="h-9 px-3 rounded-full bg-lime text-lime-ink text-[13px] font-bold" onClick={() => update((x) => { for (const s of x.exercises[ei].sets) if (!s.done && s.type !== 'warmup') { s.kg = String(e.suggestion!.kg); s.reps = String(e.suggestion!.reps) } return x })}>Öneriyi uygula</button>
+                <button type="button" className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[13px] font-bold" onClick={() => update((x) => { for (const s of x.exercises[ei].sets) if (!s.done && s.type !== 'warmup') { s.kg = String(e.suggestion!.kg); s.reps = String(e.suggestion!.reps) } return x })}>Öneriyi uygula</button>
                 {e.history.length ? <button type="button" className="h-9 px-3 rounded-full border border-line-2 text-[13px] font-bold" onClick={() => update((x) => { const last = e.history.at(-1)!.sets.filter((s) => s.type !== 'warmup'); x.exercises[ei].sets.filter((s) => !s.done && s.type !== 'warmup').forEach((s, i) => { const l = last[i] ?? last.at(-1)!; s.kg = String(l.kg); s.reps = String(l.reps) }); return x })}>Geçen gibi</button> : null}
                 <button type="button" className="h-9 px-3 rounded-full text-[13px] font-bold text-mute" onClick={() => setSheet({ kind: 'reject', ex: ei })}>Uygun değil</button>
               </div>
@@ -219,7 +219,7 @@ export default function LiveWorkout(p: Props) {
                     className="h-11 rounded-xl bg-surface-2 text-[12px] font-bold leading-tight"><span className="block text-[10px] text-mute">RIR</span>{s.rir ?? '–'}</button>
                 )}
                 <button type="button" aria-label={`Set ${si + 1} ${s.done ? 'geri al' : 'tamamla'}`} onClick={() => complete(ei, si)}
-                  className={`h-11 rounded-xl flex items-center justify-center ${s.done ? 'bg-lime text-lime-ink' : 'border border-line-2 text-ink'}`}><Check size={20} /></button>
+                  className={`h-11 rounded-xl flex items-center justify-center ${s.done ? 'bg-acc text-acc-ink' : 'border border-line-2 text-ink'}`}><Check size={20} /></button>
               </div>
             ))}
           </div>
@@ -245,14 +245,14 @@ export default function LiveWorkout(p: Props) {
       {d.restEndsAt && restLeft > 0 ? (
         <div role="timer" aria-label="Dinlenme" className="fixed inset-x-0 bottom-[84px] z-30 px-4">
           <div className="max-w-md mx-auto rounded-2xl bg-surface-3 border border-line-2 px-4 py-3 flex items-center gap-3 shadow-lg" data-testid="rest-timer">
-            <Clock size={20} className="text-lime" />
+            <Clock size={20} className="text-acc" />
             <span className="flex flex-col flex-1 min-w-0">
               <span className="num text-[22px] font-bold leading-none">{mmss(restLeft)}</span>
               <span className="text-[12px] text-mute truncate">{d.restFor ? `Sıradaki: ${d.restFor}` : 'Dinlenme'}</span>
             </span>
             <button type="button" className="h-10 px-3 rounded-full bg-surface-2 text-[13px] font-bold" onClick={() => { const left = Math.max(5, restLeft - 15); update((x) => { x.restEndsAt = Math.max(Date.now(), (x.restEndsAt ?? 0) - 15000); return x }); if (d.restPush) pushRest(left, d.restFor) }}>−15</button>
             <button type="button" className="h-10 px-3 rounded-full bg-surface-2 text-[13px] font-bold" onClick={() => { update((x) => { x.restEndsAt = (x.restEndsAt ?? Date.now()) + 15000; return x }); if (d.restPush) pushRest(restLeft + 15, d.restFor) }}>+15</button>
-            <button type="button" className="h-10 px-3 rounded-full bg-lime text-lime-ink text-[13px] font-bold" onClick={() => { cancelPush(); update((x) => { x.restEndsAt = null; return x }) }}>Atla</button>
+            <button type="button" className="h-10 px-3 rounded-full bg-acc text-acc-ink text-[13px] font-bold" onClick={() => { cancelPush(); update((x) => { x.restEndsAt = null; return x }) }}>Atla</button>
           </div>
         </div>
       ) : null}

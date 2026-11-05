@@ -18,7 +18,7 @@ export function FriendTools({ userId, username, partner }: { userId: string; use
   return (
     <section className="card p-4 flex flex-col gap-2" aria-label="Arkadaş araçları" data-testid="friend-tools">
       <div className="flex flex-wrap gap-2">
-        <Link href={`/sosyal/mesaj/${encodeURIComponent(username)}`} className="h-9 px-3 rounded-full bg-lime text-lime-ink text-[12px] font-bold inline-flex items-center">Mesaj</Link>
+        <Link href={`/sosyal/mesaj/${encodeURIComponent(username)}`} className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[12px] font-bold inline-flex items-center">Mesaj</Link>
         {(Object.keys(NUDGE) as (keyof typeof NUDGE)[]).map((k) => (
           <button key={k} type="button" disabled={pending} className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={() => start(async () => { const r = await nudgeAction(userId, k); setMsg(r.ok ? 'Dürttün 👋' : r.error) })}>{k === 'water' ? 'Su dürt 💧' : 'Antrenman dürt 💪'}</button>
         ))}
@@ -28,7 +28,7 @@ export function FriendTools({ userId, username, partner }: { userId: string; use
         <button type="button" disabled={pending} className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={() => start(async () => { const r = await partnerAction(userId, partner.mine ? 'off' : 'on'); if (!r.ok) setMsg(r.error); router.refresh() })}>{partner.mine ? 'Partnerlikten çık' : partner.theirs ? 'Partner ol' : 'Partner yap'}</button>
         {partner.mutual ? <button type="button" disabled={pending} className="h-9 px-3 rounded-full bg-surface-2 text-[12px] font-bold" onClick={() => start(async () => { const r = await partnerAction(userId, 'copy'); if (r.ok && r.id) router.push(`/fitness/programlar/${r.id}`); else if (!r.ok) setMsg(r.error) })}>Ortak program: kopyala</button> : null}
       </div>
-      {msg ? <p role="status" className="text-[13px] text-lime">{msg}</p> : null}
+      {msg ? <p role="status" className="text-[13px] text-acc">{msg}</p> : null}
     </section>
   )
 }
@@ -52,10 +52,10 @@ export function PendingPRs({ prs, self, canWitness }: { prs: PR[]; self: boolean
         <div key={p.id} className="flex items-center gap-2 min-h-11 border-b border-line last:border-0 flex-wrap" data-testid="pending-pr">
           <span className="flex-1 text-[14px]"><b>{p.name}</b> {fmtNum(p.value, p.value % 1 ? 1 : 0)} kg <span className="text-[12px] text-mute">· {p.reason} · tanık {p.witnesses}/{p.needed}{p.hasProof ? ' · kanıt var' : ''}</span></span>
           {self ? <label className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold inline-flex items-center cursor-pointer">Kanıt ekle<input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void proof(p.id, f) }} /></label>
-            : canWitness ? <button type="button" className="h-9 px-3 rounded-full bg-lime text-lime-ink text-[12px] font-bold" onClick={async () => { const r = await prVerifyAction({ op: 'witness', prId: p.id }); setMsg(r.ok ? (r.verified ? 'Rekor doğrulandı ✓' : 'Tanıklığın kaydedildi') : r.error); router.refresh() }}>Tanığım</button> : null}
+            : canWitness ? <button type="button" className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[12px] font-bold" onClick={async () => { const r = await prVerifyAction({ op: 'witness', prId: p.id }); setMsg(r.ok ? (r.verified ? 'Rekor doğrulandı ✓' : 'Tanıklığın kaydedildi') : r.error); router.refresh() }}>Tanığım</button> : null}
         </div>
       ))}
-      {msg ? <p role="status" className="text-[13px] text-lime">{msg}</p> : null}
+      {msg ? <p role="status" className="text-[13px] text-acc">{msg}</p> : null}
     </section>
   )
 }

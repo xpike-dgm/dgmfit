@@ -11,7 +11,7 @@ export default function ModuleSoon({ title, icon, color, lead, phase, features }
         <h1 className="text-[26px] font-extrabold tracking-tight">{title}</h1>
       </header>
       <section className="card p-5 flex flex-col gap-3">
-        <span className="self-start h-7 px-3 rounded-full bg-coach border border-coach-line text-lime text-xs font-bold tracking-wide uppercase flex items-center">{phase}</span>
+        <span className="self-start h-7 px-3 rounded-full bg-coach border border-coach-line text-acc text-xs font-bold tracking-wide uppercase flex items-center">{phase}</span>
         <p className="text-[15px] leading-relaxed text-ink-2">{lead}</p>
       </section>
       <section className="card p-5">

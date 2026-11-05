@@ -6,7 +6,7 @@ import { btn } from '@/components/ui'
 import { TopBar } from '@/components/ui'
 import { createFood } from '../../actions'
 
-const input = 'h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink outline-none focus:border-lime w-full'
+const input = 'h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink outline-none focus:border-acc w-full'
 
 export default function CreateFood({ name, barcode, back, aiOn = false }: { name: string; barcode: string; back: string; aiOn?: boolean }) {
   const router = useRouter()
@@ -52,7 +52,7 @@ export default function CreateFood({ name, barcode, back, aiOn = false }: { name
     })
   }
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3 pb-8">
+    <div className="px-4 flex flex-col gap-3 pb-8">
       <TopBar back={back} title="Yeni besin" />
       {aiOn ? (
         <section className="card p-4 flex flex-col gap-2 mt-2" data-testid="label-ocr">
@@ -90,7 +90,7 @@ export default function CreateFood({ name, barcode, back, aiOn = false }: { name
         </details>
       </section>
       {err ? <p role="alert" className="text-sm font-semibold text-danger px-1">{err}</p> : null}
-      <button type="button" disabled={pending || !v.name.trim() || !v.kcal} onClick={submit} className="h-14 rounded-full bg-lime text-lime-ink font-extrabold disabled:opacity-40">{pending ? 'Kaydediliyor…' : 'Besini kaydet'}</button>
+      <button type="button" disabled={pending || !v.name.trim() || !v.kcal} onClick={submit} className="h-14 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40">{pending ? 'Kaydediliyor…' : 'Besini kaydet'}</button>
     </div>
   )
 }

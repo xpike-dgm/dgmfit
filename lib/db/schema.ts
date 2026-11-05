@@ -146,7 +146,7 @@ export const waterSettings = pgTable('water_settings', {
   userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
   buttons: jsonb('buttons').$type<number[]>().notNull().default([50, 100, 150, 200, 250, 500]),
   sipMl: integer('sip_ml'),
-  progressStyle: text('progress_style').notNull().default('bottle'), // bottle | ring | wave
+  progressStyle: text('progress_style').notNull().default('ring'), // ring | bottle | wave (5c: varsayılan halka)
   simpleMode: boolean('simple_mode').notNull().default(false),
   feedback: boolean('feedback').notNull().default(true), // animasyon + titreşim
   remindersEnabled: boolean('reminders_enabled').notNull().default(false),

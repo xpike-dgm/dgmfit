@@ -42,11 +42,11 @@ export function CreateProgram({ templates, defaults, aiOn }: { templates: { id: 
         <p className="text-[13px] text-ink-2 leading-relaxed">Deneyimine, haftalık gün sayına, seans süresine ve ekipmanına göre kurallı bir program yazılır. Hedefin (Fit) dikkate alınır.</p>
         <fieldset className="flex flex-col gap-2">
           <legend className="text-sm font-semibold mb-1">Haftada kaç gün?</legend>
-          <div className="flex gap-1.5">{[2, 3, 4, 5, 6].map((n) => <button key={n} type="button" aria-pressed={days === n} onClick={() => setDays(n)} className={`flex-1 h-11 rounded-xl font-bold num ${days === n ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{n}</button>)}</div>
+          <div className="flex gap-1.5">{[2, 3, 4, 5, 6].map((n) => <button key={n} type="button" aria-pressed={days === n} onClick={() => setDays(n)} className={`flex-1 h-11 rounded-xl font-bold num ${days === n ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{n}</button>)}</div>
         </fieldset>
         <label className="flex flex-col gap-1.5 text-sm font-semibold" htmlFor="gen-min">
           <span className="flex justify-between">Seans süresi <b className="num">{minutes} dk</b></span>
-          <input id="gen-min" type="range" min={20} max={120} step={5} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} className="accent-[var(--color-lime)] h-8" />
+          <input id="gen-min" type="range" min={20} max={120} step={5} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} className=" h-8" />
         </label>
         <fieldset className="flex flex-col gap-2">
           <legend className="text-sm font-semibold mb-1">Ekipman</legend>
@@ -69,7 +69,7 @@ export function CreateProgram({ templates, defaults, aiOn }: { templates: { id: 
             <span className="text-[12px] text-mute">Zayıf bölgelerini seç; dil modeli kütüphaneden hareket seçer, kurallar set/tekrar ve haftalık hacmi denetler. Günlük AI hakkından 1 düşer.</span>
             <div className="flex flex-wrap gap-1.5">{WEAK.map((k) => (
               <button key={k} type="button" aria-pressed={weak.includes(k)} onClick={() => setWeak(weak.includes(k) ? weak.filter((x) => x !== k) : weak.length < 4 ? [...weak, k] : weak)}
-                className={`h-9 px-3 rounded-full text-[13px] font-semibold ${weak.includes(k) ? 'bg-lime text-lime-ink' : 'bg-surface-2 text-ink-2'}`}>{MUSCLES[k]}</button>
+                className={`h-9 px-3 rounded-full text-[13px] font-semibold ${weak.includes(k) ? 'bg-acc text-acc-ink' : 'bg-surface-2 text-ink-2'}`}>{MUSCLES[k]}</button>
             ))}</div>
             <label htmlFor="ai-prog-note" className="sr-only">Not</label>
             <input id="ai-prog-note" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Not (ör: dizimde hassasiyet var, squat yerine leg press)" className="h-11 rounded-xl bg-surface-2 border border-line px-3 text-[14px]" />

@@ -13,7 +13,7 @@ export default async function ProgramPage(props: { params: Promise<{ id: string 
   const p = await getProgram(u.id, id)
   if (!p) notFound()
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness/programlar" title="Program" />
       <ProgramEditor program={{
         id: p.id, name: p.name, active: p.active, notes: p.notes, nextDayIdx: p.nextDayIdx, periodization: p.periodization, deloadEvery: p.deloadEvery, startDay: p.startDay,

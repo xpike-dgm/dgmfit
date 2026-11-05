@@ -13,7 +13,7 @@ export default async function AiAdminPage() {
   const o = await providerOverview()
   const sum = (f: (x: (typeof o.today)[number]) => boolean) => o.today.filter(f).reduce((a, x) => a + x.n, 0)
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/profil" title="AI ayarları" />
       <section className="card p-5 flex flex-col gap-2" data-testid="ai-today">
         <Eyebrow>Bugün</Eyebrow>
@@ -24,7 +24,7 @@ export default async function AiAdminPage() {
         <section key={p.id} className="card p-5 flex flex-col gap-3" aria-label={p.label} data-testid={`provider-${p.id}`}>
           <div className="flex justify-between items-center">
             <span className="font-extrabold">{p.label}</span>
-            <span className={`text-[12px] font-bold ${p.skipped ? 'text-orange' : 'text-lime'}`} data-testid="provider-status">{p.skipped ?? 'Kullanılabilir'}</span>
+            <span className={`text-[12px] font-bold ${p.skipped ? 'text-orange' : 'text-acc'}`} data-testid="provider-status">{p.skipped ?? 'Kullanılabilir'}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 text-[12px] text-mute">
             <span>Anahtar: <b className="text-ink num">{p.keyLast4 ? `••••${p.keyLast4}` : 'yok'}</b></span>

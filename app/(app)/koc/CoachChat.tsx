@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Sheet from '@/components/Sheet'
-import { btn, TopBar } from '@/components/ui'
+import { btn, TopBar, hdrIcon } from '@/components/ui'
 import { Gear, Mic, Spark, Trash } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import { SUPPORT } from '@/lib/safety'
@@ -16,7 +16,7 @@ const PROVIDER: Record<string, string> = { claude: 'Claude', openai: 'OpenAI' }
 const SUGGEST = ['Bu hafta neden kilo vermedim?', 'Bu akşam 2 dilim pizza yersem ne olur?', 'Neden öğleden sonra su içmeyi unutuyorum?', 'Hedef tarihimi 2 hafta uzat', 'Bacak gününe bir hareket ekle']
 
 export default function CoachChat(p: {
-  aiOn: boolean; conversationId: string | null; initial: MessageView[]; draft: string; conversations: Conv[]
+  aiOn: boolean; conversationId: string | null; initial: MessageView[]; draft: string; conversations: Conv[]; openSettings?: boolean
   prefs: { persona: string; insights: boolean; weeklyPush: boolean }; personas: { id: string; label: string; hint: string }[]; left: number
 }) {
   const [conv, setConv] = useState(p.conversationId)
@@ -25,7 +25,7 @@ export default function CoachChat(p: {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [left, setLeft] = useState(p.left)
-  const [sheet, setSheet] = useState<null | 'settings' | 'history'>(null)
+  const [sheet, setSheet] = useState<null | 'settings' | 'history'>(p.openSettings ? 'settings' : null)
   const [prefs, setPrefs] = useState(p.prefs)
   const [listening, setListening] = useState(false)
   const [speech, setSpeech] = useState(false)
@@ -73,10 +73,9 @@ export default function CoachChat(p: {
   const persona = p.personas.find((x) => x.id === prefs.persona) ?? p.personas[0]
 
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3 min-h-[calc(100dvh-140px)]">
-      <TopBar back="/" title="Koç" right={<button type="button" className={btn.icon} aria-label="Koç ayarları" onClick={() => setSheet('settings')}><Gear size={20} /></button>} />
+    <div className="px-4 flex flex-col gap-3 min-h-[calc(100dvh-140px)]">
+      <TopBar back="/" title="Koç" sub={`Kişilik: ${persona.label}`} right={<button type="button" className={hdrIcon} aria-label="Koç ayarları" onClick={() => setSheet('settings')}><Gear size={20} /></button>} />
       <div className="flex items-center gap-2 px-1">
-        <span className="text-[13px] text-mute">Kişilik: <b className="text-ink">{persona.label}</b></span>
         <button type="button" className="ml-auto h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold" onClick={() => setSheet('history')}>Sohbetler</button>
         <Link href="/koc?yeni=1" className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center">Yeni</Link>
       </div>
@@ -86,13 +85,13 @@ export default function CoachChat(p: {
       <div className="flex flex-col gap-3 flex-1" aria-live="polite" data-testid="coach-messages">
         {!msgs.length ? (
           <div className="card p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2"><Spark size={18} className="text-lime" /><span className="font-bold">Merhaba! Tüm verilerine bakarak cevap veririm.</span></div>
+            <div className="flex items-center gap-2"><Spark size={18} className="text-acc" /><span className="font-bold">Merhaba! Tüm verilerine bakarak cevap veririm.</span></div>
             <p className="text-[13px] text-mute">Kalori, su, antrenman ve kilo trendini birlikte yorumlarım. Hedef tarihini değiştirmek, programa hareket eklemek ya da su kaydı gibi işleri önerebilirim; sen onaylamadan hiçbir şey değişmez.</p>
             <div className="flex flex-wrap gap-2">{SUGGEST.map((s) => <button key={s} type="button" className="text-left text-[13px] px-3 py-2 rounded-2xl bg-surface-2" disabled={!p.aiOn || busy} onClick={() => void send(s)}>{s}</button>)}</div>
           </div>
         ) : null}
         {msgs.map((m) => (m.role === 'user' ? (
-          <div key={m.id} className="self-end max-w-[85%] rounded-[20px] rounded-br-md bg-lime text-lime-ink px-4 py-2.5 text-[15px] whitespace-pre-wrap" data-testid="msg-user">{m.content}</div>
+          <div key={m.id} className="self-end max-w-[85%] rounded-[20px] rounded-br-md bg-acc text-acc-ink px-4 py-2.5 text-[15px] whitespace-pre-wrap" data-testid="msg-user">{m.content}</div>
         ) : (
           <div key={m.id} className="self-start max-w-[92%] flex flex-col gap-2" data-testid="msg-coach">
             {m.safety === 'crisis' || m.safety === 'ed' ? <SupportCard kind={m.safety} /> : null}
@@ -115,8 +114,8 @@ export default function CoachChat(p: {
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(text) } }}
             placeholder="Koça sor…" className="flex-1 min-h-12 max-h-32 rounded-[22px] bg-surface-2 border border-line px-4 py-3 text-ink resize-none" />
           {speech ? <button type="button" onClick={() => (listening ? rec.current?.stop() : listen())} aria-pressed={listening} aria-label={listening ? 'Dinlemeyi durdur' : 'Söyle'} disabled={!p.aiOn}
-            className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${listening ? 'bg-lime text-lime-ink animate-pulse' : 'bg-surface-2 text-lime'}`}><Mic size={22} /></button> : null}
-          <button type="submit" className="h-12 px-5 rounded-full bg-lime text-lime-ink font-extrabold shrink-0 disabled:opacity-40" disabled={!p.aiOn || busy || text.trim().length < 2}>Gönder</button>
+            className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${listening ? 'bg-acc text-acc-ink animate-pulse' : 'bg-surface-2 text-acc'}`}><Mic size={22} /></button> : null}
+          <button type="submit" className="h-12 px-5 rounded-full bg-acc text-acc-ink font-extrabold shrink-0 disabled:opacity-40" disabled={!p.aiOn || busy || text.trim().length < 2}>Gönder</button>
         </div>
         <span className="text-[11px] text-faint px-2" data-testid="coach-left">Bugün kalan AI hakkı: {left} · Koç tıbbi tavsiye vermez.</span>
       </form>
@@ -126,16 +125,16 @@ export default function CoachChat(p: {
           <fieldset className="flex flex-col gap-2">
             <legend className="text-[13px] font-bold mb-1">Kişilik</legend>
             {p.personas.map((x) => (
-              <label key={x.id} className={`flex items-center gap-3 rounded-2xl px-4 py-3 border ${prefs.persona === x.id ? 'border-lime bg-surface-2' : 'border-line'}`}>
-                <input type="radio" name="persona" value={x.id} checked={prefs.persona === x.id} onChange={() => setPrefs({ ...prefs, persona: x.id })} className="accent-[var(--color-lime)] w-4 h-4" />
+              <label key={x.id} className={`flex items-center gap-3 rounded-2xl px-4 py-3 border ${prefs.persona === x.id ? 'border-acc bg-surface-2' : 'border-line'}`}>
+                <input type="radio" name="persona" value={x.id} checked={prefs.persona === x.id} onChange={() => setPrefs({ ...prefs, persona: x.id })} className=" w-4 h-4" />
                 <span className="flex flex-col"><span className="font-bold">{x.label}</span><span className="text-[12px] text-mute">{x.hint}</span></span>
               </label>
             ))}
           </fieldset>
           <label className="flex items-center justify-between gap-3 text-[14px] font-semibold">Bugün ekranında günlük içgörü
-            <input type="checkbox" checked={prefs.insights} onChange={(e) => setPrefs({ ...prefs, insights: e.target.checked })} className="w-5 h-5 accent-[var(--color-lime)]" /></label>
+            <input type="checkbox" checked={prefs.insights} onChange={(e) => setPrefs({ ...prefs, insights: e.target.checked })} className="w-5 h-5" /></label>
           <label className="flex items-center justify-between gap-3 text-[14px] font-semibold">Pazar akşamı haftalık rapor bildirimi
-            <input type="checkbox" checked={prefs.weeklyPush} onChange={(e) => setPrefs({ ...prefs, weeklyPush: e.target.checked })} className="w-5 h-5 accent-[var(--color-lime)]" /></label>
+            <input type="checkbox" checked={prefs.weeklyPush} onChange={(e) => setPrefs({ ...prefs, weeklyPush: e.target.checked })} className="w-5 h-5" /></label>
           <p className="text-[12px] text-mute">Mesajların yalnızca sana cevap üretmek için AI sağlayıcısına gönderilir; model eğitiminde kullanılmaz. Sohbetleri istediğin zaman silebilirsin.</p>
           <button type="submit" className={btn.primary}>Kaydet</button>
           <Link href="/rapor" className={btn.secondary}>Haftalık raporlar</Link>
@@ -178,7 +177,7 @@ function WhatIfCard({ w }: { w: NonNullable<MessageView['whatIf']> }) {
             <span className="num font-bold">{it.kcal === null ? 'eşleşme yok' : `${fmtNum(it.kcal)} kcal`}</span></li>
         ))}
       </ul>
-      <p className="text-[14px]">Bugünkü kalan bütçe: <b className="num">{fmtNum(w.remainingBefore)}</b> → <b className={`num ${w.remainingAfter < 0 ? 'text-orange' : 'text-lime'}`} data-testid="whatif-after">{fmtNum(w.remainingAfter)} kcal</b></p>
+      <p className="text-[14px]">Bugünkü kalan bütçe: <b className="num">{fmtNum(w.remainingBefore)}</b> → <b className={`num ${w.remainingAfter < 0 ? 'text-orange' : 'text-acc'}`} data-testid="whatif-after">{fmtNum(w.remainingAfter)} kcal</b></p>
       <p className="text-[13px] text-ink-2">{w.diff > 0
         ? <>Gün böyle kapanırsa <b className="num">{fmtNum(w.diff)} kcal</b> fark sonraki {days} güne dağıtılır (günde ortalama {fmtNum(avg)} kcal daha az){w.leftover ? `; ${fmtNum(Math.abs(w.leftover))} kcal sığmaz` : ''}.</>
         : 'Bütçe içinde kalırsın; sonraki günlere etkisi olmaz.'}</p>
@@ -193,11 +192,11 @@ function ActionCard({ a, onDecide }: { a: StoredAction; onDecide: (d: 'confirm' 
       <span className="text-[14px] font-semibold">{a.label}</span>
       {a.status === 'pending' ? (
         <div className="flex gap-2">
-          <button type="button" className="h-10 px-4 rounded-full bg-lime text-lime-ink font-bold text-[14px]" onClick={() => onDecide('confirm')}>Onayla</button>
+          <button type="button" className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px]" onClick={() => onDecide('confirm')}>Onayla</button>
           <button type="button" className="h-10 px-4 rounded-full border border-line-2 font-bold text-[14px]" onClick={() => onDecide('cancel')}>Vazgeç</button>
         </div>
-      ) : <span className={`text-[13px] ${a.status === 'done' ? 'text-lime' : a.status === 'invalid' ? 'text-orange' : 'text-mute'}`}>{a.status === 'done' ? 'Uygulandı' : a.status === 'cancelled' ? 'Vazgeçildi' : a.error ?? 'Uygulanamadı'}</span>}
-      {a.type === 'plan_menu' && a.status === 'done' ? <Link href="/yemek/plan" className="self-start text-[13px] font-bold text-lime">Menüyü aç</Link> : null}
+      ) : <span className={`text-[13px] ${a.status === 'done' ? 'text-acc' : a.status === 'invalid' ? 'text-orange' : 'text-mute'}`}>{a.status === 'done' ? 'Uygulandı' : a.status === 'cancelled' ? 'Vazgeçildi' : a.error ?? 'Uygulanamadı'}</span>}
+      {a.type === 'plan_menu' && a.status === 'done' ? <Link href="/yemek/plan" className="self-start text-[13px] font-bold text-acc">Menüyü aç</Link> : null}
       {a.type === 'goal_date' && a.status === 'pending' ? <span className="text-[12px] text-mute">Günlük kalorin bir sonraki haftalık check-in'de yeni tarihe göre ayarlanır.</span> : null}
     </div>
   )

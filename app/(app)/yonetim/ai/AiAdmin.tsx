@@ -20,7 +20,7 @@ export function ProviderForm({ p }: { p: P }) {
   })
   return (
     <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); save() }}>
-      <label className="flex items-center gap-3 text-sm min-h-[40px]"><input type="checkbox" checked={v.enabled} onChange={(e) => setV({ ...v, enabled: e.target.checked })} className="w-5 h-5 accent-[var(--color-lime)]" />Etkin</label>
+      <label className="flex items-center gap-3 text-sm min-h-[40px]"><input type="checkbox" checked={v.enabled} onChange={(e) => setV({ ...v, enabled: e.target.checked })} className="w-5 h-5" />Etkin</label>
       <div className="grid grid-cols-3 gap-2">
         <label htmlFor={`${p.id}-prio`} className="flex flex-col gap-1 text-[12px] font-semibold">Sıra
           <input id={`${p.id}-prio`} inputMode="numeric" value={v.priority} onChange={(e) => setV({ ...v, priority: Number(e.target.value) || 0 })} className="h-11 rounded-xl bg-surface-2 border border-line px-3 num" />
@@ -51,7 +51,7 @@ export function ProviderForm({ p }: { p: P }) {
         {p.hasKey ? <button type="button" className={btn.ghost} disabled={pending} onClick={() => { if (confirm('Anahtar silinsin mi?')) save({ removeKey: true }) }}>Anahtarı sil</button> : null}
         {p.cooling ? <button type="button" className={btn.ghost} disabled={pending} onClick={() => start(async () => { await resetCooldownAction(p.id); router.refresh() })}>Beklemeyi sıfırla</button> : null}
       </div>
-      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-lime' : 'text-danger'}`}>{msg.t}</p> : null}
+      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-acc' : 'text-danger'}`}>{msg.t}</p> : null}
     </form>
   )
 }
@@ -70,7 +70,7 @@ export function UserDailyForm({ value }: { value: number }) {
         <input id="ai-daily" inputMode="numeric" value={v} onChange={(e) => setV(e.target.value.replace(/\D/g, ''))} className="flex-1 h-11 rounded-xl bg-surface-2 border border-line px-3 num" />
         <button type="submit" className={`${btn.secondary} h-11`} disabled={pending}>Kaydet</button>
       </div>
-      {msg ? <p role="status" className="text-[13px] text-lime">{msg}</p> : null}
+      {msg ? <p role="status" className="text-[13px] text-acc">{msg}</p> : null}
     </form>
   )
 }

@@ -37,7 +37,7 @@ export default function PlanClient({ plan, aiOn, today }: { plan: Plan | null; a
           <Seg label="Başlangıç" value={v.start} opts={[['today', 'Bugün'], ['tomorrow', 'Yarın']]} onChange={(x) => setV({ ...v, start: x as 'today' })} />
           <Seg label="Bütçe" value={v.budget} opts={BUDGET} onChange={(x) => setV({ ...v, budget: x })} />
           <label className="flex items-center justify-between gap-3 text-[14px] font-semibold">Toplu hazırlık planı (meal prep)
-            <input type="checkbox" checked={v.prep} onChange={(e) => setV({ ...v, prep: e.target.checked })} className="w-5 h-5 accent-[var(--color-lime)]" /></label>
+            <input type="checkbox" checked={v.prep} onChange={(e) => setV({ ...v, prep: e.target.checked })} className="w-5 h-5" /></label>
           <label htmlFor="menu-note" className="flex flex-col gap-1 text-[13px] font-semibold">Not (isteğe bağlı)
             <input id="menu-note" maxLength={200} value={v.note} onChange={(e) => setV({ ...v, note: e.target.value })} placeholder="Ör: balık sevmem, öğle yemekleri pratik olsun" className="h-12 rounded-xl bg-surface-2 border border-line px-3 font-normal" /></label>
           {err ? <p role="alert" className="text-[13px] text-orange">{err}</p> : null}
@@ -50,7 +50,7 @@ export default function PlanClient({ plan, aiOn, today }: { plan: Plan | null; a
       {plan && d && !form ? (
         <>
           <div className="flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Günler">
-            {plan.days.map((x, i) => <button key={x.day} role="tab" aria-selected={i === sel} onClick={() => setSel(i)} className={`h-10 px-3 rounded-full text-[13px] font-bold shrink-0 ${i === sel ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{x.day === today ? 'Bugün' : x.label}</button>)}
+            {plan.days.map((x, i) => <button key={x.day} role="tab" aria-selected={i === sel} onClick={() => setSel(i)} className={`h-10 px-3 rounded-full text-[13px] font-bold shrink-0 ${i === sel ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{x.day === today ? 'Bugün' : x.label}</button>)}
           </div>
           <section className="card p-4 flex items-center justify-between" data-testid="plan-day-total">
             <span className="text-[13px] text-mute">Günün toplamı</span>
@@ -70,9 +70,9 @@ export default function PlanClient({ plan, aiOn, today }: { plan: Plan | null; a
                     <span className="num">{x.kcal === null ? 'eşleşme yok' : `${fmtNum(x.kcal)} kcal`}</span>
                   </li>
                 ))}</ul>
-                {canLog ? <button type="button" className="self-start mt-1 h-10 px-4 rounded-full bg-lime text-lime-ink font-bold text-[13px]" disabled={pending}
+                {canLog ? <button type="button" className="self-start mt-1 h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[13px]" disabled={pending}
                   onClick={() => start(async () => { const r = await logPlanMealAction({ planId: plan.id, day: d.day, meal: m.meal }); setMsg(r.ok ? `${MEAL_LABEL[m.meal as MealId]} günlüğe eklendi · ${fmtNum(r.kcal)} kcal` : r.error); router.refresh() })}>Günlüğe ekle</button>
-                  : allLogged && d.day <= today ? <span className="text-[12px] text-lime">Günlükte</span> : null}
+                  : allLogged && d.day <= today ? <span className="text-[12px] text-acc">Günlükte</span> : null}
               </section>
             )
           })}
@@ -95,7 +95,7 @@ function Seg({ label, value, opts, onChange }: { label: string; value: string; o
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className="text-[13px] font-semibold mb-1">{label}</legend>
-      <div className="flex gap-2">{opts.map(([k, l]) => <button key={k} type="button" aria-pressed={value === k} onClick={() => onChange(k)} className={`h-10 px-4 rounded-full text-[13px] font-bold ${value === k ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{l}</button>)}</div>
+      <div className="flex gap-2">{opts.map(([k, l]) => <button key={k} type="button" aria-pressed={value === k} onClick={() => onChange(k)} className={`h-10 px-4 rounded-full text-[13px] font-bold ${value === k ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{l}</button>)}</div>
     </fieldset>
   )
 }

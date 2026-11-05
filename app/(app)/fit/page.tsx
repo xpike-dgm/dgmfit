@@ -7,7 +7,7 @@ import { Scenario, CarbCycle } from './Planner'
 import { addDays, diffDays, longDate, shortDate } from '@/lib/time'
 import { calorieFloor, fmtNum, GOALS, type GoalType } from '@/lib/calc'
 import { dayCap } from '@/lib/fit'
-import { Eyebrow, TopBar } from '@/components/ui'
+import { Band, Eyebrow } from '@/components/ui'
 import { Calendar, Pulse, Scale, Spark, Trend } from '@/components/icons'
 import { BankForm, CancelBank, CheckinApply, DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
 
@@ -33,11 +33,15 @@ export default async function FitPage() {
   const change = Math.round((trendNow - goal.startWeightKg) * 10) / 10
   const lastWeigh = [...s.series].reverse().find((p) => p.raw !== null)
   const last = s.closures[0]
+  const span = Math.abs(goal.targetWeightKg - goal.startWeightKg)
+  const progress = type === 'recomp' || span < 0.05 ? 0 : Math.max(0, Math.min(1, ((trendNow - goal.startWeightKg) * Math.sign(goal.targetWeightKg - goal.startWeightKg)) / span))
   const exceptionable = s.closures.find((c) => c.kind === 'over' && c.remaining < 0 && type === 'lose')
 
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
-      <TopBar back="/" title="Plan" />
+    <div className="flex flex-col gap-3 px-4">
+      <Band title="Plan" sub={`${GOALS[type]?.label ?? 'Hedef'} · Gün ${dayIndex} / ${totalDays}`}
+        ring={{ value: progress, big: fmtNum(trendNow, 1), small: 'trend kg', label: `Hedefin yüzde ${Math.round(progress * 100)}'i` }}
+        pills={[['Hedef', type === 'recomp' ? 'Koru' : `${fmtNum(goal.targetWeightKg, 1)} kg`], [checkin?.forecast.day ? 'Tahmini varış' : 'Hedef tarih', shortDate(checkin?.forecast.day ?? goal.endDate)], ['Bugün', `${fmtNum(s.targets[0].kcal)} kcal`]]} />
       <FitFlash />
 
       <section aria-label="Hedef" className="card p-5 flex flex-col gap-3">
@@ -49,14 +53,14 @@ export default async function FitPage() {
             </span>
             <span className="text-sm text-mute">Gün {dayIndex} / {totalDays} · hedef tarih <b className="text-ink">{shortDate(goal.endDate)}</b></span>
           </div>
-          <span className="w-11 h-11 rounded-full bg-surface-2 flex items-center justify-center text-lime"><Trend size={22} /></span>
+          <span className="w-11 h-11 rounded-full bg-surface-2 flex items-center justify-center text-acc"><Trend size={22} /></span>
         </div>
         <Roadmap s={s} />
         <div className="flex gap-4 text-[12px] text-ink-2 -mt-1" aria-hidden>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-[3px] rounded bg-lime" />Trend</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-[3px] rounded bg-acc" />Trend</span>
           <span className="flex items-center gap-1.5"><span className="w-3 border-t-[1.5px] border-dotted border-ink-2" />Plan</span>
           <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-mute" />Tartı</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 border-t-[1.5px] border-dashed border-lime opacity-70" />Tahmin</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 border-t-[1.5px] border-dashed border-acc opacity-70" />Tahmin</span>
         </div>
         <p className="text-[13px] text-ink-2 leading-relaxed" data-testid="forecast">
           {type === 'recomp' ? 'Rekompozisyonda kilonun sabit kalması beklenir; trend çizgisi ±1 kg bandında kalmalı.'
@@ -90,7 +94,7 @@ export default async function FitPage() {
 
       {last ? (
         <section aria-label="Dengeleme" className="card p-5 flex flex-col gap-3" data-testid="balance-card">
-          <div className="flex items-center gap-2"><Pulse size={18} className="text-lime" /><Eyebrow>Akıllı dengeleme</Eyebrow></div>
+          <div className="flex items-center gap-2"><Pulse size={18} className="text-acc" /><Eyebrow>Akıllı dengeleme</Eyebrow></div>
           <p className="text-[15px] leading-relaxed text-ink-2">{closureText(last)}</p>
           {exceptionable ? (
             <div className="flex flex-col gap-2 rounded-2xl bg-surface-2 px-4 py-3">
@@ -105,7 +109,7 @@ export default async function FitPage() {
             {s.closures.slice(0, 7).reverse().map((c) => (
               <li key={c.day} className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl bg-surface-2" title={`${shortDate(c.day)}: ${KIND[c.kind]}`}>
                 <span className="text-[11px] text-mute">{wd(c.day)}</span>
-                <span className={`num text-[12px] font-bold ${c.kind === 'over' ? 'text-orange' : c.kind === 'under' ? 'text-water' : c.kind === 'balanced' ? 'text-lime' : 'text-faint'}`}>
+                <span className={`num text-[12px] font-bold ${c.kind === 'over' ? 'text-orange' : c.kind === 'under' ? 'text-water' : c.kind === 'balanced' ? 'text-acc' : 'text-faint'}`}>
                   {c.kind === 'over' || c.kind === 'under' ? signed(c.eaten - c.target) : c.kind === 'balanced' ? '✓' : '·'}
                 </span>
               </li>
@@ -170,14 +174,14 @@ export default async function FitPage() {
         )}
       </section>
 
-      {Math.abs(change) >= 1 ? <Link href="/sosyal/yeni?tur=milestone" className="card px-5 py-4 flex items-center justify-between" data-testid="share-milestone"><span className="text-[14px]">Kilometre taşını paylaş <span className="text-mute">(yalnızca değişim, kilo görünmez)</span></span><span className="text-lime font-bold">Paylaş</span></Link> : null}
+      {Math.abs(change) >= 1 ? <Link href="/sosyal/yeni?tur=milestone" className="card px-5 py-4 flex items-center justify-between" data-testid="share-milestone"><span className="text-[14px]">Kilometre taşını paylaş <span className="text-mute">(yalnızca değişim, kilo görünmez)</span></span><span className="text-acc font-bold">Paylaş</span></Link> : null}
       {type !== 'recomp' ? <Scenario goal={type} currentKg={trendNow} targetKg={goal.targetWeightKg} tdee={checkin?.tdee.tdee ?? goal.tdee} tdeeMeasured={!!checkin?.tdee.tdee} dailyKcal={goal.dailyKcal} floor={calorieFloor(sex)} today={today} endDate={goal.endDate} /> : null}
       <CarbCycle enabled={cc.enabled} weekdays={cc.weekdays} shiftG={cc.shiftG} base={{ kcal: goal.dailyKcal, protein: goal.proteinG, carb: goal.carbG, fat: goal.fatG }} />
 
       <section aria-label="Tartı" className="card p-5 flex flex-col gap-3">
         <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow></div>
         <WeighIn last={lastWeigh?.raw ?? goal.startWeightKg} />
-        <Link href="/profil" className="text-[13px] text-mute underline underline-offset-4">Hedefi ya da tempoyu değiştir</Link>
+        <Link href="/profil/hedef" className="text-[13px] text-mute underline underline-offset-4">Hedef ve plan</Link>
       </section>
     </div>
   )
@@ -248,8 +252,8 @@ function Roadmap({ s }: { s: Screen }) {
       <circle cx={x(goal.endDate)} cy={y(goal.targetWeightKg)} r={4} fill="none" stroke="var(--color-ink-2)" strokeWidth={1.5} />
       {today <= xEnd ? <line x1={x(today)} x2={x(today)} y1={T} y2={H - B} stroke="var(--color-line-2)" strokeWidth={1} /> : null}
       {s.series.filter((p) => p.raw !== null).map((p) => <circle key={p.day} cx={x(p.day)} cy={y(p.raw!)} r={2.2} fill="var(--color-mute)" />)}
-      {trend ? <polyline points={trend} fill="none" stroke="var(--color-lime)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" /> : null}
-      {fc ? <line x1={x(today)} y1={y(trendNow)} x2={x(fc)} y2={y(goal.targetWeightKg)} stroke="var(--color-lime)" strokeWidth={1.5} strokeDasharray="5 4" opacity={0.7} /> : null}
+      {trend ? <polyline points={trend} fill="none" stroke="var(--color-acc)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" /> : null}
+      {fc ? <line x1={x(today)} y1={y(trendNow)} x2={x(fc)} y2={y(goal.targetWeightKg)} stroke="var(--color-acc)" strokeWidth={1.5} strokeDasharray="5 4" opacity={0.7} /> : null}
       <text x={L} y={H - 6} fontSize={10} fill="var(--color-mute)">{shortDate(goal.startDate)}</text>
       <text x={W - R} y={H - 6} fontSize={10} fill="var(--color-mute)" textAnchor="end">{shortDate(xEnd)}</text>
     </svg>

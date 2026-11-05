@@ -20,7 +20,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
   if (!x || !pr) notFound()
   const recs = x.records ? (Object.entries(x.records) as [PrType, number][]).filter(([, v]) => v > 0) : []
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness/hareketler" title="Hareket" />
       <section className="card p-5 flex flex-col gap-3">
         <h1 className="text-[22px] font-extrabold leading-tight">{x.nameTr}</h1>
@@ -60,7 +60,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
         <section className="card p-5 flex flex-col gap-2" aria-label="Kuvvet seviyesi" data-testid="strength-level">
           <Eyebrow>Kuvvet seviyesi (yaklaşık)</Eyebrow>
           <span className="text-[20px] font-extrabold">{pr.level.level} <span className="text-[14px] text-mute font-normal num">· e1RM {fmtNum(pr.best, 1)} kg = vücut ağırlığının {String(pr.level.ratio).replace('.', ',')} katı</span></span>
-          <div className="grid grid-cols-4 gap-1 text-center">{LEVELS.map((l, i) => <span key={l} className={`rounded-lg py-1.5 text-[11px] ${pr.level!.level === l ? 'bg-lime text-lime-ink font-bold' : 'bg-surface-2 text-mute'}`}>{l}<br /><span className="num">{pr.level!.thresholds[i]} kg</span></span>)}</div>
+          <div className="grid grid-cols-4 gap-1 text-center">{LEVELS.map((l, i) => <span key={l} className={`rounded-lg py-1.5 text-[11px] ${pr.level!.level === l ? 'bg-acc text-acc-ink font-bold' : 'bg-surface-2 text-mute'}`}>{l}<br /><span className="num">{pr.level!.thresholds[i]} kg</span></span>)}</div>
           {pr.level.next ? <p className="text-[13px] text-ink-2">{pr.level.next.level} için tahmini maksimum ~{fmtNum(pr.level.next.kg, 1)} kg.</p> : null}
           <p className="text-[11px] text-mute">DgFit'in kaba rehberidir (e1RM / vücut ağırlığı); yayımlanmış bir standart tablosu değildir.</p>
         </section>
@@ -104,8 +104,8 @@ function E1rmChart({ series }: { series: { day: string; e1rm: number }[] }) {
       <Eyebrow>Tahmini maksimum (e1RM)</Eyebrow>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={`${pts.length} seans; en iyi ${fmtNum(best.e1rm, 1)} kg (${shortDate(best.day)}), son ${fmtNum(pts.at(-1)!.e1rm, 1)} kg`} data-testid="e1rm-chart">
         {[lo, (lo + hi) / 2, hi].map((v) => <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="var(--color-line)" /><text x={L - 6} y={y(v) + 4} fontSize={10} textAnchor="end" fill="var(--color-mute)" className="num">{fmtNum(v, 0)}</text></g>)}
-        <polyline points={pts.map((p) => `${x(p.day).toFixed(1)},${y(p.e1rm).toFixed(1)}`).join(' ')} fill="none" stroke="var(--color-lime)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        {pts.map((p) => <circle key={p.day} cx={x(p.day)} cy={y(p.e1rm)} r={4} fill="var(--color-lime)" stroke="var(--color-surface)" strokeWidth={2}><title>{`${shortDate(p.day)}: ${fmtNum(p.e1rm, 1)} kg`}</title></circle>)}
+        <polyline points={pts.map((p) => `${x(p.day).toFixed(1)},${y(p.e1rm).toFixed(1)}`).join(' ')} fill="none" stroke="var(--color-acc)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        {pts.map((p) => <circle key={p.day} cx={x(p.day)} cy={y(p.e1rm)} r={4} fill="var(--color-acc)" stroke="var(--color-surface)" strokeWidth={2}><title>{`${shortDate(p.day)}: ${fmtNum(p.e1rm, 1)} kg`}</title></circle>)}
         <text x={L} y={H - 6} fontSize={10} fill="var(--color-mute)">{shortDate(pts[0].day)}</text>
         <text x={W - R} y={H - 6} fontSize={10} fill="var(--color-mute)" textAnchor="end">{shortDate(pts.at(-1)!.day)}</text>
       </svg>

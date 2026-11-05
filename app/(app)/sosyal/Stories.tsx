@@ -27,12 +27,12 @@ export default function Stories({ stories, mediaOn }: { stories: S[]; mediaOn: b
   return (
     <section aria-label="Bugün salondaydım" className="flex gap-3 overflow-x-auto pb-1" data-testid="stories">
       <button type="button" onClick={() => setCreate(true)} className="flex flex-col items-center gap-1 shrink-0 w-16">
-        <span className="w-14 h-14 rounded-full border-2 border-dashed border-lime text-lime text-2xl flex items-center justify-center">+</span>
+        <span className="w-14 h-14 rounded-full border-2 border-dashed border-acc text-acc text-2xl flex items-center justify-center">+</span>
         <span className="text-[11px] text-mute text-center leading-tight">Salondaydım</span>
       </button>
       {people.map((u) => (
         <button key={u} type="button" onClick={() => setOpen(u)} className="flex flex-col items-center gap-1 shrink-0 w-16" data-testid="story-ring" aria-label={`${u} kartları`}>
-          <span className="w-14 h-14 rounded-full p-[2px] bg-lime"><span className="w-full h-full rounded-full bg-surface-3 flex items-center justify-center font-bold uppercase">{u.slice(0, 1)}</span></span>
+          <span className="w-14 h-14 rounded-full p-[2px] bg-acc"><span className="w-full h-full rounded-full bg-surface-3 flex items-center justify-center font-bold uppercase">{u.slice(0, 1)}</span></span>
           <span className="text-[11px] truncate w-full text-center">{stories.find((s) => s.username === u)?.mine ? 'Sen' : u}</span>
         </button>
       ))}

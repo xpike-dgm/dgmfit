@@ -478,16 +478,17 @@ export async function fitnessHome(userId: string) {
   const today = dayString()
   const dow = new Date(today + 'T12:00:00Z').getUTCDay()
   const monday = addDays(today, -((dow + 6) % 7))
-  const [week, recent, prs, cardio, [profile]] = await Promise.all([
-    db.select({ day: schema.workouts.day, n: sql<number>`count(*)::int`, min: sql<number>`sum(duration_sec)/60` }).from(schema.workouts)
+  const [week, recent, prs, cardio, [cardioWeek], [profile]] = await Promise.all([
+    db.select({ day: schema.workouts.day, n: sql<number>`count(*)::int`, min: sql<number>`sum(duration_sec)/60`, vol: sql<number>`coalesce(sum(volume_kg),0)` }).from(schema.workouts)
       .where(and(eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt), sql`${schema.workouts.day} >= ${monday}`)).groupBy(schema.workouts.day),
     recentWorkouts(userId, 5),
     db.select({ pr: schema.personalRecords, name: schema.exercises.nameTr }).from(schema.personalRecords).innerJoin(schema.exercises, eq(schema.exercises.id, schema.personalRecords.exerciseId))
       .where(eq(schema.personalRecords.userId, userId)).orderBy(desc(schema.personalRecords.createdAt)).limit(5),
     recentCardio(userId, 3),
+    db.select({ min: sql<number>`coalesce(sum(minutes),0)` }).from(schema.cardioSessions).where(and(eq(schema.cardioSessions.userId, userId), isNull(schema.cardioSessions.deletedAt), sql`${schema.cardioSessions.day} >= ${monday}`)),
     db.select({ trainingDays: schema.profiles.trainingDays }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1),
   ])
-  return { programs: progs, program, next, week: week.map((w) => ({ day: w.day, n: Number(w.n), min: Number(w.min) })), monday, today, recent, prs: prs.map((p) => ({ ...p.pr, name: p.name })), cardio, trainingDays: profile?.trainingDays ?? null }
+  return { programs: progs, program, next, week: week.map((w) => ({ day: w.day, n: Number(w.n), min: Number(w.min), vol: Number(w.vol) })), cardioWeekMin: Math.round(Number(cardioWeek?.min ?? 0)), monday, today, recent, prs: prs.map((p) => ({ ...p.pr, name: p.name })), cardio, trainingDays: profile?.trainingDays ?? null }
 }
 
 /** Bugün ekranı antrenman kartı. */

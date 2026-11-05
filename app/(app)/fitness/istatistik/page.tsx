@@ -8,7 +8,7 @@ import { Eyebrow, TopBar } from '@/components/ui'
 import BodyMap from './BodyMap'
 
 export const metadata = { title: 'Fitness istatistikleri · DgFit' }
-const STATUS = { 'yeşil': { c: 'var(--color-lime)', t: 'Hazır' }, 'sarı': { c: 'var(--color-orange)', t: 'Toparlanıyor' }, 'kırmızı': { c: 'var(--color-danger)', t: 'Dinlendir' } } as const
+const STATUS = { 'yeşil': { c: 'var(--color-good)', t: 'Hazır' }, 'sarı': { c: 'var(--color-orange)', t: 'Toparlanıyor' }, 'kırmızı': { c: 'var(--color-danger)', t: 'Dinlendir' } } as const
 
 export default async function StatsPage() {
   const u = await requireUser()
@@ -18,7 +18,7 @@ export default async function StatsPage() {
   const trained = new Set(s.calendar)
   const worked = s.heat.filter((h) => h.week > 0 || h.sets7 > 0)
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="İstatistik" />
 
       <section className="card p-5 flex flex-col gap-2" aria-label="Haftalık hacim">
@@ -31,7 +31,7 @@ export default async function StatsPage() {
             return (
               <g key={w.week}>
                 <rect x={x - 3} y={0} width={bw} height={H - B} fill="transparent"><title>{`${shortDate(w.week)} haftası: ${fmtNum(w.volume)} kg · ${w.workouts} antrenman · ${w.sets} set`}</title></rect>
-                {w.volume ? <rect x={x} y={H - B - h} width={bw - 6} height={h} rx={4} fill={i === s.weeks.length - 1 ? 'var(--color-lime)' : 'var(--color-ink-2)'} opacity={i === s.weeks.length - 1 ? 1 : 0.55} pointerEvents="none" /> : null}
+                {w.volume ? <rect x={x} y={H - B - h} width={bw - 6} height={h} rx={4} fill={i === s.weeks.length - 1 ? 'var(--color-acc)' : 'var(--color-ink-2)'} opacity={i === s.weeks.length - 1 ? 1 : 0.55} pointerEvents="none" /> : null}
               </g>
             )
           })}
@@ -74,7 +74,7 @@ export default async function StatsPage() {
                 <div className="absolute inset-y-0 rounded-full bg-[rgba(200,241,105,0.15)]" style={{ left: `${(SET_BAND.min / max) * 100}%`, width: `${((SET_BAND.max - SET_BAND.min) / max) * 100}%` }} aria-hidden />
                 <div className="absolute inset-y-0 left-0 rounded-full bg-orange" style={{ width: `${Math.min(1, h.week / max) * 100}%` }} />
               </div>
-              <span className="num text-[13px] w-16 text-right">{fmtNum(h.week, h.week % 1 ? 1 : 0)} <span className={`text-[11px] ${h.band === 'iyi' ? 'text-lime' : 'text-mute'}`}>{h.band}</span></span>
+              <span className="num text-[13px] w-16 text-right">{fmtNum(h.week, h.week % 1 ? 1 : 0)} <span className={`text-[11px] ${h.band === 'iyi' ? 'text-acc' : 'text-mute'}`}>{h.band}</span></span>
             </div>
           )
         }) : <p className="text-[13px] text-mute">Bu hafta henüz antrenman yok.</p>}

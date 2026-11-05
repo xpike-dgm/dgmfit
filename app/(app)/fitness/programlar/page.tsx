@@ -20,7 +20,7 @@ export default async function ProgramsPage() {
     aiAvailable(),
   ])
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="Programlar" />
       {programs.length ? (
         <section aria-label="Programlarım" className="card p-5 flex flex-col gap-1">
@@ -28,7 +28,7 @@ export default async function ProgramsPage() {
           {programs.map((p) => (
             <div key={p.id} className="flex items-center justify-between gap-2 min-h-[60px] border-b border-line last:border-0" data-testid="program-item">
               <Link href={`/fitness/programlar/${p.id}`} className="flex-1 flex flex-col min-w-0">
-                <span className="font-bold truncate">{p.name} {p.active ? <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-lime text-lime-ink align-middle">Aktif</span> : null}</span>
+                <span className="font-bold truncate">{p.name} {p.active ? <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-acc text-acc-ink align-middle">Aktif</span> : null}</span>
                 <span className="text-[12px] text-mute">{p.dayCount} gün</span>
               </Link>
               <ProgramActions id={p.id} active={p.active} />

@@ -14,7 +14,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const d = /^[0-9a-f-]{36}$/.test(id) ? await postDetail(u.id, id) : null
   if (!d) notFound()
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/sosyal" title="Gönderi" />
       <PostCard p={d.post} detail />
       <Comments postId={id} comments={d.comments} />

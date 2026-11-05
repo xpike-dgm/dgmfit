@@ -86,14 +86,14 @@ export default function FoodSheet({ food, meal: initialMeal, remaining, onAdd, p
       <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Öğün">
         {MEALS.map((x) => (
           <button key={x.id} type="button" aria-pressed={meal === x.id} onClick={() => setMeal(x.id)}
-            className={`h-10 rounded-full text-[13px] font-bold border ${meal === x.id ? 'bg-lime text-lime-ink border-lime' : 'bg-surface-2 text-ink-2 border-line'}`}>
+            className={`h-10 rounded-full text-[13px] font-bold border ${meal === x.id ? 'bg-acc text-acc-ink border-acc' : 'bg-surface-2 text-ink-2 border-line'}`}>
             {x.label.replace(' yemeği', '')}
           </button>
         ))}
       </div>
 
       <button type="button" disabled={pending || grams <= 0} onClick={() => onAdd({ grams, portionLabel: portion.label, portionQty: isGrams ? grams : qty, meal })}
-        className="h-14 rounded-full bg-lime text-lime-ink font-extrabold text-[17px] disabled:opacity-40">
+        className="h-14 rounded-full bg-acc text-acc-ink font-extrabold text-[17px] disabled:opacity-40">
         {pending ? 'Ekleniyor…' : TO_MEAL[meal]}
       </button>
       {food.approx || food.attribution ? (

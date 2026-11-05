@@ -53,7 +53,7 @@ export default function Composer(p: { initialKind: string; initialRef: string | 
   return (
     <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); void submit() }} data-testid="composer">
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Gönderi türü">
-        {(Object.keys(POST_KINDS) as PostKind[]).map((k) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => { setKind(k); setRef(null); if (k === 'progress') setAudience('selected') }} className={`h-9 px-3 rounded-full text-[13px] font-bold ${kind === k ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{POST_KINDS[k]}</button>)}
+        {(Object.keys(POST_KINDS) as PostKind[]).map((k) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => { setKind(k); setRef(null); if (k === 'progress') setAudience('selected') }} className={`h-9 px-3 rounded-full text-[13px] font-bold ${kind === k ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{POST_KINDS[k]}</button>)}
       </div>
       {list ? (
         <label className="flex flex-col gap-1 text-[13px] font-semibold">{kind === 'progress' ? 'İlerleme fotoğrafı' : 'Paylaşılacak kayıt'}
@@ -82,7 +82,7 @@ export default function Composer(p: { initialKind: string; initialRef: string | 
       ) : <p className="text-[13px] text-mute">İlerleme fotoğrafı yalnızca seçtiğin arkadaşlara görünür.</p>}
       {audience === 'selected' || kind === 'progress' ? (
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Seçilen arkadaşlar">
-          {p.friends.length ? p.friends.map((f) => <button key={f.id} type="button" aria-pressed={sel.includes(f.id)} onClick={() => setSel(sel.includes(f.id) ? sel.filter((x) => x !== f.id) : [...sel, f.id])} className={`h-9 px-3 rounded-full text-[13px] font-semibold ${sel.includes(f.id) ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{f.username}</button>) : <span className="text-[13px] text-mute">Önce arkadaş ekle.</span>}
+          {p.friends.length ? p.friends.map((f) => <button key={f.id} type="button" aria-pressed={sel.includes(f.id)} onClick={() => setSel(sel.includes(f.id) ? sel.filter((x) => x !== f.id) : [...sel, f.id])} className={`h-9 px-3 rounded-full text-[13px] font-semibold ${sel.includes(f.id) ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{f.username}</button>) : <span className="text-[13px] text-mute">Önce arkadaş ekle.</span>}
         </div>
       ) : null}
       {err ? <p role="alert" className="text-[13px] text-orange">{err}</p> : null}

@@ -18,7 +18,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const g = /^[0-9a-f-]{36}$/.test(id) ? await groupView(u.id, id) : null
   if (!g) notFound()
   if (g.invited) return (
-    <div className="px-4 pt-5 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/sosyal/gruplar" title={g.name} />
       <section className="card p-5 flex flex-col gap-3"><b>{g.name}</b>{g.description ? <p className="text-[14px] text-ink-2">{g.description}</p> : null}<p className="text-[13px] text-mute">Bu gruba davet edildin.</p>
         <div className="flex gap-2"><GroupOp op="accept" groupId={g.id} label="Katıl" tone="primary" /><GroupOp op="decline" groupId={g.id} label="Reddet" after="/sosyal/gruplar" /></div></section>
@@ -28,7 +28,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const memberIds = new Set(g.members.map((m) => m.id))
   const invitable = fr.friends.filter((f) => !memberIds.has(f.id))
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3" data-testid="group">
+    <div className="px-4 flex flex-col gap-3" data-testid="group">
       <TopBar back="/sosyal/gruplar" title={g.name} />
       {g.description ? <p className="text-[14px] text-ink-2 px-1">{g.description}</p> : null}
       <section className="card p-4 flex flex-col gap-2" aria-label="Sıralama" data-testid="group-boards">

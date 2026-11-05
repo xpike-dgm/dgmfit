@@ -105,7 +105,7 @@ export default function PushSettings(props: { enabled: boolean; summaryEnabled: 
       <div className="flex flex-col gap-3 pt-2 border-t border-surface-2">
         <label className="flex items-center justify-between min-h-11 cursor-pointer">
           <span className="text-sm">Gün sonu özeti (uykudan 1 saat önce)</span>
-          <input type="checkbox" checked={summary} onChange={(e) => setSummary(e.target.checked)} className="w-6 h-6 accent-[#6CC7FF]" />
+          <input type="checkbox" checked={summary} onChange={(e) => setSummary(e.target.checked)} className="w-6 h-6" />
         </label>
         <div className="flex items-center justify-between gap-3">
           <label htmlFor="maxpd" className="text-sm">Günlük en fazla bildirim</label>
@@ -115,7 +115,7 @@ export default function PushSettings(props: { enabled: boolean; summaryEnabled: 
         </div>
         <label className="flex items-center justify-between min-h-11 cursor-pointer">
           <span className="text-sm">Sessiz saat aralığı</span>
-          <input type="checkbox" checked={quietOn} onChange={(e) => setQuietOn(e.target.checked)} className="w-6 h-6 accent-[#6CC7FF]" />
+          <input type="checkbox" checked={quietOn} onChange={(e) => setQuietOn(e.target.checked)} className="w-6 h-6" />
         </label>
         {quietOn ? (
           <div className="flex items-center gap-2">
@@ -129,7 +129,7 @@ export default function PushSettings(props: { enabled: boolean; summaryEnabled: 
         <p className="text-xs text-mute">Uyku saatlerinde (profilindeki uyanış–uyku aralığı dışında) hiçbir zaman bildirim gönderilmez.</p>
         <button type="button" disabled={pending} onClick={save} className="h-11 rounded-full border border-line-2 font-bold text-sm">Bildirim ayarlarını kaydet</button>
       </div>
-      {msg ? <p role="status" className={`text-sm font-semibold ${msg.ok ? 'text-lime' : 'text-danger'}`}>{msg.text}</p> : null}
+      {msg ? <p role="status" className={`text-sm font-semibold ${msg.ok ? 'text-acc' : 'text-danger'}`}>{msg.text}</p> : null}
     </section>
   )
 }

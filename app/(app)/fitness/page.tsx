@@ -4,7 +4,7 @@ import { fitnessHome } from '@/lib/fitness-data'
 import { addDays, shortDate } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { PR_LABEL, CARDIO, type PrType } from '@/lib/training'
-import { btn, Eyebrow } from '@/components/ui'
+import { Band, btn, Eyebrow, hdrIcon } from '@/components/ui'
 import { Chart, Clock, Dumbbell, Flame, Gear, Next, Pulse, Scale, Spark } from '@/components/icons'
 import PendingSync from './PendingSync'
 
@@ -17,14 +17,12 @@ export default async function FitnessPage() {
   const weekDone = h.week.reduce((a, w) => a + w.n, 0)
   const target = h.trainingDays ?? h.program?.days.length ?? 3
   return (
-    <div className="flex flex-col gap-3 px-4 pt-6">
+    <div className="flex flex-col gap-3 px-4">
+      <Band title="Fitness" sub={h.program ? h.program.name : 'Henüz program yok'}
+        right={<Link href="/fitness/ayarlar" className={hdrIcon} aria-label="Salon ayarları"><Gear size={20} /></Link>}
+        ring={{ value: target ? Math.min(1, weekDone / target) : 0, big: `${weekDone}/${target}`, small: 'bu hafta', label: `Bu hafta ${weekDone} / ${target} antrenman` }}
+        pills={[['Hacim', `${fmtNum(h.week.reduce((a, w) => a + w.vol, 0))} kg`], ['Süre', `${fmtNum(h.week.reduce((a, w) => a + w.min, 0))} dk`], ['Kardiyo', `${fmtNum(h.cardioWeekMin)} dk`]]} />
       <PendingSync />
-      <header className="px-1 flex items-center justify-between">
-        <h1 className="text-[26px] font-extrabold tracking-tight">Fitness</h1>
-        <div className="flex gap-2">
-          <Link href="/fitness/ayarlar" className={btn.icon} aria-label="Salon ayarları"><Gear size={20} /></Link>
-        </div>
-      </header>
 
       {h.next && h.program ? (
         <section aria-label="Sıradaki antrenman" className="card p-5 flex flex-col gap-3" data-testid="next-workout">
@@ -56,7 +54,7 @@ export default async function FitnessPage() {
 
       <div className="grid grid-cols-2 gap-3">
         <Link href="/fitness/antrenman" className="card p-4 flex flex-col gap-2 min-h-[104px]">
-          <Spark size={20} className="text-lime" />
+          <Spark size={20} className="text-acc" />
           <span className="font-bold">Serbest antrenman</span>
           <span className="text-[12px] text-mute">Programsız, hareket seçerek</span>
         </Link>
@@ -70,7 +68,7 @@ export default async function FitnessPage() {
       <nav aria-label="Fitness bölümleri" className="grid grid-cols-3 gap-2">
         <Link href="/fitness/istatistik" className="card px-3 py-3 flex flex-col items-center gap-1 text-[13px] font-bold"><Chart size={18} className="text-orange" />İstatistik</Link>
         <Link href="/fitness/olcumler" className="card px-3 py-3 flex flex-col items-center gap-1 text-[13px] font-bold"><Scale size={18} className="text-violet" />Ölçüler</Link>
-        <Link href="/fitness/hareketler" className="card px-3 py-3 flex flex-col items-center gap-1 text-[13px] font-bold"><Dumbbell size={18} className="text-lime" />Hareketler</Link>
+        <Link href="/fitness/hareketler" className="card px-3 py-3 flex flex-col items-center gap-1 text-[13px] font-bold"><Dumbbell size={18} className="text-acc" />Hareketler</Link>
       </nav>
 
       <section aria-label="Bu hafta" className="card p-5 flex flex-col gap-3">
@@ -85,7 +83,7 @@ export default async function FitnessPage() {
             return (
               <div key={d} className={`flex flex-col items-center gap-1 py-2 rounded-xl ${d === h.today ? 'bg-surface-2' : ''}`}>
                 <span className="text-[11px] text-mute">{WD[new Date(d + 'T12:00:00Z').getUTCDay()]}</span>
-                <span className={`w-7 h-7 rounded-full flex items-center justify-center ${w ? 'bg-orange text-[#2a1600]' : 'border border-line'}`}>{w ? <Dumbbell size={14} /> : null}</span>
+                <span className={`w-7 h-7 rounded-full flex items-center justify-center ${w ? 'bg-acc text-acc-ink' : 'border border-line'}`}>{w ? <Dumbbell size={14} /> : null}</span>
               </div>
             )
           })}

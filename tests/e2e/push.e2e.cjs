@@ -39,7 +39,7 @@ if (!CA) { console.log('PUSH E2E atlandı (TEST_CA_DIR yok)'); process.exit(0) }
   await p.waitForURL(BASE + '/')
 
   // 1) Ayarlar sayfasında bildirim bölümü yükleniyor
-  await p.goto(BASE + '/su/ayarlar')
+  await p.goto(BASE + '/su/ayarlar'); await p.getByRole('link', { name: /Hatırlatmalar ve sessiz saatler/ }).click(); await p.waitForURL('**/su/ayarlar/hatirlatma')
   await p.getByRole('heading', { name: 'Akıllı hatırlatmalar' }).waitFor()
 
   // 2) VAPID anahtarı servis ediliyor ve kalıcı

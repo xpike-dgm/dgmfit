@@ -141,7 +141,7 @@ export default function Wizard({ username }: { username: string }) {
           <button type="button" onClick={() => go(-1)} aria-label="Geri" className={btn.icon}><Back size={20} /></button>
           <div className="flex-1 grid gap-1" style={{ gridTemplateColumns: `repeat(${visibleTotal - 1}, minmax(0, 1fr))` }} aria-label={`Adım ${visibleIndex} / ${visibleTotal - 1}`}>
             {Array.from({ length: visibleTotal - 1 }, (_, i) => (
-              <span key={i} className="h-[5px] rounded-full transition-colors" style={{ background: i < visibleIndex ? 'var(--color-lime)' : 'var(--color-line)' }} />
+              <span key={i} className="h-[5px] rounded-full transition-colors" style={{ background: i < visibleIndex ? 'var(--color-acc)' : 'var(--color-line)' }} />
             ))}
           </div>
           <span className="num text-sm text-mute w-10 text-right">{visibleIndex}/{visibleTotal - 1}</span>
@@ -151,12 +151,12 @@ export default function Wizard({ username }: { username: string }) {
       <section key={s.step} className="flex-1 flex flex-col animate-[fadeIn_.28s_ease]">
         {s.step === 0 && (
           <div className="flex-1 flex flex-col justify-center gap-6 pt-10">
-            <span className="w-14 h-14 rounded-2xl bg-lime text-lime-ink flex items-center justify-center num font-bold text-xl">Dg</span>
+            <span className="w-14 h-14 rounded-2xl bg-acc text-acc-ink flex items-center justify-center num font-bold text-xl">Dg</span>
             <h1 className="text-[34px] leading-[1.1] font-extrabold tracking-tight">Merhaba {username},<br />seni tanıyalım.</h1>
             <p className="text-ink-2 text-base leading-relaxed">Birkaç soruyla günlük kalori, makro ve su hedefini hesaplayıp sana özel planı oluşturacağız. Yaklaşık 1 dakika sürer.</p>
             <ul className="flex flex-col gap-3 text-[15px] text-ink-2">
               {['Kalori ve makro hedefi', 'Hedef kilona ulaşma tarihi', 'Kişisel su hedefi'].map((t) => (
-                <li key={t} className="flex items-center gap-3"><span className="w-7 h-7 rounded-full bg-coach border border-coach-line text-lime flex items-center justify-center"><Check size={14} /></span>{t}</li>
+                <li key={t} className="flex items-center gap-3"><span className="w-7 h-7 rounded-full bg-coach border border-coach-line text-acc flex items-center justify-center"><Check size={14} /></span>{t}</li>
               ))}
             </ul>
           </div>
@@ -179,7 +179,7 @@ export default function Wizard({ username }: { username: string }) {
             <label htmlFor="bd" className="sr-only">Doğum tarihi</label>
             <input id="bd" type="date" max={maxBirthDate()} min="1926-01-01" value={s.birthDate ?? ''}
               onChange={(e) => set({ birthDate: e.target.value })}
-              className="w-full h-16 rounded-2xl bg-surface border border-line px-4 text-xl num text-ink outline-none focus:border-lime" />
+              className="w-full h-16 rounded-2xl bg-surface border border-line px-4 text-xl num text-ink outline-none focus:border-acc" />
             {age !== null ? (
               <p className="mt-4 text-ink-2">{age >= 16 ? <><b className="num text-ink text-2xl">{age}</b> yaşındasın</> : <span className="text-danger font-bold">16 yaşından küçükler kayıt olamaz.</span>}</p>
             ) : null}
@@ -261,7 +261,7 @@ export default function Wizard({ username }: { username: string }) {
                 <input aria-label="Gün sayısı" type="number" inputMode="numeric" min={7} max={1100} value={s.customDays}
                   onClick={(e) => e.stopPropagation()} onFocus={() => set({ tempo: 'custom' })}
                   onChange={(e) => set({ customDays: Math.max(7, Math.min(1100, Number(e.target.value) || 7)), tempo: 'custom' })}
-                  className="w-20 h-11 rounded-xl bg-surface-2 border border-line text-center num text-lg outline-none focus:border-lime" />
+                  className="w-20 h-11 rounded-xl bg-surface-2 border border-line text-center num text-lg outline-none focus:border-acc" />
                 <span className="text-mute text-sm">gün</span>
               </span>
             </Choice>
@@ -317,16 +317,16 @@ export default function Wizard({ username }: { username: string }) {
 
         {s.step === 10 && plan && (
           <div className="flex-1 flex flex-col gap-4 pt-8">
-            <span className="text-[13px] font-bold tracking-[0.08em] uppercase text-lime">Planın hazır</span>
+            <span className="text-[13px] font-bold tracking-[0.08em] uppercase text-acc">Planın hazır</span>
             <h1 className="text-[30px] leading-tight font-extrabold tracking-tight">
-              {recomp ? 'Kilonu koruyup kas kazanma planın' : <>{fmtNum(target, 1)} kg hedefine <span className="text-lime">{endDateLabel(days)}</span></>}
+              {recomp ? 'Kilonu koruyup kas kazanma planın' : <>{fmtNum(target, 1)} kg hedefine <span className="text-acc">{endDateLabel(days)}</span></>}
             </h1>
             <div className="card p-5 flex items-center gap-5">
               <Ring value={1} size={112} stroke={11} label={`Günlük ${plan.dailyKcal} kalori`}>
                 <div className="flex flex-col items-center"><span className="num text-2xl font-bold">{fmtNum(plan.dailyKcal)}</span><span className="text-xs text-mute">kcal/gün</span></div>
               </Ring>
               <div className="flex-1 flex flex-col gap-2.5">
-                <Macro name="Protein" g={plan.proteinG} color="var(--color-lime)" />
+                <Macro name="Protein" g={plan.proteinG} color="var(--color-protein)" />
                 <Macro name="Karbonhidrat" g={plan.carbG} color="var(--color-orange)" />
                 <Macro name="Yağ" g={plan.fatG} color="var(--color-violet)" />
               </div>
@@ -369,7 +369,7 @@ function endDateLabel(days: number) {
 function Q({ eyebrow, title, sub, children }: { eyebrow: string; title: string; sub?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col pt-8">
-      <span className="text-[13px] font-bold tracking-[0.08em] uppercase text-lime">{eyebrow}</span>
+      <span className="text-[13px] font-bold tracking-[0.08em] uppercase text-acc">{eyebrow}</span>
       <h1 className="mt-2.5 text-[30px] leading-[1.12] font-extrabold tracking-tight">{title}</h1>
       {sub ? <p className="mt-2.5 text-[15px] leading-relaxed text-mute">{sub}</p> : null}
       <div className="mt-8">{children}</div>
@@ -380,7 +380,7 @@ function Q({ eyebrow, title, sub, children }: { eyebrow: string; title: string; 
 function Choice({ selected, onClick, children, className = '' }: { selected: boolean; onClick: () => void; children: React.ReactNode; className?: string }) {
   return (
     <button type="button" onClick={onClick} aria-pressed={selected}
-      className={`w-full flex items-center gap-3 px-5 py-4 rounded-[22px] border transition active:scale-[0.99] ${selected ? 'bg-coach border-lime text-ink' : 'bg-surface border-transparent text-ink'} ${className}`}>
+      className={`w-full flex items-center gap-3 px-5 py-4 rounded-[22px] border transition active:scale-[0.99] ${selected ? 'bg-coach border-acc text-ink' : 'bg-surface border-transparent text-ink'} ${className}`}>
       {children}
     </button>
   )
@@ -396,7 +396,7 @@ function Big({ value, unit }: { value: string; unit: string }) {
 }
 
 function Chip({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
-  return <span className={`h-8 px-3 rounded-full flex items-center text-[13px] font-bold ${accent ? 'bg-coach border border-coach-line text-lime' : 'bg-surface-2 text-ink'}`}>{children}</span>
+  return <span className={`h-8 px-3 rounded-full flex items-center text-[13px] font-bold ${accent ? 'bg-coach border border-coach-line text-acc' : 'bg-surface-2 text-ink'}`}>{children}</span>
 }
 
 function Steppers({ onMinus, onPlus }: { onMinus: () => void; onPlus: () => void }) {
@@ -420,7 +420,7 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
 function Pill({ on, onClick, children, num }: { on: boolean; onClick: () => void; children: React.ReactNode; num?: boolean }) {
   return (
     <button type="button" aria-pressed={on} onClick={onClick}
-      className={`h-11 ${num ? 'w-11' : 'px-4'} rounded-full text-sm font-bold border transition ${on ? 'bg-lime text-lime-ink border-lime' : 'bg-surface text-ink-2 border-line'} ${num ? 'num' : ''}`}>
+      className={`h-11 ${num ? 'w-11' : 'px-4'} rounded-full text-sm font-bold border transition ${on ? 'bg-acc text-acc-ink border-acc' : 'bg-surface text-ink-2 border-line'} ${num ? 'num' : ''}`}>
       {children}
     </button>
   )
@@ -431,7 +431,7 @@ function TimeField({ id, label, value, onChange }: { id: string; label: string; 
     <div>
       <label htmlFor={id} className="block text-sm font-bold mb-2">{label}</label>
       <input id={id} type="time" value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full h-12 rounded-2xl bg-surface border border-line px-3 num text-lg text-ink outline-none focus:border-lime" />
+        className="w-full h-12 rounded-2xl bg-surface border border-line px-3 num text-lg text-ink outline-none focus:border-acc" />
     </div>
   )
 }

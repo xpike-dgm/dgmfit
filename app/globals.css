@@ -1,37 +1,92 @@
 @import "tailwindcss";
 
+/*
+  Tema: varsayılan değerler dengeli koyu tema. Açık tema `html[data-theme=light]` ile ya da
+  `data-theme` yokken (otomatik) sistem açık temadaysa uygulanır. Vurgu rengi (`acc`) bulunulan
+  modülden gelir: `[data-mod=…]` öğesi modül paletini, `[data-mod]` kuralı da vurguyu tanımlar.
+*/
 @theme {
-  --color-bg: #0B0C0A;
-  --color-surface: #161814;
-  --color-surface-2: #1E211A;
-  --color-surface-3: #24271F;
-  --color-line: #2A2E25;
-  --color-line-2: #3A3F33;
-  --color-ink: #F1F3EC;
-  --color-ink-2: #C9CEC1;
-  --color-mute: #A3A99B;
-  --color-faint: #6B7163;
-  --color-lime: #C8F169;
-  --color-lime-ink: #142004;
-  --color-coach: #1A1F12;
-  --color-coach-line: #33401E;
+  --color-bg: #14161B;
+  --color-surface: #1C1F26;
+  --color-surface-2: #252932;
+  --color-surface-3: #2E333D;
+  --color-line: #2C3039;
+  --color-line-2: #3B404B;
+  --color-ink: #ECEEF2;
+  --color-ink-2: #C3C7D0;
+  --color-mute: #9AA0AB;
+  --color-faint: #6E7480;
+  --color-acc: #B6E35E;
+  --color-acc-ink: #121418;
+  --color-protein: #B6E35E;
+  --color-good: #8FDB7A;
+  --color-coach: #221D2E;
+  --color-coach-line: #3D3157;
   --color-water: #6CC7FF;
   --color-water-ink: #06202E;
-  --color-water-bg: #10151A;
+  --color-water-bg: #172029;
+  --color-water-line: #26384A;
+  --color-water-deep: #0F151B;
+  --color-water-2: #2F8FD1;
   --color-orange: #FFB45C;
   --color-violet: #A99BFF;
   --color-danger: #FF8A7A;
+  --color-danger-bg: #2A1714;
+  --color-danger-line: #5A2A22;
+  --color-warn: #FFC58A;
+  --color-warn-bg: #241A10;
+  --color-warn-line: #4A3417;
+  --color-nav: rgba(28, 31, 38, 0.94);
   --font-sans: var(--font-manrope), system-ui, sans-serif;
   --font-num: var(--font-grotesk), var(--font-manrope), system-ui, sans-serif;
-  --radius-card: 28px;
+  --radius-card: 24px;
 }
 
 @layer base {
+  /* Açık tema token'ları: iki seçici aynı bloğu paylaşır (zorla açık + otomatikte sistem açık). */
+  :root[data-theme="light"] {
+    --color-bg: #F3F4F6; --color-surface: #FFFFFF; --color-surface-2: #F0F1F4; --color-surface-3: #E4E7EC;
+    --color-line: #E3E5EA; --color-line-2: #CDD1D8; --color-ink: #17191E; --color-ink-2: #454A54; --color-mute: #656B76; --color-faint: #959BA6;
+    --color-protein: #3F8F1E; --color-good: #2F8A3A; --color-coach: #F5F0FC; --color-coach-line: #E3D6F6;
+    --color-water: #0A6DB5; --color-water-ink: #FFFFFF; --color-water-bg: #EAF4FC; --color-water-line: #C8E0F3; --color-water-deep: #F2F8FD; --color-water-2: #36A9E8;
+    --color-orange: #B5560F; --color-violet: #5E4FD0; --color-danger: #C2352B; --color-danger-bg: #FDEDEB; --color-danger-line: #F2C6C0;
+    --color-warn: #93560A; --color-warn-bg: #FFF5E6; --color-warn-line: #F3D8AC; --color-nav: rgba(255, 255, 255, 0.95);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --color-bg: #F3F4F6; --color-surface: #FFFFFF; --color-surface-2: #F0F1F4; --color-surface-3: #E4E7EC;
+      --color-line: #E3E5EA; --color-line-2: #CDD1D8; --color-ink: #17191E; --color-ink-2: #454A54; --color-mute: #656B76; --color-faint: #959BA6;
+      --color-protein: #3F8F1E; --color-good: #2F8A3A; --color-coach: #F5F0FC; --color-coach-line: #E3D6F6;
+      --color-water: #0A6DB5; --color-water-ink: #FFFFFF; --color-water-bg: #EAF4FC; --color-water-line: #C8E0F3; --color-water-deep: #F2F8FD; --color-water-2: #36A9E8;
+      --color-orange: #B5560F; --color-violet: #5E4FD0; --color-danger: #C2352B; --color-danger-bg: #FDEDEB; --color-danger-line: #F2C6C0;
+      --color-warn: #93560A; --color-warn-bg: #FFF5E6; --color-warn-line: #F3D8AC; --color-nav: rgba(255, 255, 255, 0.95);
+      color-scheme: light;
+    }
+  }
+
+  /* Modül paletleri: m1/m2 = açık temada bant gradyanı, acc-l = açık vurgu (beyaz yazıyla okunur), acc-d = koyu vurgu. */
+  [data-mod="today"] { --m1: #3F7F12; --m2: #6FA51E; --acc-l: #3A7510; --acc-d: #B6E35E; }
+  [data-mod="plan"] { --m1: #0E8B7E; --m2: #2DB3A0; --acc-l: #0B7A6F; --acc-d: #5FD8C6; }
+  [data-mod="water"] { --m1: #0B79C9; --m2: #36A9E8; --acc-l: #0A6DB5; --acc-d: #6CC7FF; }
+  [data-mod="food"] { --m1: #C2551F; --m2: #E68A3E; --acc-l: #B04A18; --acc-d: #FFA06B; }
+  [data-mod="fitness"] { --m1: #D94A2B; --m2: #F08A2A; --acc-l: #C23F22; --acc-d: #FF8A65; }
+  [data-mod="social"] { --m1: #4B4FD6; --m2: #7B5CE6; --acc-l: #4347C9; --acc-d: #A9A4FF; }
+  [data-mod="coach"] { --m1: #7A3FC9; --m2: #A66BE0; --acc-l: #6E37B8; --acc-d: #C9A7FF; }
+  [data-mod="profile"] { --m1: #3D4452; --m2: #5F687A; --acc-l: #3D4452; --acc-d: #B4BCCC; }
+  [data-mod] { --color-acc: var(--acc-d); --color-acc-ink: #121418; --band: linear-gradient(160deg, color-mix(in oklab, var(--m1) 70%, #14161B), color-mix(in oklab, var(--m2) 50%, #14161B)); --hdr: color-mix(in oklab, var(--m1) 45%, #14161B); --ring-hole: color-mix(in oklab, var(--m1) 38%, #14161B); }
+  :root[data-theme="light"] [data-mod] { --color-acc: var(--acc-l); --color-acc-ink: #FFFFFF; --band: linear-gradient(160deg, var(--m1), var(--m2)); --hdr: linear-gradient(160deg, var(--m1), var(--m2)); --ring-hole: color-mix(in oklab, var(--m1) 85%, #000); }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) [data-mod] { --color-acc: var(--acc-l); --color-acc-ink: #FFFFFF; --band: linear-gradient(160deg, var(--m1), var(--m2)); --hdr: linear-gradient(160deg, var(--m1), var(--m2)); --ring-hole: color-mix(in oklab, var(--m1) 85%, #000); }
+  }
+
   html { background: var(--color-bg); color-scheme: dark; -webkit-text-size-adjust: 100%; }
   body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
   button, a, input, select, textarea { touch-action: manipulation; }
-  :focus-visible { outline: 2px solid var(--color-lime); outline-offset: 2px; }
-  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+  :focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }
+  input, select, textarea { accent-color: var(--color-acc); }
+  :root:not([data-theme="light"]) input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) input[type="date"]::-webkit-calendar-picker-indicator { filter: none; } }
 }
 
 @utility num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
@@ -39,6 +94,9 @@
 @utility safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 12px); }
 @utility safe-top { padding-top: max(env(safe-area-inset-top), 16px); }
 @utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+/* Renkli bant (sekme ana sayfası) ve alt sayfa başlığı; yazı her zaman beyaz. */
+@utility band { background: var(--band); color: #fff; }
+@utility hdr { background: var(--hdr); color: #fff; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }

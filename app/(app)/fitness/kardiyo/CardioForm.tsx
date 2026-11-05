@@ -36,11 +36,11 @@ export function CardioForm({ types, today }: { types: { id: string; label: strin
       </div>
       <fieldset className="flex gap-1.5">
         <legend className="text-[13px] font-semibold mb-1.5">Yoğunluk</legend>
-        {(['hafif', 'orta', 'yoğun'] as const).map((k) => <button key={k} type="button" aria-pressed={intensity === k} onClick={() => setIntensity(k)} className={`flex-1 h-10 rounded-xl text-[13px] font-bold capitalize ${intensity === k ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{k}</button>)}
+        {(['hafif', 'orta', 'yoğun'] as const).map((k) => <button key={k} type="button" aria-pressed={intensity === k} onClick={() => setIntensity(k)} className={`flex-1 h-10 rounded-xl text-[13px] font-bold capitalize ${intensity === k ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{k}</button>)}
       </fieldset>
       <p className="text-[12px] text-mute leading-relaxed">Kalori: nabız girersen nabız formülü (Keytel), koşu/yürüyüşte mesafe girersen hız denklemi (ACSM), yoksa MET tablosu. Fit'e dinlenme harcaması düşülmüş net kalori eklenir.</p>
       <button type="submit" className={btn.primary} disabled={pending}>Kaydet</button>
-      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-lime' : 'text-danger'}`}>{msg.t}</p> : null}
+      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-acc' : 'text-danger'}`}>{msg.t}</p> : null}
     </form>
   )
 }

@@ -58,7 +58,7 @@ export default function BarcodeScanner({ onCode }: { onCode: (code: string) => v
     <div className="flex flex-col gap-3">
       <div className="relative w-full aspect-[4/3] rounded-[22px] overflow-hidden bg-black">
         <video ref={videoRef} playsInline muted className="w-full h-full object-cover" aria-label="Kamera görüntüsü" />
-        <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-24 rounded-2xl border-2 border-lime/80 pointer-events-none" aria-hidden />
+        <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-24 rounded-2xl border-2 border-acc/80 pointer-events-none" aria-hidden />
         {status !== 'scanning' ? (
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-ink-2 bg-black/70">
             {status === 'starting' ? 'Kamera açılıyor…' : status === 'denied' ? 'Kamera izni verilmedi. Barkodu aşağıya yazabilirsin.' : 'Bu cihazda kamera kullanılamıyor. Barkodu aşağıya yaz.'}
@@ -68,8 +68,8 @@ export default function BarcodeScanner({ onCode }: { onCode: (code: string) => v
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); const c = manual.replace(/\D/g, ''); if (c.length >= 8) onCode(c) }}>
         <label htmlFor="bc-manual" className="sr-only">Barkod numarası</label>
         <input id="bc-manual" inputMode="numeric" placeholder="Barkod numarası" value={manual} onChange={(e) => setManual(e.target.value.replace(/\D/g, '').slice(0, 14))}
-          className="flex-1 h-12 rounded-2xl bg-surface-2 border border-line px-4 num text-ink outline-none focus:border-lime" />
-        <button type="submit" disabled={manual.length < 8} className="h-12 px-5 rounded-full bg-lime text-lime-ink font-extrabold disabled:opacity-40">Ara</button>
+          className="flex-1 h-12 rounded-2xl bg-surface-2 border border-line px-4 num text-ink outline-none focus:border-acc" />
+        <button type="submit" disabled={manual.length < 8} className="h-12 px-5 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40">Ara</button>
       </form>
     </div>
   )

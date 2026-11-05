@@ -25,7 +25,7 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
   const pv = s.previous
   const diff = (a: number, b: number) => (b ? Math.round(((a - b) / b) * 100) : 0)
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="Antrenman özeti" />
       <section className="card p-5 flex flex-col gap-3 relative overflow-hidden" data-testid="summary">
         {yeni && s.prs.length ? <div aria-hidden className="pointer-events-none absolute inset-0 animate-[fadeIn_.6s_ease] bg-[radial-gradient(circle_at_50%_0%,rgba(200,241,105,0.25),transparent_60%)]" /> : null}
@@ -43,10 +43,10 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
 
       {s.prs.length ? (
         <section aria-label="Kırılan rekorlar" className="card p-5 flex flex-col gap-2 border border-coach-line" data-testid="prs">
-          <div className="flex items-center gap-2"><Flame size={20} className="text-orange" /><Eyebrow className="text-lime">{s.prs.length} yeni rekor</Eyebrow></div>
+          <div className="flex items-center gap-2"><Flame size={20} className="text-orange" /><Eyebrow className="text-acc">{s.prs.length} yeni rekor</Eyebrow></div>
           {s.prs.map((p) => (
             <div key={p.id} className="flex justify-between items-center gap-2 text-[14px]">
-              <span className="text-ink-2 flex-1">{p.name} · {PR_LABEL[p.type as PrType] ?? p.type} <Link href={`/sosyal/yeni?tur=pr&ref=${p.id}`} className="text-lime text-[12px] font-bold ml-1">Paylaş</Link></span>
+              <span className="text-ink-2 flex-1">{p.name} · {PR_LABEL[p.type as PrType] ?? p.type} <Link href={`/sosyal/yeni?tur=pr&ref=${p.id}`} className="text-acc text-[12px] font-bold ml-1">Paylaş</Link></span>
               <span className="num font-bold">{p.type === 'reps' ? `${p.value} tekrar` : `${fmtNum(p.value, p.value % 1 ? 1 : 0)} kg`} <span className="text-mute font-normal">({p.type === 'reps' ? p.previous : fmtNum(p.previous ?? 0, (p.previous ?? 0) % 1 ? 1 : 0)})</span></span>
             </div>
           ))}
@@ -101,5 +101,5 @@ function Big({ label, value, sub }: { label: string; value: string; sub?: string
 }
 function Cmp({ label, cur, pct, invert }: { label: string; cur: string; pct: number; invert?: boolean }) {
   const good = invert ? pct < 0 : pct > 0
-  return <div className="flex justify-between text-[14px]"><span className="text-ink-2">{label}</span><span className="num">{cur} <span className={pct === 0 ? 'text-mute' : good ? 'text-lime' : 'text-orange'}>{pct > 0 ? '+' : ''}{pct}%</span></span></div>
+  return <div className="flex justify-between text-[14px]"><span className="text-ink-2">{label}</span><span className="num">{cur} <span className={pct === 0 ? 'text-mute' : good ? 'text-acc' : 'text-orange'}>{pct > 0 ? '+' : ''}{pct}%</span></span></div>
 }

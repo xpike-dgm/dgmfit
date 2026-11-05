@@ -84,7 +84,7 @@ export default function AiMeal({ day, meal, onAdded }: { day: string; meal: Meal
 
   return (
     <section className="card p-4 flex flex-col gap-3" aria-label="AI ile ekle" data-testid="ai-meal">
-      <div className="flex items-center gap-2"><Spark size={18} className="text-lime" /><span className="font-bold text-[15px]">AI ile ekle</span><span className="text-[11px] text-mute ml-auto">kalori veritabanından hesaplanır</span></div>
+      <div className="flex items-center gap-2"><Spark size={18} className="text-acc" /><span className="font-bold text-[15px]">AI ile ekle</span><span className="text-[11px] text-mute ml-auto">kalori veritabanından hesaplanır</span></div>
       <div className="grid grid-cols-2 gap-2">
         <label className={`${btn.secondary} cursor-pointer ${busy ? 'opacity-50' : ''}`}>
           {busy && mode === null ? 'İnceleniyor…' : 'Fotoğrafla'}
@@ -103,7 +103,7 @@ export default function AiMeal({ day, meal, onAdded }: { day: string; meal: Meal
             <textarea id="ai-text" rows={2} maxLength={500} value={text} onChange={(e) => setText(e.target.value)} placeholder="Ör: iki dilim ekmek, bir kase mercimek çorbası ve bir bardak ayran"
               className="flex-1 rounded-xl bg-surface-2 border border-line px-3 py-2 text-ink" />
             {speech ? <button type="button" onClick={() => (listening ? rec.current?.stop() : listen())} aria-pressed={listening} aria-label={listening ? 'Dinlemeyi durdur' : 'Söyle'}
-              className={`w-12 rounded-xl flex items-center justify-center ${listening ? 'bg-lime text-lime-ink animate-pulse' : 'bg-surface-2 text-lime'}`}><Mic size={22} /></button> : null}
+              className={`w-12 rounded-xl flex items-center justify-center ${listening ? 'bg-acc text-acc-ink animate-pulse' : 'bg-surface-2 text-acc'}`}><Mic size={22} /></button> : null}
           </div>
           <button type="submit" className={btn.primary + ' h-12 text-[15px]'} disabled={busy || text.trim().length < 2}>{busy ? 'Ayrıştırılıyor…' : 'Ayrıştır'}</button>
         </form>
@@ -121,7 +121,7 @@ export default function AiMeal({ day, meal, onAdded }: { day: string; meal: Meal
               return (
                 <div key={i} className={`rounded-2xl bg-surface-2 px-3.5 py-3 flex flex-col gap-2 ${r.on ? '' : 'opacity-50'}`} data-testid="ai-row">
                   <div className="flex items-center gap-2">
-                    <input type="checkbox" aria-label={`${r.name} ekle`} checked={r.on} onChange={(e) => setRows(rows.map((x, k) => (k === i ? { ...x, on: e.target.checked } : x)))} className="w-5 h-5 accent-[var(--color-lime)]" />
+                    <input type="checkbox" aria-label={`${r.name} ekle`} checked={r.on} onChange={(e) => setRows(rows.map((x, k) => (k === i ? { ...x, on: e.target.checked } : x)))} className="w-5 h-5" />
                     <span className="font-bold flex-1">{r.name}{r.portion ? <span className="text-mute font-normal"> · {r.portion}</span> : null}</span>
                     {r.confidence !== 'yüksek' ? <span className={`text-[11px] font-bold ${r.confidence === 'düşük' ? 'text-orange' : 'text-mute'}`}>{r.confidence} güven</span> : null}
                   </div>

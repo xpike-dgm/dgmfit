@@ -34,8 +34,8 @@ function Body({ p, onMsg }: { p: PostView; onMsg: (m: string) => void }) {
       <div className="rounded-2xl bg-surface-2 px-3.5 py-3 flex flex-col gap-2" data-testid="post-workout">
         <div className="flex justify-between text-[13px]"><b>{w.name}</b><span className="text-mute num">{w.minutes} dk · {fmtNum(w.volumeKg)} kg · {w.workSets} set</span></div>
         <ul className="flex flex-col gap-0.5 text-[13px]">{w.exercises.map((e, i) => <li key={i} className="flex justify-between gap-2"><span>{e.name}</span><span className="num text-ink-2 text-right">{e.sets.map((s) => (e.kind === 'time' ? `${s.seconds ?? 0} sn` : s.kg ? `${fmtNum(s.kg, 1)}×${s.reps}` : `${s.reps}`)).join(' · ')}</span></li>)}</ul>
-        {w.prs?.length ? <span className="text-[12px] text-lime">🏆 {w.prs.length} rekor</span> : null}
-        {!p.mine ? <button type="button" className="self-start h-9 px-3 rounded-full bg-lime text-lime-ink text-[12px] font-bold" disabled={pending}
+        {w.prs?.length ? <span className="text-[12px] text-acc">🏆 {w.prs.length} rekor</span> : null}
+        {!p.mine ? <button type="button" className="self-start h-9 px-3 rounded-full bg-acc text-acc-ink text-[12px] font-bold" disabled={pending}
           onClick={() => start(async () => { const r = await copyWorkoutAction(p.id); if (r.ok) router.push(`/fitness/programlar/${r.id}`); else onMsg(r.error) })}>Bu antrenmanı kopyala</button> : null}
       </div>
     )
@@ -52,7 +52,7 @@ function Body({ p, onMsg }: { p: PostView; onMsg: (m: string) => void }) {
           <div className="flex flex-wrap gap-2 items-center">
             <button type="button" className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" disabled={pending} onClick={() => start(async () => { const x = await saveRecipeAction(p.id); onMsg(x.ok ? 'Tariflerine kaydedildi' : x.error) })}>Tariflerime kaydet</button>
             <select aria-label="Öğün" value={meal} onChange={(e) => setMeal(e.target.value as MealId)} className="h-9 rounded-full bg-surface border border-line px-2 text-[12px]">{(Object.keys(MEAL_LABEL) as MealId[]).map((k) => <option key={k} value={k}>{MEAL_LABEL[k]}</option>)}</select>
-            <button type="button" className="h-9 px-3 rounded-full bg-lime text-lime-ink text-[12px] font-bold" disabled={pending} onClick={() => start(async () => { const x = await addRecipeMealAction(p.id, meal); onMsg(x.ok ? `Öğün olarak eklendi · ${fmtNum(x.kcal)} kcal` : x.error) })}>Öğün olarak ekle</button>
+            <button type="button" className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[12px] font-bold" disabled={pending} onClick={() => start(async () => { const x = await addRecipeMealAction(p.id, meal); onMsg(x.ok ? `Öğün olarak eklendi · ${fmtNum(x.kcal)} kcal` : x.error) })}>Öğün olarak ekle</button>
           </div>
         ) : null}
       </div>
@@ -117,12 +117,12 @@ export default function PostCard({ p, detail = false }: { p: PostView; detail?: 
       <footer className="flex items-center gap-1.5 flex-wrap">
         {(Object.keys(REACTIONS) as Reaction[]).map((k) => (
           <button key={k} type="button" aria-pressed={mine === k} aria-label={`Tepki ${REACTIONS[k]}`} onClick={() => void tap(k)}
-            className={`h-9 px-2.5 rounded-full text-[14px] flex items-center gap-1 ${mine === k ? 'bg-lime/20 border border-lime' : 'bg-surface-2'}`}>{REACTIONS[k]}{counts[k] ? <span className="num text-[12px]">{counts[k]}</span> : null}</button>
+            className={`h-9 px-2.5 rounded-full text-[14px] flex items-center gap-1 ${mine === k ? 'bg-acc/20 border border-acc' : 'bg-surface-2'}`}>{REACTIONS[k]}{counts[k] ? <span className="num text-[12px]">{counts[k]}</span> : null}</button>
         ))}
         {!detail ? <Link href={`/sosyal/p/${p.id}`} className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center" data-testid="post-comments">💬 {p.comments}</Link> : null}
         <button type="button" aria-pressed={saved} aria-label={saved ? "Kaydedilenlerden çıkar" : "Gönderiyi kaydet"} onClick={async () => { setSaved(!saved); await saveAction(p.id, !saved) }} className="ml-auto h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold">{saved ? 'Kaydedildi' : 'Kaydet'}</button>
       </footer>
-      {msg ? <p role="status" className="text-[13px] text-lime">{msg}</p> : null}
+      {msg ? <p role="status" className="text-[13px] text-acc">{msg}</p> : null}
     </article>
   )
 }

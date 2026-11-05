@@ -11,7 +11,7 @@ export default async function CardioPage() {
   const u = await requireUser()
   const list = await recentCardio(u.id, 15)
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="Kardiyo" />
       <CardioForm types={Object.entries(CARDIO).map(([k, v]) => ({ id: k, label: v.label, distance: v.distance }))} today={dayString()} />
       <section className="card p-5 flex flex-col gap-1" aria-label="Son kardiyolar">

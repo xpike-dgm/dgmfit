@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { profileView } from '@/lib/social-data'
 import { fmtNum } from '@/lib/calc'
-import { TopBar } from '@/components/ui'
+import { TopBar, hdrBtn } from '@/components/ui'
 import PostCard, { Avatar } from '@/components/social/PostCard'
 import { RelButton } from '../../sosyal/SocialClient'
 import { partnerStatus, pendingPRs } from '@/lib/social2-data'
@@ -17,7 +17,7 @@ function Spark({ pts }: { pts: { kg: number }[] }) {
   if (pts.length < 2) return null
   const lo = Math.min(...pts.map((p) => p.kg)), hi = Math.max(...pts.map((p) => p.kg)), W = 80, H = 24
   const d = pts.map((p, i) => `${(i / (pts.length - 1)) * W},${H - (hi === lo ? H / 2 : ((p.kg - lo) / (hi - lo)) * H)}`).join(' ')
-  return <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden className="shrink-0"><polyline points={d} fill="none" stroke="var(--color-lime)" strokeWidth="2" strokeLinecap="round" /></svg>
+  return <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden className="shrink-0"><polyline points={d} fill="none" stroke="var(--color-acc)" strokeWidth="2" strokeLinecap="round" /></svg>
 }
 
 export default async function Page(props: { params: Promise<{ username: string }>; searchParams: Promise<{ davet?: string }> }) {
@@ -27,7 +27,7 @@ export default async function Page(props: { params: Promise<{ username: string }
   const v = await profileView(me.id, decodeURIComponent(username))
   if (!v || (v.hidden && !v.iBlocked)) notFound() // engelleyen dışında varlığı sızdırılmaz
   if (v.hidden) return (
-    <div className="px-4 pt-5 flex flex-col gap-3"><TopBar back="/sosyal" title={v.username} />
+    <div className="px-4 flex flex-col gap-3"><TopBar back="/sosyal" title={v.username} />
       <p className="card p-5 text-[14px] text-mute">Bu kişiyi engelledin.</p>
       <RelButton op="unblock" id={v.id} label="Engeli kaldır" />
     </div>
@@ -35,14 +35,14 @@ export default async function Page(props: { params: Promise<{ username: string }
   const self = v.rel === 'self'
   const [partner, pend] = await Promise.all([v.rel === 'friend' ? partnerStatus(me.id, v.id) : null, self || (v.rel === 'friend' && v.showcase) ? pendingPRs(v.id) : []])
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3" data-testid="profile">
-      <TopBar back="/sosyal" title={v.username} right={self ? <Link href="/sosyal/ayarlar" className="h-11 px-3 rounded-full bg-surface-2 text-[13px] font-bold inline-flex items-center">Düzenle</Link> : undefined} />
+    <div className="px-4 flex flex-col gap-3" data-testid="profile">
+      <TopBar back="/sosyal" title={v.username} right={self ? <Link href="/sosyal/ayarlar" className={hdrBtn}>Düzenle</Link> : undefined} />
       <section className="card p-5 flex flex-col gap-3">
         <div className="flex items-center gap-4">
           <Avatar src={v.avatar} name={v.username} size={72} />
           <div className="flex flex-col gap-1 min-w-0">
             <b className="text-[20px] truncate">{v.username}</b>
-            {v.badge ? <span className="self-start text-[12px] font-bold px-2.5 py-1 rounded-full bg-lime text-lime-ink" data-testid="goal-badge">{v.badge}</span> : null}
+            {v.badge ? <span className="self-start text-[12px] font-bold px-2.5 py-1 rounded-full bg-acc text-acc-ink" data-testid="goal-badge">{v.badge}</span> : null}
             <span className="text-[12px] text-mute">{v.friends} arkadaş · {VIS[v.visibility]}</span>
           </div>
         </div>

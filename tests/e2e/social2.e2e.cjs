@@ -110,7 +110,7 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
 
   // 5) PR doğrulama: A ve C tanıklık eder → doğrulanır → B'nin DOTS'u 120 ile
   await pb.goto(`${BASE}/u/${B}`); await pb.getByTestId('pending-prs').getByText(/PR vitrinini arkadaşlarına aç/).waitFor().catch(() => fail('sahibine vitrin ipucu yok'))
-  await pb.goto(BASE + '/sosyal/ayarlar'); await pb.getByLabel('PR vitrini', { exact: true }).selectOption('friends'); await pb.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pb.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
+  await pb.goto(BASE + '/sosyal/ayarlar/gorunenler'); await pb.getByLabel('PR vitrini', { exact: true }).selectOption('friends'); await pb.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pb.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
   await pa.goto(`${BASE}/u/${B}`); const pend = pa.getByTestId('pending-pr').first()
   await pend.waitFor().catch(() => fail('arkadaş şüpheli rekoru görmüyor'))
   await pend.getByRole('button', { name: 'Tanığım' }).click(); await pa.getByRole('status').filter({ hasText: 'Tanıklığın kaydedildi' }).waitFor()

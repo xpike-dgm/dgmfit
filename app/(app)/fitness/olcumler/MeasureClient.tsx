@@ -39,7 +39,7 @@ export function MeasureForm({ today }: { today: string }) {
       </div>
       <p className="text-[11px] text-mute">İpucu: sabah, aç karnına ve aynı noktalardan ölç (bel: göbek hizası). Doldurmadığın alanlar boş kalır.</p>
       <button type="submit" className={btn.primary} disabled={pending}>Kaydet</button>
-      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-lime' : 'text-danger'}`}>{msg.t}</p> : null}
+      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-acc' : 'text-danger'}`}>{msg.t}</p> : null}
     </form>
   )
 }
@@ -89,7 +89,7 @@ export function Photos({ enabled, today, photos }: { enabled: boolean; today: st
           </label>
         </div>
       )}
-      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-lime' : 'text-danger'}`}>{msg.t}</p> : null}
+      {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-acc' : 'text-danger'}`}>{msg.t}</p> : null}
       {cmp.length === 2 ? (
         <div className="grid grid-cols-2 gap-2" data-testid="compare">
           {cmp.map((p) => <figure key={p.id} className="flex flex-col gap-1"><img src={`/api/media/${p.id}`} alt={`${short(p.day)} ${p.pose ?? ''}`} className="w-full aspect-[3/4] object-cover rounded-xl bg-surface-2" /><figcaption className="text-[12px] text-mute text-center">{short(p.day)}{p.pose ? ` · ${p.pose}` : ''}</figcaption></figure>)}
@@ -99,7 +99,7 @@ export function Photos({ enabled, today, photos }: { enabled: boolean; today: st
         {photos.map((p) => (
           <li key={p.id} className="relative">
             <button type="button" aria-pressed={sel.includes(p.id)} aria-label={`${short(p.day)} ${p.pose ?? ''} fotoğrafını seç`} onClick={() => setSel(sel.includes(p.id) ? sel.filter((x) => x !== p.id) : [...sel.slice(-1), p.id])}
-              className={`block w-full rounded-xl overflow-hidden border-2 ${sel.includes(p.id) ? 'border-lime' : 'border-transparent'}`}>
+              className={`block w-full rounded-xl overflow-hidden border-2 ${sel.includes(p.id) ? 'border-acc' : 'border-transparent'}`}>
               <img src={`/api/media/${p.id}`} alt="" loading="lazy" className="w-full aspect-[3/4] object-cover bg-surface-2" />
             </button>
             <span className="text-[11px] text-mute">{short(p.day)}{p.pose ? ` · ${p.pose}` : ''}</span>

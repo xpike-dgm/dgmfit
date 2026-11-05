@@ -29,7 +29,7 @@ export default async function Page(props: { searchParams: Promise<{ hafta?: stri
   ]
   const prev = addDays(ws, -7), next = addDays(ws, 7)
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/" title="Haftalık rapor" />
       <div className="flex items-center justify-between px-1" data-testid="report-week">
         <Link href={`/rapor?hafta=${prev}`} className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center" aria-label="Önceki hafta">‹ Önceki</Link>
@@ -63,18 +63,18 @@ export default async function Page(props: { searchParams: Promise<{ hafta?: stri
       ) : null}
 
       <section className="rounded-[28px] px-5 py-[18px] flex flex-col gap-3 bg-coach border border-coach-line" data-testid="report-summary">
-        <div className="flex items-center gap-2"><Spark size={18} className="text-lime" /><span className="text-[13px] font-bold tracking-[0.08em] uppercase text-lime">Koçun yorumu</span></div>
+        <div className="flex items-center gap-2"><Spark size={18} className="text-acc" /><span className="text-[13px] font-bold tracking-[0.08em] uppercase text-acc">Koçun yorumu</span></div>
         {!r.ready ? <p className="text-[13px] text-mute">Bu haftanın raporu Pazar 18.00'de hazır olur; şimdilik anlık sayılar görünüyor.</p> : null}
-        <p className="text-[15px] leading-relaxed text-[#E4E8DC]">{r.summary}</p>
-        <ul className="flex flex-col gap-2">{r.suggestions.map((x, i) => <li key={i} className="text-[14px] text-ink-2 pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-lime">{x}</li>)}</ul>
+        <p className="text-[15px] leading-relaxed text-ink">{r.summary}</p>
+        <ul className="flex flex-col gap-2">{r.suggestions.map((x, i) => <li key={i} className="text-[14px] text-ink-2 pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-acc">{x}</li>)}</ul>
         <span className="text-[11px] text-mute">{r.provider ? `Yorum: ${PROVIDER[r.provider] ?? r.provider} · sayılar DgFit motorlarından` : 'Kural tabanlı yorum · sayılar DgFit motorlarından'}</span>
-        <Link href={`/koc?soru=${encodeURIComponent('Haftalık raporuma göre önümüzdeki hafta neye odaklanmalıyım?')}`} className="self-start h-10 px-4 rounded-full bg-lime text-lime-ink font-bold text-[14px] inline-flex items-center">Koça sor</Link>
+        <Link href={`/koc?soru=${encodeURIComponent('Haftalık raporuma göre önümüzdeki hafta neye odaklanmalıyım?')}`} className="self-start h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center">Koça sor</Link>
       </section>
 
       {past.length ? (
         <section className="card p-4 flex flex-col gap-2">
           <Eyebrow>Geçmiş raporlar</Eyebrow>
-          <div className="flex flex-wrap gap-2">{past.map((x) => <Link key={x.period} href={`/rapor?hafta=${x.period}`} aria-current={x.period === ws ? 'page' : undefined} className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center aria-[current=page]:bg-lime aria-[current=page]:text-lime-ink">{shortDate(x.period)}</Link>)}</div>
+          <div className="flex flex-wrap gap-2">{past.map((x) => <Link key={x.period} href={`/rapor?hafta=${x.period}`} aria-current={x.period === ws ? 'page' : undefined} className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center aria-[current=page]:bg-acc aria-[current=page]:text-acc-ink">{shortDate(x.period)}</Link>)}</div>
         </section>
       ) : null}
       {latest !== ws ? null : <span className="text-[11px] text-faint text-center">En son tamamlanan hafta</span>}

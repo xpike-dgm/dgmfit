@@ -5,7 +5,7 @@ import { useEffect, useState, useTransition } from 'react'
 import Sheet from '@/components/Sheet'
 import FoodSheet, { type SheetFood } from '@/components/FoodSheet'
 import BarcodeScanner from '@/components/BarcodeScanner'
-import { btn } from '@/components/ui'
+import { btn, TopBar } from '@/components/ui'
 import { Back, Check, Plus } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import { MEAL_LABEL, type MealId } from '@/lib/food'
@@ -64,19 +64,13 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
   const list = results ?? (tab === 'recent' ? recent : tab === 'mine' ? mine : [])
 
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3">
-      <div className="flex items-center gap-2 px-1">
-        <Link href={`/yemek${day ? `?gun=${day}` : ''}`} aria-label="Geri" className={btn.icon}><Back size={20} /></Link>
-        <div className="flex flex-col">
-          <span className="font-extrabold">{MEAL_LABEL[meal]}</span>
-          <span className="text-xs text-mute">Kalan bütçe <b className="num text-ink-2">{fmtNum(left)} kcal</b></span>
-        </div>
-      </div>
+    <div className="px-4 flex flex-col gap-3">
+      <TopBar back={`/yemek${day ? `?gun=${day}` : ''}`} title={`${MEAL_LABEL[meal]} · ekle`} sub={<>Kalan bütçe <b className="num">{fmtNum(left)} kcal</b></>} />
 
       <div className="relative">
         <label htmlFor="food-q" className="sr-only">Besin ara</label>
         <input id="food-q" autoFocus={!startBarcode} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Besin veya yemek ara (ör. mercimek çorbası)"
-          className="w-full h-14 rounded-2xl bg-surface border border-line pl-4 pr-28 text-[16px] text-ink placeholder:text-faint outline-none focus:border-lime" autoComplete="off" />
+          className="w-full h-14 rounded-2xl bg-surface border border-line pl-4 pr-28 text-[16px] text-ink placeholder:text-faint outline-none focus:border-acc" autoComplete="off" />
         <button type="button" onClick={() => setScan(true)} className="absolute right-1.5 top-1/2 -translate-y-1/2 h-11 px-4 rounded-xl bg-surface-2 text-sm font-bold">Barkod</button>
       </div>
 
@@ -84,8 +78,8 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
 
       {added.length ? (
         <div className="rounded-2xl bg-coach border border-coach-line px-4 py-3 text-sm flex flex-col gap-1" role="status">
-          {added.map((a, i) => <span key={i} className="flex items-center gap-2"><Check size={14} className="text-lime" />{a}</span>)}
-          <Link href={`/yemek?gun=${day}`} className="text-lime font-bold text-sm mt-1">Günlüğe dön</Link>
+          {added.map((a, i) => <span key={i} className="flex items-center gap-2"><Check size={14} className="text-acc" />{a}</span>)}
+          <Link href={`/yemek?gun=${day}`} className="text-acc font-bold text-sm mt-1">Günlüğe dön</Link>
         </div>
       ) : null}
 
@@ -110,7 +104,7 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
           {saved.map((s) => (
             <li key={s.id} className="flex items-center justify-between min-h-[56px] border-t border-surface-2 first:border-t-0">
               <span className="flex flex-col"><span className="font-bold text-sm">{s.name}</span><span className="text-xs text-mute">{s.count} besin</span></span>
-              <button type="button" disabled={pending} className="h-10 px-4 rounded-full bg-lime text-lime-ink text-sm font-extrabold"
+              <button type="button" disabled={pending} className="h-10 px-4 rounded-full bg-acc text-acc-ink text-sm font-extrabold"
                 onClick={() => start(async () => { const r = await addSavedMeal(s.id, meal, day); if (r.ok) { setAdded((a) => [`${s.name} · ${r.count} besin`, ...a]); router.refresh() } else alert(r.error) })}>Ekle</button>
             </li>
           ))}
@@ -120,7 +114,7 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
           {results !== null && !loading && list.length === 0 ? (
             <li className="p-4 text-sm text-mute flex flex-col gap-2">
               <span>"{q}" için sonuç yok.</span>
-              <Link href={`/yemek/besin/yeni?ad=${encodeURIComponent(q)}&ogun=${meal}&gun=${day}`} className="text-lime font-bold">Yeni besin olarak ekle</Link>
+              <Link href={`/yemek/besin/yeni?ad=${encodeURIComponent(q)}&ogun=${meal}&gun=${day}`} className="text-acc font-bold">Yeni besin olarak ekle</Link>
             </li>
           ) : null}
           {results === null && tab === 'recent' && recent.length === 0 ? <li className="p-4 text-sm text-mute">Henüz kayıt yok. Yukarıdan arayarak başla.</li> : null}

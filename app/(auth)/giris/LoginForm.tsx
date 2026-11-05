@@ -6,7 +6,7 @@ import { btn, FieldError } from '@/components/ui'
 import { Eye, EyeOff } from '@/components/icons'
 
 const input =
-  'w-full h-14 rounded-2xl bg-surface border border-line px-4 text-[16px] text-ink placeholder:text-faint outline-none focus:border-lime transition'
+  'w-full h-14 rounded-2xl bg-surface border border-line px-4 text-[16px] text-ink placeholder:text-faint outline-none focus:border-acc transition'
 
 export default function LoginForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(loginAction, {})
@@ -30,7 +30,7 @@ export default function LoginForm() {
       </div>
       <FieldError>{state.errors?.form}</FieldError>
       <button type="submit" className={btn.primary + ' mt-1'} disabled={pending}>{pending ? 'Giriş yapılıyor…' : 'Giriş yap'}</button>
-      <p className="text-center text-sm text-mute">Hesabın yok mu? <Link href="/kayit" className="text-lime font-bold">Hemen oluştur</Link></p>
+      <p className="text-center text-sm text-mute">Hesabın yok mu? <Link href="/kayit" className="text-acc font-bold">Hemen oluştur</Link></p>
     </form>
   )
 }

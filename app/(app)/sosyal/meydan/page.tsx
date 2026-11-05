@@ -14,14 +14,14 @@ export default async function Page() {
   const u = await requireUser()
   const [list, fr] = await Promise.all([myChallenges(u.id), friendsOverview(u.id)])
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/sosyal" title="Meydan okumalar" />
       <section className="card p-4 flex flex-col gap-2" data-testid="challenge-list">
         <span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Benimkiler</span>
         {list.length ? list.map((c) => (
           <Link key={c.id} href={`/sosyal/meydan/${c.id}`} className="flex items-center justify-between min-h-12 border-b border-line last:border-0" data-testid="challenge-row">
             <span className="flex flex-col"><b>{c.title}</b><span className="text-[12px] text-mute">{SCOPE[c.scope]} · {c.ended ? 'bitti' : `${c.endDay} bitiyor`}</span></span>
-            {c.status === 'invited' ? <span className="text-[12px] font-bold text-orange">Davet</span> : <span className="text-lime">›</span>}
+            {c.status === 'invited' ? <span className="text-[12px] font-bold text-orange">Davet</span> : <span className="text-acc">›</span>}
           </Link>
         )) : <p className="text-[14px] text-mute">Henüz meydan okuma yok.</p>}
       </section>

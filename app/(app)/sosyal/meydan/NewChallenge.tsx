@@ -29,7 +29,7 @@ export default function NewChallenge({ templates, metrics, friends, groupId }: {
   return (
     <form className="card p-4 flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); void submit() }} data-testid="new-challenge">
       <span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Yeni</span>
-      {!groupId ? <div className="flex gap-1.5" role="group" aria-label="Tür">{([['friends', 'Meydan okuma'], ['duel', 'Düello (1’e 1, 7 gün)']] as const).map(([k, l]) => <button key={k} type="button" aria-pressed={scope === k} onClick={() => { setScope(k); setSel([]) }} className={`h-9 px-3 rounded-full text-[13px] font-bold ${scope === k ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{l}</button>)}</div> : null}
+      {!groupId ? <div className="flex gap-1.5" role="group" aria-label="Tür">{([['friends', 'Meydan okuma'], ['duel', 'Düello (1’e 1, 7 gün)']] as const).map(([k, l]) => <button key={k} type="button" aria-pressed={scope === k} onClick={() => { setScope(k); setSel([]) }} className={`h-9 px-3 rounded-full text-[13px] font-bold ${scope === k ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{l}</button>)}</div> : null}
       {!duel ? (
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Şablon">
           {templates.map((t) => <button key={t.key} type="button" aria-pressed={tpl === t.key} onClick={() => setTpl(t.key)} className={`h-9 px-3 rounded-full text-[13px] font-semibold ${tpl === t.key ? 'bg-ink text-bg' : 'bg-surface-2'}`}>{t.title}</button>)}
@@ -48,7 +48,7 @@ export default function NewChallenge({ templates, metrics, friends, groupId }: {
       ) : null}
       {!groupId ? (
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Davet edilecekler">
-          {friends.length ? friends.map((f) => <button key={f.id} type="button" aria-pressed={sel.includes(f.id)} onClick={() => setSel(duel ? [f.id] : sel.includes(f.id) ? sel.filter((x) => x !== f.id) : [...sel, f.id])} className={`h-9 px-3 rounded-full text-[13px] font-semibold ${sel.includes(f.id) ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{f.username}</button>) : <span className="text-[13px] text-mute">Önce arkadaş ekle.</span>}
+          {friends.length ? friends.map((f) => <button key={f.id} type="button" aria-pressed={sel.includes(f.id)} onClick={() => setSel(duel ? [f.id] : sel.includes(f.id) ? sel.filter((x) => x !== f.id) : [...sel, f.id])} className={`h-9 px-3 rounded-full text-[13px] font-semibold ${sel.includes(f.id) ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{f.username}</button>) : <span className="text-[13px] text-mute">Önce arkadaş ekle.</span>}
         </div>
       ) : <p className="text-[12px] text-mute">Grubun tüm üyeleri davet edilir.</p>}
       {err ? <p role="alert" className="text-[13px] text-orange">{err}</p> : null}

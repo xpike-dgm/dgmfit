@@ -7,7 +7,7 @@ import { Check, Eye, EyeOff } from '@/components/icons'
 import { checkPassword, emailError, emailSuggestion, usernameError } from '@/lib/validation'
 
 const input =
-  'w-full h-14 rounded-2xl bg-surface border border-line px-4 text-[16px] text-ink placeholder:text-faint outline-none focus:border-lime transition'
+  'w-full h-14 rounded-2xl bg-surface border border-line px-4 text-[16px] text-ink placeholder:text-faint outline-none focus:border-acc transition'
 
 export default function RegisterForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(registerAction, {})
@@ -40,7 +40,7 @@ export default function RegisterForm() {
   const matches = confirm.length > 0 && confirm === password
   const canSubmit = !usernameError(username) && uCheck.available !== false && !emailError(email) && pw.ok && matches && terms
   const strength = ['Çok zayıf', 'Zayıf', 'Orta', 'İyi', 'Güçlü'][pw.score]
-  const strengthColor = ['var(--color-danger)', 'var(--color-danger)', 'var(--color-orange)', 'var(--color-lime)', 'var(--color-lime)'][pw.score]
+  const strengthColor = ['var(--color-danger)', 'var(--color-danger)', 'var(--color-orange)', 'var(--color-good)', 'var(--color-good)'][pw.score]
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
@@ -49,7 +49,7 @@ export default function RegisterForm() {
         <div className="relative">
           <input id="username" name="username" className={input} autoComplete="username" autoCapitalize="none" spellCheck={false}
             placeholder="ornek: cihad.fit" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={20} />
-          {uCheck.available && !uErr ? <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lime" aria-label="Kullanılabilir"><Check size={20} /></span> : null}
+          {uCheck.available && !uErr ? <span className="absolute right-4 top-1/2 -translate-y-1/2 text-acc" aria-label="Kullanılabilir"><Check size={20} /></span> : null}
         </div>
         <FieldError>{state.errors?.username ?? uErr ?? (uCheck.available === false ? 'Bu kullanıcı adı alınmış' : null)}</FieldError>
         {uCheck.available === false && uCheck.suggestions.length ? (
@@ -67,7 +67,7 @@ export default function RegisterForm() {
           spellCheck={false} placeholder="sen@ornek.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         {suggestion ? (
           <button type="button" onClick={() => setEmail(suggestion)} className="mt-2 text-[13px] text-ink-2">
-            Bunu mu demek istedin? <b className="text-lime">{suggestion}</b>
+            Bunu mu demek istedin? <b className="text-acc">{suggestion}</b>
           </button>
         ) : null}
         <FieldError>{state.errors?.email ?? eErr}</FieldError>
@@ -99,16 +99,16 @@ export default function RegisterForm() {
         <div className="relative">
           <input id="confirm" name="confirm" type={show ? 'text' : 'password'} className={input} autoComplete="new-password"
             value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-          {matches ? <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lime" aria-label="Şifreler eşleşiyor"><Check size={20} /></span> : null}
+          {matches ? <span className="absolute right-4 top-1/2 -translate-y-1/2 text-acc" aria-label="Şifreler eşleşiyor"><Check size={20} /></span> : null}
         </div>
         <FieldError>{state.errors?.confirm ?? (confirm && !matches && confirm.length >= password.length ? 'Şifreler eşleşmiyor' : null)}</FieldError>
       </div>
 
       <label className="flex gap-3 items-start cursor-pointer">
-        <input type="checkbox" name="terms" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 w-6 h-6 accent-[#C8F169] shrink-0" />
+        <input type="checkbox" name="terms" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 w-6 h-6 shrink-0" />
         <span className="text-sm leading-relaxed text-ink-2">
-          <Link href="/yasal/kosullar" className="text-lime font-bold">Kullanım koşullarını</Link> ve{' '}
-          <Link href="/yasal/kvkk" className="text-lime font-bold">KVKK aydınlatma metnini</Link> okudum, sağlık verilerimin işlenmesine açık rıza veriyorum.
+          <Link href="/yasal/kosullar" className="text-acc font-bold">Kullanım koşullarını</Link> ve{' '}
+          <Link href="/yasal/kvkk" className="text-acc font-bold">KVKK aydınlatma metnini</Link> okudum, sağlık verilerimin işlenmesine açık rıza veriyorum.
         </span>
       </label>
       <FieldError>{state.errors?.terms}</FieldError>
@@ -117,7 +117,7 @@ export default function RegisterForm() {
       <button type="submit" className={btn.primary + ' mt-2'} disabled={!canSubmit || pending}>
         {pending ? 'Hesap oluşturuluyor…' : 'Hesabı oluştur'}
       </button>
-      <p className="text-center text-sm text-mute">Zaten hesabın var mı? <Link href="/giris" className="text-lime font-bold">Giriş yap</Link></p>
+      <p className="text-center text-sm text-mute">Zaten hesabın var mı? <Link href="/giris" className="text-acc font-bold">Giriş yap</Link></p>
     </form>
   )
 }

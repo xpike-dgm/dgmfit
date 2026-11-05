@@ -14,7 +14,7 @@ export default async function MeasurePage() {
   const first = rows.at(-1), last = rows[0]
   const used = MEASURES.filter((k) => rows.some((r) => r[k] !== null))
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="Ölçüler ve fotoğraflar" />
       <MeasureForm today={dayString()} />
       {rows.length ? (

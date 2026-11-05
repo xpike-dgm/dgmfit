@@ -34,7 +34,7 @@ export default async function LibraryPage(props: { searchParams: Promise<SP> }) 
     </div>
   )
   return (
-    <div className="flex flex-col gap-3 px-4 pt-5">
+    <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="Hareket kütüphanesi" />
       <form action="/fitness/hareketler" className="flex gap-2">
         {f.muscle ? <input type="hidden" name="kas" value={f.muscle} /> : null}
@@ -43,7 +43,7 @@ export default async function LibraryPage(props: { searchParams: Promise<SP> }) 
         {f.level ? <input type="hidden" name="seviye" value={f.level} /> : null}
         <label htmlFor="lib-q" className="sr-only">Hareket ara</label>
         <input id="lib-q" name="q" defaultValue={f.q} placeholder="Ara: squat, göğüs, barfiks…" className="flex-1 h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink" />
-        <button type="submit" className="h-12 px-4 rounded-xl bg-lime text-lime-ink font-bold">Ara</button>
+        <button type="submit" className="h-12 px-4 rounded-xl bg-acc text-acc-ink font-bold">Ara</button>
       </form>
       <Chips title="Kas grubu" map={MUSCLES} cur={f.muscle} k="kas" order={MUSCLE_ORDER} />
       <Chips title="Ekipman" map={EQUIPMENT} cur={f.equipment} k="ekipman" />

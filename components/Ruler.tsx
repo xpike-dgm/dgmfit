@@ -99,13 +99,13 @@ export default function Ruler({ min, max, step, value, onChange, majorEvery, lab
         aria-valuemax={max}
         aria-valuenow={value}
         aria-valuetext={format(value)}
-        className="no-scrollbar overflow-x-auto rounded-[22px] bg-[#121410] h-[120px] outline-none focus-visible:ring-2 focus-visible:ring-lime"
+        className="no-scrollbar overflow-x-auto rounded-[22px] bg-surface h-[120px] outline-none focus-visible:ring-2 focus-visible:ring-acc"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div className="relative h-full" style={{ width: steps * PX + half * 2 }}>
           <div className="absolute inset-y-0" style={{ left: half, width: steps * PX + 2 }}>
             {band ? (
-              <div className="absolute inset-y-0 bg-lime/[0.08]"
+              <div className="absolute inset-y-0 bg-acc/[0.08]"
                 style={{ left: Math.max(0, toX(band[0])), width: Math.max(0, Math.min(toX(max), toX(band[1])) - Math.max(0, toX(band[0]))) }} />
             ) : null}
             <div className="absolute left-0 right-0 top-[22px]" style={{ height: 24, background: ticks, backgroundPosition: '-1px 0' }} />
@@ -116,9 +116,9 @@ export default function Ruler({ min, max, step, value, onChange, majorEvery, lab
           </div>
         </div>
       </div>
-      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-[10px] w-[3px] h-[64px] rounded bg-lime" aria-hidden />
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-14 rounded-l-[22px] bg-gradient-to-r from-[#121410] to-transparent" aria-hidden />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-14 rounded-r-[22px] bg-gradient-to-l from-[#121410] to-transparent" aria-hidden />
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-[10px] w-[3px] h-[64px] rounded bg-acc" aria-hidden />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-14 rounded-l-[22px] bg-gradient-to-r from-surface to-transparent" aria-hidden />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-14 rounded-r-[22px] bg-gradient-to-l from-surface to-transparent" aria-hidden />
     </div>
   )
 }

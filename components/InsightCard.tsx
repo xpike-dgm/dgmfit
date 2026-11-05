@@ -17,21 +17,21 @@ export default function InsightCard({ fallback, weeklyReady }: { fallback: strin
   }, [])
   const care = ins?.tone === 'care'
   return (
-    <section aria-label="Koç" data-testid="coach-card" className={`rounded-[28px] px-5 py-[18px] flex flex-col gap-3 border ${care ? 'bg-surface border-water/40' : 'bg-coach border-coach-line'}`}>
+    <section aria-label="Koç" data-testid="coach-card" className={`rounded-[24px] px-4 py-4 flex flex-col gap-3 border border-l-4 ${care ? "bg-surface border-water/40 border-l-water" : "bg-coach border-coach-line border-l-acc"}`}>
       <div className="flex items-center gap-2">
-        <Spark size={18} className={care ? 'text-water' : 'text-lime'} />
-        <span className={`text-[13px] font-bold tracking-[0.08em] uppercase ${care ? 'text-water' : 'text-lime'}`}>Koç</span>
+        <Spark size={18} className={care ? 'text-water' : 'text-acc'} />
+        <span className={`text-[13px] font-bold tracking-[0.08em] uppercase ${care ? 'text-water' : 'text-acc'}`}>Koç</span>
         {ins && !hidden && !care ? <button type="button" className="ml-auto text-[12px] text-mute font-semibold h-8 px-2" onClick={() => { setHidden(true); void dismissInsightAction(ins.id) }}>Kapat</button> : null}
       </div>
-      {ins === undefined ? <p className="text-[15px] leading-relaxed text-[#E4E8DC] opacity-70" aria-busy="true">{fallback}</p>
+      {ins === undefined ? <p className="text-[15px] leading-relaxed text-ink opacity-70" aria-busy="true">{fallback}</p>
         : ins && !hidden ? (
           <div className="flex flex-col gap-1" data-testid="insight" data-key={ins.key}>
             <span className="font-bold text-[15px]">{ins.title}</span>
-            <p className="text-[15px] leading-relaxed text-[#E4E8DC]">{ins.body}</p>
+            <p className="text-[15px] leading-relaxed text-ink">{ins.body}</p>
           </div>
-        ) : <p className="text-[15px] leading-relaxed text-[#E4E8DC]">{fallback}</p>}
+        ) : <p className="text-[15px] leading-relaxed text-ink">{fallback}</p>}
       <div className="flex flex-wrap gap-2">
-        <Link href={ins?.ask && !hidden ? `/koc?soru=${encodeURIComponent(ins.ask)}` : '/koc'} className="h-10 px-4 rounded-full bg-lime text-lime-ink font-bold text-[14px] inline-flex items-center">{ins?.ask && !hidden ? 'Koça sor' : 'Koçla konuş'}</Link>
+        <Link href={ins?.ask && !hidden ? `/koc?soru=${encodeURIComponent(ins.ask)}` : '/koc'} className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center">{ins?.ask && !hidden ? 'Koça sor' : 'Koçla konuş'}</Link>
         {weeklyReady ? <Link href="/rapor" className="h-10 px-4 rounded-full border border-coach-line text-ink font-bold text-[14px] inline-flex items-center" data-testid="weekly-link">Haftalık rapor</Link> : null}
       </div>
     </section>

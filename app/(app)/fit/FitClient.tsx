@@ -23,7 +23,7 @@ function useAct() {
 
 function Msg({ m }: { m: { ok: boolean; text: string } | null }) {
   if (!m) return null
-  return <p role="status" className={`text-[13px] leading-relaxed ${m.ok ? 'text-lime' : 'text-danger'}`}>{m.text}</p>
+  return <p role="status" className={`text-[13px] leading-relaxed ${m.ok ? 'text-acc' : 'text-danger'}`}>{m.text}</p>
 }
 
 const KIND_TEXT: Record<string, string> = {
@@ -105,7 +105,7 @@ export function BankForm({ days }: { days: { day: string; label: string }[] }) {
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-semibold" htmlFor="bank-extra">
         <span className="flex justify-between">Ekstra kalori <b className="num">{fmt(extra)} kcal</b></span>
-        <input id="bank-extra" type="range" min={100} max={1500} step={50} value={extra} onChange={(e) => setExtra(Number(e.target.value))} className="accent-[var(--color-lime)] h-8" />
+        <input id="bank-extra" type="range" min={100} max={1500} step={50} value={extra} onChange={(e) => setExtra(Number(e.target.value))} className=" h-8" />
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-semibold" htmlFor="bank-note">Not (isteğe bağlı)
         <input id="bank-note" value={note} onChange={(e) => setNote(e.target.value.slice(0, 40))} placeholder="Ör. düğün" className="h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink font-normal" />
@@ -163,7 +163,7 @@ export function WeighIn({ last }: { last: number }) {
           className="flex-1 h-12 rounded-xl bg-surface-2 border border-line px-3 num text-lg text-ink" />
         <button type="submit" className={`${btn.primary} h-12 text-[15px] px-5`} disabled={pending}>Kaydet</button>
       </div>
-      {err ? <p role="alert" className="text-[13px] text-danger">{err}</p> : done ? <p role="status" className="text-[13px] text-lime">Tartı kaydedildi.</p> : <span className="text-[12px] text-mute">Sabah, tuvaletten sonra ve kahvaltıdan önce tartılmak en tutarlı sonucu verir.</span>}
+      {err ? <p role="alert" className="text-[13px] text-danger">{err}</p> : done ? <p role="status" className="text-[13px] text-acc">Tartı kaydedildi.</p> : <span className="text-[12px] text-mute">Sabah, tuvaletten sonra ve kahvaltıdan önce tartılmak en tutarlı sonucu verir.</span>}
     </form>
   )
 }

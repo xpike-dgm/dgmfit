@@ -1,30 +1,28 @@
 import type { Metadata } from 'next'
-import { headers } from 'next/headers'
-import { eq } from 'drizzle-orm'
-import QRCode from 'qrcode'
 import { requireUser } from '@/lib/auth'
-import { db, schema } from '@/lib/db'
-import { itemsOf, socialProfile, NOTIFY_KINDS } from '@/lib/social-data'
-import { mediaEnabled } from '@/lib/media'
-import { TopBar } from '@/components/ui'
-import SocialSettings from './SocialSettings'
+import { ITEMS } from '@/lib/social'
+import { Menu, TopBar } from '@/components/ui'
+import { socialSettingsData } from './data'
 
 export const metadata: Metadata = { title: 'Sosyal ayarlar · DgFit' }
+const VIS: Record<string, string> = { public: 'Herkese açık', friends: 'Yalnızca arkadaşlar', private: 'Gizli' }
 
 export default async function Page() {
   const u = await requireUser()
-  const sp = await socialProfile(u.id)
-  const h = await headers()
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'dgfit.dgmcraft.online'
-  const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https')
-  const invite = `${proto}://${host}/u/${encodeURIComponent(u.username)}?davet=1`
-  const qr = await QRCode.toString(invite, { type: 'svg', margin: 1, width: 180, color: { dark: '#11130F', light: '#FFFFFF' } })
-  const recs = await db.select({ id: schema.exercises.id, name: schema.exercises.nameTr }).from(schema.exerciseRecords).innerJoin(schema.exercises, eq(schema.exercises.id, schema.exerciseRecords.exerciseId)).where(eq(schema.exerciseRecords.userId, u.id))
+  const { props } = await socialSettingsData(u)
+  const open = ITEMS.filter((it) => props.initial.items[it] !== 'none').length
+  const notifOff = props.notifyKinds.filter(([k]) => props.initial.notify[k] === false).length
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3">
-      <TopBar back={`/u/${u.username}`} title="Profil ve gizlilik" />
-      <SocialSettings mediaOn={mediaEnabled()} invite={invite} qr={qr} exercises={recs} notifyKinds={Object.entries(NOTIFY_KINDS)}
-        initial={{ bio: sp.bio ?? '', gym: sp.gym ?? '', visibility: sp.visibility, items: itemsOf(sp), showGoal: sp.showGoal, showcase: sp.showcase, notify: sp.notify as Record<string, boolean>, avatar: sp.avatarId ? `/api/media/${sp.avatarId}` : null }} />
+    <div className="px-4 flex flex-col gap-3">
+      <TopBar back={`/u/${u.username}`} title="Sosyal profil ve gizlilik" sub="Varsayılan olarak her şey özel" />
+      <Menu items={[
+        { href: '/sosyal/ayarlar/profil', label: 'Profil bilgileri', value: 'Fotoğraf, biyografi, salon' },
+        { href: '/sosyal/ayarlar/gizlilik', label: 'Gizlilik', value: VIS[props.initial.visibility] ?? props.initial.visibility },
+        { href: '/sosyal/ayarlar/gorunenler', label: 'Profilde görünenler', value: `${open} / ${ITEMS.length} açık` },
+        { href: '/sosyal/ayarlar/bildirimler', label: 'Sosyal bildirimler', value: notifOff ? `${notifOff} kapalı` : 'Hepsi açık' },
+        { href: '/sosyal/ayarlar/davet', label: 'Davet linki ve QR' },
+      ]} />
+      <p className="text-[12px] text-mute px-1">Kilo ve vücut verileri hiçbir ayarda gösterilmez.</p>
     </div>
   )
 }

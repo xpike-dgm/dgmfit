@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Manrope, Space_Grotesk } from 'next/font/google'
+import { cookies } from 'next/headers'
 import SwRegister from '@/components/SwRegister'
+import { THEME_COOKIE, parseTheme } from '@/lib/theme'
 import './globals.css'
 
 const manrope = Manrope({ subsets: ['latin', 'latin-ext'], variable: '--font-manrope', display: 'swap' })
@@ -20,17 +22,22 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0B0C0A',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F3F4F6' },
+    { media: '(prefers-color-scheme: dark)', color: '#14161B' },
+  ],
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  colorScheme: 'dark',
+  colorScheme: 'light dark',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Tema çerezi sunucuda okunur: ilk çizim doğru temayla gelir (otomatikte CSS sistem ayarını izler).
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
   return (
-    <html lang="tr" className={`${manrope.variable} ${grotesk.variable}`}>
-      <body>
+    <html lang="tr" className={`${manrope.variable} ${grotesk.variable}`} data-theme={theme === 'auto' ? undefined : theme}>
+      <body data-mod="today">
         {children}
         <SwRegister />
       </body>

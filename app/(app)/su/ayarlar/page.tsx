@@ -1,43 +1,28 @@
 import type { Metadata } from 'next'
-import { and, asc, eq, isNull } from 'drizzle-orm'
 import { requireUser } from '@/lib/auth'
-import { db, schema } from '@/lib/db'
-import { ensureWaterSetup, goalHistory } from '@/lib/water-data'
-import { DEFAULT_BUTTONS, sipMl } from '@/lib/water'
-import { waterTarget } from '@/lib/calc'
-import { TopBar } from '@/components/ui'
-import SettingsForm from './SettingsForm'
-import PushSettings from './PushSettings'
+import { fmtNum } from '@/lib/calc'
+import { Menu, TopBar } from '@/components/ui'
 import FoodWaterToggle from './FoodWaterToggle'
+import { waterSettingsData } from './data'
 
 export const metadata: Metadata = { title: 'Su ayarları' }
+const STYLE: Record<string, string> = { ring: 'Halka', bottle: 'Şişe', wave: 'Dalga' }
 
 export default async function Page() {
   const u = await requireUser()
-  await ensureWaterSetup(u.id)
-  const [[settings], containers, history, [profile]] = await Promise.all([
-    db.select().from(schema.waterSettings).where(eq(schema.waterSettings.userId, u.id)).limit(1),
-    db.select().from(schema.waterContainers).where(and(eq(schema.waterContainers.userId, u.id), isNull(schema.waterContainers.archivedAt))).orderBy(asc(schema.waterContainers.sort), asc(schema.waterContainers.createdAt)),
-    goalHistory(u.id),
-    db.select({ weightKg: schema.profiles.weightKg }).from(schema.profiles).where(eq(schema.profiles.userId, u.id)).limit(1),
-  ])
-  const last = history.at(-1)
+  const { settings, form } = await waterSettingsData(u.id)
+  const special = form.goal.weekday.filter((x) => x).length
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3">
-      <TopBar back="/su" title="Su ayarları" />
-      <div className="mt-2">
-        <PushSettings enabled={settings?.remindersEnabled ?? false} summaryEnabled={settings?.summaryEnabled ?? true} maxPerDay={settings?.maxPerDay ?? 8} quiet={settings?.quiet ?? []} />
-      </div>
+    <div className="px-4 flex flex-col gap-3">
+      <TopBar back="/su" title="Su ayarları" sub="Her satır kendi sayfasını açar" />
+      <Menu items={[
+        { href: '/su/ayarlar/hedef', label: 'Günlük hedef ve haftanın günleri', value: `${fmtNum(form.goal.baseMl)} ml${special ? ` · ${special} özel gün` : ''}` },
+        { href: '/su/ayarlar/kaplar', label: 'Kaplar', value: `${form.containers.length} kap` },
+        { href: '/su/ayarlar/butonlar', label: 'Hızlı butonlar ve yudum', value: `${form.buttons.length} buton · yudum ${form.sip.ml} ml` },
+        { href: '/su/ayarlar/hatirlatma', label: 'Hatırlatmalar ve sessiz saatler', value: settings?.remindersEnabled ? 'Açık' : 'Kapalı' },
+        { href: '/su/ayarlar/gorunum', label: 'Görünüm ve geri bildirim', value: STYLE[form.progressStyle] ?? form.progressStyle },
+      ]} />
       <FoodWaterToggle on={settings?.foodWater ?? false} />
-      <SettingsForm
-        goal={{ baseMl: last?.baseMl ?? 2500, weekday: last?.weekday ?? [null, null, null, null, null, null, null] }}
-        suggested={profile ? waterTarget(profile.weightKg) : 2500}
-        buttons={settings?.buttons?.length ? settings.buttons : DEFAULT_BUTTONS}
-        containers={containers.map((c) => ({ id: c.id, name: c.name, kind: c.kind, capacityMl: c.capacityMl, isDefault: c.isDefault }))}
-        sip={{ ml: sipMl(settings?.sipMl), calibrated: !!settings?.sipMl }}
-        progressStyle={settings?.progressStyle ?? 'bottle'}
-        feedback={settings?.feedback ?? true}
-      />
     </div>
   )
 }

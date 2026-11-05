@@ -40,10 +40,10 @@ export default function PantryClient({ aiOn, meal }: { aiOn: boolean; meal: Meal
               <ul className="text-[13px] flex flex-col">{r.ingredients.map((x, k) => <li key={k} className="flex justify-between"><span className={x.foodId ? '' : 'text-mute'}>{x.name} · {fmtNum(x.grams)} g</span><span className="num">{x.kcal === null ? 'eşleşme yok' : `${fmtNum(x.kcal)} kcal`}</span></li>)}</ul>
               <ol className="list-decimal pl-5 text-[13px] text-ink-2 flex flex-col gap-0.5">{r.steps.map((s, k) => <li key={k}>{s}</li>)}</ol>
               <p className="text-[14px]">1 porsiyon <b className="num">{fmtNum(r.perServing)} kcal</b> · senin için önerilen <b className="num" data-testid="portion-kcal">{fmtNum(r.portion.kcal)} kcal</b>{r.portion.factor !== 1 ? ` (porsiyonun ${fmtNum(r.portion.factor, 2)} katı)` : ''}</p>
-              {added[i] ? <p role="status" className="text-[13px] text-lime">{added[i]}</p> : r.portion.grams.length ? (
+              {added[i] ? <p role="status" className="text-[13px] text-acc">{added[i]}</p> : r.portion.grams.length ? (
                 <div className="flex gap-2 items-center">
                   <select aria-label="Öğün" value={m} onChange={(e) => setM(e.target.value as MealId)} className="h-10 rounded-full bg-surface-2 border border-line px-3 text-[13px]">{(Object.keys(MEAL_LABEL) as MealId[]).map((k) => <option key={k} value={k}>{MEAL_LABEL[k]}</option>)}</select>
-                  <button type="button" className="h-10 px-4 rounded-full bg-lime text-lime-ink font-bold text-[13px]" onClick={async () => {
+                  <button type="button" className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[13px]" onClick={async () => {
                     const a = await addPortionAction({ meal: m, items: r.portion.grams.map((x) => ({ foodId: x.foodId, grams: x.grams })) })
                     setAdded({ ...added, [i]: a.ok ? `${MEAL_LABEL[m]} öğününe eklendi · ${fmtNum(a.kcal)} kcal` : a.error }); router.refresh()
                   }}>Porsiyonu günlüğe ekle</button>

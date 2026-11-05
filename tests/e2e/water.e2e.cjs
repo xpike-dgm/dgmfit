@@ -43,7 +43,7 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   // 1) Su ekranı boş
   await p.goto(BASE + '/su')
   await expectTotal(0, 'başlangıç')
-  if (!(await p.getByText('/ 2.600 ml').count())) fail('hedef 2.600 ml görünmüyor (78,4 kg × 33)')
+  if (!(await p.getByText('2.600 ml', { exact: true }).count())) fail('hedef 2.600 ml görünmüyor (78,4 kg × 33)')
 
   // 2) Tek dokunuş + geri al
   await p.getByRole('button', { name: /^250 ml ekle/ }).click()
@@ -131,15 +131,19 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await p.goto(BASE + '/su'); await expectTotal(1300, 'bugün değişmedi')
 
   // 12) Ayarlar: hedef 3000 → su ekranında görünür
-  await p.goto(BASE + '/su/ayarlar')
+  // Su ekranındaki "Düzenle" doğrudan kaplar sayfasını açar
+  await p.goto(BASE + '/su'); await p.getByRole('link', { name: 'Düzenle', exact: true }).click(); await p.waitForURL('**/su/ayarlar/kaplar')
+  await p.getByRole('heading', { name: 'Kapların' }).waitFor()
+  await p.goto(BASE + '/su/ayarlar'); await p.getByRole('link', { name: /Günlük hedef ve haftanın günleri/ }).click(); await p.waitForURL('**/su/ayarlar/hedef')
   await p.fill('#base', '3000')
   await p.getByRole('button', { name: 'Hedefi kaydet' }).click()
   await p.getByText('Kaydedildi').first().waitFor()
+  await p.goto(BASE + '/su/ayarlar/butonlar')
   await p.fill('#s-vol', '200'); await p.fill('#s-n', '10')
   await p.getByRole('button', { name: 'Kalibre et' }).click()
   await p.getByText('Yudum hacmin 20 ml').waitFor()
   await p.goto(BASE + '/su')
-  if (!(await p.getByText('/ 3.000 ml').count())) fail('yeni hedef 3.000 ml görünmüyor')
+  if (!(await p.getByText('3.000 ml', { exact: true }).count())) fail('yeni hedef 3.000 ml görünmüyor')
 
   // 13) İstatistik ve Bugün ekranı
   await p.goto(BASE + '/su/istatistik'); await p.getByText('Günlük ortalama').waitFor()

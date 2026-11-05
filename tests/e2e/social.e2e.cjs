@@ -66,16 +66,22 @@ function fake(port, handler) {
 
   // 1) A: rekorlar + profil (biyografi, salon, avatar, PR/istatistik arkadaşlara, vitrin)
   await post(pa, '/api/test/social', { records: [{ key: 'Barbell_Squat', kg: 120 }, { key: 'Barbell_Bench_Press_-_Medium_Grip', kg: 90 }] })
-  await pa.goto(BASE + '/sosyal/ayarlar')
+  // ayarlar menüsü: her satır kendi sayfasını açar
+  await pa.goto(BASE + '/sosyal/ayarlar'); await pa.getByRole('link', { name: /Profil bilgileri/ }).click(); await pa.waitForURL('**/sosyal/ayarlar/profil')
   await pa.fill('#sp-bio', 'Bench sever, sabah sporcusu'); await pa.fill('#sp-gym', 'Salon ' + ts)
+  await pa.getByTestId('avatar-input').setInputFiles({ name: 'a.png', mimeType: 'image/png', buffer: png() }); await pa.waitForTimeout(1200)
+  await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pa.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
+  await pa.goto(BASE + '/sosyal/ayarlar/gorunenler')
   await pa.getByLabel('PR vitrini', { exact: true }).selectOption('friends'); await pa.getByLabel('İstatistik kartları').selectOption('friends')
   await pa.getByRole('button', { name: 'Squat (barbell)' }).click()
-  await pa.getByTestId('avatar-input').setInputFiles({ name: 'a.png', mimeType: 'image/png', buffer: png() }); await pa.waitForTimeout(1200)
+  await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pa.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
+  // ayrı sayfada kaydetmek diğer sayfanın verisini bozmaz
+  await pa.goto(BASE + '/sosyal/ayarlar/profil'); if ((await pa.inputValue('#sp-bio')) !== 'Bench sever, sabah sporcusu') fail('biyografi kayboldu')
+  await pa.goto(BASE + '/sosyal/ayarlar/davet')
   await pa.getByTestId('invite-link').getByText(`/u/${A}?davet=1`).waitFor().catch(() => fail('davet linki yok'))
   await pa.getByRole('img', { name: 'Davet QR kodu' }).locator('svg').waitFor().catch(() => fail('QR yok'))
-  await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pa.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
   // C gizli profil
-  await pc.goto(BASE + '/sosyal/ayarlar'); await pc.getByRole('radio', { name: /Gizli/ }).check(); await pc.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pc.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
+  await pc.goto(BASE + '/sosyal/ayarlar/gizlilik'); await pc.getByRole('radio', { name: /Gizli/ }).check(); await pc.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pc.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
 
   // 2) Arama: B, A'yı bulur; C (gizli) bulunmaz
   await pb.goto(`${BASE}/sosyal/ara?q=${C}`)
@@ -148,7 +154,7 @@ function fake(port, handler) {
   await pb.goto(`${BASE}/sosyal/p/${selPost}`); await pb.getByText('Yalnızca seçilenlere').waitFor().catch(() => fail('seçilen kişi göremedi'))
 
   // 9) Herkese açık profil + takip: C takip eder, yalnızca herkese açık gönderiyi görür
-  await pa.goto(BASE + '/sosyal/ayarlar'); await pa.getByRole('radio', { name: /Herkese açık/ }).check(); await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pa.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
+  await pa.goto(BASE + '/sosyal/ayarlar/gizlilik'); await pa.getByRole('radio', { name: /Herkese açık/ }).check(); await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pa.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
   await pa.goto(BASE + '/sosyal/yeni'); await pa.fill('#post-body', 'Herkese açık gönderi ' + ts)
   await pa.locator('fieldset').getByRole('button', { name: 'Herkese açık' }).click(); await pa.getByRole('button', { name: 'Paylaş', exact: true }).click(); await pa.waitForURL(/\/sosyal\/p\//)
   const pubPost = pa.url().split('/').pop()

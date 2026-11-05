@@ -14,7 +14,7 @@ export default async function Page(props: { searchParams: Promise<{ tur?: string
   const sp = await props.searchParams
   const [src, photos] = await Promise.all([shareSources(u.id), listProgressPhotos(u.id)])
   return (
-    <div className="px-4 pt-5 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/sosyal" title="Paylaş" />
       <Composer initialKind={KINDS.includes(sp.tur ?? '') ? sp.tur! : 'text'} initialRef={sp.ref?.slice(0, 80) ?? null} today={dayString()} mediaOn={mediaEnabled()}
         workouts={src.workouts.map((w) => ({ id: w.id, label: `${w.name} · ${w.day}` }))} prs={src.prs.map((p) => ({ id: String(p.id), label: `${p.name} · ${p.label} ${p.value}` }))}

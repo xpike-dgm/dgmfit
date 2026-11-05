@@ -27,7 +27,7 @@ export default function Comments({ postId, comments }: { postId: string; comment
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (!text.trim()) return; start(async () => { const r = await commentAction(postId, text); if (!r.ok) { setMsg(r.error); return } setText(''); setMsg(r.pending ? 'Yorumun incelemeye alındı.' : null); router.refresh() }) }}>
         <label htmlFor="comment-input" className="sr-only">Yorum yaz</label>
         <input id="comment-input" maxLength={500} value={text} onChange={(e) => setText(e.target.value)} placeholder="Yorum yaz…" className="flex-1 h-11 rounded-full bg-surface-2 border border-line px-4" />
-        <button type="submit" disabled={pending || !text.trim()} className="h-11 px-4 rounded-full bg-lime text-lime-ink font-bold disabled:opacity-40">Gönder</button>
+        <button type="submit" disabled={pending || !text.trim()} className="h-11 px-4 rounded-full bg-acc text-acc-ink font-bold disabled:opacity-40">Gönder</button>
       </form>
       {msg ? <p role="status" className="text-[13px] text-ink-2">{msg}</p> : null}
     </section>

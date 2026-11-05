@@ -27,7 +27,7 @@ export default function ProgramEditor({ program }: { program: { id: string; name
     <>
       <section className="card p-5 flex flex-col gap-2">
         <h1 className="text-[22px] font-extrabold leading-tight">{program.name}</h1>
-        {program.active ? <span className="text-[13px] text-lime">Aktif program · sıradaki gün: {program.days[next]?.name}</span>
+        {program.active ? <span className="text-[13px] text-acc">Aktif program · sıradaki gün: {program.days[next]?.name}</span>
           : <button type="button" className={btn.secondary} disabled={pending} onClick={() => go(() => setActiveProgramAction(program.id))}>Aktif program yap</button>}
         {program.notes.map((n) => <p key={n} className="text-[12px] text-mute">{n}</p>)}
       </section>
@@ -36,7 +36,7 @@ export default function ProgramEditor({ program }: { program: { id: string; name
         <section key={d.id} aria-label={d.name} className="card p-5 flex flex-col gap-2" data-testid="program-day">
           <div className="flex justify-between items-center gap-2">
             <span className="flex flex-col"><span className="font-extrabold">{d.name}</span>{d.focus ? <span className="text-[12px] text-mute">{d.focus}</span> : null}</span>
-            {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-9 px-3 rounded-full bg-lime text-lime-ink text-[13px] font-bold flex items-center gap-1.5"><Dumbbell size={15} />{di === next && program.active ? 'Başla' : 'Bu günü yap'}</Link> : null}
+            {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[13px] font-bold flex items-center gap-1.5"><Dumbbell size={15} />{di === next && program.active ? 'Başla' : 'Bu günü yap'}</Link> : null}
           </div>
           {d.exercises.map((e) => (
             <button key={e.id} type="button" onClick={() => setEdit(e)} className="flex justify-between items-center min-h-[48px] text-left border-b border-line last:border-0">
@@ -132,13 +132,13 @@ function PeriodSettings({ program, pending, go }: { program: { id: string; perio
       <div className="flex justify-between items-center"><Eyebrow>Periyodizasyon</Eyebrow><span className="text-[12px] text-mute">{week + 1}. hafta{isDeloadWeek(week, program.deloadEvery) ? ' · deload' : ''}</span></div>
       <div className="flex flex-col gap-1.5">
         {(Object.keys(PERIODIZATION) as Periodization[]).map((k) => (
-          <button key={k} type="button" aria-pressed={p === k} onClick={() => setP(k)} className={`text-left rounded-2xl px-4 py-2.5 ${p === k ? 'bg-surface-3 border border-lime' : 'bg-surface-2 border border-transparent'}`}>
+          <button key={k} type="button" aria-pressed={p === k} onClick={() => setP(k)} className={`text-left rounded-2xl px-4 py-2.5 ${p === k ? 'bg-surface-3 border border-acc' : 'bg-surface-2 border border-transparent'}`}>
             <span className="font-bold text-[14px]">{PERIODIZATION[k].label}</span><br /><span className="text-[12px] text-mute">{PERIODIZATION[k].hint}</span>
           </button>
         ))}
       </div>
       <fieldset className="flex gap-1.5"><legend className="text-sm font-semibold mb-1.5">Deload haftası</legend>
-        {[0, 4, 5, 6, 8].map((n) => <button key={n} type="button" aria-pressed={every === n} onClick={() => setEvery(n)} className={`flex-1 h-10 rounded-xl text-[13px] font-bold ${every === n ? 'bg-lime text-lime-ink' : 'bg-surface-2'}`}>{n ? `${n}. hafta` : 'Yok'}</button>)}
+        {[0, 4, 5, 6, 8].map((n) => <button key={n} type="button" aria-pressed={every === n} onClick={() => setEvery(n)} className={`flex-1 h-10 rounded-xl text-[13px] font-bold ${every === n ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{n ? `${n}. hafta` : 'Yok'}</button>)}
       </fieldset>
       <p className="text-[11px] text-mute">Deload haftasında set sayısı yarıya iner, RIR 2 artar, önerilen ağırlık %90 olur. GZCLP hareketleri kendi kademeleriyle ilerler.</p>
       {changed ? <button type="button" className={btn.primary} disabled={pending} onClick={() => go(() => updateProgramSettingsAction(program.id, { periodization: p, deloadEvery: every }))}>Kaydet</button> : null}

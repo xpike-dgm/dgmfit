@@ -31,7 +31,7 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
   const hMax = Math.max(50, ...s.hourlyAvg)
 
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3">
       <TopBar back="/su" title="Su istatistikleri" />
 
       <nav aria-label="Zaman aralığı" className="grid grid-cols-4 gap-1.5 p-1 rounded-full bg-surface mt-2">
@@ -64,7 +64,7 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
           <div className="absolute inset-0 grid items-end gap-[3px]" style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}>
             {bars.map((b) => (
               <div key={b.key} title={`${b.key}: ${b.v} ml`} className="rounded-t-[5px] rounded-b-[2px]"
-                style={{ height: `${Math.max(2, (b.v / max) * 100)}%`, background: b.v >= b.goal ? 'var(--color-water)' : b.today ? 'rgba(108,199,255,0.45)' : '#2F5A78' }} />
+                style={{ height: `${Math.max(2, (b.v / max) * 100)}%`, background: b.v >= b.goal ? 'var(--color-water)' : b.today ? 'color-mix(in oklab, var(--color-water) 45%, transparent)' : 'color-mix(in oklab, var(--color-water) 25%, var(--color-surface-2))' }} />
             ))}
           </div>
         </div>
@@ -82,14 +82,14 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
       {ins.insights.length ? (
         <section aria-label="Koç analizi" className="flex flex-col gap-2">
           {ins.insights.map((x) => (
-            <div key={x.id} className={`rounded-[24px] p-4 flex gap-3 border ${x.tone === 'warn' ? 'bg-[#22190F] border-[#4A3417]' : x.tone === 'good' ? 'bg-coach border-coach-line' : 'bg-water-bg border-[#24323D]'}`}>
-              <Spark size={18} className={`shrink-0 mt-0.5 ${x.tone === 'warn' ? 'text-orange' : x.tone === 'good' ? 'text-lime' : 'text-water'}`} />
-              <p className="text-sm leading-relaxed text-[#E4E8DC]">{x.text}</p>
+            <div key={x.id} className={`rounded-[24px] p-4 flex gap-3 border ${x.tone === 'warn' ? 'bg-warn-bg border-warn-line' : x.tone === 'good' ? 'bg-coach border-coach-line' : 'bg-water-bg border-water-line'}`}>
+              <Spark size={18} className={`shrink-0 mt-0.5 ${x.tone === 'warn' ? 'text-orange' : x.tone === 'good' ? 'text-acc' : 'text-water'}`} />
+              <p className="text-sm leading-relaxed text-ink">{x.text}</p>
             </div>
           ))}
         </section>
       ) : (
-        <section aria-label="Koç analizi" className="rounded-[24px] p-4 flex gap-3 bg-water-bg border border-[#24323D]">
+        <section aria-label="Koç analizi" className="rounded-[24px] p-4 flex gap-3 bg-water-bg border border-water-line">
           <Spark size={18} className="text-water shrink-0 mt-0.5" />
           <p className="text-sm leading-relaxed text-ink-2">Kişisel analizler için birkaç günlük kayıt gerekiyor. 5 gün düzenli kayıttan sonra en çok unuttuğun saatleri ve gelişimini burada göreceksin.</p>
         </section>
@@ -128,7 +128,7 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
             return (
               <Link key={d} href={d === today ? '/su' : `/su?gun=${d}`} aria-label={`${d}: ${v.total} ml`}
                 className="aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5"
-                style={{ background: v.total ? `rgba(108,199,255,${0.12 + f * 0.6})` : 'var(--color-surface-2)', outline: d === today ? '2px solid var(--color-lime)' : undefined }}>
+                style={{ background: v.total ? `color-mix(in oklab, var(--color-water) ${Math.round((0.12 + f * 0.6) * 100)}%, transparent)` : 'var(--color-surface-2)', outline: d === today ? '2px solid var(--color-acc)' : undefined }}>
                 <span className={`num text-[13px] font-bold ${f >= 0.6 ? 'text-water-ink' : 'text-ink'}`}>{Number(d.slice(8))}</span>
                 {v.total ? <span className={`num text-[9px] ${f >= 0.6 ? 'text-water-ink' : 'text-ink-2'}`}>{fmtNum(v.total / 1000, 1)}</span> : null}
               </Link>
@@ -159,7 +159,7 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
         <ul className="grid grid-cols-2 gap-2">
           {ins.badges.map((b) => (
             <li key={b.id} className={`rounded-2xl p-3 flex flex-col gap-0.5 border ${b.earnedDay ? 'bg-coach border-coach-line' : 'bg-surface-2 border-transparent opacity-60'}`}>
-              <span className={`text-sm font-extrabold ${b.earnedDay ? 'text-lime' : 'text-ink-2'}`}>{b.title}</span>
+              <span className={`text-sm font-extrabold ${b.earnedDay ? 'text-acc' : 'text-ink-2'}`}>{b.title}</span>
               <span className="text-xs text-mute leading-snug">{b.desc}</span>
               <span className="text-[11px] text-ink-2 mt-1">{b.earnedDay ? `Kazanıldı · ${shortDay(b.earnedDay)}` : 'Henüz kazanılmadı'}</span>
             </li>

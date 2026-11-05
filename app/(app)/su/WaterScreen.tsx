@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Sheet from '@/components/Sheet'
-import { btn, Ring } from '@/components/ui'
+import { Band, btn, hdrIcon } from '@/components/ui'
 import { Back, Bottle, Chart, Check, Clock, Cup, Drop, Flame, Gear, Glass, Merge, Mic, Next, Thermos, Trash, Trend } from '@/components/icons'
 import { parseWaterSpeech } from '@/lib/water-speech'
 import { fmtNum } from '@/lib/calc'
@@ -100,44 +100,21 @@ export default function WaterScreen({ data }: { data: Data }) {
   const maxPast = shiftDay(todayStr(), -365)
 
   return (
-    <div className="px-4 pt-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between px-1">
-        <Link href="/" aria-label="Bugün ekranına dön" className={btn.icon}><Back size={20} /></Link>
-        <div className="flex items-center gap-1">
-          {data.day > maxPast ? <Link href={`/su?gun=${prev}`} aria-label="Önceki gün" className="w-11 h-11 flex items-center justify-center text-mute"><Back size={18} /></Link> : <span className="w-11" />}
-          <div className="flex flex-col items-center min-w-[120px]">
-            <span className="text-lg font-extrabold">{data.isToday ? 'Su' : dayLabel(data.day)}</span>
-            <span className="text-[13px] text-mute flex items-center gap-1">
-              <Flame size={13} className="text-orange" /> Seri {data.streak.current} gün · {data.streak.freezesLeft} dondurma
-              {data.isToday && data.streak.current >= 2 ? <Link href="/sosyal/yeni?tur=streak" className="text-lime font-bold ml-1">Paylaş</Link> : null}
-            </span>
-          </div>
-          {!data.isToday ? <Link href={next >= todayStr() ? '/su' : `/su?gun=${next}`} aria-label="Sonraki gün" className="w-11 h-11 flex items-center justify-center text-mute"><Next size={18} /></Link> : <span className="w-11" />}
+    <div className="px-4 flex flex-col gap-3">
+      <Band
+        title={data.isToday ? 'Su' : dayLabel(data.day)}
+        sub={<>{data.isToday ? (ahead >= 0 ? `Tempondasın · ${fmtNum(ahead)} ml öndesin` : `${fmtNum(-ahead)} ml gerideysin`) : 'Geçmiş gün'} · seri {data.streak.current} gün</>}
+        right={<Link href="/su/ayarlar" aria-label="Su ayarları" className={hdrIcon}><Gear size={20} /></Link>}
+        visual={data.progressStyle === 'ring' ? undefined : <Progress style={data.progressStyle} frac={frac} idealFrac={data.goal ? ideal / data.goal : 0} pop={pop} total={total} />}
+        ring={{ value: Math.min(1, frac), big: <span aria-live="polite">{fmtNum(total)}</span>, small: `ml · %${Math.round(frac * 100)}`, label: `Hedefin yüzde ${Math.round(frac * 100)}'i` }}
+        pills={[['Hedef', `${fmtNum(data.goal)} ml`], ['Kalan', left ? `${fmtNum(left)} ml` : 'Tamamlandı'], [data.isToday ? `İdeal · ${fmtHm(data.nowMin)}` : 'Dondurma', data.isToday ? `${fmtNum(ideal)} ml` : `${data.streak.freezesLeft} hak`]]}
+      >
+        <div className="flex items-center justify-between mt-3 -mx-1 text-[13px] font-bold">
+          {data.day > maxPast ? <Link href={`/su?gun=${prev}`} aria-label="Önceki gün" className="h-9 px-2 inline-flex items-center gap-1 rounded-full opacity-90"><Back size={16} />Önceki gün</Link> : <span />}
+          {data.isToday && data.streak.current >= 2 ? <Link href="/sosyal/yeni?tur=streak" className="h-9 px-3 inline-flex items-center gap-1 rounded-full bg-white/20"><Flame size={14} />Seriyi paylaş</Link> : <span className="opacity-85">{data.streak.freezesLeft} dondurma hakkı</span>}
+          {!data.isToday ? <Link href={next >= todayStr() ? '/su' : `/su?gun=${next}`} aria-label="Sonraki gün" className="h-9 px-2 inline-flex items-center gap-1 rounded-full opacity-90">Sonraki gün<Next size={16} /></Link> : <span className="w-[86px]" />}
         </div>
-        <Link href="/su/ayarlar" aria-label="Su ayarları" className={btn.icon}><Gear size={20} /></Link>
-      </div>
-
-      <section aria-label="Günlük ilerleme" className="rounded-[32px] p-5 flex gap-5 items-center bg-water-bg">
-        <Progress style={data.progressStyle} frac={frac} idealFrac={data.goal ? ideal / data.goal : 0} pop={pop} total={total} />
-        <div className="flex flex-col gap-2.5 flex-1 min-w-0">
-          <div className="flex flex-col">
-            <span className="num text-[40px] font-bold tracking-[-0.03em] leading-none" aria-live="polite">{fmtNum(total)}</span>
-            <span className="text-sm text-mute">/ {fmtNum(data.goal)} ml · %{Math.round(frac * 100)}</span>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-mute">Hedefe kalan</span>
-            <span className="num text-xl font-bold text-water">{left ? `${fmtNum(left)} ml` : 'Tamamlandı'}</span>
-          </div>
-          {data.isToday ? (
-            <div className="flex flex-col gap-1 pt-2 border-t border-[#1E2A33]">
-              <span className="text-[13px] text-ink-2">Saat {fmtHm(data.nowMin)} · ideal {fmtNum(ideal)} ml</span>
-              <span className="text-[13px] font-extrabold" style={{ color: ahead >= 0 ? 'var(--color-lime)' : 'var(--color-orange)' }}>
-                {ahead >= 0 ? `${fmtNum(ahead)} ml öndesin` : `${fmtNum(-ahead)} ml gerideysin`}
-              </span>
-            </div>
-          ) : null}
-        </div>
-      </section>
+      </Band>
 
       {data.prediction ? <PredictionCard p={data.prediction} goal={data.goal} total={total} /> : null}
 
@@ -179,13 +156,13 @@ export default function WaterScreen({ data }: { data: Data }) {
       ) : null}
 
       <div className="grid grid-cols-3 gap-2">
-        <button type="button" onClick={() => setSheet('voice')} className="h-[52px] rounded-[18px] bg-water-bg border border-[#24323D] font-bold text-sm flex items-center justify-center gap-2">
+        <button type="button" onClick={() => setSheet('voice')} className="h-[52px] rounded-[18px] bg-water-bg border border-water-line font-bold text-sm flex items-center justify-center gap-2">
           <Mic size={18} className="text-water" /> Söyle
         </button>
-        <button type="button" onClick={() => setSheet('sip')} className="h-[52px] rounded-[18px] bg-water-bg border border-[#24323D] font-bold text-sm flex items-center justify-center gap-2">
+        <button type="button" onClick={() => setSheet('sip')} className="h-[52px] rounded-[18px] bg-water-bg border border-water-line font-bold text-sm flex items-center justify-center gap-2">
           <Drop size={18} className="text-water" /> Yudum
         </button>
-        <button type="button" onClick={() => setSheet('custom')} className="h-[52px] rounded-[18px] bg-water-bg border border-[#24323D] font-bold text-sm flex items-center justify-center gap-2">
+        <button type="button" onClick={() => setSheet('custom')} className="h-[52px] rounded-[18px] bg-water-bg border border-water-line font-bold text-sm flex items-center justify-center gap-2">
           <Clock size={18} className="text-water" /> Özel
         </button>
       </div>
@@ -193,7 +170,7 @@ export default function WaterScreen({ data }: { data: Data }) {
       <section aria-label="Kapların" className="flex flex-col gap-2">
         <div className="flex justify-between items-baseline px-1">
           <h2 className="font-extrabold">Kapların</h2>
-          <Link href="/su/ayarlar#kaplar" className="text-sm text-mute font-semibold">Düzenle</Link>
+          <Link href="/su/ayarlar/kaplar" className="text-sm text-acc font-bold">Düzenle</Link>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
           {data.containers.map((c) => {
@@ -323,29 +300,23 @@ export default function WaterScreen({ data }: { data: Data }) {
 }
 
 function Progress({ style, frac, idealFrac, pop, total }: { style: string; frac: number; idealFrac: number; pop: number; total: number }) {
+  // Bant içinde çizilir (beyaz tonlar). 'ring' bandın kendi halkasını kullanır.
   const f = Math.min(1, frac)
-  if (style === 'ring') {
-    return (
-      <div key={pop} className="animate-[pop_.35s_ease]">
-        <Ring size={132} stroke={14} value={f} color="var(--color-water)" track="#1E2A33" label={`Hedefin yüzde ${Math.round(frac * 100)}'i`}>
-          <Drop size={26} className="text-water" />
-        </Ring>
-      </div>
-    )
-  }
-  const h = style === 'wave' ? 132 : 220
-  const w = style === 'wave' ? 132 : 120
+  if (style === 'ring') return null
+  const h = style === 'wave' ? 92 : 108
+  const w = style === 'wave' ? 92 : 64
   const inner = h - 4
   return (
     <div key={pop} role="img" aria-label={`Hedefin yüzde ${Math.round(frac * 100)}'i, ${total} ml`}
-      className={`relative shrink-0 overflow-hidden border-2 border-[#24323D] bg-[#0C1115] animate-[pop_.35s_ease] ${style === 'wave' ? 'rounded-full' : 'rounded-[26px_26px_34px_34px]'}`} style={{ width: w, height: h }}>
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-water to-[#2F8FD1] transition-[height] duration-700 ease-out" style={{ height: inner * f }} />
+      className={`relative shrink-0 overflow-hidden border-2 border-white/45 bg-white/15 animate-[pop_.35s_ease] ${style === 'wave' ? 'rounded-full' : 'rounded-[18px_18px_24px_24px]'}`} style={{ width: w, height: h }}>
+      <div className="absolute inset-x-0 bottom-0 bg-white/85 transition-[height] duration-700 ease-out" style={{ height: inner * f }} />
       {f > 0 && f < 1 ? (
         <svg className="absolute left-0 transition-[bottom] duration-700 ease-out animate-[wave_3s_linear_infinite]" style={{ bottom: inner * f - 7 }} width={w * 2} height="14" viewBox="0 0 264 14" preserveAspectRatio="none" aria-hidden>
-          <path d="M0 7 C 16 0, 33 14, 50 7 S 83 0, 100 7 S 116 14, 132 7 S 165 0, 182 7 S 215 14, 232 7 S 254 0, 264 7 V14 H0 Z" fill="var(--color-water)" />
+          <path d="M0 7 C 16 0, 33 14, 50 7 S 83 0, 100 7 S 116 14, 132 7 S 165 0, 182 7 S 215 14, 232 7 S 254 0, 264 7 V14 H0 Z" fill="rgba(255,255,255,0.85)" />
         </svg>
       ) : null}
-      {idealFrac > 0 && idealFrac < 1 ? <div className="absolute inset-x-2.5 border-t-2 border-dashed border-ink/50" style={{ bottom: inner * idealFrac }} aria-hidden /> : null}
+      {idealFrac > 0 && idealFrac < 1 ? <div className="absolute inset-x-1.5 border-t-2 border-dashed border-white/80 mix-blend-difference" style={{ bottom: inner * idealFrac }} aria-hidden /> : null}
+      <span className="absolute inset-x-0 bottom-1.5 text-center num text-[12px] font-bold text-[var(--m1)]">%{Math.round(frac * 100)}</span>
     </div>
   )
 }
@@ -363,7 +334,7 @@ function PredictionCard({ p, goal, total }: { p: NonNullable<Data['prediction']>
           </span>
         )}
         {p.vsHistory !== null && Math.abs(p.vsHistory) >= 150 ? (
-          <span className="text-[13px]">Geçmiş günlerde bu saate göre {p.vsHistory > 0 ? <b className="text-lime">{fmtNum(p.vsHistory)} ml öndesin</b> : <b className="text-orange">{fmtNum(-p.vsHistory)} ml gerisindesin</b>}.</span>
+          <span className="text-[13px]">Geçmiş günlerde bu saate göre {p.vsHistory > 0 ? <b className="text-acc">{fmtNum(p.vsHistory)} ml öndesin</b> : <b className="text-orange">{fmtNum(-p.vsHistory)} ml gerisindesin</b>}.</span>
         ) : null}
         <span className="text-xs text-mute">Tahmin güveni: {p.confidence}{p.basis === 'tempo' ? ' (henüz yeterli geçmiş yok, bugünkü tempoya göre)' : ''}</span>
       </div>
@@ -451,7 +422,7 @@ function SipForm({ sipMl, calibrated, onAdd }: { sipMl: number; calibrated: bool
       </div>
       <p className="text-center text-sm text-ink-2"><b className="num text-ink">{n} × {sipMl} ml = {fmtNum(n * sipMl)} ml</b></p>
       {!calibrated ? (
-        <p className="text-[13px] text-mute text-center">Yudumun varsayılan olarak {sipMl} ml sayılıyor. <Link href="/su/ayarlar#yudum" className="text-water font-bold">Kendi yudumunu ölç</Link></p>
+        <p className="text-[13px] text-mute text-center">Yudumun varsayılan olarak {sipMl} ml sayılıyor. <Link href="/su/ayarlar/butonlar" className="text-water font-bold">Kendi yudumunu ölç</Link></p>
       ) : null}
       <button type="button" className="h-14 rounded-full bg-water text-water-ink font-extrabold text-[17px]" onClick={() => onAdd(n)}>{fmtNum(n * sipMl)} ml ekle</button>
     </div>
@@ -487,8 +458,8 @@ function ContainerForm({ c, onAdd }: { c: ContainerView; onAdd: (ml: number, fil
   return (
     <div className="flex flex-col gap-4 pb-4">
       <div className="flex items-center gap-5">
-        <div className="relative w-24 h-40 rounded-[18px_18px_26px_26px] border-2 border-[#24323D] bg-[#0C1115] overflow-hidden shrink-0" aria-hidden>
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-water to-[#2F8FD1] transition-[height] duration-200" style={{ height: `${fill * 100}%` }} />
+        <div className="relative w-24 h-40 rounded-[18px_18px_26px_26px] border-2 border-water-line bg-water-deep overflow-hidden shrink-0" aria-hidden>
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-water to-water-2 transition-[height] duration-200" style={{ height: `${fill * 100}%` }} />
           <I size={20} className="absolute top-2 left-1/2 -translate-x-1/2 text-ink/60" />
         </div>
         <div className="flex flex-col gap-1">
@@ -497,7 +468,7 @@ function ContainerForm({ c, onAdd }: { c: ContainerView; onAdd: (ml: number, fil
         </div>
       </div>
       <label htmlFor="fill" className="sr-only">Doluluk oranı</label>
-      <input id="fill" type="range" min={5} max={100} step={5} value={Math.round(fill * 100)} onChange={(e) => setFill(Number(e.target.value) / 100)} className="w-full accent-[#6CC7FF] h-8" />
+      <input id="fill" type="range" min={5} max={100} step={5} value={Math.round(fill * 100)} onChange={(e) => setFill(Number(e.target.value) / 100)} className="w-full h-8" />
       <div className="grid grid-cols-4 gap-2">
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <button key={f} type="button" aria-pressed={fill === f} onClick={() => setFill(f)} className={`h-11 rounded-full text-sm font-bold ${fill === f ? 'bg-ink text-bg' : 'bg-surface-2 text-ink-2'}`}>
@@ -537,7 +508,7 @@ function EditForm({ log, day, onSave, onDelete }: { log: WaterLogView; day: stri
       </div>
       <p className="text-xs text-mute">Kaynak: {SOURCE_LABEL[log.source] ?? log.source} · {dayLabel(day)}{log.edited ? ' · daha önce düzenlendi' : ''}</p>
       <button type="submit" className="h-14 rounded-full bg-water text-water-ink font-extrabold text-[17px]">Kaydet</button>
-      <button type="button" onClick={onDelete} className="h-12 rounded-full border border-[#5A2A22] text-danger font-bold flex items-center justify-center gap-2"><Trash size={18} /> Kaydı sil</button>
+      <button type="button" onClick={onDelete} className="h-12 rounded-full border border-danger-line text-danger font-bold flex items-center justify-center gap-2"><Trash size={18} /> Kaydı sil</button>
     </form>
   )
 }

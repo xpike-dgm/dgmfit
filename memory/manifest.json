@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
-  "verifiedAt": "2026-11-04",
-  "phase": "5b",
+  "verifiedAt": "2026-11-05",
+  "phase": "5c",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -191,7 +191,13 @@
     "app/api/social/story/[id]/route.ts",
     "app/api/social/proof/[id]/route.ts",
     "tests/social2.test.ts",
-    "tests/e2e/social2.e2e.cjs"
+    "tests/e2e/social2.e2e.cjs",
+    "lib/theme.ts",
+    "components/ModShell.tsx",
+    "tests/theme.test.ts",
+    "app/(app)/su/ayarlar/data.ts",
+    "app/(app)/sosyal/ayarlar/data.ts",
+    "app/(app)/profil/actions.ts"
   ],
   "tables": [
     "users",
@@ -329,7 +335,25 @@
     "/sosyal/mesaj",
     "/sosyal/mesaj/[username]",
     "/api/social/story/[id]",
-    "/api/social/proof/[id]"
+    "/api/social/proof/[id]",
+    "/fitness/ayarlar/artis",
+    "/fitness/ayarlar/ekipman",
+    "/fitness/ayarlar/plakalar",
+    "/fitness/ayarlar/seans",
+    "/profil/bildirimler",
+    "/profil/gorunum",
+    "/profil/hedef",
+    "/profil/hesap",
+    "/sosyal/ayarlar/bildirimler",
+    "/sosyal/ayarlar/davet",
+    "/sosyal/ayarlar/gizlilik",
+    "/sosyal/ayarlar/gorunenler",
+    "/sosyal/ayarlar/profil",
+    "/su/ayarlar/butonlar",
+    "/su/ayarlar/gorunum",
+    "/su/ayarlar/hatirlatma",
+    "/su/ayarlar/hedef",
+    "/su/ayarlar/kaplar"
   ],
   "events": [
     "profile.onboarded",
@@ -354,7 +378,8 @@
       "healthyWeightRange",
       "ageFromBirthDate",
       "bmi",
-      "fmtNum"
+      "fmtNum",
+      "HARD_MAX_WEEKLY_KG"
     ],
     "lib/auth.ts": [
       "hashPassword",
@@ -715,6 +740,21 @@
       "witnessPR",
       "attachProof",
       "resolveProof"
+    ],
+    "lib/theme.ts": [
+      "moduleFor",
+      "tabFor",
+      "hidesNav",
+      "parseTheme",
+      "THEME_COOKIE",
+      "THEMES"
+    ],
+    "components/ui.tsx": [
+      "Band",
+      "Menu",
+      "TopBar",
+      "hdrBtn",
+      "hdrIcon"
     ]
   },
   "dependencies": {
@@ -744,6 +784,7 @@
     "0009_coach.sql",
     "0010_planner.sql",
     "0011_social.sql",
-    "0012_social2.sql"
+    "0012_social2.sql",
+    "0013_design.sql"
   ]
 }
