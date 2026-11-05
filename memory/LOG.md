@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 4b başladı
+- Faz başı: memory-check geçti; son commit `5c9d997` STATE ile uyumlu; çalışma ağacı temiz. Spesifikasyon bölüm 10, 5.6, 6.4, 7.4, 13, 11.5 Claude Docs'tan okundu.
+- Kapsam kararı: 4b = koç + içgörü + rapor + sınırlar; menü/tarif/restoran/program oluşturucu 4c.
+
 ## 2026-11-05 — 4a eki: karma model (fotoğraf/etiket Opus, yazı Haiku)
 - Kullanıcı kararı: "evet karma modeli ekle, fotoğrafa opus". Migration 0008 (`ai_providers.task_models`, `ai_calls.model`), `modelFor`, `PRICES`, Opus için sunucu tarafı yedek; yönetici sayfasında görev başına model + bu ayın tahmini maliyet tablosu.
 - Bulunan kusur: zod 4'te `z.record(z.enum(...))` tüm anahtarları zorunlu kılıyor → kaydetme sessizce reddediliyordu (AI e2e "Kaydedildi" beklerken zaman aşımı) → `z.partialRecord`.
