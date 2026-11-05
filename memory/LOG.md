@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Hareket adları İngilizce
+- Kullanıcı isteği: Fitness'ta hareket adları İngilizce kalsın. `scripts/data/build_exercises.mjs`: görünen ad = kaynak adı, Türkçe ad takma adların başına; seed sürümü `6b1d9d0883fb`. Hareket sayfası alt başlığı "Türkçe: …". e2e'lerde Türkçe hareket adları İngilizceye çevrildi (fitness, progress, social).
+- Doğrulama: commit `3805ab9`; verify.sh VERIFY OK (146 birim, 15 e2e); release `2026-11-05T17-57-24-577Z` RELEASE OK; canlı DB: `Barbell Squat [Squat (barbell)]`, `Pullups [Barfiks]`, 876 hareket; test kullanıcıları silindi.
+
 ## 2026-11-05 — Faz 5g: günlük özet görseli
 - Kullanıcı isteği: Yemek sağ üstüne kaydetme düğmesi, günün kalorisi + mikro besinler güzel bir şablonda fotoğraf olarak insin; önce şablon onayı. İki taslak (HTML → PNG) gönderildi; kullanıcı: ikisi birden seçilebilsin, kullanıcı adı bana kalmış (gösterilmedi), takviye/su kalsın.
 - `app/api/yemek/gorsel/route.tsx` (next/og; belge: `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/image-response.md` — yalnızca flex, ttf/otf/woff), `lib/day-card.ts` + 2 birim test, `DayCardSheet.tsx`, `public/fonts/*.ttf` (Google Fonts, OFL; Türkçe karakterler fontTools ile doğrulandı).

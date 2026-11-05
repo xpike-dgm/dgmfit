@@ -72,6 +72,8 @@ Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 
 ## Veri modeli
 
+Hareket adları (2026-11-05): `exercises.name_tr` = görünen ad (kütüphanede İngilizce kaynak adı), Türkçe ad `aliases[0]`; arama `search` iki dili de içerir.
+
 Faz 5g (günlük özet görseli): `GET /api/yemek/gorsel?gun=&tip=a|b` → PNG (`next/og` ImageResponse; Satori yalnızca flex; TTF yazı tipleri `public/fonts` Manrope + Space Grotesk, OFL). A koyu kart 1080×1350 (10 mikro), B açık hikâye 1080×1920 (6 mikro). Mikro referansları ve tonlar `lib/day-card.ts` (saf, testli). Yemek bandının sağ üstünde indirme düğmesi → `DayCardSheet` (iki önizleme, Kaydet = indirme, destekleyen cihazda Paylaş). Görselde kullanıcı adı yok.
 
 Faz 5f (takviyeler): kullanıcının takviyesi `foods` satırı, `source='user-supplement'`, `supplement` jsonb (birim, porsiyon gramı, ek içerikler porsiyon başına, günlük hedef; 0015). Porsiyon başına değer 100 g başına çevrilir; gramı bilinmeyen birimde 1 porsiyon = 1 sanal gram. Kayıt `meal_items.meal='supplement'`, `source='supplement'`: günlük toplamlara (Bugün, Fit, koç) girer, öğün listelerinde ve kopyalamada görünmez; Fit kapanışındaki kayıt sayısına ve besin aramasına/son kullanılanlara girmez. Kurallar `lib/supplements.ts` (saf, testli), veri `lib/supplement-data.ts`.
