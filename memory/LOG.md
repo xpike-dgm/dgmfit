@@ -2,6 +2,14 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Kas ısı haritası, koç ekranı, program paylaşma, AI şema düzeltmesi
+- Kas haritası: kullanıcının ürettiği renk kodlu ön/arka görsel `data/body-map-source.webp` → `scripts/data/build_bodymap.py` (opencv; en yakın palet rengi + kontur) → `lib/body-map-paths.ts` (17 KB, ön 10 / arka 10 kas grubu); `BodyMap.tsx` son 7 gün setine göre 4 kademe boyar, dokununca kas + set + toparlanma.
+- Koç: tam ekran sohbet (alt bar gizli, `hidesNav('/koc')`), kendiliğinden büyüyen yazma alanı (kullanıcının ekran görüntüsündeki kesilen metin), içte mikrofon + gönder, avatar balonları, yazıyor animasyonu, başlıkta sohbetler / yeni / ayarlar, kalan hak alt başlıkta.
+- Sosyal: `program` gönderi türü (anlık görüntü; yalnızca ortak kütüphane hareketleri), `saveProgramCopy` → "Programlarıma kaydet"; program sayfasında Paylaş. sosyal e2e'ye adım.
+- Canlı AI hatası (kullanıcı: "Elimde bunlar var" → "AI yanıt veremedi"): `ai_calls` kaydı `bad_output: recipes[0].ingredients[].grams too_small minimum 5` (tuz/baharat < 5 g). Düzeltme: gram alt sınırı 0,5; `parseResult` yalnızca sayı sınırı aşımında (negatif hariç) değeri sınıra çekip yeniden dener; `tests/ai.test.ts` yeni test. OpenAI sağlayıcısı etkin ama anahtarsız → yedek devreye giremedi (kullanıcıya bildirildi).
+- Test kaynaklı: sosyal-2'de düğme hidrasyondan önce tıklanıyordu → `networkidle` beklenir.
+- Doğrulama: commit `2d615d3`; verify.sh VERIFY OK (136 birim, 13 e2e); release `2026-11-05T15-15-46-385Z` RELEASE OK; test kullanıcıları silindi.
+
 ## 2026-11-05 — xpike yönetici yapıldı
 - Kullanıcı isteği: `/opt/dgfit-pwa/docker-compose.yml` `DGFIT_ADMINS: deneme` → `deneme,xpike` (önce yedek: `docker-compose.yml.bak-<zaman>`), `docker compose up -d app`. Kanıt: container `printenv DGFIT_ADMINS` = `deneme,xpike`, sağlık `{"ok":true,"db":true}`.
 

@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 5d tamamlandı (2026-11-05): kullanıcı düzeltme listesi (A–F) + dış AI görsel inceleme paketi. Kullanıcıdan bekleniyor: G (Sosyal) maddesi boş geldi; kas haritası için profesyonel görsel. Faz 0–5d tamamlandı; Faz 6 isteğe bağlı ve beklemede. AI özelliklerinin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
+**Şu anki faz: Faz 5d tamamlandı (2026-11-05): kullanıcı düzeltme listesi (A–F) + dış AI görsel inceleme paketi. Sonrası: kas ısı haritası kullanıcının görseliyle, koç ekranı yenilendi, sosyalde program paylaşma eklendi, canlı AI şema hatası düzeltildi (commit `2d615d3`, release `2026-11-05T15-15-46-385Z`). Kullanıcıdan bekleniyor: G (Sosyal) maddesi boş geldi; OpenAI anahtarı girilmedi (yedek sağlayıcı yok). Faz 0–5d tamamlandı; Faz 6 isteğe bağlı ve beklemede. AI özelliklerinin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 

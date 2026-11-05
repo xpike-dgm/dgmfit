@@ -127,3 +127,6 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-05 | Kas ısı haritası çizimi kaldırıldı; profesyonel anatomi görseli gelene kadar kas grubu listesi | Kullanıcı: "acemi işler yapma, görsel gerekirse söyle" | Tasarım |
 | 2026-11-05 | free-exercise-db kamu malı (Unlicense) olduğundan arayüzdeki kaynak yazısı kaldırıldı; kaynak DECISIONS'ta kayıtlı | Kullanıcı isteği; lisans atıf istemiyor | Kaynak |
 | 2026-11-05 | Yöneticiler: `deneme`, `xpike` (`DGFIT_ADMINS`, sunucu compose dosyasında; sürüm yüklemesi bu dosyayı değiştirmez) | Kullanıcı isteği | Altyapı |
+| 2026-11-05 | AI yanıtında yalnızca sayı sınırı aşımı varsa değer sınıra çekilir (negatif ve tür/alan hataları reddedilir); sayılar yine motorda doğrulanır | Canlı hata: tuz 2 g tüm tarifi düşürüyordu | AI |
+| 2026-11-05 | Program paylaşımı anlık görüntüdür (sonraki düzenlemeler gönderiye yansımaz); kişisel hareketler paylaşılmaz; kaydeden kişide aktif yapılmaz | Gizlilik + basitlik | Sosyal |
+| 2026-11-05 | Kas haritası kullanıcının ürettiği görselden türetilir (renk → kas); görsel repo içinde `data/body-map-source.webp`, yollar üretilir | Kullanıcı: "görsel gerekirse söyle" | Tasarım |
