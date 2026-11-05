@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5b tamamlandı
+- DOTS: web okuma ajanı OpenPowerlifting `crates/coefficients/src/dots.rs` ve `lib.rs`'i (poly4 = A·x⁴+B·x³+C·x²+D·x+E) okudu; Wikipedia sayfası 404. Katsayılar ve 40–210 / 40–150 kg sınırları koda bu kaynaktan girildi.
+- Saf `lib/social-rank.ts` + `tests/social2.test.ts` (6); veri katmanı `lib/social2-data.ts`; migration 0012; `saveWorkout` rekorları şüphe nedeniyle yazar; zamanlayıcıda `workout.finished` → partner bildirimi; ekranlar `/sosyal/meydan`, `/sosyal/gruplar`, `/sosyal/mesaj`, profilde arkadaş araçları ve doğrulama bekleyen rekorlar, akışta 24 saatlik kart şeridi, yönetici kanıt kuyruğu.
+- Bulunan kusurlar: düello sayfası rakip katılmadan durum satırını hiç göstermiyordu → her zaman gösterilir. Test kaynaklı: vitrini kapalı kullanıcının şüpheli rekoru arkadaşlara görünmüyordu (kural doğru; sahibine "vitrini arkadaşlara aç" ipucu eklendi, test vitrini açar).
+- Doğrulama: commit `8e9b256`; verify.sh VERIFY OK (birim 130/130, 13 e2e); release `2026-11-05T06-10-32-259Z` RELEASE OK; canlı kancasız 5a+5b kontrolü OK; canlıda 8 tablo + `0012_social2.sql`; 10 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 5b başladı
 - Faz başı: memory-check geçti; son commit `d6eabdb` STATE ile uyumlu; çalışma ağacı temiz. DOTS katsayıları web okuma ajanıyla kaynaktan doğrulanıyor.
 
