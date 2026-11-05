@@ -26,7 +26,8 @@ export async function registerAction(_prev: FormState, fd: FormData): Promise<Fo
   if (!terms) errors.terms = 'Devam etmek için kullanım koşullarını ve KVKK metnini onaylamalısın'
   if (Object.keys(errors).length) return { errors, values }
 
-  if (!rateLimit('reg:' + (await clientIp()), 10, 60 * 60 * 1000)) {
+  // Yerel e2e (yalnızca DGFIT_TEST_HOOKS=1) tek IP'den çok hesap açar; canlıda sınır saatte 10
+  if (!rateLimit('reg:' + (await clientIp()), process.env.DGFIT_TEST_HOOKS === '1' ? 200 : 10, 60 * 60 * 1000)) {
     return { errors: { form: 'Çok fazla deneme yapıldı. Biraz sonra tekrar dene.' }, values }
   }
 

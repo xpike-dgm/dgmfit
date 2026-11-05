@@ -64,6 +64,8 @@ export default async function Page() {
         </dl>
       </section>
 
+      <Link href="/koc" className={btn.secondary + ' w-full h-12'}>AI koç ve ayarları</Link>
+      <Link href="/rapor" className={btn.secondary + ' w-full h-12'}>Haftalık raporlar</Link>
       {isAdmin(u.username) ? <Link href="/yonetim/ai" className={btn.secondary + ' w-full h-12'}>AI ayarları (yönetici)</Link> : null}
       <form action={logoutAction}>
         <button type="submit" className={btn.secondary + ' w-full h-12'}><Logout size={18} /> Çıkış yap</button>

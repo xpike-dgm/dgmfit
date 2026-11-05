@@ -1,7 +1,7 @@
 import 'server-only'
 import { and, eq, gte, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
-import { on } from './events'
+import { on, publish } from './events'
 import { sendToUser } from './push'
 import { decideReminder, type SentReminder } from './reminders'
 import { goalForDay, parseHm } from './water'
@@ -11,7 +11,7 @@ import { closePendingDays } from './fit-data'
 import { waterBonusByDay } from './burn'
 
 const ACT_WINDOW_MIN = 20
-const g = globalThis as unknown as { __dgfitScheduler?: { timer: ReturnType<typeof setInterval>; running: boolean; closedFor?: string } }
+const g = globalThis as unknown as { __dgfitScheduler?: { timer: ReturnType<typeof setInterval>; running: boolean; closedFor?: string; reportFor?: string } }
 
 /** Sunucu açılışında bir kez çağrılır (instrumentation.ts). Tek süreçte tek zamanlayıcı. */
 export function startScheduler() {
@@ -44,6 +44,11 @@ async function tick() {
       }
       if (n) console.log(`[dgfit] ${n} gün kapatıldı`)
     }
+    // Haftalık rapor bildirimi: Pazar 19.00'dan sonra ilk tikte, haftada bir (spesifikasyon 10: "Pazar akşamı")
+    if (new Date(today + 'T12:00:00Z').getUTCDay() === 0 && minuteOfDay(now) >= 19 * 60 && s.reportFor !== today) {
+      s.reportFor = today
+      try { await sendWeeklyPushes(addDays(today, -6)) } catch (e) { console.error('[dgfit] haftalık rapor bildirimi hatası', e) }
+    }
     const users = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
       .innerJoin(schema.waterSettings, eq(schema.waterSettings.userId, schema.pushSubscriptions.userId))
       .where(eq(schema.waterSettings.remindersEnabled, true))
@@ -53,6 +58,23 @@ async function tick() {
   } finally {
     s.running = false
   }
+}
+
+/** Haftalık rapor push'u: aboneliği olan ve kapatmamış kullanıcılara haftada bir. Test için dışa açık. */
+export async function sendWeeklyPushes(weekStart: string, onlyUser?: string): Promise<number> {
+  const subs = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
+    .leftJoin(schema.coachPrefs, eq(schema.coachPrefs.userId, schema.pushSubscriptions.userId))
+    .where(and(sql`coalesce(${schema.coachPrefs.weeklyPush}, true)`, onlyUser ? eq(schema.pushSubscriptions.userId, onlyUser) : undefined))
+  let n = 0
+  for (const u of subs) {
+    const [done] = await db.select({ id: schema.events.id }).from(schema.events)
+      .where(and(eq(schema.events.userId, u.userId), eq(schema.events.type, 'report.pushed'), sql`${schema.events.payload}->>'week' = ${weekStart}`)).limit(1)
+    if (done) continue
+    const ok = await sendToUser(u.userId, { title: 'Haftalık raporun hazır', body: 'Kalori, su ve antrenman haftanın özeti ve koçun önerileri seni bekliyor.', tag: 'weekly-report', url: '/rapor' })
+    await publish(u.userId, 'report.pushed', { week: weekStart, delivered: ok })
+    if (ok) n++
+  }
+  return n
 }
 
 /** Bir kullanıcı için kararı verir ve gerekiyorsa gönderir. Test için dışa açık. */

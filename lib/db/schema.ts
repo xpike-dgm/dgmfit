@@ -522,3 +522,53 @@ export const aiCache = pgTable('ai_cache', {
   provider: text('provider').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// ───────────── AI koç (Faz 4b) ─────────────
+
+/** Koç tercihleri: kişilik, günlük içgörü, haftalık rapor bildirimi. */
+export const coachPrefs = pgTable('coach_prefs', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  persona: text('persona').notNull().default('supportive'), // supportive | strict | science
+  insights: boolean('insights').notNull().default(true),
+  weeklyPush: boolean('weekly_push').notNull().default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const aiConversations = pgTable('ai_conversations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('ai_conversations_user_idx').on(t.userId, t.updatedAt)])
+
+/** Sohbet mesajları; asistan mesajında önerilen eylemler (durumlarıyla), "ne olur" kartı ve güvenlik bayrağı. */
+export const aiMessages = pgTable('ai_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  conversationId: uuid('conversation_id').notNull().references(() => aiConversations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  role: text('role').notNull(), // user | assistant
+  content: text('content').notNull(),
+  actions: jsonb('actions').$type<unknown[]>().notNull().default([]),
+  whatIf: jsonb('what_if').$type<unknown>(),
+  safety: text('safety'), // null | ed | crisis | medical
+  provider: text('provider'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('ai_messages_conv_idx').on(t.conversationId, t.createdAt)])
+
+/** Günlük içgörü ve haftalık rapor (dönem başına tek satır). Sayılar `data`'da motor çıktısıdır. */
+export const aiInsights = pgTable('ai_insights', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // daily | weekly
+  period: text('period').notNull(), // gün ya da hafta başı (Pazartesi)
+  key: text('key').notNull(), // içgörü konusu ya da "week"
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull().default({}),
+  provider: text('provider'), // null = kural metni
+  pushedAt: timestamp('pushed_at', { withTimezone: true }),
+  dismissedAt: timestamp('dismissed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex('ai_insights_period_idx').on(t.userId, t.kind, t.period)])

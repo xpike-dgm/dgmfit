@@ -17,7 +17,7 @@ export async function activeGoal(userId: string): Promise<Goal | null> {
   return g ?? null
 }
 
-async function sexOf(userId: string): Promise<Sex> {
+export async function sexOf(userId: string): Promise<Sex> {
   const [p] = await db.select({ sex: schema.profiles.sex }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
   return (p?.sex as Sex) ?? 'female'
 }

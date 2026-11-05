@@ -1,13 +1,13 @@
 import 'server-only'
 import crypto from 'node:crypto'
-import { and, eq, gte, sql } from 'drizzle-orm'
+import { and, eq, gte, inArray, sql } from 'drizzle-orm'
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
 import { db, schema } from '../db'
 import { dayString } from '../time'
 import { dayBounds } from '../water-data'
 import { classifyError, DEFAULT_USER_DAILY, pickProviders, type ProviderId, type ProviderState } from './policy'
-import { jsonSchemaFor, parseResult, TASKS, type Task } from './schemas'
+import { jsonSchemaFor, parseResult, TASKS, USER_QUOTA_TASKS, type Task } from './schemas'
 
 /** Varsayılanlar: kullanıcı kararı (Haiku her yerde); OpenAI modeli resmi belgedeki en verimli model (2026-11-05). */
 export const DEFAULT_MODELS: Record<ProviderId, string> = { claude: 'claude-haiku-5-5', openai: 'gpt-6-luna' }
@@ -72,7 +72,9 @@ function baseUrl(id: ProviderId): string {
   return OFFICIAL[id]
 }
 
-interface CallInput { text: string; image?: { mime: string; data: Buffer } }
+/** `system`: görev talimatına eklenen bağlam/kişilik; `history`: önceki sohbet (eskiden yeniye). */
+export interface CallInput { text: string; image?: { mime: string; data: Buffer }; system?: string; history?: { role: 'user' | 'assistant'; text: string }[] }
+const systemFor = (task: Task, input: CallInput) => (input.system ? TASKS[task].system + '\n\n' + input.system : TASKS[task].system)
 interface CallOut { json: unknown; inputTokens: number; outputTokens: number }
 
 class ProviderError extends Error { constructor(message: string, readonly status: number | null, readonly code: string | null) { super(message) } }
@@ -85,9 +87,9 @@ async function callClaude(key: string, model: string, task: Task, input: CallInp
     if (input.image) content.push({ type: 'image', source: { type: 'base64', media_type: input.image.mime as 'image/jpeg', data: input.image.data.toString('base64') } })
     content.push({ type: 'text', text: input.text })
     const params = {
-      model, max_tokens: SERVER_FALLBACK.test(model) ? 8000 : 4000, system: TASKS[task].system,
+      model, max_tokens: SERVER_FALLBACK.test(model) ? 8000 : 4000, system: systemFor(task, input),
       output_config: { effort: 'low' as const, format: { type: 'json_schema' as const, schema: jsonSchemaFor(task) } },
-      messages: [{ role: 'user' as const, content }],
+      messages: [...(input.history ?? []).map((h) => ({ role: h.role, content: h.text })), { role: 'user' as const, content }],
     }
     // Opus 5.5 (ve diğer destekleyenler): güvenlik reddinde aynı çağrı içinde sunucu tarafı yedek model ("default" yönlendirme)
     const r = SERVER_FALLBACK.test(model)
@@ -110,8 +112,8 @@ async function callOpenAI(key: string, model: string, task: Task, input: CallInp
     const content: OpenAI.Responses.ResponseInputContent[] = [{ type: 'input_text', text: input.text }]
     if (input.image) content.push({ type: 'input_image', image_url: `data:${input.image.mime};base64,${input.image.data.toString('base64')}`, detail: 'auto' })
     const r = await client.responses.create({
-      model, instructions: TASKS[task].system, max_output_tokens: 4000,
-      input: [{ role: 'user', content }],
+      model, instructions: systemFor(task, input), max_output_tokens: 4000,
+      input: [...(input.history ?? []).map((h) => ({ role: h.role, content: h.text })), { role: 'user' as const, content }],
       text: { format: { type: 'json_schema', name: 'dgfit_' + task.replace('-', '_'), schema: jsonSchemaFor(task), strict: true } },
     })
     return { json: parseResult(task, r.output_text), inputTokens: r.usage?.input_tokens ?? 0, outputTokens: r.usage?.output_tokens ?? 0 }
@@ -134,7 +136,7 @@ async function usageByProvider(): Promise<Map<string, { today: number; month: nu
 export async function userCallsToday(userId: string): Promise<number> {
   const [start] = dayBounds(dayString())
   const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.aiCalls)
-    .where(and(eq(schema.aiCalls.userId, userId), gte(schema.aiCalls.createdAt, start), eq(schema.aiCalls.cached, false), eq(schema.aiCalls.ok, true)))
+    .where(and(eq(schema.aiCalls.userId, userId), gte(schema.aiCalls.createdAt, start), eq(schema.aiCalls.cached, false), eq(schema.aiCalls.ok, true), inArray(schema.aiCalls.task, USER_QUOTA_TASKS)))
   return Number(r?.n ?? 0)
 }
 
@@ -142,15 +144,17 @@ export async function userCallsToday(userId: string): Promise<number> {
  * Bir AI görevini çalıştırır: kullanıcı kotası → önbellek → sağlayıcılar öncelik sırasıyla (kota/limit/hata → sonraki).
  * Dönen JSON görev şemasıyla doğrulanmıştır. İçerik kaydedilmez; yalnızca sağlayıcı, token, süre, hata.
  */
-export async function runTask<T extends Task>(userId: string, task: T, input: CallInput): Promise<{ result: ReturnType<typeof parseResult<T>>; provider: ProviderId | 'cache' }> {
+export async function runTask<T extends Task>(userId: string, task: T, input: CallInput, opts: { cache?: boolean } = {}): Promise<{ result: ReturnType<typeof parseResult<T>>; provider: ProviderId | 'cache' }> {
+  // Önbellek yalnızca bağlamsız görevlerde (fotoğraf/metin/etiket); koç ve rapor kişisel bağlam taşır
+  const useCache = opts.cache ?? (!input.system && !input.history?.length)
   const hash = crypto.createHash('sha256').update(task).update('\0').update(input.text.trim().toLocaleLowerCase('tr-TR')).update('\0').update(input.image ? crypto.createHash('sha256').update(input.image.data).digest('hex') : '').digest('hex')
-  const [hit] = await db.select().from(schema.aiCache).where(and(eq(schema.aiCache.hash, hash), gte(schema.aiCache.createdAt, new Date(Date.now() - 30 * 86400_000)))).limit(1)
+  const [hit] = useCache ? await db.select().from(schema.aiCache).where(and(eq(schema.aiCache.hash, hash), gte(schema.aiCache.createdAt, new Date(Date.now() - 30 * 86400_000)))).limit(1) : []
   if (hit) {
     await db.insert(schema.aiCalls).values({ userId, task, provider: null, ok: true, cached: true })
     return { result: parseResult(task, JSON.stringify(hit.result)), provider: 'cache' }
   }
   const { userDaily } = await aiSettings()
-  if ((await userCallsToday(userId)) >= userDaily) throw new AiError(`Bugünkü AI hakkın doldu (${userDaily}). Yarın yenilenir; şimdilik elle ekleyebilirsin.`, 'kota')
+  if (USER_QUOTA_TASKS.includes(task) && (await userCallsToday(userId)) >= userDaily) throw new AiError(`Bugünkü AI hakkın doldu (${userDaily}). Yarın yenilenir; şimdilik elle ekleyebilirsin.`, 'kota')
 
   const rows = await ensureProviders()
   const used = await usageByProvider()
@@ -170,7 +174,7 @@ export async function runTask<T extends Task>(userId: string, task: T, input: Ca
       const model = modelFor(p, task)
       const out = id === 'claude' ? await callClaude(key, model, task, input) : await callOpenAI(key, model, task, input)
       await db.insert(schema.aiCalls).values({ userId, task, provider: id, model, ok: true, inputTokens: out.inputTokens, outputTokens: out.outputTokens, ms: Date.now() - t0 })
-      await db.insert(schema.aiCache).values({ hash, task, result: out.json as object, provider: id }).onConflictDoNothing()
+      if (useCache) await db.insert(schema.aiCache).values({ hash, task, result: out.json as object, provider: id }).onConflictDoNothing()
       if (p.lastError) await db.update(schema.aiProviders).set({ cooldownUntil: null }).where(eq(schema.aiProviders.id, id))
       return { result: out.json as never, provider: id }
     } catch (e) {

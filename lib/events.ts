@@ -16,6 +16,8 @@ export type EventType =
   | 'water.logged'
   | 'day.closed'
   | 'plan.adjusted'
+  | 'coach.action'
+  | 'report.pushed'
 
 type Handler = (userId: string, payload: Record<string, unknown>) => Promise<void> | void
 

@@ -34,6 +34,47 @@ export const LabelResult = z.strictObject({
 })
 export type LabelResult = z.infer<typeof LabelResult>
 
+export const CoachAction = z.strictObject({
+  type: z.enum(['goal_date', 'add_exercise', 'log_water']),
+  weeks: z.number().int().min(-12).max(12).nullable().describe('goal_date: hedef tarihini bu kadar hafta uzat (+) ya da kısalt (−); diğerlerinde null'),
+  programDay: z.string().max(60).nullable().describe('add_exercise: bağlamdaki aktif program günlerinden birinin adı; diğerlerinde null'),
+  exercise: z.string().max(80).nullable().describe('add_exercise: hareketin Türkçe adı (ör. "Romanya ölü kaldırışı"); diğerlerinde null'),
+  sets: z.number().int().min(1).max(10).nullable(),
+  repMin: z.number().int().min(1).max(50).nullable(),
+  repMax: z.number().int().min(1).max(50).nullable(),
+  ml: z.number().int().min(50).max(3000).nullable().describe('log_water: ml; diğerlerinde null'),
+  drink: z.enum(drinkIds).nullable().describe('log_water: içecek türü; diğerlerinde null'),
+})
+export type CoachAction = z.infer<typeof CoachAction>
+export const CoachResult = z.strictObject({
+  reply: z.string().min(1).max(2400).describe('Kullanıcıya Türkçe cevap (kısa paragraflar, en fazla 8 cümle)'),
+  actions: z.array(CoachAction).max(3).describe('Kullanıcının onayına sunulacak eylemler; gerekmiyorsa boş'),
+  whatIf: z.array(z.strictObject({ name: z.string().min(1).max(80), grams: z.number().min(1).max(3000) })).max(5)
+    .describe('Kullanıcı "şunu yersem ne olur" diye sorduysa yiyecekler ve tahmini gram; yoksa boş'),
+  safety: z.enum(['yok', 'yeme-bozuklugu', 'kriz', 'tibbi']).describe('Mesajda yeme bozukluğu, kendine zarar ya da tıbbi durum işareti'),
+})
+export type CoachResult = z.infer<typeof CoachResult>
+export const InsightResult = z.strictObject({
+  title: z.string().min(1).max(70).describe('Kısa başlık'),
+  body: z.string().min(1).max(320).describe('1–2 cümle; yalnızca verilen sayılar'),
+})
+export const WeeklyResult = z.strictObject({
+  summary: z.string().min(1).max(900).describe('Haftanın 3–5 cümlelik özeti; yalnızca verilen sayılar'),
+  suggestions: z.array(z.string().min(1).max(220)).min(1).max(3).describe('Somut, uygulanabilir öneriler'),
+})
+
+const COACH_RULES = [
+  'Sen DgFit uygulamasının Türkçe konuşan koçusun. Kullanıcının verisi BAĞLAM bölümünde; oradaki sayılar uygulamanın test edilmiş motorlarıyla hesaplandı.',
+  'Kurallar:',
+  '1) Sayı uydurma. Yalnızca BAĞLAM\'daki sayıları kullan; bir veri yoksa "bu veri henüz yok" de. Kalori ya da makro hesaplama yapma.',
+  '2) Tıbbi teşhis, tedavi, ilaç ya da takviye dozu önerme. Hastalık, hamilelik, ağrı ya da sakatlıkta hekime yönlendir ve safety="tibbi".',
+  '3) Yeme bozukluğu işaretlerinde (kusma, aç kalma, laksatif, aşırı kısıtlama, yemekten sonra suçluluk) nazikçe bir uzmana yönlendir, kalori açığını artıracak hiçbir öneri yapma, safety="yeme-bozuklugu". Kendine zarar verme ifadesinde kısa ve şefkatli cevap ver, 112\'yi hatırlat, safety="kriz".',
+  '4) Güvenli kalori tabanının altını ya da haftada vücut ağırlığının %1\'inden hızlı kilo kaybını asla önerme. BAĞLAM\'da güvenlik bayrağı varsa hedefi hızlandıran öneri yapma.',
+  '5) Eylemleri kendin yapamazsın; yalnızca actions\'a öner, kullanıcı onaylar. Yalnızca kullanıcı istediğinde ya da açıkça faydalıysa öner. goal_date: hedef tarihini weeks hafta uzat (+) ya da kısalt (−). add_exercise: aktif programdaki bir güne hareket ekle. log_water: su ya da içecek kaydı. Kullanılmayan alanlar null.',
+  '6) Kullanıcı bir yiyeceği yerse ne olacağını sorarsa whatIf\'e yiyecekleri ve tahmini gramı yaz; reply\'da o yiyeceğin kalorisini yazma, uygulama kartta veritabanından hesaplar.',
+  '7) Kısa yaz (en fazla 8 cümle). Madde işareti kullanabilirsin; başlık ve tablo kullanma. Kullanıcıya "sen" diye hitap et.',
+].join('\n')
+
 export const TASKS = {
   'meal-photo': {
     schema: MealResult,
@@ -47,8 +88,26 @@ export const TASKS = {
     schema: LabelResult,
     system: 'Fotoğraftaki besin değeri tablosunu oku. Yalnızca tabloda yazan sayıları aktar, tahmin etme ya da hesaplama yapma; okunamayan değer null olsun. Değerler 100 g / 100 ml için verilmişse basis buna göre; yalnızca porsiyon başına verilmişse basis "porsiyon" ve servingGrams porsiyon gramı. Ürün adı ve marka paketten okunabiliyorsa yaz.',
   },
+  coach: { schema: CoachResult, system: COACH_RULES },
+  insight: {
+    schema: InsightResult,
+    system: 'DgFit koçu olarak sana verilen TEK gerçeği kullanıcıya kişiliğine uygun, kısa bir içgörü kartına dönüştür. Yalnızca gerçekte geçen sayıları aynen kullan, yeni sayı ekleme. Tıbbi yorum yapma. Türkçe, "sen" diliyle.',
+  },
+  weekly: {
+    schema: WeeklyResult,
+    system: 'DgFit koçu olarak haftalık raporu yorumla. İstatistikler uygulamanın motorlarıyla hesaplandı; yalnızca verilen sayıları aynen kullan, yeni sayı ya da yüzde üretme. Güçlü yanları ve en önemli 1–2 sorunu söyle, en fazla 3 somut öneri ver. Tıbbi tavsiye verme; güvenlik bayrağı varsa daha az yemeyi ya da daha çok antrenmanı önerme. Türkçe, "sen" diliyle.',
+  },
 } as const
 export type Task = keyof typeof TASKS
+/** Kullanıcının günlük AI hakkına sayılan görevler (spesifikasyon 11.5: fotoğraf/ses ve koç sohbeti). */
+export const USER_QUOTA_TASKS: Task[] = ['meal-photo', 'meal-text', 'label', 'coach']
+
+export const PERSONAS = {
+  supportive: { label: 'Destekleyici', hint: 'Sıcak, cesaretlendirici, yargısız', prompt: 'Kişilik: destekleyici. Sıcak, cesaretlendirici ve yargısız ol; küçük kazanımları fark et ve kutla.' },
+  strict: { label: 'Disiplinli', hint: 'Net, doğrudan, hedef odaklı', prompt: 'Kişilik: disiplinli. Net, doğrudan ve hedef odaklı ol; bahaneyi nazikçe ama açıkça geri çevir, her cevabı somut bir sonraki adımla bitir. Asla aşağılama ya da utandırma.' },
+  science: { label: 'Bilimsel', hint: 'Nedenleri kanıtla açıklar', prompt: 'Kişilik: bilimsel. Nedenleri enerji dengesi, TDEE, su tutulumu, ilerleyen aşırı yüklenme gibi kavramlarla sakin ve analitik biçimde açıkla; kesin olmayanı belirt.' },
+} as const
+export type Persona = keyof typeof PERSONAS
 
 type J = Record<string, unknown>
 const MOVE = ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'minLength', 'maxLength', 'maxItems', 'minItems', 'pattern', 'format']

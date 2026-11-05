@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "4a",
+  "phase": "4b",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -129,7 +129,21 @@
     "tests/e2e/ai.e2e.cjs",
     "app/(app)/yemek/ekle/AiMeal.tsx",
     "app/(app)/yonetim/ai/AiAdmin.tsx",
-    "app/(app)/yonetim/ai/actions.ts"
+    "app/(app)/yonetim/ai/actions.ts",
+    "lib/weekly.ts",
+    "lib/safety.ts",
+    "lib/insights.ts",
+    "lib/coach-calc.ts",
+    "lib/coach-data.ts",
+    "app/(app)/koc/page.tsx",
+    "app/(app)/koc/CoachChat.tsx",
+    "app/(app)/koc/actions.ts",
+    "app/(app)/rapor/page.tsx",
+    "app/api/coach/insight/route.ts",
+    "app/api/test/coach/route.ts",
+    "components/InsightCard.tsx",
+    "tests/coach.test.ts",
+    "tests/e2e/coach.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -165,7 +179,11 @@
     "media_blobs",
     "ai_providers",
     "ai_calls",
-    "ai_cache"
+    "ai_cache",
+    "coach_prefs",
+    "ai_conversations",
+    "ai_messages",
+    "ai_insights"
   ],
   "routes": [
     "/",
@@ -213,7 +231,11 @@
     "/api/test/fitness",
     "/yonetim/ai",
     "/api/ai/meal",
-    "/api/ai/label"
+    "/api/ai/label",
+    "/koc",
+    "/rapor",
+    "/api/coach/insight",
+    "/api/test/coach"
   ],
   "events": [
     "profile.onboarded",
@@ -224,7 +246,9 @@
     "pr.achieved",
     "water.logged",
     "day.closed",
-    "plan.adjusted"
+    "plan.adjusted",
+    "coach.action",
+    "report.pushed"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -489,6 +513,34 @@
       "providerOverview",
       "aiAvailable",
       "userCallsToday"
+    ],
+    "lib/weekly.ts": [
+      "weekStats",
+      "ruleSuggestions",
+      "numbersAllowed",
+      "trendSeries"
+    ],
+    "lib/safety.ts": [
+      "safetyFlags",
+      "riskyText",
+      "SUPPORT"
+    ],
+    "lib/insights.ts": [
+      "insightCandidates",
+      "pickInsight"
+    ],
+    "lib/coach-calc.ts": [
+      "whatIfImpact",
+      "matchProgramDay",
+      "shiftGoal"
+    ],
+    "lib/coach-data.ts": [
+      "coachContext",
+      "sendCoachMessage",
+      "applyCoachAction",
+      "dailyInsight",
+      "weeklyReport",
+      "latestReportWeek"
     ]
   },
   "dependencies": {
@@ -513,6 +565,7 @@
     "0005_fitness.sql",
     "0006_fitness_progress.sql",
     "0007_ai.sql",
-    "0008_ai_task_models.sql"
+    "0008_ai_task_models.sql",
+    "0009_coach.sql"
   ]
 }

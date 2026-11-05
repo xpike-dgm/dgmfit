@@ -8,7 +8,9 @@ import { greeting, longDate, shortDate, addDays } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { Bar, Ring } from '@/components/ui'
 import QuickWaterButton from '@/components/QuickWaterButton'
-import { Drop, Dumbbell, Flame, Pulse, Spark, User } from '@/components/icons'
+import InsightCard from '@/components/InsightCard'
+import { latestReportWeek, mondayOf } from '@/lib/coach-data'
+import { Drop, Dumbbell, Flame, Pulse, User } from '@/components/icons'
 
 export default async function Today() {
   const user = await requireUser()
@@ -16,6 +18,8 @@ export default async function Today() {
   const t = await getToday(user.id)
   if (!t) redirect('/kurulum')
   const tr = await todayTraining(user.id, t.day)
+  // Haftalık rapor kısayolu: Pazar 18.00'den Pazartesi sonuna kadar
+  const weeklyReady = latestReportWeek() === mondayOf(t.day) || latestReportWeek() === addDays(mondayOf(t.day), -7) && new Date(t.day + 'T12:00:00Z').getUTCDay() === 1
 
   const budget = t.target.kcal + t.burned
   const left = budget - t.eaten.kcal
@@ -146,10 +150,7 @@ export default async function Today() {
           </Link>
         </div>
 
-        <section aria-label="Koç" className="rounded-[28px] px-5 py-[18px] flex flex-col gap-3 bg-coach border border-coach-line">
-          <div className="flex items-center gap-2"><Spark size={18} className="text-lime" /><span className="text-[13px] font-bold tracking-[0.08em] uppercase text-lime">Koç</span></div>
-          <p className="text-[15px] leading-relaxed text-[#E4E8DC]">{coachLine(t)}</p>
-        </section>
+        <InsightCard fallback={coachLine(t)} weeklyReady={weeklyReady} />
       </main>
     </div>
   )
