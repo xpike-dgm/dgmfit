@@ -70,6 +70,8 @@ function fake(port, handler) {
     await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
     await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'female', birthDate: '1992-03-03', heightCm: 165, weightKg: 70, activity: 'light', goal: 'lose', targetWeightKg: 64, tempo: 'balanced', customDays: 90, experience: 'new', trainingDays: 3, dietPref: null, allergies: [], wakeTime: '07:30', sleepTime: '23:30' })))
     await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
+    // Bugün ekranının ilk içgörü isteği bitsin (yoksa test kancasındaki sıfırlamadan sonra 'start' içgörüsünü yazabilir)
+    await p.getByTestId('coach-card').locator('[aria-busy=true]').waitFor({ state: 'detached', timeout: 20000 }).catch(() => {})
   }
   const hook = (p, body) => p.evaluate(async (b) => (await fetch('/api/test/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) })).json(), body)
   const p = await mk()

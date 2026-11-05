@@ -80,7 +80,8 @@
     :root:not([data-theme="dark"]) [data-mod] { --color-acc: var(--acc-l); --color-acc-ink: #FFFFFF; --band: linear-gradient(160deg, var(--m1), var(--m2)); --hdr: linear-gradient(160deg, var(--m1), var(--m2)); --ring-hole: color-mix(in oklab, var(--m1) 85%, #000); }
   }
 
-  html { background: var(--color-bg); color-scheme: dark; -webkit-text-size-adjust: 100%; }
+  /* Aşağı çekip yenileme ve sıçrama kapalı (kök kaydırıcı), parmakla yakınlaştırma kapalı (pan serbest). */
+  html { background: var(--color-bg); color-scheme: dark; -webkit-text-size-adjust: 100%; overscroll-behavior: none; touch-action: pan-x pan-y; }
   body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
   button, a, input, select, textarea { touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }

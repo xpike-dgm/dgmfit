@@ -28,6 +28,9 @@ export const viewport: Viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
+  // Kullanıcı isteği: uygulama gibi davransın, yakınlaştırma kapalı (iOS'ta odaklanınca otomatik yakınlaşmayı da önler)
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   colorScheme: 'light dark',
 }

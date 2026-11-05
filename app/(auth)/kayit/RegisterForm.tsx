@@ -1,6 +1,8 @@
 'use client'
 import { useActionState, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import Sheet from '@/components/Sheet'
+import { KvkkText, TermsText, legalProse } from '@/components/legal'
 import { registerAction, type FormState } from '../actions'
 import { btn, FieldError } from '@/components/ui'
 import { Check, Eye, EyeOff } from '@/components/icons'
@@ -8,6 +10,8 @@ import { checkPassword, emailError, emailSuggestion, usernameError } from '@/lib
 
 const input =
   'w-full h-14 rounded-2xl bg-surface border border-line px-4 text-[16px] text-ink placeholder:text-faint outline-none focus:border-acc transition'
+
+const DRAFT = 'dgfit:kayit:v1'
 
 export default function RegisterForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(registerAction, {})
@@ -17,6 +21,18 @@ export default function RegisterForm() {
   const [confirm, setConfirm] = useState('')
   const [show, setShow] = useState(false)
   const [terms, setTerms] = useState(false)
+  const [doc, setDoc] = useState<null | 'terms' | 'kvkk'>(null)
+  // Taslak: kullanıcı adı, e-posta ve onay oturum boyunca saklanır (şifreler asla saklanmaz)
+  useEffect(() => {
+    try {
+      const d = JSON.parse(sessionStorage.getItem(DRAFT) ?? 'null') as { username?: string; email?: string; terms?: boolean } | null
+      if (d && !state.values) { if (d.username) setUsername(d.username); if (d.email) setEmail(d.email); if (d.terms) setTerms(true) }
+    } catch { /* yok */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => {
+    try { sessionStorage.setItem(DRAFT, JSON.stringify({ username, email, terms })) } catch { /* yok */ }
+  }, [username, email, terms])
   const [uCheck, setUCheck] = useState<{ available?: boolean; suggestions: string[]; loading?: boolean }>({ suggestions: [] })
 
   useEffect(() => {
@@ -43,7 +59,7 @@ export default function RegisterForm() {
   const strengthColor = ['var(--color-danger)', 'var(--color-danger)', 'var(--color-orange)', 'var(--color-good)', 'var(--color-good)'][pw.score]
 
   return (
-    <form action={action} className="flex flex-col gap-5" noValidate>
+    <form action={action} onSubmit={() => { try { sessionStorage.removeItem(DRAFT) } catch { /* yok */ } }} className="flex flex-col gap-5" noValidate>
       <div>
         <label htmlFor="username" className="block text-sm font-bold mb-2">Kullanıcı adı</label>
         <div className="relative">
@@ -107,11 +123,15 @@ export default function RegisterForm() {
       <label className="flex gap-3 items-start cursor-pointer">
         <input type="checkbox" name="terms" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 w-6 h-6 shrink-0" />
         <span className="text-sm leading-relaxed text-ink-2">
-          <Link href="/yasal/kosullar" className="text-acc font-bold">Kullanım koşullarını</Link> ve{' '}
-          <Link href="/yasal/kvkk" className="text-acc font-bold">KVKK aydınlatma metnini</Link> okudum, sağlık verilerimin işlenmesine açık rıza veriyorum.
+          <button type="button" onClick={(e) => { e.preventDefault(); setDoc('terms') }} className="text-acc font-bold">Kullanım koşullarını</button> ve{' '}
+          <button type="button" onClick={(e) => { e.preventDefault(); setDoc('kvkk') }} className="text-acc font-bold">KVKK aydınlatma metnini</button> okudum, sağlık verilerimin işlenmesine açık rıza veriyorum.
         </span>
       </label>
       <FieldError>{state.errors?.terms}</FieldError>
+      <Sheet open={doc !== null} onClose={() => setDoc(null)} title={doc === 'kvkk' ? 'KVKK aydınlatma metni' : 'Kullanım koşulları'}>
+        <article className={`${legalProse} pb-4 [&_h1]:hidden`}>{doc === 'kvkk' ? <KvkkText /> : <TermsText />}</article>
+        <button type="button" className={btn.primary + ' w-full mb-4'} onClick={() => setDoc(null)}>Kayda dön</button>
+      </Sheet>
       <FieldError>{state.errors?.form}</FieldError>
 
       <button type="submit" className={btn.primary + ' mt-2'} disabled={!canSubmit || pending}>

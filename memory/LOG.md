@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Kullanıcı geri bildirimi: kayıt formu + yakınlaştırma/yenileme
+- Kayıt ekranında koşullar/KVKK bağlantısı sayfadan çıkıyordu → form siliniyordu. Artık metin alt sayfada açılır (`components/legal.tsx` ortak içerik, `/yasal/*` de onu kullanır); kullanıcı adı, e-posta ve onay `sessionStorage` taslağında (şifre asla saklanmaz, gönderince silinir).
+- Yakınlaştırma kapalı (`maximumScale: 1`, `userScalable: false`, `html { touch-action: pan-x pan-y }`, iOS `gesturestart` engeli); aşağı çekip yenileme kapalı (`html { overscroll-behavior: none }`).
+- Koç e2e'sinde zamanlama yarışı: kayıttan sonra Bugün'ün ilk içgörü isteği test kancasının sıfırlamasından sonra bitince "start" içgörüsü yazılıyordu → test isteğin bitmesini bekler (uygulama doğru).
+- Doğrulama: verify.sh VERIFY OK (onboarding e2e: koşullar alt sayfası, dönüşte form dolu, yenilemede kullanıcı adı/e-posta var, şifre yok, viewport ve overscroll kontrolü).
+
 ## 2026-11-05 — Faz 5c tamamlandı
 - Tempo: `computePlan` artık `allowed` (mutlak sınır 1,5 kg/hf), `minDays`, `expectedDays` döner; sihirbaz ve sunucu `allowed`'a bakar; kalori tabanında gerçek tempo gösterilir (önceden istenen tempo yazılıyordu).
 - Tasarım: token'lar iki temada; `lime` → modül vurgusu `acc` (70 dosyada sınıf taşındı, sabit hex'ler token'a); `ModShell`, `Band`, renkli `TopBar`, `Menu`, 7 yuvalı alt bar; Bugün/Fit/Su/Yemek/Fitness/Sosyal bantları; ayarlar 18 yeni sayfaya bölündü; Görünüm sayfası (çerez); 0013 su görünümü halka.
