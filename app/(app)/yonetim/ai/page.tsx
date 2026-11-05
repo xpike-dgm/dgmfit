@@ -5,6 +5,7 @@ import { fmtNum } from '@/lib/calc'
 import { ProviderForm, UserDailyForm } from './AiAdmin'
 
 export const metadata = { title: 'AI ayarları · DgFit' }
+const TASK_LABEL: Record<string, string> = { 'meal-photo': 'öğün fotoğrafı', label: 'etiket', 'meal-text': 'yazı / ses' }
 const t = (d: Date | null) => (d ? new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d) : '—')
 
 export default async function AiAdminPage() {
@@ -32,9 +33,27 @@ export default async function AiAdminPage() {
             <span>Bekleme: <b className="text-ink">{p.cooldownUntil && p.cooldownUntil > new Date() ? t(p.cooldownUntil) : '—'}</b></span>
           </div>
           {p.lastError ? <p className="text-[12px] text-danger" data-testid="provider-error">Son hata ({t(p.lastErrorAt)}): {p.lastError}</p> : null}
-          <ProviderForm p={{ id: p.id, enabled: p.enabled, priority: p.priority, model: p.model, dailyTokenLimit: p.dailyTokenLimit, monthlyTokenLimit: p.monthlyTokenLimit, hasKey: !!p.keyLast4, cooling: !!(p.cooldownUntil && p.cooldownUntil > new Date()) || !!p.lastError }} />
+          <ProviderForm p={{ id: p.id, enabled: p.enabled, priority: p.priority, model: p.model, taskModels: p.taskModels, dailyTokenLimit: p.dailyTokenLimit, monthlyTokenLimit: p.monthlyTokenLimit, hasKey: !!p.keyLast4, cooling: !!(p.cooldownUntil && p.cooldownUntil > new Date()) || !!p.lastError }} />
         </section>
       ))}
+      <section className="card p-5 flex flex-col gap-2" aria-label="Maliyet" data-testid="ai-cost">
+        <Eyebrow>Bu ay · tahmini maliyet</Eyebrow>
+        {o.cost.length ? (
+          <div className="overflow-x-auto -mx-1 px-1"><table className="w-full text-[12px] num">
+            <thead><tr className="text-mute text-left"><th className="py-1 font-semibold">Model · görev</th><th className="font-semibold text-right">Çağrı</th><th className="font-semibold text-right">Token (gir/çık)</th><th className="font-semibold text-right">Çağrı başı</th><th className="font-semibold text-right">Toplam</th></tr></thead>
+            <tbody>{o.cost.map((c) => (
+              <tr key={c.model + c.task} className="border-t border-line">
+                <td className="py-1.5">{c.model}<br /><span className="text-mute">{TASK_LABEL[c.task] ?? c.task}</span></td>
+                <td className="text-right">{c.n}</td>
+                <td className="text-right">{fmtNum(Math.round(c.inputTokens / c.n))} / {fmtNum(Math.round(c.outputTokens / c.n))}</td>
+                <td className="text-right">{c.perCall === null ? '?' : '$' + c.perCall.toFixed(4)}</td>
+                <td className="text-right">{c.usd === null ? '?' : '$' + c.usd.toFixed(3)}</td>
+              </tr>
+            ))}</tbody>
+          </table></div>
+        ) : <p className="text-[13px] text-mute">Bu ay henüz başarılı çağrı yok.</p>}
+        <p className="text-[11px] text-mute">Gerçek token sayıları × liste fiyatı (milyon token başına; Opus 5.5 $4/$20, Haiku 5.5 $0,10/$0,50, gpt-6-luna $0,10/$0,50). Faturadaki tutar için sağlayıcı paneline bak; önbellekten gelenler ücretsizdir.</p>
+      </section>
       <UserDailyForm value={o.settings.userDaily} />
     </div>
   )

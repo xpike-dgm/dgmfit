@@ -38,8 +38,8 @@ const pick = (system, hasImage, text) => (/besin değeri tablosu/i.test(system) 
   const hookCheck = await fetch(BASE + '/api/test/fitness', { method: 'POST' }).catch(() => null)
   if (!hookCheck || hookCheck.status === 404) { console.log('AI E2E ATLANDI (canlı: test kancası yok, sahte sağlayıcı kullanılamaz)'); return }
   const sc = await fake(3190, (req, body) => {
-    if (req.url !== '/v1/messages') return { status: 404, body: {} }
-    state.calls.claude++; state.last.claude = { key: req.headers['x-api-key'] ?? String(req.headers.authorization ?? '').replace(/^Bearer /, ''), auths: [req.headers['x-api-key'], req.headers.authorization].filter(Boolean).length, body }
+    if (req.url !== '/v1/messages' && req.url !== '/v1/messages?beta=true') return { status: 404, body: {} }
+    state.calls.claude++; state.last.claude = { key: req.headers['x-api-key'] ?? String(req.headers.authorization ?? '').replace(/^Bearer /, ''), auths: [req.headers['x-api-key'], req.headers.authorization].filter(Boolean).length, body, beta: String(req.headers['anthropic-beta'] ?? '') }
     if (state.claude === 'rate') return { status: 429, body: { type: 'error', error: { type: 'rate_limit_error', message: 'rate limit' } } }
     const content = body.messages[0].content
     const out = pick(body.system, content.some((c) => c.type === 'image'), content.find((c) => c.type === 'text')?.text)
@@ -108,7 +108,8 @@ const pick = (system, hasImage, text) => (/besin değeri tablosu/i.test(system) 
   await p.getByTestId('ai-review').waitFor({ timeout: 20000 }).catch(() => fail('AI önerisi gelmedi'))
   if (state.last.claude?.key !== CLAUDE_KEY || state.last.claude.auths !== 1) fail('Claude anahtarı çözülüp tek kimlik olarak gönderilmedi: ' + JSON.stringify({ calls: state.calls, auths: state.last.claude?.auths }))
   const cb = state.last.claude.body
-  if (cb.model !== 'claude-haiku-5-5' || cb.output_config?.format?.type !== 'json_schema' || !cb.messages[0].content.some((c) => c.type === 'image' && c.source.type === 'base64')) fail('Claude isteği beklenen biçimde değil')
+  if (cb.model !== 'claude-opus-5-5' || cb.fallbacks !== 'default' || !state.last.claude.beta.includes('server-side-fallback-2026-07-01')) fail('fotoğraf Opus + sunucu yedeğiyle gitmedi: ' + JSON.stringify({ model: cb.model, fb: cb.fallbacks, beta: state.last.claude.beta }))
+  if (cb.output_config?.format?.type !== 'json_schema' || !cb.messages[0].content.some((c) => c.type === 'image' && c.source.type === 'base64')) fail('Claude isteği beklenen biçimde değil')
   const rows = p.getByTestId('ai-row')
   if ((await rows.count()) !== 3) fail('3 kalem bekleniyordu')
   const k1 = Math.round((corba.per100.kcal * 250) / 100), k2 = Math.round((simit.per100.kcal * 100) / 100)
@@ -131,6 +132,7 @@ const pick = (system, hasImage, text) => (/besin değeri tablosu/i.test(system) 
   await p.goto(BASE + '/yemek/besin/yeni')
   await p.getByTestId('label-input').setInputFiles({ name: 'e.png', mimeType: 'image/png', buffer: uniquePng() })
   await p.getByTestId('label-ocr').getByRole('status').filter({ hasText: 'Etiketten dolduruldu' }).waitFor({ timeout: 20000 }).catch(() => fail('etiket okunmadı'))
+  if (state.last.claude.body.model !== 'claude-opus-5-5') fail('etiket Opus ile gitmedi')
   for (const [id, v] of [['cf-kcal', '400'], ['cf-protein', '10'], ['cf-carb', '60'], ['cf-fat', '12,5'], ['cf-sodium', '200'], ['cf-name', 'Test kraker']]) if ((await p.inputValue('#' + id)) !== v) fail(`${id} = ${await p.inputValue('#' + id)}, beklenen ${v}`)
 
   // 5) Claude 429 → OpenAI'ye geçiş
@@ -141,12 +143,17 @@ const pick = (system, hasImage, text) => (/besin değeri tablosu/i.test(system) 
   await p.fill('#ai-text', tx)
   await p.getByRole('button', { name: 'Ayrıştır' }).click()
   await p.getByTestId('ai-review').getByText('Yanıt: OpenAI').waitFor({ timeout: 20000 }).catch(() => fail('OpenAI\'ye geçilmedi'))
+  const tb = state.last.claude.body
+  if (tb.model !== 'claude-haiku-5-5' || tb.fallbacks !== undefined || state.last.claude.beta) fail('yazılı kayıt Haiku ile (yedeksiz) gitmedi: ' + JSON.stringify({ model: tb.model, fb: tb.fallbacks }))
   const ob = state.last.openai.body
   if (state.last.openai.auth !== 'Bearer ' + OPENAI_KEY || ob.model !== 'gpt-6-luna' || ob.text?.format?.type !== 'json_schema' || ob.text.format.strict !== true) fail('OpenAI isteği beklenen biçimde değil')
   await p.keyboard.press('Escape')
   await p.goto(BASE + '/yonetim/ai')
   await p.getByTestId('provider-claude').getByTestId('provider-error').getByText(/rate 429/).waitFor().catch(() => fail('Claude hatası yöneticide görünmüyor'))
   if ((await p.getByTestId('provider-claude').getByTestId('provider-status').innerText()) !== 'bekleme süresinde') fail('Claude beklemede değil')
+  const cost = await p.getByTestId('ai-cost').innerText()
+  if (!/claude-opus-5-5/.test(cost) || !/gpt-6-luna/.test(cost) || !/\$0[.,]\d{4}/.test(cost)) fail('maliyet tablosu eksik: ' + cost)
+  if ((await p.inputValue('#claude-tm-meal-photo')) !== 'claude-opus-5-5' || (await p.inputValue('#claude-tm-meal-text')) !== '') fail('görev modelleri formda yanlış')
 
   // 6) Aynı istek önbellekten (sağlayıcıya gitmez)
   const before = state.calls.openai + state.calls.claude

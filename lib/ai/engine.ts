@@ -11,6 +11,15 @@ import { jsonSchemaFor, parseResult, TASKS, type Task } from './schemas'
 
 /** Varsayılanlar: kullanıcı kararı (Haiku her yerde); OpenAI modeli resmi belgedeki en verimli model (2026-11-05). */
 export const DEFAULT_MODELS: Record<ProviderId, string> = { claude: 'claude-haiku-5-5', openai: 'gpt-6-luna' }
+/** Karma model (kullanıcı kararı 2026-11-05): fotoğraf ve etiket Claude Opus 5.5, yazılı kayıt Haiku 5.5. */
+export const DEFAULT_TASK_MODELS: Record<ProviderId, Partial<Record<Task, string>>> = { claude: { 'meal-photo': 'claude-opus-5-5', label: 'claude-opus-5-5' }, openai: {} }
+/** Milyon token başına $ (giriş, çıkış). Kaynak: claude-api rehberi model tablosu (2026-10-06) ve OpenAI fiyat sayfası (2026-11-05). Yalnızca tahmin ekranı için. */
+export const PRICES: Record<string, [number, number]> = {
+  'claude-opus-5-5': [4, 20], 'claude-haiku-5-5': [0.1, 0.5], 'claude-sonnet-5-5': [2, 10], 'gpt-6-luna': [0.1, 0.5],
+}
+export const modelFor = (p: { model: string; taskModels: Record<string, string> | null }, task: Task) => (p.taskModels ?? {})[task] || p.model
+/** Sunucu tarafı yedek (refusal → başka model) bu modellerde var; Haiku'da yok. */
+const SERVER_FALLBACK = /^claude-(opus|fable|sonnet-5-5)/
 export const PROVIDER_LABEL: Record<ProviderId, string> = { claude: 'Claude (Anthropic)', openai: 'OpenAI' }
 
 export class AiError extends Error {
@@ -40,8 +49,8 @@ function openKey(p: typeof schema.aiProviders.$inferSelect): string | null {
 
 export async function ensureProviders() {
   await db.insert(schema.aiProviders).values([
-    { id: 'claude', priority: 0, model: DEFAULT_MODELS.claude },
-    { id: 'openai', priority: 1, model: DEFAULT_MODELS.openai },
+    { id: 'claude', priority: 0, model: DEFAULT_MODELS.claude, taskModels: DEFAULT_TASK_MODELS.claude as Record<string, string> },
+    { id: 'openai', priority: 1, model: DEFAULT_MODELS.openai, taskModels: {} },
   ]).onConflictDoNothing()
   return db.select().from(schema.aiProviders).orderBy(schema.aiProviders.priority)
 }
@@ -75,13 +84,18 @@ async function callClaude(key: string, model: string, task: Task, input: CallInp
     const content: Anthropic.ContentBlockParam[] = []
     if (input.image) content.push({ type: 'image', source: { type: 'base64', media_type: input.image.mime as 'image/jpeg', data: input.image.data.toString('base64') } })
     content.push({ type: 'text', text: input.text })
-    const r = await client.messages.create({
-      model, max_tokens: 4000, system: TASKS[task].system,
-      output_config: { effort: 'low', format: { type: 'json_schema', schema: jsonSchemaFor(task) } },
-      messages: [{ role: 'user', content }],
-    })
+    const params = {
+      model, max_tokens: SERVER_FALLBACK.test(model) ? 8000 : 4000, system: TASKS[task].system,
+      output_config: { effort: 'low' as const, format: { type: 'json_schema' as const, schema: jsonSchemaFor(task) } },
+      messages: [{ role: 'user' as const, content }],
+    }
+    // Opus 5.5 (ve diğer destekleyenler): güvenlik reddinde aynı çağrı içinde sunucu tarafı yedek model ("default" yönlendirme)
+    const r = SERVER_FALLBACK.test(model)
+      ? await client.beta.messages.create({ ...params, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' })
+      : await client.messages.create(params)
     if (r.stop_reason === 'refusal') throw new ProviderError('Model isteği reddetti', 200, 'refusal')
-    const text = r.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
+    if (r.stop_reason === 'max_tokens') throw new ProviderError('Yanıt yarıda kesildi', 200, 'bad_output')
+    const text = (r.content as { type: string; text?: string }[]).flatMap((b) => (b.type === 'text' && b.text ? [b.text] : [])).join('')
     return { json: parseResult(task, text), inputTokens: r.usage.input_tokens, outputTokens: r.usage.output_tokens }
   } catch (e) {
     if (e instanceof ProviderError) throw e
@@ -153,8 +167,9 @@ export async function runTask<T extends Task>(userId: string, task: T, input: Ca
     try {
       const key = openKey(p)
       if (!key) continue
-      const out = id === 'claude' ? await callClaude(key, p.model, task, input) : await callOpenAI(key, p.model, task, input)
-      await db.insert(schema.aiCalls).values({ userId, task, provider: id, ok: true, inputTokens: out.inputTokens, outputTokens: out.outputTokens, ms: Date.now() - t0 })
+      const model = modelFor(p, task)
+      const out = id === 'claude' ? await callClaude(key, model, task, input) : await callOpenAI(key, model, task, input)
+      await db.insert(schema.aiCalls).values({ userId, task, provider: id, model, ok: true, inputTokens: out.inputTokens, outputTokens: out.outputTokens, ms: Date.now() - t0 })
       await db.insert(schema.aiCache).values({ hash, task, result: out.json as object, provider: id }).onConflictDoNothing()
       if (p.lastError) await db.update(schema.aiProviders).set({ cooldownUntil: null }).where(eq(schema.aiProviders.id, id))
       return { result: out.json as never, provider: id }
@@ -162,7 +177,7 @@ export async function runTask<T extends Task>(userId: string, task: T, input: Ca
       const pe = e instanceof ProviderError ? e : new ProviderError((e as Error).message, null, null)
       const c = classifyError(pe.code === 'refusal' || pe.code === 'bad_output' ? 400 : pe.status, pe.code)
       const kind = pe.code === 'refusal' ? 'refusal' : pe.code === 'bad_output' ? 'bad_output' : c.kind
-      await db.insert(schema.aiCalls).values({ userId, task, provider: id, ok: false, ms: Date.now() - t0, error: `${kind}${pe.status ? ' ' + pe.status : ''}: ${pe.message.slice(0, 160)}` })
+      await db.insert(schema.aiCalls).values({ userId, task, provider: id, model: modelFor(p, task), ok: false, ms: Date.now() - t0, error: `${kind}${pe.status ? ' ' + pe.status : ''}: ${pe.message.slice(0, 160)}` })
       await db.update(schema.aiProviders).set({
         lastError: `${kind}${pe.status ? ' ' + pe.status : ''}${pe.code ? ' ' + pe.code : ''}`, lastErrorAt: new Date(),
         ...(c.cooldownMs && kind !== 'refusal' && kind !== 'bad_output' ? { cooldownUntil: new Date(Date.now() + c.cooldownMs) } : {}),
@@ -184,9 +199,19 @@ export async function providerOverview() {
   const [start] = dayBounds(dayString())
   const calls = await db.select({ provider: schema.aiCalls.provider, ok: schema.aiCalls.ok, cached: schema.aiCalls.cached, n: sql<number>`count(*)::int` })
     .from(schema.aiCalls).where(gte(schema.aiCalls.createdAt, start)).groupBy(schema.aiCalls.provider, schema.aiCalls.ok, schema.aiCalls.cached)
+  const monthStart = new Date(start); monthStart.setUTCDate(1)
+  const byModel = await db.execute<{ model: string; task: string; n: number; inp: number; outp: number }>(sql`
+    select model, task, count(*)::int as n, coalesce(sum(input_tokens),0)::int as inp, coalesce(sum(output_tokens),0)::int as outp
+    from ai_calls where ok and not cached and model is not null and created_at >= ${monthStart.toISOString()} group by model, task order by model, task`)
+  const cost = byModel.map((r) => {
+    const pr = PRICES[r.model]
+    const usd = pr ? (Number(r.inp) * pr[0] + Number(r.outp) * pr[1]) / 1e6 : null
+    return { model: r.model, task: r.task, n: Number(r.n), inputTokens: Number(r.inp), outputTokens: Number(r.outp), usd, perCall: usd !== null && Number(r.n) ? usd / Number(r.n) : null }
+  })
   return {
+    cost,
     providers: rows.map((p) => ({
-      id: p.id as ProviderId, label: PROVIDER_LABEL[p.id as ProviderId] ?? p.id, enabled: p.enabled, priority: p.priority, model: p.model, keyLast4: p.keyData?.length ? p.keyLast4 : null,
+      id: p.id as ProviderId, label: PROVIDER_LABEL[p.id as ProviderId] ?? p.id, enabled: p.enabled, priority: p.priority, model: p.model, taskModels: (p.taskModels ?? {}) as Record<string, string>, keyLast4: p.keyData?.length ? p.keyLast4 : null,
       dailyTokenLimit: p.dailyTokenLimit, monthlyTokenLimit: p.monthlyTokenLimit, usedToday: used.get(p.id)?.today ?? 0, usedMonth: used.get(p.id)?.month ?? 0,
       cooldownUntil: p.cooldownUntil, lastError: p.lastError, lastErrorAt: p.lastErrorAt, skipped: skipped.find((s) => s.id === p.id)?.reason ?? null,
     })),

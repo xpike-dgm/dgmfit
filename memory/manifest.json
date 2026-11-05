@@ -512,6 +512,7 @@
     "0004_fit.sql",
     "0005_fitness.sql",
     "0006_fitness_progress.sql",
-    "0007_ai.sql"
+    "0007_ai.sql",
+    "0008_ai_task_models.sql"
   ]
 }

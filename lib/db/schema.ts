@@ -488,6 +488,7 @@ export const aiProviders = pgTable('ai_providers', {
   enabled: boolean('enabled').notNull().default(true),
   priority: integer('priority').notNull().default(0), // küçük olan önce
   model: text('model').notNull(),
+  taskModels: jsonb('task_models').$type<Record<string, string>>().notNull().default({}), // görev başına model (Faz 4a karma: fotoğraf/etiket Opus)
   keyIv: bytea('key_iv'), keyTag: bytea('key_tag'), keyData: bytea('key_data'), keyLast4: text('key_last4'),
   dailyTokenLimit: integer('daily_token_limit').notNull().default(0), // 0 = sınırsız
   monthlyTokenLimit: integer('monthly_token_limit').notNull().default(0),
@@ -503,6 +504,7 @@ export const aiCalls = pgTable('ai_calls', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   task: text('task').notNull(), // meal-photo | meal-text | label
   provider: text('provider'), // null = önbellek ya da hiçbiri
+  model: text('model'),
   ok: boolean('ok').notNull(),
   cached: boolean('cached').notNull().default(false),
   inputTokens: integer('input_tokens').notNull().default(0),

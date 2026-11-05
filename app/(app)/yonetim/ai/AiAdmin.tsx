@@ -4,15 +4,17 @@ import { useRouter } from 'next/navigation'
 import { btn, Eyebrow } from '@/components/ui'
 import { resetCooldownAction, saveAiSettingsAction, saveProviderAction } from './actions'
 
-type P = { id: 'claude' | 'openai'; enabled: boolean; priority: number; model: string; dailyTokenLimit: number; monthlyTokenLimit: number; hasKey: boolean; cooling: boolean }
+type P = { id: 'claude' | 'openai'; enabled: boolean; priority: number; model: string; taskModels: Record<string, string>; dailyTokenLimit: number; monthlyTokenLimit: number; hasKey: boolean; cooling: boolean }
+const TASKS = [['meal-photo', 'Fotoğraf'], ['label', 'Etiket'], ['meal-text', 'Yazı / ses']] as const
 
 export function ProviderForm({ p }: { p: P }) {
   const [v, setV] = useState({ enabled: p.enabled, priority: p.priority, model: p.model, daily: String(p.dailyTokenLimit), monthly: String(p.monthlyTokenLimit), key: '' })
+  const [tm, setTm] = useState<Record<string, string>>({ ...p.taskModels })
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null)
   const [pending, start] = useTransition()
   const router = useRouter()
   const save = (extra: { removeKey?: boolean } = {}) => start(async () => {
-    const r = await saveProviderAction({ id: p.id, enabled: v.enabled, priority: v.priority, model: v.model, dailyTokenLimit: Number(v.daily) || 0, monthlyTokenLimit: Number(v.monthly) || 0, key: v.key || undefined, ...extra })
+    const r = await saveProviderAction({ id: p.id, enabled: v.enabled, priority: v.priority, model: v.model, dailyTokenLimit: Number(v.daily) || 0, monthlyTokenLimit: Number(v.monthly) || 0, key: v.key || undefined, taskModels: tm, ...extra })
     setMsg(r.ok ? { ok: true, t: 'Kaydedildi.' } : { ok: false, t: r.error })
     if (r.ok) { setV({ ...v, key: '' }); router.refresh() }
   })
@@ -23,7 +25,7 @@ export function ProviderForm({ p }: { p: P }) {
         <label htmlFor={`${p.id}-prio`} className="flex flex-col gap-1 text-[12px] font-semibold">Sıra
           <input id={`${p.id}-prio`} inputMode="numeric" value={v.priority} onChange={(e) => setV({ ...v, priority: Number(e.target.value) || 0 })} className="h-11 rounded-xl bg-surface-2 border border-line px-3 num" />
         </label>
-        <label htmlFor={`${p.id}-model`} className="col-span-2 flex flex-col gap-1 text-[12px] font-semibold">Model
+        <label htmlFor={`${p.id}-model`} className="col-span-2 flex flex-col gap-1 text-[12px] font-semibold">Varsayılan model
           <input id={`${p.id}-model`} value={v.model} onChange={(e) => setV({ ...v, model: e.target.value })} className="h-11 rounded-xl bg-surface-2 border border-line px-3" />
         </label>
         <label htmlFor={`${p.id}-daily`} className="col-span-1 flex flex-col gap-1 text-[12px] font-semibold">Günlük token
@@ -33,6 +35,14 @@ export function ProviderForm({ p }: { p: P }) {
           <input id={`${p.id}-monthly`} inputMode="numeric" value={v.monthly} onChange={(e) => setV({ ...v, monthly: e.target.value.replace(/\D/g, '') })} placeholder="0 = sınırsız" className="h-11 rounded-xl bg-surface-2 border border-line px-3 num" />
         </label>
       </div>
+      <fieldset className="grid grid-cols-3 gap-2">
+        <legend className="text-[12px] font-semibold mb-1">Görev başına model (boş = varsayılan)</legend>
+        {TASKS.map(([k, l]) => (
+          <label key={k} htmlFor={`${p.id}-tm-${k}`} className="flex flex-col gap-1 text-[11px] text-mute">{l}
+            <input id={`${p.id}-tm-${k}`} value={tm[k] ?? ''} onChange={(e) => setTm({ ...tm, [k]: e.target.value.trim() })} placeholder={v.model} className="h-10 rounded-lg bg-surface-2 border border-line px-2 text-[12px] text-ink" />
+          </label>
+        ))}
+      </fieldset>
       <label htmlFor={`${p.id}-key`} className="flex flex-col gap-1 text-[12px] font-semibold">{p.hasKey ? 'Yeni anahtar (değiştirmek için)' : 'API anahtarı'}
         <input id={`${p.id}-key`} type="password" autoComplete="off" spellCheck={false} value={v.key} onChange={(e) => setV({ ...v, key: e.target.value })} placeholder={p.hasKey ? 'Boş bırakırsan aynı kalır' : 'Anahtarı yapıştır'} className="h-11 rounded-xl bg-surface-2 border border-line px-3" />
       </label>

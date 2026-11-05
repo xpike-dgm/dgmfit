@@ -15,6 +15,7 @@ const ProvIn = z.object({
   id: Id, enabled: z.boolean(), priority: z.number().int().min(0).max(9), model: z.string().trim().min(3).max(80).regex(/^[a-z0-9.\-_:]+$/i, 'Model adı yalnızca harf, rakam, nokta, tire'),
   dailyTokenLimit: z.number().int().min(0).max(1e9), monthlyTokenLimit: z.number().int().min(0).max(1e10),
   key: z.string().trim().max(300).optional(), removeKey: z.boolean().optional(),
+  taskModels: z.partialRecord(z.enum(['meal-photo', 'meal-text', 'label']), z.string().trim().max(80).regex(/^[a-z0-9.\-_:]*$/i)).optional(),
 })
 export async function saveProviderAction(input: z.input<typeof ProvIn>): Promise<R> {
   try { await admin() } catch { return { ok: false, error: 'Yetki yok' } }
@@ -22,7 +23,9 @@ export async function saveProviderAction(input: z.input<typeof ProvIn>): Promise
   if (!p.success) return { ok: false, error: p.error.issues[0]?.message ?? 'Geçersiz' }
   await ensureProviders()
   const { id, key, removeKey, ...rest } = p.data
-  const set: Partial<typeof schema.aiProviders.$inferInsert> = { ...rest, updatedAt: new Date() }
+  const { taskModels, ...plain } = rest
+  const set: Partial<typeof schema.aiProviders.$inferInsert> = { ...plain, updatedAt: new Date() }
+  if (taskModels) set.taskModels = Object.fromEntries(Object.entries(taskModels).filter(([, v]) => v)) as Record<string, string>
   if (key) {
     if (key.length < 20 || /\s/.test(key)) return { ok: false, error: 'Anahtar geçersiz görünüyor' }
     try { Object.assign(set, sealKey(id, key), { cooldownUntil: null, lastError: null }) } catch (e) { return { ok: false, error: (e as Error).message } }
