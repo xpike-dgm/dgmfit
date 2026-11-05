@@ -257,6 +257,8 @@ Kaynak: kullanıcı mesajı 2026-11-05 ("ayarlara feedback butonu…", "whitelis
 
 ## Sıradaki işler
 
+0. **Bekleyen:** Ağırsağlam'dan içerik kullanım izni (kullanıcı 2026-11-05'te e-posta gönderdi; cevabın ekran görüntüsünü paylaşacak). İzne göre kapsam belirlenecek; izin gelmezse aynı özellikler kendi verimizle: süperset, kas etki + seans yorgunluk puanı, rekor denemesi modu + plaka görseli, yağ oranı/FFMI, ayrıntılı kas haritası.
+
 1. Kullanıcı `deneme` ile giriş yapıp Profil → AI ayarları'ndan Claude ve OpenAI anahtarlarını girsin; ardından gerçek fotoğraf/yazı ve koç denemesi (yönetici sayfasında hata/kullanım/maliyet görünür).
 2. İsteğe bağlı Faz 6 (Capacitor ile mağaza sürümü, Apple Sağlık / Health Connect, Bluetooth şişe, akıllı saat, video) ya da kullanıcı geri bildirimine göre iyileştirmeler.
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
