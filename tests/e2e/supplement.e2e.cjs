@@ -57,8 +57,9 @@ const fail = (m) => { throw new Error(m) }
   await plus('Pre-workout', 2); await p.getByRole('alert').filter({ hasText: /kafein/ }).waitFor().catch(() => fail('500 mg kafein uyarısı yok'))
   await p.getByTestId('supp-extras').filter({ hasText: 'Kafein 500 mg' }).waitFor()
   await shot('02-kart')
-  await row('Pre-workout').getByRole('button', { name: 'Pre-workout bir porsiyon azalt' }).click(); await p.waitForTimeout(900)
-  if (await p.getByRole('alert').filter({ hasText: /kafein/ }).count()) fail('geri alınca kafein uyarısı kalktı değil')
+  await row('Pre-workout').getByRole('button', { name: 'Pre-workout bir porsiyon azalt' }).click()
+  await p.getByRole('alert').filter({ hasText: /kafein/ }).waitFor({ state: 'detached', timeout: 8000 }).catch(() => fail('geri alınca kafein uyarısı kalkmadı'))
+  await p.waitForTimeout(1500); await p.waitForLoadState('networkidle') // sunucu kaydı
   await p.reload(); if ((await count('Pre-workout')) !== '1') fail('azaltma kalıcı olmadı')
 
   // 3) Düzenle + sil; besin aramasında takviye çıkmaz

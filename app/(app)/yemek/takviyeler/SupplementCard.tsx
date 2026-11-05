@@ -3,18 +3,21 @@ import Link from 'next/link'
 import { useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { fmtNum } from '@/lib/calc'
-import type { Extra } from '@/lib/supplements'
+import { limitWarnings, sumExtras, type Extra } from '@/lib/supplements'
 import { Info, Plus } from '@/components/icons'
 import { servingAction } from './actions'
 
 interface S { id: number; name: string; brand: string | null; unit: string; label: string; serving: { kcal: number; protein: number }; extras: Extra[]; daily: number | null; count: number }
 
 /** Yemek ekranındaki takviye kartı: her takviye için bugünkü porsiyon sayısı ve −/+ düğmeleri. */
-export default function SupplementCard({ day, items, extras, warnings, totals }: { day: string; items: S[]; extras: Extra[]; warnings: string[]; totals: { kcal: number; protein: number } }) {
+export default function SupplementCard({ day, items, totals }: { day: string; items: S[]; extras?: Extra[]; warnings?: string[]; totals: { kcal: number; protein: number } }) {
   const router = useRouter()
   const [, start] = useTransition()
   const [err, setErr] = useState<string | null>(null)
   const [counts, bump] = useOptimistic(Object.fromEntries(items.map((i) => [i.id, i.count])) as Record<number, number>, (s, [id, d]: [number, number]) => ({ ...s, [id]: Math.max(0, (s[id] ?? 0) + d) }))
+  // ek içerik toplamı ve uyarılar anlık sayaçlardan (sunucu yenilemesini beklemez)
+  const extras = sumExtras(items.map((i) => ({ extras: i.extras, count: counts[i.id] ?? 0 })))
+  const warnings = limitWarnings(extras)
   const tap = (id: number, d: 1 | -1) => start(async () => { bump([id, d]); const r = await servingAction(id, day, d); setErr(r.ok ? null : r.error); router.refresh() })
   return (
     <section className="card p-4 flex flex-col gap-3" aria-label="Takviyeler" data-testid="supplements">
