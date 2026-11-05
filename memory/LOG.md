@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5c tamamlandı
+- Tempo: `computePlan` artık `allowed` (mutlak sınır 1,5 kg/hf), `minDays`, `expectedDays` döner; sihirbaz ve sunucu `allowed`'a bakar; kalori tabanında gerçek tempo gösterilir (önceden istenen tempo yazılıyordu).
+- Tasarım: token'lar iki temada; `lime` → modül vurgusu `acc` (70 dosyada sınıf taşındı, sabit hex'ler token'a); `ModShell`, `Band`, renkli `TopBar`, `Menu`, 7 yuvalı alt bar; Bugün/Fit/Su/Yemek/Fitness/Sosyal bantları; ayarlar 18 yeni sayfaya bölündü; Görünüm sayfası (çerez); 0013 su görünümü halka.
+- Bulunan kusur: su e2e hedefi "/ 2.600 ml" metninden okuyordu, yeni bantta değer "Hedef 2.600 ml" → test güncellendi (uygulama doğru).
+- Doğrulama: commit `238bea8`; verify.sh VERIFY OK (135 birim, 13 e2e); release `2026-11-05T08-26-24-019Z` RELEASE OK; canlıda `_migrations` son 0013, `water_settings` hepsi `ring`, 20 dk logda hata 0; 8 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 5c başladı (yeni tasarım + tempo)
 - Faz başı: memory-check geçti; son commit `2c1198f` STATE ile uyumlu; çalışma ağacı temiz. Kullanıcı 41 ekranlık tasarımı onayladı ve kurulumda temponun engellenmemesini istedi.
 

@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 5c devam ediyor (2026-11-05): kullanıcı incelemesi sonrası yeni tasarım + kurulum temposu. Faz 0–5b tamamlandı; Faz 6 isteğe bağlı ve beklemede. AI özelliklerinin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
+**Şu anki faz: Faz 5c tamamlandı (2026-11-05): yeni tasarım + kurulum temposu. Faz 0–5c tamamlandı; kullanıcının diğer hata bildirimleri bekleniyor; Faz 6 isteğe bağlı ve beklemede. AI özelliklerinin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -20,7 +20,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 4c | AI haftalık menü + alışveriş listesi + toplu hazırlık, "elimde bunlar var" tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü, karb döngüsü, koçtan "yarının menüsü" | tamamlandı (sahte sağlayıcıyla) | commit `3410884`; birim test 118/118; verify.sh VERIFY OK (11 e2e, planlama e2e sahte Claude ile); release deploy `2026-11-05T03-34-15-650Z` RELEASE OK; canlıda 0010 uygulandı (4 tablo), yeni sayfalar girişe yönlendirir, `/api/ai/restaurant` oturumsuz 401, app logunda hata yok; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
 | 5a | Sosyal çekirdek: profil (foto, biyografi, salon, hedef rozeti), PR vitrini, istatistik kartları, gizlilik (profil + öğe bazında), arkadaşlık + takip, arama, davet linki + QR, arkadaş önerileri, akış (önerilen/kronolojik), gönderi türleri, tepki/yorum/kaydetme, antrenman kopyalama, tarif kaydetme, engelle/sessize al/şikayet, AI + kural moderasyonu, bildirimler | tamamlandı | commit `7072263`; birim test 124/124; verify.sh VERIFY OK (12 e2e, sosyal e2e 3 kullanıcı + sahte Claude moderasyonu); release deploy `2026-11-05T05-42-38-190Z` RELEASE OK; canlı kancasız sosyal kontrolü OK (arama → istek → kabul → gönderi → arkadaş akışı → tepki bildirimi → yabancıya 404 → QR); canlıda 0011 (10 tablo), logda hata yok; 10 test kullanıcısı silindi. AI moderasyonu gerçek sağlayıcıyla denenmedi (canlıda anahtar yok → yalnızca kural; fotoğraflı gönderi onaya düşer) |
 | 5b | Sosyal genişleme: meydan okumalar, gruplar + grup sohbeti, adil sıralama (DOTS, tutarlılık), düello, birebir mesaj, dürtme, antrenman partneri, 24 saatlik kartlar, PR doğrulama | tamamlandı | commit `8e9b256`; birim test 130/130; verify.sh VERIFY OK (13 e2e, sosyal-2 e2e 3 kullanıcı); release deploy `2026-11-05T06-10-32-259Z` RELEASE OK; canlı kancasız kontrol OK (5a + grup daveti/katılım/sohbet, DM, dürtme, meydan okuma katılım + sıralama, 24 saatlik kart, üye olmayana grup 404); canlıda 0012 (8 tablo), logda hata yok; 10 test kullanıcısı silindi |
-| 5c | Kullanıcı incelemesi (6/10): yeni tasarım (modül renk paletleri, açık/koyu/otomatik tema, 7 yuvalı alt bar, sekme bantları + geri düğmeli alt sayfa başlıkları, ayarların ayrı sayfalara bölünmesi) + kurulumda kullanıcının temposuna saygı | devam ediyor | — |
+| 5c | Kullanıcı incelemesi (6/10): yeni tasarım (modül renk paletleri, açık/koyu/otomatik tema, 7 yuvalı alt bar, sekme bantları + geri düğmeli alt sayfa başlıkları, ayarların ayrı sayfalara bölünmesi) + kurulumda kullanıcının temposuna saygı | tamamlandı | commit `b5b012a` + `238bea8`; birim test 135/135; verify.sh VERIFY OK (13 e2e; tema/alt bar/odak modu onboarding e2e'de, bölünmüş ayarlar su/push/sosyal e2e'de); release `2026-11-05T08-26-24-019Z` RELEASE OK; canlıda 0013 uygulandı (su ayarları `ring`), yeni rotalar oturumsuz girişe yönlendirir, iki temada canlı ekran kontrolü, logda hata yok; 8 test kullanıcısı silindi |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı (beklemede) | — |
 
 ## Faz 1a kapsamı ve kabul kriterleri (tamamlandı)
@@ -199,17 +199,20 @@ Kaynak: spesifikasyon 8.2 (antrenman partneri), 8.3 (24 saatlik kartlar, paylaş
 Kanıt `tests/e2e/social2.e2e.cjs`: karşılıklı partner → B'nin gerçek kayıt yolundan antrenmanı (saveWorkout) A'ya `partner_workout` bildirimi, B partnerin aktif programını kopyaladı; 10 gün önce 60 kg → bugün 100 kg squat şüpheli işaretlendi; "Haftalık en çok hacim": A 1.800, B 1.500 (kayıtlardan), C reddetti → 404; düello "Rakip henüz katılmadı" → katılım → berabere; grup daveti/katılım, sohbet, uygunsuz mesaj gizli; sıralamaya katılmayan görünmez; A'nın DOTS'u test içinde `lib/social-rank.ts` ile hesaplanan değere eşit; B'nin şüpheli rekoru yerine önceki 70 e1RM kullanıldı, 2 tanıkla doğrulanınca 120 ile sıralandı ve B'ye bildirim gitti; DM + okunmamış sayısı; gönderi mesajla paylaşıldı; dürtme ikinci kez engellendi; 24 saatlik kart arkadaşta antrenman özetiyle göründü.
 **Açık:** push teslimi cihazda denenmedi; PR kanıt fotoğrafının yönetici onayı e2e'de denenmedi (yönetici kuyruğu + onay kodu var); video Faz 6'da.
 
-## Faz 5c kapsamı ve kabul kriterleri (devam ediyor)
+## Faz 5c kapsamı ve kabul kriterleri (tamamlandı)
 
 Kaynak: kullanıcı incelemesi 2026-11-05 ("her şey karmakarışık; her düzenleme kendi sayfasını açsın; farklı modüllerde farklı renk paleti; dengeli koyu tema"), alt bar isteği ("ana ekran - fit - su - + - yemek - fitness - sosyal"), onaylanan ekran tasarımı (artifact `2smYSfpGdAX2739CrrjZ3v`, 41 ekran, "bire bir gösterdiğin gibi") ve tempo geri bildirimi ("kullanıcı kaç günde hedefliyorsa onu hedeflesin, güvenli değilse uyar; haftada 1,5 kg üstü kabul edilmez").
 
-- [ ] Kurulum temposu: güvenli olmayan süre seçilebilir (uyarı + önerilen süre düğmesi); yalnızca haftada 1,5 kg üstü (18 yaş altında önerilen sınır) engellenir; kalori tabanı korunur ve tahmini süre gösterilir; sunucu aynı kuralı uygular
-- [ ] Tema: açık, dengeli koyu, otomatik (sistem); Profil → Görünüm'den seçilir, ilk çizimde doğru tema (yanıp sönme yok)
-- [ ] Modül paletleri: Bugün yeşil, Fit turkuaz, Su mavi, Yemek turuncu, Fitness kırmızı-turuncu, Sosyal mor-mavi, Koç mor, Profil gri; vurgu rengi (düğme, seçili öğe, odak) bulunulan modülden gelir; makro renkleri sabit
-- [ ] Alt bar 7 yuva: Bugün · Fit · Su · ＋ · Yemek · Fitness · Sosyal; seçili sekme kendi renginde; canlı antrenmanda gizli
-- [ ] Sekme ana sayfalarında renkli özet bandı (halka + 3 değer); alt sayfalarda modül renginde geri düğmeli başlık
-- [ ] Ayarlar bölünür, her satır kendi sayfasını açar: Su (hedef, kaplar, hızlı butonlar ve yudum, hatırlatmalar), Profil (hesap, hedef ve plan, görünüm, bildirimler, gizlilik → sosyal, AI koç), Salon (ekipman, bar ve plakalar, artış ve dinlenme, seans süresi), Sosyal (profil bilgileri, gizlilik, profilde görünenler, bildirimler, davet); Su ekranındaki "Düzenle" doğrudan kaplar sayfasını açar
-- [ ] Testler: birim (tempo kuralları) + tüm e2e'ler yeni yapıya göre + iki temada ekran görüntüsü kontrolü + verify.sh + canlı e2e + hafıza
+- [x] Kurulum temposu: güvenli olmayan süre seçilebilir (uyarı + önerilen süre düğmesi); yalnızca haftada 1,5 kg üstü (18 yaş altında önerilen sınır) engellenir; kalori tabanı korunur ve tahmini süre gösterilir; sunucu aynı kuralı uygular
+- [x] Tema: açık, dengeli koyu, otomatik (sistem); Profil → Görünüm'den seçilir, ilk çizimde doğru tema (yanıp sönme yok)
+- [x] Modül paletleri: Bugün yeşil, Fit turkuaz, Su mavi, Yemek turuncu, Fitness kırmızı-turuncu, Sosyal mor-mavi, Koç mor, Profil gri; vurgu rengi (düğme, seçili öğe, odak) bulunulan modülden gelir; makro renkleri sabit
+- [x] Alt bar 7 yuva: Bugün · Fit · Su · ＋ · Yemek · Fitness · Sosyal; seçili sekme kendi renginde; canlı antrenmanda gizli
+- [x] Sekme ana sayfalarında renkli özet bandı (halka + 3 değer); alt sayfalarda modül renginde geri düğmeli başlık
+- [x] Ayarlar bölünür, her satır kendi sayfasını açar: Su (hedef, kaplar, hızlı butonlar ve yudum, hatırlatmalar), Profil (hesap, hedef ve plan, görünüm, bildirimler, gizlilik → sosyal, AI koç), Salon (ekipman, bar ve plakalar, artış ve dinlenme, seans süresi), Sosyal (profil bilgileri, gizlilik, profilde görünenler, bildirimler, davet); Su ekranındaki "Düzenle" doğrudan kaplar sayfasını açar
+- [x] Testler: birim (tempo kuralları) + tüm e2e'ler yeni yapıya göre + iki temada ekran görüntüsü kontrolü + verify.sh + canlı e2e + hafıza
+
+Kanıt: `tests/calc.test.ts` (ekran görüntüsündeki 70 gün / 1,2 kg/hf kilo alma kabul + uyarı; 50 gün / 1,68 kg/hf red, en kısa 56 gün; kalori tabanı + tahmini süre; 18 yaş altı), `tests/theme.test.ts`, onboarding e2e (30 gün güvensiz ama devam açık; 20 gün kapalı → "günü kullan"; 7 sekme sırası; su sayfasında `data-mod=water`; Açık/Koyu/Otomatik çerezle kalıcı, zemin rgb(243,244,246)/rgb(20,22,27); canlı antrenmanda alt bar yok), su e2e ("Düzenle" → `/su/ayarlar/kaplar`), sosyal e2e (menü → profil bilgileri; ayrı sayfada kaydetmek diğerini bozmaz).
+**Açık:** Hesap ve kişisel bilgiler sayfası salt okunur (boy/aktivite düzenleme yok); hedef değiştirme akışı yok (Fit planı); alt sayfaların bir kısmında tasarımdaki alt başlık metni yok.
 
 ## Sıradaki işler
 
