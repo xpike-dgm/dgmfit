@@ -114,7 +114,11 @@
     "tests/progress.test.ts",
     "tests/e2e/progress.e2e.cjs",
     "app/(app)/fitness/istatistik/BodyMap.tsx",
-    "app/(app)/fitness/olcumler/MeasureClient.tsx"
+    "app/(app)/fitness/olcumler/MeasureClient.tsx",
+    "data/exercises-tr-auto/part1.json",
+    "data/exercises-tr-auto/part2.json",
+    "data/exercises-tr-auto/part3.json",
+    "data/exercises-tr-auto/part4.json"
   ],
   "tables": [
     "users",

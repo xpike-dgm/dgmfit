@@ -1,0 +1,1841 @@
+{
+ "Shoulder_Stretch": {
+  "name": "Omuz esnemesi",
+  "steps": [
+   "Sol kolunu vücudunun önünden karşıya uzat ve düz tut."
+  ]
+ },
+ "Side-Lying_Floor_Stretch": {
+  "name": "Yan yatarak yer esnemesi",
+  "steps": [
+   "Sol yanına uzan; gövdeni sabitlemek için sol dizini önüne bük ve dik kalmak için karın kaslarını da kullan.",
+   "Sağ bacağını düzleştir ve sağ ayağını sol ayağının arkasında yere koy.",
+   "Sağ kolunu başının üstüne düz uzat ve sağ bileğini nazikçe çekerek vücudunun tüm sağ tarafını esnet.",
+   "Taraf değiştir."
+  ]
+ },
+ "Side_Bridge": {
+  "name": "Yan köprü",
+  "steps": []
+ },
+ "Side_Hop-Sprint": {
+  "name": "Yana sıçrama ve sprint",
+  "steps": [
+   "Bir koni ya da engelin yanında dur.",
+   "Engelin üstünden yana sıçra ve inişten hemen sekerek başladığın yere geri sıçra.",
+   "Belirlenen tekrar kadar olabildiğince hızlı sıçra.",
+   "Son sıçramadan iner inmez kısa bir mesafe sprint atarak drili bitir."
+  ]
+ },
+ "Side_Jackknife": {
+  "name": "Yan çakı (side jackknife)",
+  "steps": []
+ },
+ "Side_Laterals_to_Front_Raise": {
+  "name": "Yana açıştan öne kaldırışa",
+  "steps": [
+   "Ayakta dur, dumbbell'ları yanlarında tut.",
+   "Dirsekler hafif bükülü, sallanmadan ağırlıkları önünde omuz hizasına kaldır.",
+   "Tepede kolların uzanmış şekilde ağırlıkları önünden yanlara taşı ve kontrollü şekilde indir.",
+   "Sonraki tekrarda ağırlıkları önünde omuz hizasına kaldırıp yanlara taşı.",
+   "Ağırlıkları başlangıca indir."
+  ]
+ },
+ "Side_Leg_Raises": {
+  "name": "Yana bacak savurma",
+  "steps": [
+   "Destek için tutunabileceğin bir sandalyenin yanında tek bacak üstünde dur.",
+   "Bacağını düz tutarak yana olabildiğince kaldır.",
+   "Bacağı aşağı savurup diğer bacağının önünden çaprazlamasına izin ver.",
+   "Bu savurmayı hareket açıklığını artırarak 5-10 kez tekrarla."
+  ]
+ },
+ "Side_Lying_Groin_Stretch": {
+  "name": "Yan yatarak kasık esnemesi",
+  "steps": [
+   "Sağ yanına uzan; gövdeni sabitlemek için sağ dizini önüne bük.",
+   "Başını sağ eline ya da omzuna yasla.",
+   "Sol bacağını kaldır ve diz arkasından (daha kolay) ya da ayağından (daha zor) tut.",
+   "Sol dizini sol omzuna doğru çekerken aynı anda ayağını ya da dizini yere doğru bastır; artırmak için sol bacağını düzleştir.",
+   "Taraf değiştir."
+  ]
+ },
+ "Side_Neck_Stretch": {
+  "name": "Yan boyun esnemesi",
+  "steps": [
+   "Omuzların gevşek şekilde başını nazikçe omzuna doğru eğ.",
+   "Başının yanından nazikçe çekerek esnemeye yardım et."
+  ]
+ },
+ "Side_Standing_Long_Jump": {
+  "name": "Yana durarak uzun atlama",
+  "steps": [
+   "Ayaklar kalça genişliğinde atletik duruşta başla; başın ve göğsün yukarıda, diz ve kalçan hafif bükülü olsun.",
+   "Sağa yaslanarak kalça, diz ve ayak bileklerini açıp havaya sıçra.",
+   "Kollarınla hareketi yönlendirerek sağa olabildiğince uzağa atla.",
+   "Aynı yöne bakarak ayaklar kalça genişliğinde in ve darbeyi alt vücudunla em."
+  ]
+ },
+ "Side_To_Side_Chins": {
+  "name": "Yandan yana chin-up",
+  "steps": [
+   "Barfiks barını avuçlar öne bakacak şekilde geniş tutuşla kavra.",
+   "Gövdeni yaklaşık 30 derece geriye al, belini kavisle ve göğsünü öne çıkar.",
+   "Nefes vererek sola yaslanıp omuzlarını ve üst kollarını aşağı ve geriye çekerek bar neredeyse üst göğsüne değene kadar çek; sırt kaslarını sık.",
+   "Bir saniye sık, nefes alarak başlangıca dön.",
+   "Aynısını sağa yaslanarak yap ve iki tarafla tekrarla."
+  ]
+ },
+ "Side_Wrist_Pull": {
+  "name": "Yan bilek çekme esnemesi",
+  "steps": [
+   "Bu esneme ayakta en iyi sonucu verir; sol kolunu vücudunun orta hattından geçir ve sol bileğini kalça hizasında sağ elinle tut.",
+   "Sol kolun bükülü başla.",
+   "Kolunu yavaşça düzleştir, çek ve omuz hizasına kaldır.",
+   "Esnemeyi omuzlarında değil sırtında hisset ve omuz eklemini fazla çekme.",
+   "Taraf değiştir."
+  ]
+ },
+ "Side_to_Side_Box_Shuffle": {
+  "name": "Kutuda yandan yana shuffle",
+  "steps": [
+   "Kutunun bir yanında dur, sol ayağını kutunun ortasına koy.",
+   "Kollarını savurarak kutunun üstünden diğer tarafa sıçra; sağ ayağın kutunun üstüne, sol ayağın yere insin.",
+   "Kutunun üstünden ileri geri shuffle yapmaya devam et."
+  ]
+ },
+ "Single-Arm_Cable_Crossover": {
+  "name": "Tek kol kablo crossover",
+  "steps": [
+   "Makaraları yüksek konuma getir, direnci seç ve her elinle bir tutamak al.",
+   "İki makaranın önüne adım at, kollarını önüne uzatıp ellerini birleştir; başın ve göğsün yukarıda öne eğil, ayakların çapraz olsun.",
+   "Sol kolun yerinde, sağ kolunu dirsek hafif bükülü şekilde yaklaşık omuz hizasında vücuduna dik olana kadar yana aç.",
+   "Elini vücudunun orta hattına çekerek kolunu başlangıca getir.",
+   "Bir saniye bekle ve diğer tarafla dönüşümlü devam et."
+  ]
+ },
+ "Single-Arm_Linear_Jammer": {
+  "name": "Tek kol lineer jammer",
+  "steps": [
+   "Barı landmine aparatına yerleştir ya da bir köşeye sağlamca sabitle ve uygun ağırlığı yükle.",
+   "Barı yerden kaldırıp tek ya da iki elinle omuzlarına getir; geniş dur.",
+   "Dirseğini açarak ağırlığı yukarı it.",
+   "Maksimum kuvvet için kalça ve dizlerini tamamen açarak patlayıcı hareket et.",
+   "Başlangıca dön."
+  ]
+ },
+ "Single-Arm_Push-Up": {
+  "name": "Tek kol şınav",
+  "steps": [
+   "Yüzüstü uzan ve ağırlığını ayak parmaklarına ve tek koluna ver; çalışan kolun omzunun tam altında ve tamamen uzanmış olsun.",
+   "Bacakların uzansın; daha geniş taban için ayaklarını normal şınavdan daha fazla açabilirsin.",
+   "Düzgün duruşu koru ve boştaki elini sırtına koy.",
+   "Dirseğini bükerek yere değene kadar yavaşça alçal.",
+   "Kolunu açarak yön değiştir ve başlangıca dön."
+  ]
+ },
+ "Single-Cone_Sprint_Drill": {
+  "name": "Tek koni sprint drili",
+  "steps": [
+   "Bu drill hızlı ayak hareketini öğretir; tek bir koni gerekir.",
+   "Koninin yanında bir kolun geride, diğeri önde dur.",
+   "Kollarınla blok yaparak ayaklarını olabildiğince hızlı vur.",
+   "Dizlerin yukarıda, sert ayak hareketiyle koninin etrafında dön.",
+   "Koninin etrafında üç tur attıktan sonra dinlen."
+  ]
+ },
+ "Single-Leg_High_Box_Squat": {
+  "name": "Tek bacak yüksek kutu squat",
+  "steps": [
+   "Bir kutuyu rack içine koy ve kutunun üstüne bir bant ya da ip sabitle.",
+   "Kutunun önünde dur ve tek bacakla kutuya basıp tamamen dik konuma gel; diğer bacağın desteksiz kalsın.",
+   "Denge için banda tutun.",
+   "Aynı bacakla inip çıkmaya devam et, sonra diğer tarafa geç."
+  ]
+ },
+ "Single-Leg_Hop_Progression": {
+  "name": "Tek bacak sıçrama progresyonu",
+  "steps": [
+   "Önüne bir sıra koni diz.",
+   "Tek bacak üstünde dengede, rahat bir duruş al ve diğer dizini kaldır.",
+   "Aynı bacakla sıçrayıp inerek koninin üstünden öne sıçra.",
+   "Koniden koniye karşı hareketli sıçrayışla ilerle.",
+   "Sonunda arkanı dön ve diğer bacakla geri gel."
+  ]
+ },
+ "Single-Leg_Lateral_Hop": {
+  "name": "Tek bacak yana sıçrama",
+  "steps": [
+   "Bir koni ya da engelin yanında, dizi hafif bükülü tek bacak üstünde dur.",
+   "Karşı hareketle koninin üstünden yana sıçra.",
+   "Sıçradığın bacağın üstüne in ve hemen sekerek başlangıca geri sıçra.",
+   "İleri geri sıçramaya devam et."
+  ]
+ },
+ "Single-Leg_Leg_Extension": {
+  "name": "Tek bacak leg extension",
+  "steps": [
+   "Makineye otur ve doğru konumlanacak şekilde ayarla; ped kaval kemiğinin alt kısmına dayansın ama bileğe değmesin.",
+   "Koltuğu dönme noktası dizinle aynı hizada olacak şekilde ayarla ve uygun ağırlığı seç.",
+   "Düzgün duruşu koruyarak bir bacağını tamamen aç ve tepede bekle.",
+   "Ağırlığı durdurmadan, kastaki gerilimi koruyarak başlangıca dön."
+  ]
+ },
+ "Single-Leg_Stride_Jump": {
+  "name": "Tek bacak adım sıçraması",
+  "steps": [
+   "Bir kutunun yanında, içteki ayağın kutunun üstünde ve kenara yakın olacak şekilde dur.",
+   "Kollarını yukarı savururken üstteki bacağınla iterek olabildiğince yükseğe sıçra.",
+   "Karşı dizini yukarı sürmeye çalış.",
+   "Başladığın pozisyona in ve darbeyi içteki bacağınla yavaşlat."
+  ]
+ },
+ "Single_Dumbbell_Raise": {
+  "name": "Tek dumbbell ile öne kaldırış",
+  "steps": [
+   "Geniş duruşla bir dumbbell'ı iki elinle sapından değil başından tut.",
+   "Kolların uzanmış şekilde bel hizasında sarksın.",
+   "Kolların düz, ağırlığı omuz hizasının üstüne kaldır; gövden ve kalçan hareket boyunca sabit kalsın.",
+   "Başlangıca dön ve tekrarla."
+  ]
+ },
+ "Single_Leg_Butt_Kick": {
+  "name": "Tek bacak topuk kalçaya sıçrama",
+  "steps": [
+   "Tek bacak üstünde, diğer dizin bükülü ve yukarıda dur.",
+   "Karşı hareketli sıçrayışla yerdeki bacağının kalça, diz ve ayak bileğini açarak yukarı sıçra.",
+   "Hemen dizini bükerek sıçradığın bacağın topuğuyla kalçana dokunmaya çalış.",
+   "Bacağını kalçanın altında kısmen bükülü konuma getirip in; diğer bacağın drill boyunca hemen hemen aynı konumda kalsın."
+  ]
+ },
+ "Single_Leg_Glute_Bridge": {
+  "name": "Tek bacak glute bridge",
+  "steps": [
+   "Ayakların düz basmış, dizlerin bükülü şekilde yere uzan.",
+   "Bir bacağını yerden kaldır ve dizini göğsüne çek.",
+   "Topuğundan iterek kalçanı yukarı aç ve kalçanı yerden kaldır.",
+   "Olabildiğince yükseğe çık, bekle ve başlangıca dön."
+  ]
+ },
+ "Single_Leg_Push-off": {
+  "name": "Tek bacak itiş (kutu)",
+  "steps": [
+   "Bir ayağın kutunun üstünde, topuğun kenara yakın şekilde yerde dur.",
+   "Kutudaki ayağınla it; kalça ve dizini açarak olabildiğince yükseklik kazanmaya çalış.",
+   "Aynı ayakla kutunun üstüne in, diğer ayağını başlangıç konumuna geri getir."
+  ]
+ },
+ "Sit-Up": {
+  "name": "Mekik",
+  "steps": [
+   "Yere uzan, ayaklarını hareket etmeyecek bir şeyin altına koy ya da partnerin tutsun; dizlerin bükülü olsun.",
+   "Ellerini başının arkasına koy ve parmaklarını kenetle.",
+   "Nefes vererek üst gövdeni uyluklarınla hayali bir V şekli oluşturacak kadar kaldır.",
+   "Bir saniye kasılmayı hisset, nefes alarak üst gövdeni başlangıca indir."
+  ]
+ },
+ "Sit_Squats": {
+  "name": "Oturma squat'ı",
+  "steps": [
+   "Ayakların omuz genişliğinde dur.",
+   "Diz ve kalçanı bükerek kalçanla geriye otur.",
+   "Paralelin üstünde kalacak şekilde bir miktar çömel ve hareketi hızla tersine çevirip başlangıca dön.",
+   "5-10 tekrar yap."
+  ]
+ },
+ "Skating": {
+  "name": "Paten",
+  "steps": [
+   "Paten, kardiyorespiratuvar kondisyonu ve kas dayanıklılığını geliştirebilen eğlenceli bir aktivitedir; iyi denge ve koordinasyon gerektirir.",
+   "Dönme ve durma gibi temel becerileri öğren ve olası yaralanmalara karşı koruyucu ekipman kullan.",
+   "Rahat bir tempoda 30 dakika kesintisiz kayabilirsin.",
+   "Kardiyo için interval yap: her beş dakikanın iki dakikasında hızlı kay, kalan üç dakikada toparlan."
+  ]
+ },
+ "Sled_Drag_-_Harness": {
+  "name": "Koşumla kızak çekme",
+  "steps": [
+   "Kızağa istediğin ağırlığı yükle ve çekme kayışını bağla.",
+   "Tutamaklarla çekebilir, koşum kullanabilir ya da kayışı ağırlık kemerine bağlayabilirsin.",
+   "İleri ya da geri çekerken gidiş yönüne doğru eğil.",
+   "Kalça ve dizlerini açarak ilerle."
+  ]
+ },
+ "Sled_Overhead_Backward_Walk": {
+  "name": "Kızakla baş üstü geri yürüyüş",
+  "steps": [
+   "Kızağa ip ya da zincirle çift tutamak bağla ve hafif ağırlık yükle.",
+   "Kızağa dönük dur, hatta biraz gerilim oluşana kadar geri çekil.",
+   "Dirseklerin düz, ellerini başının tam üstünde tut.",
+   "Kollarını baş üstünde tutarak geriye yürü; ani hareketlerden kaçın."
+  ]
+ },
+ "Sled_Overhead_Triceps_Extension": {
+  "name": "Kızakla baş üstü triceps ekstansiyon",
+  "steps": [
+   "Kızağa zincir ya da iple çift tutamak bağla ve uygun ağırlığı yükle.",
+   "Kızağa sırtın dönük, hatta gerilim oluşana kadar uzaklaş.",
+   "Ellerini birleşik ve avuçlar birbirine bakacak şekilde başının üstüne kaldır; dirseklerin yukarı dönük ve bükülü olsun.",
+   "Üst kolun yerinde kalarak dirseğini açıp kolunu düzleştir.",
+   "Tam açılınca hattaki boşluğu almak için öne adım at; denge için ayaklarını çapraz tutabilirsin."
+  ]
+ },
+ "Sled_Push": {
+  "name": "Kızak itme",
+  "steps": [
+   "İtme kızağına istediğin ağırlığı yükle.",
+   "Atletik bir duruşla, kolların tamamen uzanmış şekilde tutamakları kavrayıp kızağa yaslan.",
+   "Kızağı olabildiğince hızlı it.",
+   "Arka zinciri güçlendirmek için kalça ve dizlerini açmaya odaklan."
+  ]
+ },
+ "Sled_Reverse_Flye": {
+  "name": "Kızakla ters fly",
+  "steps": [
+   "Kızağa ip ya da zincirle çift tutamak bağla ve hafif ağırlık yükle.",
+   "Kızağa dönük dur, hatta biraz gerilim oluşana kadar geri çekil.",
+   "İki tutamağı kolların uzanmış şekilde bel hizasında tut; dizlerini hafif bük, göğsün ve başın yukarıda olsun.",
+   "Dirseklerini bükmeden tutamakları yukarı ve ayrı yönlere çekerek hafif dış rotasyonlu ters fly yap; avuçların öne baksın.",
+   "Başlangıca dön ve hattaki boşluğu almak için birkaç adım geri çekil."
+  ]
+ },
+ "Sled_Row": {
+  "name": "Kızakla row",
+  "steps": [
+   "Kızağa ip ya da zincirle çift tutamak bağla ve uygun ağırlığı yükle; kızağa dönük, hatta gerilim oluşana kadar geri çekil.",
+   "Her elinde bir tutamak, dizlerin hafif bükülü, başın ve göğsün yukarıda, kolların uzanmış başla.",
+   "Dirseklerini büküp kürek kemiklerini geri çekerek kızağı kendine çek.",
+   "Hatta gerilim oluşması için bir-iki adım geri çekil ve tekrarla."
+  ]
+ },
+ "Sledgehammer_Swings": {
+  "name": "Balyoz vuruşu",
+  "steps": [
+   "Bir lastik ve balyoz kullan; lastiğin yaklaşık 60 cm önünde çapraz duruşla dur ve balyozu kavra.",
+   "Sağ elini kullanıyorsan sol elin sapın altında, sağ elin başa yakın olsun.",
+   "Balyozu kaldırırken sağ elin başa doğru kaysın; aşağı savururken sağ elin sol elinin yanına kaysın.",
+   "Balyozu lastiğe olabildiğince sert vur ve lastikten sekmesini kontrol et.",
+   "Diğer tarafta tekrarla."
+  ]
+ },
+ "Smith_Incline_Shoulder_Raise": {
+  "name": "Smith makinede eğimli omuz kaldırış",
+  "steps": [
+   "Eğimli sehpayı Smith makinenin altına koy; barı yatınca kolların neredeyse uzanmışken ulaşabileceğin yüksekliğe ayarla.",
+   "Ağırlığı seçip sehpaya yat, omuzların barın tam altında olsun.",
+   "Barı omuz genişliğinde, avuçlar öne bakacak şekilde rack'ten al ve dirsekler hafif bükülü şekilde üstünde tut.",
+   "Nefes vererek kolların tamamen uzanana kadar barı kaldır; kasılmayı omuzlarında hisset.",
+   "Bir saniye bekle, nefes alarak başlangıca indir; bitince barı rack'e koy."
+  ]
+ },
+ "Smith_Machine_Behind_the_Back_Shrug": {
+  "name": "Smith makinede arkadan shrug",
+  "steps": [
+   "Barı uyluk hizasına ayarla ve uygun ağırlığı yükle.",
+   "Bar arkanda olacak şekilde dur, omuz genişliğinde üstten tutuşla kavra ve kancalardan çıkar; dik dur, başın ve göğsün yukarıda, kolların uzanmış olsun.",
+   "Omuzlarını dümdüz yukarı silk; kollarını ya da bileklerini bükme.",
+   "Kısa bir duraksamanın ardından ağırlığı başlangıca indir.",
+   "Tekrarları bitirince kancaları takarak barı rack'e koy."
+  ]
+ },
+ "Smith_Machine_Bench_Press": {
+  "name": "Smith makinede bench press",
+  "steps": [
+   "Düz sehpayı Smith makinenin altına koy; barı yatınca kolların neredeyse uzanmışken ulaşabileceğin yüksekliğe ayarla.",
+   "Ağırlığı seçip yat; barı omuzdan geniş, üstten tutuşla kavra, kilidini aç ve kolların kilitli şekilde üstünde tut.",
+   "Nefes alarak barı göğsünün ortasında hissedene kadar yavaşça indir.",
+   "Bir saniye bekle, nefes vererek göğüs kaslarınla başlangıca it ve bir saniye tut; inişi çıkışın en az iki katı sürede yap.",
+   "Bitince barı rack'e kilitle."
+  ]
+ },
+ "Smith_Machine_Bent_Over_Row": {
+  "name": "Smith makinede öne eğilerek row",
+  "steps": [
+   "Smith makinedeki barı dizlerinin yaklaşık 5 cm altına ayarla.",
+   "Dizlerini hafif bükerek sırtın düz şekilde gövden neredeyse yere paralel olana kadar belinden eğil; başını yukarıda tut.",
+   "Barı üstten tutuşla kavra, kilidini aç ve kolların yere dik şekilde önünde sarkmasına izin ver.",
+   "Gövden sabitken nefes vererek dirsekler vücuduna yakın şekilde barı kaldır; tepede sırtını bir saniye sık.",
+   "Nefes alarak ağırlığı yavaşça indir."
+  ]
+ },
+ "Smith_Machine_Calf_Raise": {
+  "name": "Smith makinede baldır kaldırış",
+  "steps": [
+   "Smith makinede barın altına bir blok ya da plaka koy ve barı boyuna uygun yüksekliğe ayarla.",
+   "Ayaklarının ön tarafıyla plakaların üstüne çık ve barı omuzlarının arkasına yerleştir.",
+   "Barı avuçlar öne bakacak şekilde iki elinle tut ve döndürerek rack'ten çıkar.",
+   "Ayaklarının ön tarafıyla iterek topuklarını olabildiğince kaldır ve tepede baldırını sık; dizlerin düz kalsın, bir saniye tut.",
+   "Nefes alarak topuklarını indirip yavaşça başlangıca dön."
+  ]
+ },
+ "Smith_Machine_Close-Grip_Bench_Press": {
+  "name": "Smith makinede dar tutuş bench press",
+  "steps": [
+   "Düz sehpayı Smith makinenin altına koy; barı yatınca kolların neredeyse uzanmışken ulaşabileceğin yüksekliğe ayarla.",
+   "Ağırlığı seçip yat; barı yaklaşık omuz genişliğinde dar, üstten tutuşla kavra, kilidini aç ve kollar kilitli şekilde üstünde tut.",
+   "Nefes alarak barı göğsünün ortasında hissedene kadar yavaşça indir; dirseklerin hep gövdene yakın kalsın.",
+   "Bir saniye bekle, nefes vererek tricepslerinle başlangıca it ve bir saniye tut; inişi çıkışın en az iki katı sürede yap.",
+   "Bitince barı rack'e kilitle."
+  ]
+ },
+ "Smith_Machine_Decline_Press": {
+  "name": "Smith makinede ters eğimli press",
+  "steps": [
+   "Ters eğimli sehpayı rack'e, bar göğsünün üstüne gelecek şekilde yerleştir; uygun ağırlığı yükle ve sehpaya yat.",
+   "Barı döndürerek kancadan çıkar ve kollarını tamamen uzat; sırtın hafif kavisli, kürek kemiklerin geride olsun.",
+   "Kollarını bükerek barı göğsüne indir.",
+   "Kısa bekle, ardından kollarını açarak ağırlığı başlangıca it.",
+   "Tekrarları bitirince barı döndürerek rack'e koy."
+  ]
+ },
+ "Smith_Machine_Hang_Power_Clean": {
+  "name": "Smith makinede hang power clean",
+  "steps": [
+   "Barı diz hizasına ayarla ve uygun ağırlığı yükle.",
+   "Barı omuzdan geniş, üstten tutuşla kavra ve kancadan çıkar; kolların uzanmış, göğsün yukarıda, dirseklerin dışa dönük, omuzların geride ve aşağıda olsun.",
+   "Kalçanı geriye alarak hamstringlerde gerilim oluştur.",
+   "Kalça ve dizlerini güçlüce açarak bara ivme kazandır; bu sırada kolların düz kalsın.",
+   "Tam açılınca kalça ve dizlerini yeniden bük, dirseklerini barın etrafında döndürerek barı omuzlarında karşıla ve dik konuma gel."
+  ]
+ },
+ "Smith_Machine_Hip_Raise": {
+  "name": "Smith makinede kalça kaldırma",
+  "steps": [
+   "Rack'e bir sehpa koy ve bara uygun ağırlığı yükle.",
+   "Sehpaya uzan, ayak tabanlarını bara daya; barın kilidini aç ve bacaklarını uzat, gerekirse ellerinle yardım et.",
+   "Denge için Smith makinenin yanlarını tutabilirsin.",
+   "Leğenini döndürüp omurganı bükerek kalçanı sehpadan kaldır; dizlerinde hafif bükülme koru.",
+   "Kısa bir duraksamanın ardından kalçanı sehpaya indir."
+  ]
+ },
+ "Smith_Machine_Incline_Bench_Press": {
+  "name": "Smith makinede eğimli bench press",
+  "steps": [
+   "Eğimli sehpayı Smith makinenin altına koy; barı yatınca kolların neredeyse uzanmışken ulaşabileceğin yüksekliğe ayarla.",
+   "Ağırlığı seçip yat, üst göğsün barla hizalı olsun; barı omuzdan geniş, üstten tutuşla kavra, kilidini aç ve kollar kilitli tut.",
+   "Nefes alarak barı üst göğsünde hissedene kadar yavaşça indir.",
+   "Bir saniye bekle, nefes vererek göğüs kaslarınla başlangıca it ve bir saniye tut; inişi çıkışın en az iki katı sürede yap.",
+   "Bitince barı rack'e koy."
+  ]
+ },
+ "Smith_Machine_Leg_Press": {
+  "name": "Smith makinede leg press",
+  "steps": [
+   "Smith makine barını yerden yaklaşık yarım metre yükseğe, emniyetlerin üstüne yerleştir.",
+   "Bara uygun ağırlığı yükledikten sonra barın altına uzan.",
+   "Ayaklarının ortasını bara koy ve dizlerini göğsüne çek.",
+   "Ayaklarınla iterek kalça ve dizlerini açıp barı yukarı kaldır; dizlerini kilitleme.",
+   "Tepede kısa bekle ve başlangıca dön."
+  ]
+ },
+ "Smith_Machine_One-Arm_Upright_Row": {
+  "name": "Smith makinede tek kol upright row",
+  "steps": [
+   "Barı uyluk hizasına ayarla ve uygun ağırlığı yükle.",
+   "Barı geniş tutuşla kavra, kancadan çıkar ve boştaki elini bardan çek; kolun uzanmış, dik dur, başın ve göğsün yukarıda olsun.",
+   "Dirseğini bükerek ve dışa dönük tutarak üst kolunu kaldır; üst kolun yere paralel olana kadar devam et.",
+   "Kısa bir duraksamanın ardından ağırlığı başlangıca indir.",
+   "Tekrarları bitirince kancaları takarak barı rack'e koy."
+  ]
+ },
+ "Smith_Machine_Overhead_Shoulder_Press": {
+  "name": "Smith makinede omuz press",
+  "steps": [
+   "Smith makinenin altına düz ya da tercihen sırt destekli bir sehpa koy; barı oturunca kolların neredeyse tamamen uzanarak ulaşacağın yüksekliğe ayarla.",
+   "Burnunun ucundan bara düz bir çizgi oluşacak şekilde barın biraz arkasına otur; ayakların sabit olsun.",
+   "Barı avuçlar öne bakacak şekilde kavra, kilidini aç ve kolların tamamen uzanana kadar kaldır.",
+   "Nefes alarak barı çene hizasına kadar yavaşça indir.",
+   "Nefes vererek omuzlarınla barı başlangıca kaldır."
+  ]
+ },
+ "Smith_Machine_Pistol_Squat": {
+  "name": "Smith makinede pistol squat",
+  "steps": [
+   "Barı boyuna uygun konuma ayarla, altına girip omuzlarının arkasına yerleştir.",
+   "Barı avuçlar öne bakacak şekilde tut, kilidini aç ve bacaklarını açarak rack'ten kaldır.",
+   "Bir ayağını barın yaklaşık 30 cm önüne al, diğer bacağını önüne uzatıp yerden kaldır; önüne bak ve omurgan nötr kalsın.",
+   "Düzgün duruşla diz ve kalçanı bükerek esnekliğinin izin verdiği kadar alçal.",
+   "Altta kısa bekle, topuğundan iterek diz ve kalçanı açıp başlangıca dön."
+  ]
+ },
+ "Smith_Machine_Reverse_Calf_Raises": {
+  "name": "Smith makinede ters baldır kaldırış",
+  "steps": [
+   "Smith makinedeki barı boyuna göre ayarla ve barın tam altına yükseltilmiş bir platform yerleştir.",
+   "Topukların platformun üstünde, ayakların ön tarafı dışarıda kalacak şekilde platforma çık; parmak uçların öne bakarken omuz genişliğinde dur.",
+   "Omuzlarını barın altına yerleştir ve kalça ile dizlerini açarak barı kaldır; dizlerin hafif bükülü olsun, bar yalnızca denge içindir.",
+   "Nefes vererek ayak ön tarafını ve parmaklarını olabildiğince yukarı kaldır; dizin sabit kalsın, bir saniye tut.",
+   "Nefes alarak ayak ön tarafını ve parmaklarını yavaşça indir."
+  ]
+ },
+ "Smith_Machine_Stiff-Legged_Deadlift": {
+  "name": "Smith makinede stiff-leg deadlift",
+  "steps": [
+   "Smith makinedeki barı yaklaşık uyluk ortasına ayarla ve yükle; barı omuz genişliğinde, avuçlar öne bakacak şekilde kavra. Ağır yükte bilek bandı gerekebilir.",
+   "Sırtın düz şekilde kollarını uzatarak barı kaldır; gövden düz, ayakların omuz genişliğinde ya da daha dar, dizlerin hafif bükülü olsun.",
+   "Dizlerin sabit, sırtın düz şekilde belinden eğilerek barı ayaklarının üstüne indir; hamstringlerde esneme hissedene kadar devam et.",
+   "Esnemeyi hissedince kalçanı ve belini açarak gövdeni yeniden dikleştir ve başlangıca dön."
+  ]
+ },
+ "Smith_Machine_Upright_Row": {
+  "name": "Smith makinede upright row",
+  "steps": [
+   "Smith makinedeki barı yaklaşık uyluk ortasına ayarla ve yükle; barı omuz genişliğinde, avuçlar öne bakacak şekilde kavra.",
+   "Barı kaldırıp sırtın düz şekilde kollarını tamamen uzat; dirseklerde hafif bükülme olsun.",
+   "Nefes vererek yan omuzlarınla barı vücuduna yakın şekilde neredeyse çenene değene kadar kaldır.",
+   "Hareketi dirseklerin yönlendirsin ve dirseklerin ön kollarından hep yüksek kalsın; gövdeni sabit tut, tepede bir saniye bekle.",
+   "Nefes alarak barı yavaşça başlangıca indir."
+  ]
+ },
+ "Smith_Single-Leg_Split_Squat": {
+  "name": "Smith makinede tek bacak split squat",
+  "steps": [
+   "Düz bir sehpayı Smith makinenin 60-90 cm arkasına koy ve barı boyuna uygun yüksekliğe ayarla.",
+   "Barın altına girip omuzlarının arkasına yerleştir, avuçlar öne bakacak şekilde tutup kilidini aç ve bacaklarınla iterek kaldır.",
+   "Bir ayağını barın altında hafif öne koy, diğer bacağını geriye uzatıp ayağının üstünü sehpaya yerleştir.",
+   "Nefes alarak dik duruşla dizini bükerek uyluğun paralelin biraz altına inene kadar yavaşça alçal; dizin parmak uçlarını geçmesin.",
+   "Nefes vererek ağırlıklı olarak topuğunla iterek başlangıca yüksel; bacak değiştir."
+  ]
+ },
+ "Snatch": {
+  "name": "Snatch",
+  "steps": [
+   "Ayaklarını omuz genişliğinde aç; bar ayak parmaklarının ayakla birleştiği yerin hemen üstünde olsun.",
+   "Dizlerini bükerek sırtın düz şekilde barı omuzdan geniş, üstten tutuşla kavra; kalçanı sandalyeye oturur gibi indir.",
+   "Ayaklarınla yeri iterken barı bacaklarına yakın tutarak kaldır; bar uyluk ortasına gelince patlayarak vücudunu tamamen aç.",
+   "Omuzlarını silkip dirseklerini yanlarda ve barın üstünde tutarak barı yükselt; bar yeterince yükselince hızla altına girip kollar kilitli squat'ta karşıla.",
+   "Squat'tan kalkarak hareketi bitir; sonda ayakların aynı hizada, kolların bar baş üstünde tamamen uzanmış olsun."
+  ]
+ },
+ "Snatch_Balance": {
+  "name": "Snatch balance",
+  "steps": [
+   "Ayakların çekiş pozisyonunda, bar omuzlarının arkasında ve ellerin geniş snatch tutuşunda başla.",
+   "Dizlerinle ani bir çökme ve itişle barı sıçrat ve ayaklarını karşılama konumuna alırken sertçe barın altına gir.",
+   "Barı squat'ın altına yakın, kollar kilitli şekilde baş üstünde karşıla; gövden dik kalsın, kalçan bacaklarının arasına insin.",
+   "Tam derinliğe inmeye devam et ve dik konuma dön.",
+   "Ağırlığı dikkatle indir."
+  ]
+ },
+ "Snatch_Deadlift": {
+  "name": "Snatch deadlift",
+  "steps": [
+   "Snatch deadlift snatch'in ilk çekişini güçlendirir; bar platformdayken geniş snatch tutuşla kavra.",
+   "Ayakların kalçanın tam altında ve dışa dönük olsun; sırtın tamamen düz, başın önde şekilde bara çömel.",
+   "Topuklarından iterek kalçanı kaldır; bar dizleri geçene kadar sırt açın sabit kalsın.",
+   "Bu noktada geriye yaslanırken kalçanı bara doğru sür.",
+   "Hareketi tersine çevirerek barı platforma indir."
+  ]
+ },
+ "Snatch_Pull": {
+  "name": "Snatch pull",
+  "steps": [
+   "Bar kaval kemiklerine yakın yerdeyken geniş snatch tutuşla kavra; kalça aşağıda, ağırlık topuklarda, sırt düz, göğüs yukarıda olsun.",
+   "İlk çekişte topuklarınla itip dizlerini aç; sırt açın sabit, kolların düz kalsın ve barı kontrollü şekilde dizlerin üstüne taşı.",
+   "Bar uyluk ortasına yaklaşınca kalçanı açmaya başla; sıçrar gibi kalça, diz ve ayak bileklerini açarak barı hızlandır.",
+   "Kollarınla aktif çekmene gerek yok; ikinci çekişin sonunda vücudun tamamen açılmış ve hafif geriye yaslanmış olsun.",
+   "Tam açılmayı sert ve ani yap, gereğinden uzun sürdürme."
+  ]
+ },
+ "Snatch_Shrug": {
+  "name": "Snatch shrug",
+  "steps": [
+   "Barı geniş tutuşla uyluk ortasında asılı tut; hook ya da üstten tutuş kullanabilirsin.",
+   "Sırtın düz ve hafif öne eğik olsun.",
+   "Omuzlarını kulaklarına doğru silk.",
+   "Snatch'ten ağır yükleyebilirsin ama hareketi yavaşlatacak kadar yükleme."
+  ]
+ },
+ "Snatch_from_Blocks": {
+  "name": "Bloktan snatch",
+  "steps": [
+   "Yüklü bar istediğin yükseklikte kutu ya da sehpalarda olsun; barı geniş tutuşla kavra, ayakların kalçanın altında ve gerektiği kadar dışa dönük olsun.",
+   "Kalçanı indir; göğsün yukarıda, başın önde, omuzların barın biraz önünde ve dirseklerin dışa dönük olsun.",
+   "Topuklarının ön kısmından iterek barı kaldır; kalça, diz ve ayak bileklerini açarak barı vücuduna yakın şekilde hızla sür ve omuzlarını silk.",
+   "Ayaklarını kalçanın hemen dışına alırken kendini güçlü şekilde barın altına çek; barı olabildiğince alçakta, kollar tamamen uzanmış şekilde karşıla.",
+   "Bar topuklarının önü hizasında, başın ve göğsün yukarıda şekilde ayağa kalk ve ağırlığı dikkatle kutulara koy."
+  ]
+ },
+ "Speed_Band_Overhead_Triceps": {
+  "name": "Hızlı bantla baş üstü triceps",
+  "steps": [
+   "Bandı yere sabitle; örneğin eğimli sehpanın tabanına bağlayıp sehpanın üstünde durabilir ya da banda basabilirsin.",
+   "Bandı başının arkasına çek; üstten tutuşla tut, dirseklerin yukarıda olsun.",
+   "Üst kolların yerinde kalarak dirseklerini açıp kollarını düzleştir.",
+   "Bekle, ardından başlangıca dön."
+  ]
+ },
+ "Speed_Box_Squat": {
+  "name": "Hızlı box squat",
+  "steps": [
+   "Bara yere yakın sağlamca sabitlenmiş bantlar tak; yeterli gerilim için bantları düğümlemen gerekebilir.",
+   "Uygun yükseklikte bir kutu kullan; barı efor gerektiren ama hızı bozmayacak bir ağırlıkla, genelde tek tekrar maksimumunun %50-70'i kadar yükle.",
+   "Barı üst sırtına yerleştir; kürek kemiklerin geride, sırtın kavisli ve baştan ayağa her yer sıkı olsun.",
+   "Barı rack'ten al ve kutunun önüne geç; kontrollü şekilde, kutuya çarpmadan kalçanla geriye oturarak kutuya otur.",
+   "Kısa bekle ve kalça ile dizlerini açarak kutudan patlayarak kalk."
+  ]
+ },
+ "Speed_Squats": {
+  "name": "Hızlı squat",
+  "steps": [
+   "Squat rack içinde barı boyuna uygun yüksekliğe ayarla; altına girip omuzlarının arkasına yerleştir ve bacaklarınla iterek rack'ten kaldır.",
+   "Geri çekil; ayaklar omuz genişliğinde, parmak uçları hafif dışa dönük, başın yukarıda ve sırtın düz olsun.",
+   "Nefes alarak dizlerini bükerek uylukların paralelin biraz altına inene kadar alçal; dizlerin parmak uçlarını geçmesin.",
+   "Nefes vererek ağırlıklı olarak topuklarınla iterek barı momentum kullanmadan olabildiğince hızlı kaldır.",
+   "Hareketi olabildiğince hızlı ama formu bozmadan ve momentum kullanmadan yap."
+  ]
+ },
+ "Spell_Caster": {
+  "name": "Spell caster (dumbbell)",
+  "steps": [
+   "Her elinde bir dumbbell'ı üstten tutuşla tut; ayakların geniş, kalçan ve dizlerin açık olsun.",
+   "Gövdeni döndürerek iki dumbbell'ı bir yanda kalçanın yanına çek.",
+   "Kolların düz, dumbbell'lar yere paralel şekilde gövdeni döndürerek ağırlıkları karşı tarafa savur.",
+   "Set bitene kadar bir yandan diğerine dönüşümlü devam et."
+  ]
+ },
+ "Spider_Crawl": {
+  "name": "Örümcek yürüyüşü",
+  "steps": [
+   "Yere yüzüstü yerleş; ağırlığın ellerinde ve ayak parmaklarında, ayakların bitişik, vücudun düz ve kolların 90 derece bükülü olsun.",
+   "Bir ayağını yerden kaldır.",
+   "Bacağını dışa döndürüp dizini dirseğine doğru olabildiğince öne getir.",
+   "Bacağı başlangıca götür ve diğer tarafla tekrarla."
+  ]
+ },
+ "Spider_Curl": {
+  "name": "Spider curl (EZ bar)",
+  "steps": [
+   "Barı preacher sehpasının normalde oturduğun kısmına, dengede kalıp düşmeyecek şekilde koy.",
+   "Preacher sehpasının kolların konduğu ön tarafına geç ve gövdenle karnın ön tarafa bastırılmış şekilde 45 derece eğimle yaslan.",
+   "Ayaklarını, özellikle parmak uçlarını yere iyi yerleştir ve üst kollarını preacher sehpasının iç tarafındaki pedin üstüne koy.",
+   "Barı avuçlar yukarı bakacak şekilde omuz genişliğinde ya da biraz dar kavra; nefes vererek yavaşça yukarı kaldır ve bir saniye bicepsini sık.",
+   "Nefes alarak barı yavaşça başlangıca indir."
+  ]
+ },
+ "Spinal_Stretch": {
+  "name": "Omurga esnemesi",
+  "steps": [
+   "Sırtın düz, ayakların yere basılı şekilde bir sandalyeye otur.",
+   "Parmaklarını başının arkasında kenetle; dirseklerin dışa açık, çenen aşağıda olsun.",
+   "Üst gövdeni bir yana gidebildiğin kadar yaklaşık 3 kez döndür.",
+   "Ardından öne eğil ve gövdeni döndürerek dirseğini dizinin iç tarafında yere uzat.",
+   "Dik konuma dön ve diğer tarafta tekrarla."
+  ]
+ },
+ "Split_Clean": {
+  "name": "Split clean",
+  "steps": [
+   "Bar kaval kemiklerine yakınken bacaklarının hemen dışından üstten tutuşla kavra; kalça aşağıda, sırt düz, göğüs yukarıda olsun.",
+   "İlk çekişte topuklarınla itip dizlerini aç; sırt açın sabit, kolların düz kalsın ve barı kontrollü şekilde dizlerin üstüne taşı.",
+   "Bar uyluk ortasında kalça, diz ve ayak bileklerini açarak barı hızlandır; ardından omuzlarını silkip dirsekleri yukarı ve dışa çekerek barın altına gir.",
+   "Ayaklarını sertçe öne-arkaya split konumuna al ve barı öne açılmış omuzlarında, boğazına hafifçe değecek şekilde karşıla.",
+   "Topuklarından iterek gövden dik, dirseklerin yukarıda şekilde toparlan ve kalkarken ayaklarını birleştir."
+  ]
+ },
+ "Split_Jerk": {
+  "name": "Split jerk",
+  "steps": [
+   "Ağırlık omuzlarının önündeyken ayakların kalçanın tam altında dur; kalçanı geriye itmeden dizlerini bükerek çök.",
+   "Yalnızca hafifçe in ve olabildiğince güçlü yön değiştir; topuklarından iterek hız ve kuvvet üret, bar omuzdan ayrılırken başını yoldan çek.",
+   "Ayakların yerden kesildiği anda onları olabildiğince hızlı karşılama konumuna al.",
+   "Ayaklarını bir önde, bir arkada ve dizler kısmen bükülü split duruşa getir; barı kollar kilitli baş üstünde karşıla.",
+   "Ayaklarını birleştirerek dik konuma dön."
+  ]
+ },
+ "Split_Jump": {
+  "name": "Split jump",
+  "steps": [
+   "Bir ayağın önde dizi bükülü, arka dizin neredeyse yere değecek şekilde lunge duruşuna geç.",
+   "Ön dizin ayağının orta hattının üstünde olsun.",
+   "İki bacağını açıp kollarını savurarak olabildiğince yükseğe sıçra.",
+   "Sıçrarken ayaklarını birleştir ve inerken başlangıç konumlarına geri götür.",
+   "Başlangıç pozisyonuna dönerek darbeyi em."
+  ]
+ },
+ "Split_Snatch": {
+  "name": "Split snatch",
+  "steps": [
+   "Yüklü bar yerde, kaval kemiklerine yakın olsun; barı geniş tutuşla kavra, ayakların kalçanın altında ve gerektiği kadar dışa dönük olsun.",
+   "Kalçanı indir; göğsün yukarıda, başın önde, omuzların barın biraz önünde olsun.",
+   "Topuklarının ön kısmından iterek barı kaldır; bar dizleri geçene kadar sırt açın sabit kalsın, ardından kalça, diz ve ayak bileklerini açıp omuzlarını silk.",
+   "Ayaklarını güçlü şekilde öne-arkaya split konumuna alırken barın altına gir; barı olabildiğince alçakta, kollar tamamen uzanmış şekilde karşıla.",
+   "Başın ve göğsün yukarıda, topuklarından iterek ayaklarını birleştirip dik konuma gel ve ağırlığı dikkatle yere indir."
+  ]
+ },
+ "Split_Squats": {
+  "name": "Split squat sıçraması",
+  "steps": [
+   "Ayakta dur.",
+   "Bir bacak önde, diğeri arkada split pozisyona sıçra; dizlerini bükerek kalçanı biraz indir.",
+   "İnerken hemen yön değiştirip yeniden sıçra ve bacaklarının yerini değiştir.",
+   "Her bacakla 5-10 kez tekrarla."
+  ]
+ },
+ "Squat_Jerk": {
+  "name": "Squat jerk",
+  "steps": [
+   "Ağırlık omuzlarının önündeyken ayakların kalçanın tam altında dur; kalçanı geriye itmeden dizlerini hafifçe bükerek çök.",
+   "Olabildiğince güçlü yön değiştir, topuklarından iterek hız ve kuvvet üret; bar omuzdan ayrılırken başını yoldan çek.",
+   "Ayakların yerden kesildiği anda onları güçlü şekilde kalçanın hemen dışına, gerektiği kadar dışa dönük konuma al.",
+   "Barı tam squat'ta, kollar tamamen uzanmış şekilde baş üstünde karşıla.",
+   "Bar topuklarının önü hizasında, başın ve göğsün yukarıda topuklarından iterek ayağa kalk; ağırlığı dikkatle yere indir."
+  ]
+ },
+ "Squat_with_Bands": {
+  "name": "Bantlı squat",
+  "steps": [
+   "Bantları barın uçlarına takıp pimlere, rack'e ya da dumbbell'lara uygun gerilimle sabitle.",
+   "Barın altına girip omuzlarının arkasına yerleştir; kürek kemiklerini sıkıştır, dirseklerini öne döndür, belini kavisleyerek barı al ve geniş duruşla geri çekil.",
+   "Başın önde; sırt ve karın sıkı, dizlerini ve kalçanı dışa iterek kalçanı olabildiğince geriye oturt.",
+   "Barı topuklarının üstünde tutmak için gövdeni öne eğ; kalça kıvrımı diz üstü hizasına gelene kadar paralelin altına in.",
+   "Ağırlık topuklarında, ayak ve dizlerini dışa iterek başınla yönlendirip başlangıca yüksel."
+  ]
+ },
+ "Squat_with_Chains": {
+  "name": "Zincirli squat",
+  "steps": [
+   "Öncü zinciri barın uçlarına geçir, ağır zinciri kancayla bağla; tepede birkaç halka yerde kalacak şekilde uzunluğu ayarla.",
+   "Barın altına girip omuzlarının arkasına yerleştir; kürek kemiklerini sıkıştır, dirseklerini öne döndür, belini kavisleyerek barı al ve geniş duruşla geri çekil.",
+   "Başın önde; sırt ve karın sıkı, dizlerini ve kalçanı dışa iterek kalçanı olabildiğince geriye oturt.",
+   "Barı topuklarının üstünde tutmak için gövdeni öne eğ; kalça kıvrımı diz üstü hizasına gelene kadar paralelin altına in.",
+   "Ağırlık topuklarında, ayak ve dizlerini dışa iterek başınla yönlendirip başlangıca yüksel."
+  ]
+ },
+ "Squat_with_Plate_Movers": {
+  "name": "Plaka kaydırmalı squat",
+  "steps": [
+   "Barı rack'te omuz hizasının hemen altına ayarla ve rack'in birkaç adım gerisine yere bir plaka koy.",
+   "Barın altına girip omuzlarının arkasına yerleştir ve bacaklarınla iterek rack'ten kaldır; geri çekilip bir ayağın plakada olacak şekilde geniş dur.",
+   "Diz ve kalçanı bükerek üst bacak ile baldır arasındaki açı 90 dereceden biraz az olana kadar yavaşça alçal.",
+   "Nefes vererek topuklarınla iterek kalça ve dizlerini açıp yüksel.",
+   "Tepede plakanın diğer tarafına yan adım at, içteki ayağınla plakayı az önce durduğun yere kaydır ve sonraki tekrar için o ayağını plakaya koy."
+  ]
+ },
+ "Squats_-_With_Bands": {
+  "name": "Bantla squat",
+  "steps": [
+   "Egzersiz bandının iki yanını ellerinle tut ve iki ayağınla bandın ortasına bas; ayakların omuz genişliğinde olsun.",
+   "Bant iki tarafta da aynı yükseklikte olsun; tutamakları avuçlar öne bakacak şekilde yüzünün yanında tut.",
+   "Dizlerini bükerek uylukların yere paralel olana kadar yavaşça alçal.",
+   "Nefes vererek topuklarınla iterek başlangıca yüksel."
+  ]
+ },
+ "Standing_Alternating_Dumbbell_Press": {
+  "name": "Ayakta dönüşümlü dumbbell press",
+  "steps": [
+   "Her elinde bir dumbbell ile dur; dumbbell'ları avuçlar öne, dirsekler dışa bakacak şekilde omuzlarına kaldır.",
+   "Diğer elin yerinde kalırken bir kolunu açarak dumbbell'ı dümdüz yukarı it.",
+   "Hareket sırasında eğilme ya da ağırlığı silkeleme.",
+   "Kısa bir duraksamanın ardından ağırlığı başlangıca indir.",
+   "Diğer tarafla tekrarla ve kolları dönüşümlü kullanmaya devam et."
+  ]
+ },
+ "Standing_Barbell_Calf_Raise": {
+  "name": "Ayakta barbell baldır kaldırış",
+  "steps": [
+   "Squat rack içinde barı boyuna uygun yüksekliğe ayarla; altına girip omuzlarının arkasına yerleştir ve bacaklarınla iterek rack'ten kaldır.",
+   "Geri çekil; ayaklar omuz genişliğinde, parmak uçları hafif dışa dönük, başın yukarıda, sırtın düz ve dizlerin hafif bükülü olsun.",
+   "Daha geniş hareket açıklığı için ayaklarının ön tarafını sağlam bir tahta bloğa koyabilirsin; bu daha fazla denge gerektirir.",
+   "Nefes vererek topuklarını olabildiğince kaldırıp baldırını sık; dizin sabit kalsın ve bir saniye tut.",
+   "Nefes alarak topuklarını indirip baldırların esneyene kadar yavaşça başlangıca dön."
+  ]
+ },
+ "Standing_Barbell_Press_Behind_Neck": {
+  "name": "Ayakta boyun arkası barbell press",
+  "steps": [
+   "Barı kolay almak için squat rack içinde boyuna uygun yüksekliğe ayarla; altına girip omuzlarının arkasına yerleştir.",
+   "Barı iki yandan tut ve bacaklarınla iterek rack'ten kaldır.",
+   "Geri çekil; ayaklar omuz genişliğinde, parmak uçları hafif dışa dönük olsun ve sırtını düz tut.",
+   "Nefes vererek kollarını tamamen açıp barı baş üstüne kaldır.",
+   "Bir saniye sık, nefes alarak barı başlangıca indir."
+  ]
+ },
+ "Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension": {
+  "name": "Ayakta öne eğilerek tek kol dumbbell triceps ekstansiyon",
+  "steps": [
+   "Bir elinde dumbbell, avucun gövdene bakarken dizlerini hafif bük ve sırtın düz şekilde gövden neredeyse yere paralel olana kadar eğil; başın yukarıda olsun.",
+   "Üst kolun gövdene yakın ve yere paralel, ön kolun yere dönük olsun; ön kol ile üst kol 90 derece açı yapsın.",
+   "Üst kolun sabit, nefes vererek tricepsinle ön kolun yere paralel ve tüm kolun uzanana kadar ağırlığı kaldır; yalnızca ön kolun hareket etsin.",
+   "Tepede bir saniye sık, nefes alarak dumbbell'ı yavaşça başlangıca indir.",
+   "Kol değiştirip tekrarla."
+  ]
+ },
+ "Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension": {
+  "name": "Ayakta öne eğilerek iki kol dumbbell triceps ekstansiyon",
+  "steps": [
+   "Her elinde bir dumbbell, avuçların gövdene bakarken dizlerini hafif bük ve sırtın düz şekilde gövden neredeyse yere paralel olana kadar eğil; başın yukarıda.",
+   "Üst kolların gövdene yakın ve yere paralel, ön kolların yere dönük olsun; ön kol ile üst kol 90 derece açı yapsın.",
+   "Üst kolların sabit, nefes vererek tricepslerinle ön kollar yere paralel ve kollar uzanana kadar ağırlıkları kaldır; yalnızca ön kollar hareket etsin.",
+   "Tepede bir saniye sık, nefes alarak dumbbell'ları yavaşça başlangıca indir."
+  ]
+ },
+ "Standing_Biceps_Cable_Curl": {
+  "name": "Ayakta kablo biceps curl",
+  "steps": [
+   "Gövden dik, alt makaraya bağlı curl barını omuz genişliğinde, avuçlar yukarı bakacak şekilde tut; dirseklerin gövdene yakın olsun.",
+   "Üst kolların sabit, nefes vererek bicepsini kasıp barı curl yap; yalnızca ön kolların hareket etsin.",
+   "Bar omuz hizasına gelince bir saniye kası sık.",
+   "Nefes alarak barı yavaşça başlangıca indir."
+  ]
+ },
+ "Standing_Biceps_Stretch": {
+  "name": "Ayakta biceps esnemesi",
+  "steps": [
+   "Ellerini sırtının arkasında avuçlar birleşik şekilde kenetle.",
+   "Kollarını düzleştir ve avuçların aşağı bakacak şekilde döndür.",
+   "Bicepslerinde esneme hissedene kadar kollarını kaldır ve tut."
+  ]
+ },
+ "Standing_Bradford_Press": {
+  "name": "Ayakta Bradford press",
+  "steps": [
+   "Yüklü barı rack'te omuz hizasına koy; barı omuz genişliğinde, üstten tutuşla kavrayıp omuzlarının önünde tut.",
+   "Dirseklerini açarak barı baş üstüne it; barı başının arkasına götürürken dirseklerini kilitleme.",
+   "Barı dirseğin dik açı yapana kadar başının arkasına indir.",
+   "Dirseklerini açarak barı yeniden baş üstüne kaldır.",
+   "Barı başlangıç konumuna indir ve bu şekilde dönüşümlü devam et."
+  ]
+ },
+ "Standing_Cable_Chest_Press": {
+  "name": "Ayakta kablo göğüs press",
+  "steps": [
+   "Çift makaraları göğüs hizasına ayarla ve uygun ağırlığı seç.",
+   "Kabloların 30-60 cm önünde her elinde bir tutamakla dur; denge için çapraz duruş alabilirsin.",
+   "Üst kolunu 90 derece açıyla konumlandır, kürek kemiklerin sıkışık olsun.",
+   "Vücudun geri kalanı sabitken dirseklerini açarak tutamakları öne it ve önünde birleştir.",
+   "Hareketin sonunda bekle ve başlangıca dön."
+  ]
+ },
+ "Standing_Cable_Lift": {
+  "name": "Ayakta kablo lift",
+  "steps": [
+   "İstasyona standart tutamak tak ve kabloyu en alt makara konumuna al.",
+   "Yan dönük, tutamağı tek elle kavrayıp bir kol boyu uzaklaş; kabloda gerilim olsun, uzanmış kolun kabloyla hizalı olsun.",
+   "Ayaklar omuz genişliğinde, çömel ve tutamağı iki elinle kavra; kolların tamamen uzanmış kalsın.",
+   "Tek hareketle tutamağı vücudunun önünden çapraz şekilde kollar uzanana kadar baş üstüne çek; sırtın düz, arka ayağını döndürüp bacaklarını düzleştir.",
+   "Önce kollarını sonra gövdeni geri al ve yavaş, kontrollü şekilde ortaya dön; tükenene kadar tekrarlayıp diğer tarafta yap."
+  ]
+ },
+ "Standing_Cable_Wood_Chop": {
+  "name": "Ayakta kablo odun kesme",
+  "steps": [
+   "İstasyona standart tutamak tak ve kabloyu en yüksek makara konumuna al.",
+   "Yan dönük, tutamağı tek elle kavrayıp bir kol boyu uzaklaş; kabloda gerilim olsun, uzanmış kolun kabloyla hizalı olsun.",
+   "Ayaklar omuz genişliğinde, diğer elinle de yukarı uzanıp tutamağı iki elinle kavra; kolların tamamen uzanmış kalsın.",
+   "Tek hareketle gövdeni döndürerek tutamağı çapraz şekilde ön dizine çek; sırtın ve kolların düz, karnın sıkı, arka ayağını döndürüp dizlerini bük.",
+   "Duruşunu ve düz kollarını koruyarak yavaş ve kontrollü şekilde ortaya dön; tükenene kadar tekrarlayıp diğer tarafta yap."
+  ]
+ },
+ "Standing_Concentration_Curl": {
+  "name": "Ayakta konsantrasyon curl",
+  "steps": [
+   "Çalışan elinde dumbbell ile öne eğil.",
+   "Çalışan kolun dirseği dışa dönük şekilde yere dik olarak sarksın.",
+   "Üst kolun sabit, dirseğini bükerek ağırlığı curl yap.",
+   "Tepede bicepsini sık ve bekle.",
+   "Dumbbell'ı başlangıca indir."
+  ]
+ },
+ "Standing_Dumbbell_Calf_Raise": {
+  "name": "Ayakta dumbbell baldır kaldırış",
+  "steps": [
+   "Gövden dik, iki dumbbell yanlarında dur.",
+   "Ayaklarının ön tarafını 5-8 cm yüksekliğinde sağlam bir tahtaya koy; topukların dışarıda kalıp yere değsin.",
+   "Parmak uçların düz (tüm bölümler), içe (dış baş) ya da dışa (iç baş) dönük olabilir.",
+   "Nefes vererek baldırlarını kasıp topuklarını yerden kaldır ve tepede bir saniye tut.",
+   "Nefes alarak topuklarını yavaşça indirip başlangıca dön."
+  ]
+ },
+ "Standing_Dumbbell_Press": {
+  "name": "Ayakta dumbbell press",
+  "steps": [
+   "Ayakların omuz genişliğinde dur, her eline bir dumbbell al.",
+   "Dumbbell'ları baş hizasına kaldır; dirseklerin dışa açık ve yaklaşık 90 derece bükülü olsun.",
+   "Bacaklarınla itmeden ve geriye yaslanmadan, dirseklerini açarak ağırlıkları birlikte başının tam üstüne kaldır.",
+   "Bekle ve ağırlığı yavaşça başlangıca indir."
+  ]
+ },
+ "Standing_Dumbbell_Reverse_Curl": {
+  "name": "Ayakta ters tutuş dumbbell curl",
+  "steps": [
+   "Her elinde bir dumbbell'ı avuçlar aşağı bakacak şekilde tutarak dik dur; kolların tamamen uzanmış, ayakların omuz genişliğinde olsun.",
+   "Üst kolların sabit, nefes vererek bicepsini kasıp dumbbell'ları curl yap; yalnızca ön kolların hareket etsin.",
+   "Dumbbell'lar omuz hizasına gelince bir saniye kası sık.",
+   "Nefes alarak dumbbell'ları yavaşça başlangıca indir."
+  ]
+ },
+ "Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head": {
+  "name": "Ayakta düz kol baş üstüne öne dumbbell kaldırış",
+  "steps": [
+   "Dumbbell'ları avuçlar uyluklarına bakacak şekilde uyluklarının önünde tut.",
+   "Kolların düz, dirsekler hafif bükülü ama sabit olsun.",
+   "Nefes vererek dumbbell'ları yarım daire çizerek kolların uzanmış şekilde baş üstüne kaldır.",
+   "Nefes alarak aynı yoldan yavaşça başlangıca dön."
+  ]
+ },
+ "Standing_Dumbbell_Upright_Row": {
+  "name": "Ayakta dumbbell upright row",
+  "steps": [
+   "Her elinde bir dumbbell'ı avuçlar öne bakacak şekilde omuzdan biraz dar tut; dumbbell'lar uyluklarının üstünde dursun.",
+   "Kolların dirsekler hafif bükülü şekilde uzanmış, sırtın düz olsun.",
+   "Nefes vererek yan omuzlarınla dumbbell'ları vücuduna yakın şekilde neredeyse çenene değene kadar kaldır.",
+   "Hareketi dirseklerin yönlendirsin ve dirseklerin ön kollarından hep yüksek kalsın; gövdeni sabit tut, tepede bir saniye bekle.",
+   "Nefes alarak dumbbell'ları yavaşça başlangıca indir."
+  ]
+ },
+ "Standing_Elevated_Quad_Stretch": {
+  "name": "Ayakta yükseltilmiş quadriceps esnemesi",
+  "steps": [
+   "Sırtın bir sehpaya ya da stepe dönük, yaklaşık 60-90 cm uzakta dur.",
+   "Bir bacağını arkana kaldır ve ayağını, hangisi rahatsa ayak üstün ya da ön tarafınla stepe koy.",
+   "Destek dizini hafif bükülü tut ve dizinin parmak uçlarını geçmesine izin verme.",
+   "Taraf değiştir."
+  ]
+ },
+ "Standing_Front_Barbell_Raise_Over_Head": {
+  "name": "Ayakta baş üstüne öne barbell kaldırış",
+  "steps": [
+   "Barı avuçlar aşağı bakacak şekilde omuzdan dar tutarak dik dur.",
+   "Ayakların omuz genişliğinde, dirseklerin hafif bükülü olsun.",
+   "Nefes vererek barı başının tam üstüne gelene kadar kaldır; her tekrarda dirseklerini hafif bükülü tut.",
+   "Kasılmayı hissedince nefes alarak barı başlangıca indir."
+  ]
+ },
+ "Standing_Gastrocnemius_Calf_Stretch": {
+  "name": "Ayakta gastroknemius baldır esnemesi",
+  "steps": [
+   "Sağ topuğunu dizin düz şekilde bir basamağa koy ve öne eğilip sağ elinle sağ ayak parmaklarını tut.",
+   "Sol dizin hafif bükülü, sırtın düz olsun.",
+   "Ağırlığını sol bacağına ver ve sol elini sol uyluğuna koy.",
+   "Baldırında esneme hissedene kadar sağ ayak parmaklarını dizine doğru çek."
+  ]
+ },
+ "Standing_Hamstring_and_Calf_Stretch": {
+  "name": "Ayakta hamstring ve baldır esnemesi",
+  "steps": [
+   "Bir ayağına kemer, bant ya da ip geçir ve ayaktayken o ayağını öne koy.",
+   "Öndeki bacağın düz kalırken arka bacağını bük.",
+   "Ön ayağının parmaklarını yerden kaldır ve öne eğil.",
+   "Kemerle ayağının üstünü çekerek baldırdaki esnemeyi artır.",
+   "10-20 saniye tut ve diğer ayakla tekrarla."
+  ]
+ },
+ "Standing_Hip_Circles": {
+  "name": "Ayakta kalça çevirme",
+  "steps": [
+   "Dikey bir desteğe tutunarak tek bacak üstünde dur.",
+   "Desteksiz dizini 90 dereceye kaldır.",
+   "Kalçanı olabildiğince açarak dizinle büyük bir daire çizmeye çalış.",
+   "Bu hareketi yavaşça birkaç tekrar yap, ardından diğer tarafta tekrarla."
+  ]
+ },
+ "Standing_Hip_Flexors": {
+  "name": "Ayakta kalça fleksörü esnemesi",
+  "steps": [
+   "Omurgan dik, sol ayağın sağ ayağının biraz önünde dur.",
+   "İki dizini bük, arka topuğunu yerden kaldır ve sağ kalçanı öne bastır.",
+   "Bu pozisyonda derin bir esneme zordur, çünkü kalça fleksörünü gevşetip aynı anda üstünde durmak kolay değildir.",
+   "Taraf değiştir."
+  ]
+ },
+ "Standing_Inner-Biceps_Curl": {
+  "name": "Ayakta iç biceps curl",
+  "steps": [
+   "Her elinde bir dumbbell kolların uzanmış şekilde dur; dirseklerin gövdene yakın, bacakların omuz genişliğinde olsun.",
+   "Avuçlarını nötr pozisyonda içe bakacak şekilde çevir.",
+   "Üst kolların sabit, nefes vererek bicepsini kasıp ağırlıkları dışa curl yap; bileklerin dönerek tepede avuçların yukarı baksın.",
+   "Ön kolların dış omuzlarınla hizalı kalsın; dumbbell'lar omuz hizasına gelince bir saniye bicepsini sık.",
+   "Nefes alarak dumbbell'ları indirirken bileklerini döndürüp nötr tutuşa dön."
+  ]
+ },
+ "Standing_Lateral_Stretch": {
+  "name": "Ayakta yan esneme",
+  "steps": [
+   "Kalça genişliğinden biraz geniş, dizlerin hafif bükülü şekilde dur.",
+   "Omurganı desteklemek için sağ elini sağ kalçana koy.",
+   "Sol kolunu dikey olarak kaldır, sol elini başının arkasına koy ve orada tutarak gövdeni sağa eğ.",
+   "Ağırlığını iki bacağına eşit dağıt; sol kalçana yüklenme.",
+   "Taraf değiştir."
+  ]
+ },
+ "Standing_Leg_Curl": {
+  "name": "Ayakta leg curl",
+  "steps": [
+   "Makine kolunu boyuna göre ayarla; gövden belinden yaklaşık 30-45 derece öne eğik, kolun pedi sağ bacağının arkasında baldırının birkaç santim altında olsun.",
+   "Sağ bacağının önü makine pedinin üstüne dayansın.",
+   "Gövden öne eğik, bacağın tamamen uzanmış şekilde yan tutamakları kavra; ayak parmakların düz baksın.",
+   "Nefes vererek üst bacağını pedden kaldırmadan sağ bacağını olabildiğince yukarı kıvır ve bir saniye tut.",
+   "Nefes alarak bacağını başlangıca getir; tekrarları bitirince sol bacakla yap."
+  ]
+ },
+ "Standing_Long_Jump": {
+  "name": "Durarak uzun atlama",
+  "steps": [
+   "Bu drili kum gibi yumuşak bir zeminde ve mesafeyi ölçebileceğin bir yerde yap.",
+   "Ayaklar omuz genişliğinde, yarım squat duruşunda dur.",
+   "Kollarını güçlüce savurup bacaklarınla karşı hareket yaparak olabildiğince ileri atla.",
+   "Bacaklarınla olabildiğince öne uzanarak ayakların önde olacak şekilde inmeye çalış.",
+   "İniş noktanla başlangıç arasındaki mesafeyi ölç ve sonuçlarını takip et."
+  ]
+ },
+ "Standing_Low-Pulley_Deltoid_Raise": {
+  "name": "Ayakta alt makara omuz kaldırış",
+  "steps": [
+   "Alt makaranın sağ tarafında dur; sol elinle vücudunun önünden uzanıp tek tutamağı avuç aşağı bakacak şekilde kavra.",
+   "Kolun önünde dursun, sağ elinle denge için makineye tutun.",
+   "Sırtın dik, ayakların omuz genişliğinde olsun.",
+   "Nefes vererek sol elini vücudunun önünden dışa doğru omuz hizasına kaldır.",
+   "Tepede bir saniye kasılmayı hisset, nefes alarak yavaşça indir; kol değiştirip tekrarla."
+  ]
+ },
+ "Standing_Low-Pulley_One-Arm_Triceps_Extension": {
+  "name": "Ayakta alt makara tek kol triceps ekstansiyon",
+  "steps": [
+   "Alt makaradaki tek tutamağı sol elinle al, makineye sırtını dön ve kolun uzanmış şekilde tutamağı yanında tut.",
+   "İki elinle tutamağı avucun öne bakacak şekilde başının tam üstüne kaldır; üst kolun dik kalsın, sağ elini dengede tutmak için sol dirseğine koy.",
+   "Üst kolun başına yakın ve yere dik; nefes alarak tutamağı yarım daire çizerek ön kolun bicepsine değene kadar başının arkasına indir.",
+   "Nefes vererek tricepsinle tutamağı başlangıca kaldır; yalnızca ön kolun hareket etsin.",
+   "Kol değiştirip tekrarla."
+  ]
+ },
+ "Standing_Olympic_Plate_Hand_Squeeze": {
+  "name": "Ayakta olimpik plaka el sıkma",
+  "steps": [
+   "Dik dur, her elinle bir plakayı kenarından avuçlar içe bakacak şekilde kolların uzanmış halde tut; ayakların omuz genişliğinde olsun.",
+   "Nefes alarak parmaklar neredeyse açılana ama plakaları hâlâ tutabilene kadar plakaları indir.",
+   "Nefes vererek ellerini kapatıp plakaları başlangıca kaldır."
+  ]
+ },
+ "Standing_One-Arm_Cable_Curl": {
+  "name": "Ayakta tek kol kablo curl",
+  "steps": [
+   "Alt makaradaki tek tutamağı al; kolunun ağırlığı taşıyacağı kadar makineden uzakta dur.",
+   "Üst kolun sabit ve yere dik, dirseğin içeride, avucun öne baksın; boştaki elinle denge için beline tutun.",
+   "Üst kolun sabitken nefes vererek tutamağı ön kolun bicepsine değene kadar yavaşça yukarı curl yap; yalnızca ön kolun hareket etsin.",
+   "Bicepsini sıkarak tut, ardından nefes alarak tutamağı başlangıca indir.",
+   "Kol değiştirip tekrarla."
+  ]
+ },
+ "Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench": {
+  "name": "Eğimli sehpa üstünden ayakta tek kol dumbbell curl",
+  "steps": [
+   "Yardımcı olacakmış gibi eğimli sehpanın arka tarafında dur; bir elinde dumbbell'ı avuç yukarı bakacak şekilde tutup kolunu sehpanın üstüne yasla.",
+   "Boştaki elini sehpanın köşesine ya da yanına koy; göğsün sehpanın üst kısmına bastırılmış, ayakların geniş ve yere sağlam bassın.",
+   "Üst kolun sabit, nefes vererek bicepsini kasıp dumbbell'ı omuz hizasına kadar curl yap; yalnızca ön kolun hareket etsin.",
+   "Tepede bir saniye tut, nefes alarak yavaşça başlangıca indir.",
+   "Kol değiştirip tekrarla."
+  ]
+ },
+ "Standing_One-Arm_Dumbbell_Triceps_Extension": {
+  "name": "Ayakta tek kol dumbbell triceps ekstansiyon",
+  "steps": [
+   "Bir elinde dumbbell ile ayaklar omuz genişliğinde dur ve kolunu tamamen uzatarak dumbbell'ı başının üstüne kaldır.",
+   "Serçe parmağın tavana, avucun öne baksın.",
+   "Üst kolun başına yakın ve yere dik; nefes alarak dumbbell'ı yarım daire çizerek ön kolun bicepsine değene kadar başının arkasına indir.",
+   "Nefes vererek tricepsinle dumbbell'ı başlangıca kaldır; yalnızca ön kolun hareket etsin.",
+   "Kol değiştirip tekrarla."
+  ]
+ },
+ "Standing_Overhead_Barbell_Triceps_Extension": {
+  "name": "Ayakta baş üstü barbell triceps ekstansiyon",
+  "steps": [
+   "Barbell ya da EZ barı avuçlar öne bakacak şekilde omuzdan dar tutarak dur; ayakların omuz genişliğinde olsun.",
+   "Barı kolların tamamen uzanana kadar başının üstüne kaldır; dirseklerin içeride olsun.",
+   "Üst kolların başına yakın ve yere dik; nefes alarak barı yarım daire çizerek ön kolların bicepslerine değene kadar başının arkasına indir.",
+   "Nefes vererek tricepslerinle barı başlangıca kaldır; yalnızca ön kolların hareket etsin."
+  ]
+ },
+ "Standing_Palm-In_One-Arm_Dumbbell_Press": {
+  "name": "Ayakta avuç içe tek kol dumbbell press",
+  "steps": [
+   "Bir elinde dumbbell, kolun nötr tutuşla yana tamamen uzanmış olsun; diğer elinle denge için eğimli bir sehpaya tutun.",
+   "Ayakların omuz genişliğinde, dumbbell'ı kolunla 90 derece açı oluşana kadar yavaşça kaldır; ön kolun yere dik olsun, nötr tutuşu koru.",
+   "Dumbbell'ı kolun tamamen uzanana kadar yavaşça yukarı kaldır.",
+   "Nefes alarak ağırlığı kolun yeniden 90 derece olana kadar indir, bir saniye kasılmayı hisset ve nefes vererek yukarı kaldır.",
+   "Denge için sehpaya tutunmayı sürdür; kol değiştirip tekrarla."
+  ]
+ },
+ "Standing_Palms-In_Dumbbell_Press": {
+  "name": "Ayakta avuçlar içe dumbbell press",
+  "steps": [
+   "Her elinde bir dumbbell, kolların nötr tutuşla yanlara tamamen uzanmış olsun; ayakların omuz genişliğinde dursun.",
+   "Dumbbell'ları kollarınla 90 derece açı oluşana kadar yavaşça kaldır; ön kolların yere dik olsun.",
+   "Hareket boyunca nötr tutuşu koruyarak dumbbell'ları kolların tamamen uzanana kadar yavaşça yukarı kaldır.",
+   "Nefes alarak ağırlıkları kolların yeniden 90 derece olana kadar indir."
+  ]
+ },
+ "Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl": {
+  "name": "Ayakta arkadan avuçlar yukarı barbell bilek curl",
+  "steps": [
+   "Dik dur, barı kalçanın arkasında kolların uzanmış şekilde, avuçlar arkaya bakacak ve ellerin omuz genişliğinde olacak şekilde tut.",
+   "Düz ileri bak, ayakların omuz genişliğinde olsun.",
+   "Nefes vererek bileklerini yarım daire çizerek tavana doğru kıvırıp barı yavaşça kaldır; yalnızca bileklerin hareket etsin.",
+   "Bir saniye tut, nefes alarak barı başlangıca indir.",
+   "Bitince dizlerini bükerek barı squat rack'e ya da yere bırak; barı rack'ten almak ya da bir partnerden almak en kolayıdır."
+  ]
+ },
+ "Standing_Pelvic_Tilt": {
+  "name": "Ayakta pelvik tilt",
+  "steps": [
+   "Ayakların kalça genişliğinde dur.",
+   "Dizlerini yumuşak ve esnek tutmak için hafifçe bük.",
+   "Kuyruk sokumunu öne alıp tutmadan önce leğenini birkaç kez öne ve geriye hareket ettirebilirsin."
+  ]
+ },
+ "Standing_Rope_Crunch": {
+  "name": "Ayakta ip crunch",
+  "steps": [
+   "Yüksek makaraya ip tak ve uygun ağırlığı seç.",
+   "Sırtın kablo istasyonuna dönük dur; ipi iki elinle omuzlarının üstünden alıp üst göğsünde tut.",
+   "Omurganı bükerek ağırlığı olabildiğince aşağı crunch yap.",
+   "Tam kasılmayı bir an tut, ardından başlangıca dön."
+  ]
+ },
+ "Standing_Soleus_And_Achilles_Stretch": {
+  "name": "Ayakta soleus ve aşil esnemesi",
+  "steps": [
+   "Ayakların kalça genişliğinde, bir ayağın diğerinin biraz önünde dur.",
+   "Arka topuğun yerde kalacak şekilde iki dizini bük.",
+   "Taraf değiştir."
+  ]
+ },
+ "Standing_Toe_Touches": {
+  "name": "Ayakta parmak ucuna uzanma",
+  "steps": [
+   "Önünde ve arkanda biraz boşluk olacak şekilde dur.",
+   "Bacakların düz, gevşeyip üst gövdeni önüne sarkıtabilene kadar belinden eğil.",
+   "Kollarını ve ellerini doğal şekilde aşağı sarkıt.",
+   "10-20 saniye bekle."
+  ]
+ },
+ "Standing_Towel_Triceps_Extension": {
+  "name": "Ayakta havluyla triceps ekstansiyon",
+  "steps": [
+   "Ayakların omuz genişliğinde dur, havlunun bir ucunu iki elinle tutup kollarını başının üstüne tamamen uzat; dirseklerin içeride, avuçların birbirine baksın.",
+   "Partnerinle iletişim kur; havlunun diğer ucunu tutarak direnç uygulasın.",
+   "Üst kolların başına yakın ve yere dik; nefes alarak havluyu yarım daire çizerek ön kolların bicepslerine değene kadar başının arkasına indir.",
+   "Nefes vererek tricepslerinle havluyu başlangıca kaldır; yalnızca ön kolların hareket etsin."
+  ]
+ },
+ "Standing_Two-Arm_Overhead_Throw": {
+  "name": "Ayakta iki kol baş üstü atış",
+  "steps": [
+   "Ayakların omuz genişliğinde, sağlık topunu iki elinle tutarak dur.",
+   "Dizlerini hafifçe bükerken geriye yaslan ve topu başının çok gerisine uzat.",
+   "Kalçandan bükülerek ve tüm vücudunu kullanarak topu sertçe öne fırlat.",
+   "Topu bir partnere ya da duvara atıp geri sekerken karşılayabilirsin."
+  ]
+ },
+ "Star_Jump": {
+  "name": "Yıldız sıçraması",
+  "steps": [
+   "Ayakların omuz genişliğinde rahat dur, kollarını vücuduna yakın tut.",
+   "Yarıya kadar çömel ve olabildiğince yükseğe patlayarak sıçra.",
+   "Tüm vücudunu tamamen açıp kollarını ve bacaklarını vücudundan uzağa aç.",
+   "İnerken kollarını ve bacaklarını geri topla ve darbeyi bacaklarınla em."
+  ]
+ },
+ "Step-up_with_Knee_Raise": {
+  "name": "Diz kaldırmalı step-up",
+  "steps": [
+   "Uygun yükseklikteki bir kutu ya da sehpaya dönük, ayakların bitişik dur.",
+   "Sol ayağını sehpanın üstüne koyarak adım at.",
+   "Ön bacağının kalça ve dizini açarak kutunun üstünde dik dur; bu sırada sağ diz ve kalçanı bükerek dizini olabildiğince yükseğe kaldır.",
+   "Hareketi tersine çevirerek kutudan in ve diğer bacakla tekrarla."
+  ]
+ },
+ "Step_Mill": {
+  "name": "Step mill (merdiven makinesi)",
+  "steps": [
+   "Step mill'e çık ve menüden istediğin seçeneği seç; manuel ayar ya da bir program kullanabilirsin.",
+   "Harcanan kaloriyi tahmin etmek için genellikle yaşını ve kilonu girebilirsin.",
+   "Basamakları çıkarken takılmamaya dikkat et.",
+   "Düşmemek için tutamakları tutmaya devam etmen önerilir."
+  ]
+ },
+ "Stiff-Legged_Dumbbell_Deadlift": {
+  "name": "Stiff-leg dumbbell deadlift",
+  "steps": [
+   "İki dumbbell'ı kolların uzanmış şekilde yanlarında tut.",
+   "Gövden düz, ayakların omuz genişliğinde ya da daha dar, dizlerin hafif bükülü dur.",
+   "Dizlerin sabit, sırtın düz şekilde belinden eğilerek dumbbell'ları ayaklarının üstüne indir.",
+   "Yerden bir şey alacakmış gibi hamstringlerinde esneme hissedene kadar devam et.",
+   "Kalçanı ve belini açarak gövdeni yeniden dikleştir ve başlangıca dön."
+  ]
+ },
+ "Stiff_Leg_Barbell_Good_Morning": {
+  "name": "Stiff-leg barbell good morning",
+  "steps": [
+   "Squat rack içinde barı boyuna uygun yüksekliğe ayarla; altına girip omuzlarının arkasına yerleştir.",
+   "Barı iki yandan tut ve bacaklarınla iterek rack'ten kaldır.",
+   "Geri çekil, ayaklarını omuz genişliğinde aç; başın yukarıda, sırtın düz olsun.",
+   "Bacakların sabit, nefes alarak kalçandan bükülüp gövdeni yere paralel olana kadar öne indir.",
+   "Nefes vererek gövdeni başlangıca kaldır."
+  ]
+ },
+ "Stomach_Vacuum": {
+  "name": "Karın vakumu",
+  "steps": [
+   "Ayakların omuz genişliğinde dik dur, ellerini beline koy.",
+   "Yavaşça olabildiğince çok nefes al, sonra olabildiğince çok nefes verirken karnını olabildiğince içe çek ve tut.",
+   "Göbeğinin omurgana değdiğini hayal et.",
+   "Bir izometrik kasılma yaklaşık 20 saniyedir; bu sürede normal nefes almaya çalış, ardından nefes alıp karnını başlangıca bırak.",
+   "Pratik yaptıkça 20 saniyeden uzun, 40-60 saniyeye kadar tutmayı dene."
+  ]
+ },
+ "Straight-Arm_Pulldown": {
+  "name": "Düz kol pulldown",
+  "steps": [
+   "Pulldown makinesinin üst makarasındaki geniş barı omuzdan geniş, avuçlar aşağı bakacak şekilde kavra ve yaklaşık 60 cm geri çekil.",
+   "Kolların önünde tamamen uzanmış ve dirsekler hafif bükülü şekilde gövdeni belinden yaklaşık 30 derece öne eğ.",
+   "Kolların tam uzanmıyorsa biraz daha geri çekil; ardından lat kaslarını sık.",
+   "Kolların düz, nefes vererek lat kaslarını kasıp barı ellerin uyluklarının yanına gelene kadar aşağı çek.",
+   "Kolların düz kalarak nefes alıp başlangıca dön."
+  ]
+ },
+ "Straight_Bar_Bench_Mid_Rows": {
+  "name": "Sehpada düz bar orta row",
+  "steps": [
+   "Yüklü barı bir sehpanın ucuna koy.",
+   "Sehpanın üstünde barın arkasında dur ve barı orta genişlikte, üstten tutuşla kavra.",
+   "Kalçan geride, göğsün yukarıda, omurgan nötr olsun.",
+   "Kürek kemiklerini geri çekip dirseklerini bükerek barı gövdene çek; silkelemeden kontrollü hareket et.",
+   "Kısa bir duraksamanın ardından barı tamamen aşağı inecek şekilde yavaşça başlangıca indir."
+  ]
+ },
+ "Straight_Raises_on_Incline_Bench": {
+  "name": "Eğimli sehpada düz kol kaldırış",
+  "steps": [
+   "Barı eğimli sehpanın baş kısmının arkasında yere koy.",
+   "Sehpaya yüzüstü yat; kolların düz, barı üstten tutuşla yerden al ve dümdüz aşağı sarkıt.",
+   "Kolların uzanmış şekilde barı başının önüne doğru kaldır.",
+   "Başlangıca dön."
+  ]
+ },
+ "Stride_Jump_Crossover": {
+  "name": "Çapraz adım sıçraması",
+  "steps": [
+   "Bir kutunun yanında, içteki ayağın kutunun üstünde ve kenara yakın olacak şekilde dur.",
+   "Kollarını yukarı savururken üstteki bacağınla iterek olabildiğince yükseğe sıçra; karşı dizini yukarı sürmeye çalış.",
+   "Kutunun diğer tarafına, başladığın pozisyonun tersine in.",
+   "Başta kutuda olan ayak şimdi yerde, diğer ayak kutunun üstünde olsun.",
+   "Hareketi tekrarlayarak diğer tarafa geri geç."
+  ]
+ },
+ "Sumo_Deadlift_with_Bands": {
+  "name": "Bantlı sumo deadlift",
+  "steps": [
+   "Kısa bantları başlamadan barın üstünden geçir ve içlerine bas; bantlar ayaklarının arka yarısının altında olsun.",
+   "Yüklü bar yerdeyken ayaklarının ortasından geçecek şekilde yaklaş; ayaklarını bileziklere yakın, çok geniş aç.",
+   "Kalçandan eğilip barı kolların omuzlarının altında ve bacaklarının içinde olacak şekilde üstten, karma ya da hook tutuşla kavra.",
+   "Nefes al, kalçanı indir; başın önde, göğsün yukarıda şekilde ayaklarını dışa açarak ve ağırlık ayakların arka yarısındayken it, kalça ve dizlerini aç.",
+   "Bar dizleri geçince geriye yaslanıp kalçanı bara sür ve kürek kemiklerini sıkıştır; kalçandan eğilerek kontrollü şekilde yere indir."
+  ]
+ },
+ "Sumo_Deadlift_with_Chains": {
+  "name": "Zincirli sumo deadlift",
+  "steps": [
+   "Zincirleri barın uçlarına tak ya da ortalarını barın üstüne as; indirirken çarpmaması için uçlarını plakalardan uzak tut.",
+   "Yüklü bar yerdeyken ayaklarının ortasından geçecek şekilde yaklaş; ayaklarını bileziklere yakın, çok geniş aç.",
+   "Kalçandan eğilip barı kolların omuzlarının altında ve bacaklarının içinde olacak şekilde kavra; omuzlarını gevşet.",
+   "Nefes al, kalçanı indir; başın önde, göğsün yukarıda şekilde ayaklarını dışa açarak ve ağırlık ayakların arka yarısındayken it, kalça ve dizlerini aç.",
+   "Bar dizleri geçince geriye yaslanıp kalçanı bara sür ve kürek kemiklerini sıkıştır; kalçandan eğilerek kontrollü şekilde yere indir."
+  ]
+ },
+ "Superman": {
+  "name": "Superman",
+  "steps": [
+   "Yere ya da mata yüzüstü düz uzan; kolların önüne tamamen uzansın.",
+   "Nefes vererek kollarını, bacaklarını ve göğsünü aynı anda yerden kaldır ve 2 saniye tut.",
+   "En iyi sonuç için belini sık; bu pozisyonda uçan Superman gibi görünürsün.",
+   "Nefes alarak kollarını, bacaklarını ve göğsünü yavaşça başlangıca indir."
+  ]
+ },
+ "Supine_Chest_Throw": {
+  "name": "Sırtüstü göğüsten atış",
+  "steps": [
+   "Bu drill partnerin ya da yeterince sağlam bir duvarın yoksa göğüs pası çalışmak için idealdir; dizlerin bükülü sırtüstü yat.",
+   "Topu göğsünde, iki elinle altından tut.",
+   "Patlayarak dirseklerini açıp topu olabildiğince yükseğe, tam üstüne at.",
+   "Top inerken iki elinle yakala."
+  ]
+ },
+ "Supine_One-Arm_Overhead_Throw": {
+  "name": "Sırtüstü tek kol baş üstü atış",
+  "steps": [
+   "Dizlerin bükülü sırtüstü yat.",
+   "Topu tek elinle tut ve kolunu başının arkasına tamamen uzat.",
+   "Hareketi omuzdan başlatarak doğrulurken topu maksimum mesafe için tam önüne at.",
+   "Topu bir partnere atabilir ya da duvardan sektirebilirsin."
+  ]
+ },
+ "Supine_Two-Arm_Overhead_Throw": {
+  "name": "Sırtüstü iki kol baş üstü atış",
+  "steps": [
+   "Dizlerin bükülü sırtüstü yat.",
+   "Topu iki elinle tut ve kollarını başının arkasına tamamen uzat.",
+   "Hareketi omuzdan başlatarak doğrulurken topu maksimum mesafe için tam önüne at.",
+   "Topu bir partnere atabilir ya da duvardan sektirebilirsin."
+  ]
+ },
+ "Suspended_Fallout": {
+  "name": "Askıda fallout",
+  "steps": [
+   "Askı kayışlarını tutamaklar bel hizasının altında, uygun yükseklikte olacak şekilde ayarla.",
+   "Ayakta tutamakları kavra ve kayışlara yaslanarak eğimli şınav pozisyonuna geç.",
+   "Kolların düz, kayışlara daha çok yaslanarak vücudunu yere yaklaştır; omuzlarını açıp kollarını başının üstüne kaldır.",
+   "Omurgan nötr, vücudun düz kalsın; yalnızca omuzların hareket etsin.",
+   "Tam kasılmada bekle, ardından başlangıca dön."
+  ]
+ },
+ "Suspended_Push-Up": {
+  "name": "Askıda şınav",
+  "steps": [
+   "Askı kayışlarını bir rack'in üstüne ya da sağlam bir nesneye sıkıca sabitle.",
+   "Kayışlara yaslanıp her elinle bir tutamak al ve şınav plank pozisyonuna geç; kolların tamamen uzanmış, vücudun yere olabildiğince paralel olsun.",
+   "Gövden düz ve sabit, dirseklerini bükerek yavaşça alçal.",
+   "Dirseklerin 90 derecenin altına inene kadar devam et, bekle ve kollarını açarak başlangıca dön."
+  ]
+ },
+ "Suspended_Reverse_Crunch": {
+  "name": "Askıda ters crunch",
+  "steps": [
+   "Askı kayışlarını tutamaklar yerden yaklaşık 30 cm yukarıda olacak şekilde sabitle ve rack'e sırtın dönük şınav plank pozisyonuna geç.",
+   "Ayaklarını tutamaklara yerleştir; vücudun düz kalsın, kalçan çökmesin.",
+   "Diz ve kalçanı bükerek dizlerini gövdene çek.",
+   "Bu sırada leğenini öne eğip omurganın bükülmesine izin ver.",
+   "Kontrollü hareketin tepesinde başlangıca dön."
+  ]
+ },
+ "Suspended_Row": {
+  "name": "Askıda row",
+  "steps": [
+   "Kayışları yaklaşık göğüs hizasına as, her elinle bir tutamak al ve geriye yaslan.",
+   "Vücudun dik, başın ve göğsün yukarıda, kolların tamamen uzanmış olsun.",
+   "Dirseklerini bükerek hareketi başlat; bu sırada kürek kemiklerini çalıştır.",
+   "Hareketin sonunda bekle, ardından başlangıca dön."
+  ]
+ },
+ "Suspended_Split_Squat": {
+  "name": "Askıda split squat",
+  "steps": [
+   "Kayışları tutamaklar yerden 45-75 cm yukarıda olacak şekilde as.",
+   "Düzeneğe sırtın dönük, arka ayağını arkandaki tutamağa yerleştir; başın önde, göğsün yukarıda, dizin hafif bükülü olsun.",
+   "Diz ve kalçanı bükerek kendini yere doğru indir.",
+   "Ağırlığını ön ayağının topuğunda tut ve duruşunu hareket boyunca koru.",
+   "Altta hareketi tersine çevirip kalça ve dizini açarak başlangıca dön."
+  ]
+ },
+ "Svend_Press": {
+  "name": "Svend press",
+  "steps": [
+   "Ayakta dur.",
+   "İki hafif plakayı ellerinle birbirine bastır ve göğsünün yakınında tutarak göğüs kaslarında izometrik kasılma oluştur; parmakların öne baksın.",
+   "Plakaları avuçlarının arasında sıkarak kollarını kontrollü şekilde tam önüne uzat.",
+   "Hareketin sonunda bekle, ardından yavaşça başlangıca dön."
+  ]
+ },
+ "Tate_Press": {
+  "name": "Tate press",
+  "steps": [
+   "Dumbbell'lar uyluklarının üstünde, avuçlar birbirine bakacak şekilde düz sehpaya uzan.",
+   "Uyluklarının yardımıyla dumbbell'ları birer birer kaldırıp önünde tut; kolların omuzdan geniş, avuçlar öne bakacak ve dirsekler dışa dönük olsun.",
+   "Üst kolların sabit, nefes alarak dumbbell'ları yarım daire çizerek içe ve aşağı, üst göğsüne değene kadar yavaşça indir; dumbbell'ları göğsüne bırakma.",
+   "Nefes vererek tricepslerinle aynı yarım daireyi ters yönde izleyip dumbbell'ları birlikte yukarı kaldır ve bir saniye tut.",
+   "İnişi çıkışın en az iki katı sürede yap."
+  ]
+ },
+ "The_Straddle": {
+  "name": "Straddle esnemesi",
+  "steps": [
+   "Dik otur ve bacaklarını önünde V şeklinde aç.",
+   "Ellerin yerde, olabildiğince öne eğil.",
+   "10-20 saniye bekle."
+  ]
+ },
+ "Tire_Flip": {
+  "name": "Lastik çevirme",
+  "steps": [
+   "Lastiğin altını tırtıllı yüzeyinden kavra ve ayaklarını biraz geriye al; göğsün lastiğe doğru itsin.",
+   "Kalça, diz ve ayak bileklerini açarak lastiğe ve yukarı doğru iterek kaldır.",
+   "Lastik 45 dereceye gelince öne adım at ve dizini lastiğe sür.",
+   "Bu sırada tutuşunu lastiğin üst kısmına değiştir ve çevirmeyi tamamlamak için olabildiğince güçlü öne it.",
+   "Gerektiği kadar tekrarla."
+  ]
+ },
+ "Toe_Touchers": {
+  "name": "Parmak ucuna dokunma crunch",
+  "steps": [
+   "Sırtın yere bastırılmış şekilde yere ya da mata uzan; kolların avuçlar aşağı bakacak şekilde yanlarında dursun.",
+   "Bacakların bitişik, dizler hafif bükülü şekilde bacaklarını neredeyse yere dik olana kadar yavaşça kaldır; ayakların yere paralel olsun.",
+   "Kollarını yerle 45 derece açı yapacak şekilde tamamen uzat.",
+   "Belin yere bastırılmışken nefes vererek gövdeni yavaşça kaldır ve ellerinle ayak parmaklarına dokunmaya çalış.",
+   "Nefes alarak gövdeni ve kollarını yavaşça başlangıca indir; kolların ayak parmaklarına dönük düz kalsın."
+  ]
+ },
+ "Torso_Rotation": {
+  "name": "Gövde rotasyonu (pilates topu)",
+  "steps": [
+   "Pilates topunu iki elinle tutarak dik dur ve kollarını topun tam önünde olacak şekilde uzat.",
+   "Gözün topta, gövdeni bir yana döndür.",
+   "Ardından ters yöne dön.",
+   "10-20 tekrar yap."
+  ]
+ },
+ "Trail_Running_Walking": {
+  "name": "Arazide koşu/yürüyüş",
+  "steps": [
+   "Patikada koşmak ya da yürümek kanını hemen pompalar ve kalbini çalıştırır; iyi ayakkabı giydiğinden emin ol.",
+   "Yokuş yukarı çıkarken baldır ve kalça kaslarını, inerken ise dizler, eklemler ve ayak bilekleri darbenin çoğunu karşılar.",
+   "Yokuş aşağı inerken daha küçük adımlar at.",
+   "Darbeyi azaltmak için dizlerini bükülü tut ve düşmemek için yavaşla."
+  ]
+ },
+ "Trap_Bar_Deadlift": {
+  "name": "Trap bar deadlift",
+  "steps": [
+   "Hex bar olarak da bilinen trap barı yerde uygun ağırlıkla yükle.",
+   "Aletin ortasında dur ve iki tutamağı kavra.",
+   "Kalçanı indir; başın önde, göğsün yukarıda olsun.",
+   "Topuklarından iterek kalça ve dizlerini aç; sırtını asla yuvarlama.",
+   "Hareketin sonunda ağırlığı kontrollü şekilde yere indir."
+  ]
+ },
+ "Tricep_Side_Stretch": {
+  "name": "Yandan triceps esnemesi",
+  "steps": [
+   "Sağ kolunu vücudunun önünden sol omzunun üstüne getir.",
+   "Sol elinle dirseğini tutarak tricepsinde esneme hissedene kadar çek.",
+   "Ardından diğer kolla tekrarla."
+  ]
+ },
+ "Triceps_Overhead_Extension_with_Rope": {
+  "name": "İple baş üstü triceps ekstansiyon",
+  "steps": [
+   "Alt makaraya ip tak, uygun ağırlığı seç; ipi iki elinle kavra ve kabloya sırtını dön.",
+   "Ellerini başının arkasına al, dirseklerin dümdüz yukarı baksın ve bükülü başlasın.",
+   "Daha iyi denge için çapraz duruş alıp makineden hafifçe uzağa yaslanabilirsin.",
+   "Üst kolun yerinde, dirseklerini açarak ellerini başının üstüne kaldır.",
+   "Tepede tricepsini sık ve ağırlığı yavaşça başlangıca indir."
+  ]
+ },
+ "Triceps_Pushdown_-_V-Bar_Attachment": {
+  "name": "Triceps pushdown (V bar)",
+  "steps": [
+   "Yüksek makaraya V bar tak ve omuz genişliğinde, avuçlar aşağı bakacak şekilde kavra.",
+   "Gövden düz ve çok hafif öne eğik dik dur; üst kollarını vücuduna yakın ve yere dik tut.",
+   "Ön kolların barı tutarak makaraya doğru yukarı baksın; başparmakların serçe parmaklarından yukarıda olsun.",
+   "Nefes vererek tricepslerinle barı uyluklarının önüne değene ve kolların tamamen uzanana kadar indir; üst kolların sabit kalsın.",
+   "Bir saniye tut, nefes alarak V barı yavaşça başlangıca kaldır."
+  ]
+ },
+ "Triceps_Stretch": {
+  "name": "Triceps esnemesi",
+  "steps": [
+   "Elini başının arkasına uzat.",
+   "Diğer elinle dirseğini kavra ve nazikçe çek.",
+   "10-20 saniye bekle, sonra taraf değiştir."
+  ]
+ },
+ "Tuck_Crunch": {
+  "name": "Tuck crunch",
+  "steps": [
+   "Sırtın yere bastırılmış şekilde yere ya da mata uzan; kolların avuçlar aşağı bakacak şekilde yanlarında dursun.",
+   "Bir bileğini diğerine sararak bacaklarını çaprazla.",
+   "Dizler hafif bükülü, uylukların yere dik olana kadar bacaklarını yavaşça kaldır; dizlerin ve ayak parmakların yere paralel olsun.",
+   "Kollarını yerden kaldırıp göğsünde çaprazla.",
+   "Belin yere bastırılmışken nefes vererek gövdeni yavaşça kaldır, nefes alarak başlangıca indir."
+  ]
+ },
+ "Two-Arm_Dumbbell_Preacher_Curl": {
+  "name": "İki kol dumbbell preacher curl",
+  "steps": [
+   "Her elinle bir dumbbell al ve üst kollarını preacher ya da eğimli sehpanın üstüne yerleştir; dumbbell'lar omuz hizasında olsun.",
+   "Nefes alarak üst kolların uzanıp biceps tam esneyene kadar dumbbell'ları yavaşça indir.",
+   "Nefes vererek bicepslerinle ağırlıkları omuz hizasına kadar curl yap.",
+   "Tepede bicepsini bir saniye sıkıca sık."
+  ]
+ },
+ "Two-Arm_Kettlebell_Clean": {
+  "name": "İki kol kettlebell clean",
+  "steps": [
+   "İki kettlebell'i ayaklarının arasına koy; kalçanı geriye it ve düz ileri bak.",
+   "Bacak ve kalçanı açarak kettlebell'leri omuzlarına clean yap.",
+   "Bu sırada bileklerini döndür.",
+   "Kettlebell'leri başlangıca indir ve tekrarla."
+  ]
+ },
+ "Two-Arm_Kettlebell_Jerk": {
+  "name": "İki kol kettlebell jerk",
+  "steps": [
+   "Bacak ve kalçanı açarak iki kettlebell'i omuzlarına clean yap; avuçların öne bakacak şekilde bileklerini döndür.",
+   "Birkaç santim çömel ve hareketi hızla tersine çevirerek iki kettlebell'i baş üstüne sür.",
+   "İlk itişin hemen ardından yeniden çömel ve kettlebell'lerin altına gir.",
+   "Kettlebell'ler kilitlenince dik durarak hareketi tamamla."
+  ]
+ },
+ "Two-Arm_Kettlebell_Military_Press": {
+  "name": "İki kol kettlebell military press",
+  "steps": [
+   "Bacak ve kalçanı açarak iki kettlebell'i omuzlarına clean yap; avuçların öne bakacak şekilde bileklerini döndür.",
+   "Kettlebell'leri yukarı ve dışa it.",
+   "Kettlebell'ler başını geçerken ağırlıklara doğru yaslan; kettlebell'ler başının arkasına otursun.",
+   "Denge için lat, kalça ve karın kaslarını kas."
+  ]
+ },
+ "Two-Arm_Kettlebell_Row": {
+  "name": "İki kol kettlebell row",
+  "steps": [
+   "İki kettlebell'i ayaklarının önüne koy.",
+   "Dizlerini hafif bük ve öne eğilirken kalçanı olabildiğince geriye it.",
+   "İki kettlebell'i kavra, kürek kemiklerini geri çekip dirseklerini bükerek karnına çek; sırtın düz kalsın.",
+   "İndir ve tekrarla."
+  ]
+ },
+ "Underhand_Cable_Pulldowns": {
+  "name": "Ters tutuş kablo pulldown",
+  "steps": [
+   "Üst makarasına geniş bar takılı pulldown makinesine otur; diz pedini boyuna göre ayarla, pedler direncin seni kaldırmasını önler.",
+   "Barı avuçlar gövdene bakacak şekilde omuzdan dar kavra.",
+   "Kolların önünde uzanmışken gövdeni yaklaşık 30 derece geriye al, belini kavisle ve göğsünü öne çıkar.",
+   "Nefes vererek omuzlarını ve üst kollarını aşağı ve geriye çekip barı üst göğsüne değene kadar indir; dirseklerin vücuduna yakın olsun, sırt kaslarını sık.",
+   "Bir saniye tut, nefes alarak kolların tamamen uzanıp lat kasları esneyene kadar barı yavaşça başlangıca götür."
+  ]
+ },
+ "Upper_Back-Leg_Grab": {
+  "name": "Üst sırt bacak sarma esnemesi",
+  "steps": [
+   "Otururken öne eğil ve iki kolunla uyluklarına alttan sarıl.",
+   "Dizlerin bitişik, bacakların uzanmış şekilde göğsünü dizlerine indir.",
+   "Sarılırken sırtını dizlerinden uzağa çekerek orta sırtını da esnetebilirsin."
+  ]
+ },
+ "Upper_Back_Stretch": {
+  "name": "Üst sırt esnemesi",
+  "steps": [
+   "Parmaklarını başparmaklar aşağı bakacak şekilde kenetle.",
+   "Ellerini öne uzatırken omuzlarını yuvarla."
+  ]
+ },
+ "Upright_Cable_Row": {
+  "name": "Kablo upright row",
+  "steps": [
+   "Alt makaradaki düz barı avuçlar uyluklarına bakacak şekilde omuzdan biraz dar kavra; bar uyluklarının üstünde dursun.",
+   "Kolların dirsekler hafif bükülü şekilde uzanmış, sırtın düz olsun.",
+   "Nefes vererek yan omuzlarınla barı vücuduna yakın şekilde neredeyse çenene değene kadar kaldır.",
+   "Hareketi dirseklerin yönlendirsin ve dirseklerin ön kollarından hep yüksek kalsın; gövdeni sabit tut, tepede bir saniye bekle.",
+   "Nefes alarak barı yavaşça başlangıca indir."
+  ]
+ },
+ "Upright_Row_-_With_Bands": {
+  "name": "Bantla upright row",
+  "steps": [
+   "Egzersiz bandına, gerilim kol boyunda başlayacak şekilde bas.",
+   "Tutamakları avuçlar uyluklarına bakacak şekilde omuzdan biraz dar kavra; tutamaklar uyluklarının üstünde, kolların dirsekler hafif bükülü, sırtın düz olsun.",
+   "Nefes vererek yan omuzlarınla tutamakları vücuduna yakın şekilde neredeyse çenene değene kadar kaldır.",
+   "Hareketi dirseklerin yönlendirsin ve dirseklerin ön kollarından hep yüksek kalsın; gövdeni sabit tut, tepede bir saniye bekle.",
+   "Nefes alarak tutamakları yavaşça başlangıca indir."
+  ]
+ },
+ "Upward_Stretch": {
+  "name": "Yukarı esneme",
+  "steps": [
+   "İki elini avuçlar birbirine değecek şekilde başının üstüne düz uzat.",
+   "Sırtını düz tutarak ellerini yavaşça yukarı ve geriye it."
+  ]
+ },
+ "V-Bar_Pulldown": {
+  "name": "V bar pulldown",
+  "steps": [
+   "Üst makarasına V bar takılı pulldown makinesine otur.",
+   "Diz pedini boyuna göre ayarla; pedler direncin seni kaldırmasını önler.",
+   "V barı avuçlar birbirine bakacak şekilde kavra; lat kaslarını daha iyi çalıştırmak için göğsünü öne çıkar ve yaklaşık 30 derece geriye yaslan.",
+   "Nefes vererek lat kaslarınla kürek kemiklerini sıkıştırıp barı göğsün neredeyse V bara değene kadar çek; gövdeni sabit tut.",
+   "Bir saniye tut, nefes alarak barı yavaşça başlangıca götür."
+  ]
+ },
+ "V-Bar_Pullup": {
+  "name": "V bar barfiks",
+  "steps": [
+   "Barfiks istasyonunda nötr tutamak yoksa V barın ortasını barfiks barının ortasına yerleştir; tutamaklar aşağı baksın.",
+   "V barı sağlamca yerleştirince iki yanından tutup asıl.",
+   "Lat kaslarını daha iyi çalıştırmak için göğsünü öne çıkar ve hafifçe geriye yaslan.",
+   "Nefes vererek lat kaslarınla gövdeni yukarı çek; bara çarpmamak için başını hafifçe geriye al ve göğsün neredeyse V bara değene kadar devam et.",
+   "Bir saniye tut, nefes alarak vücudunu yavaşça başlangıca indir."
+  ]
+ },
+ "Vertical_Swing": {
+  "name": "Dikey swing (dumbbell)",
+  "steps": [
+   "Dumbbell'ı iki elinle tutarak kolların uzanmış şekilde bacaklarının arasında sarkıt; sırtın düz, başın yukarıda olsun.",
+   "Kalçandan bükülüp dizlerini hafifçe bükerek dumbbell'ı bacaklarının arasından savur.",
+   "Kalça, diz ve ayak bileklerini güçlüce açarak hareketi tersine çevir, kendini yukarı fırlat ve dumbbell'ı başının üstüne savur.",
+   "İnerken darbeyi bacaklarınla em ve sonraki tekrardan önce dumbbell'ı gövdene çek."
+  ]
+ },
+ "Weighted_Ball_Hyperextension": {
+  "name": "Pilates topunda ağırlıklı hiperekstansiyon",
+  "steps": [
+   "Gövden topa bastırılmış ve yere paralel olacak şekilde pilates topuna uzan.",
+   "Dengen için ayaklarının ön tarafını yere bastır.",
+   "Bir plakayı çenenin altında ya da ensende tut.",
+   "Nefes vererek belinden ve alt sırtından bükülerek gövdeni yavaşça kaldır.",
+   "Belinde bir saniye kasılmayı tut, nefes alarak gövdeni başlangıca indir."
+  ]
+ },
+ "Weighted_Ball_Side_Bend": {
+  "name": "Pilates topunda ağırlıklı yana eğilme",
+  "steps": [
+   "Gövdenin sol tarafı (bel, kalça ve omuz) topa bastırılmış şekilde pilates topuna uzan.",
+   "Ayakların yerde, bacakların çapraz ve toptan sarkık olsun; sağ elinle bir plakayı düz yüzü başına dayalı şekilde başının sağ yanında tut.",
+   "Sol kolunu gövdenin önünden geçirip avucunu oblik kaslarına koy; sol ön kolun ile üst kolun dik açı yapsın.",
+   "Nefes vererek belinden yana bükülüp gövdenin yanını kaldır.",
+   "Bir saniye tut, nefes alarak yavaşça başlangıca in; taraf değiştirip tekrarla."
+  ]
+ },
+ "Weighted_Bench_Dip": {
+  "name": "Ağırlıklı bench dips",
+  "steps": [
+   "Bir sehpayı arkana, diğerini önüne vücuduna dik şekilde koy.",
+   "Arkandaki sehpanın kenarını ellerin vücuduna yakın ve omuz genişliğinde olacak şekilde tut; kolların tamamen uzansın.",
+   "Bacaklarını öndeki sehpanın üstüne uzat; bacakların yere paralel, gövden yere dik olsun ve partnerin dumbbell'ı kucağına koysun.",
+   "Nefes alarak dirseklerini bükerek üst kol ile ön kol arasında 90 dereceden biraz küçük açı oluşana kadar yavaşça alçal; dirseklerin yakın kalsın.",
+   "Nefes vererek tricepslerinle gövdeni başlangıca kaldır."
+  ]
+ },
+ "Weighted_Crunches": {
+  "name": "Ağırlıklı crunch",
+  "steps": [
+   "Ayakların yerde düz ya da bir sehpaya dayalı, dizlerin 90 derece bükülü şekilde sırtüstü uzan.",
+   "Bir ağırlığı göğsünde ya da gövdenin üstünde kolların uzanmış şekilde tut.",
+   "Nefes vererek omuzlarını yavaşça yerden yaklaşık 10 cm kaldır; belin yerde kalsın.",
+   "Hareketin tepesinde karnını kas ve kısa bir an bekle.",
+   "Nefes alarak yavaşça başlangıca in."
+  ]
+ },
+ "Weighted_Jump_Squat": {
+  "name": "Ağırlıklı jump squat",
+  "steps": [
+   "Hafif yüklü bir barı omuzlarının arkasına yerleştir; ağırlık yeleği, kum torbası ya da başka bir direnç de kullanabilirsin.",
+   "Ağırlık seni belirgin şekilde yavaşlatmayacak kadar hafif olsun; ayakların omuz genişliğinin hemen dışında, başın ve göğsün yukarıda olsun.",
+   "Karşı hareketle kısmen çömel ve hemen yön değiştirip kalça, diz ve ayak bileklerini açarak yerden patlayarak sıçra.",
+   "Sıçrama boyunca düzgün duruşu koru.",
+   "Yere inerken darbeyi bacaklarınla em."
+  ]
+ },
+ "Weighted_Pull_Ups": {
+  "name": "Ağırlıklı barfiks",
+  "steps": [
+   "Dips kemerine ağırlık tak ve beline sabitle.",
+   "Barfiks barını avuçlar öne bakacak şekilde kavra; orta tutuş için ellerin omuz genişliğinde olsun.",
+   "Gövdeni yaklaşık 30 derece geriye al, belini kavisle ve göğsünü öne çıkar.",
+   "Nefes vererek başın ellerinin üstüne çıkana kadar gövdeni çek; tepede kürek kemiklerini geriye ve aşağı sıkıştır.",
+   "Kısa bir an bekle, nefes alarak kolların uzanıp lat kasları esneyene kadar yavaşça in."
+  ]
+ },
+ "Weighted_Sissy_Squat": {
+  "name": "Ağırlıklı sissy squat",
+  "steps": [
+   "Ayaklar omuz genişliğinde ve parmak uçlarında dik dur; bir elinle squat rack'in direğine tutun, diğer kolunla göğsünde bir plaka tut.",
+   "Bir kolunla kendini tutarken dizlerini bük ve leğenini ve dizlerini öne getirerek gövdeni yavaşça yere doğru indir.",
+   "Nefes alarak in ve üst ile alt bacağın neredeyse 90 derece olunca dur.",
+   "Esneme pozisyonunda bir saniye bekle.",
+   "Nefes vererek uyluk kaslarınla gövdeni başlangıca kaldır."
+  ]
+ },
+ "Weighted_Sit-Ups_-_With_Bands": {
+  "name": "Bantlı ağırlıklı mekik",
+  "steps": [
+   "Bantları ters eğimli sehpanın tabanına bağla; uzandığında ikisine de uzanabilmen için tutamakları sehpanın iç tarafına doğru yerleştir.",
+   "Bacaklarını sehpaya sabitle ve bantları iki elinle avuçlar öne bakacak şekilde kavra.",
+   "Tutamakları köprücük kemiğinin yanına getir ve bileklerini avuçların gövdene bakacak şekilde çevir; kolların hareket boyunca sabit kalsın.",
+   "Nefes vererek üst gövdeni yere dik olana kadar kaldır.",
+   "Bir saniye tut, nefes alarak üst gövdeni başlangıca indir."
+  ]
+ },
+ "Weighted_Squat": {
+  "name": "Ağırlık kemeriyle squat",
+  "steps": [
+   "İki düz sehpayı omuz genişliğinde aralıklı yerleştir ve üstlerine çık.",
+   "Rahat ettiğin ağırlıkla ağırlık kemerini beline bağla; parmak uçların dışa dönük olsun.",
+   "Ağırlık bacaklarının arasında sarkarken dik dur ve kollarını yanlara tamamen uzat.",
+   "Nefes alarak dik duruşla dizlerini bükerek uylukların paralelin biraz altına inene kadar alçal; dizlerin parmak uçlarını geçmesin.",
+   "Nefes vererek ağırlıklı olarak ayaklarının ön tarafıyla sehpayı iterek bacaklarını düzleştir ve başlangıca dön."
+  ]
+ },
+ "Wide-Grip_Barbell_Bench_Press": {
+  "name": "Geniş tutuş bench press (barbell)",
+  "steps": [
+   "Ayakların yere sağlam basarak düz sehpaya yat.",
+   "Barı her iki tarafta omuz genişliğinden yaklaşık 7-8 cm geniş, avuçlar öne bakacak şekilde kavra; rack'ten alıp kolların kilitli şekilde tam üstünde tut.",
+   "Nefes alarak barı göğsünün ortasında hissedene kadar yavaşça indir.",
+   "Bir saniye bekle, nefes vererek göğüs kaslarınla barı başlangıca it ve göğsünü bir saniye sık.",
+   "İnişi çıkışın en az iki katı sürede yap."
+  ]
+ },
+ "Wide-Grip_Decline_Barbell_Bench_Press": {
+  "name": "Geniş tutuş ters eğimli bench press",
+  "steps": [
+   "Ayakların sehpanın önünde sabitlenmiş şekilde ters eğimli sehpaya yat.",
+   "Barı her iki tarafta omuz genişliğinden yaklaşık 7-8 cm geniş, avuçlar öne bakacak şekilde kavra; rack'ten alıp kolların kilitli şekilde tam üstünde tut.",
+   "Nefes alarak barı göğsünün alt kısmında hissedene kadar yavaşça indir.",
+   "Bir saniye bekle, nefes vererek göğüs kaslarınla barı başlangıca it ve göğsünü bir saniye sık.",
+   "İnişi çıkışın en az iki katı sürede yap."
+  ]
+ },
+ "Wide-Grip_Decline_Barbell_Pullover": {
+  "name": "Geniş tutuş ters eğimli barbell pullover",
+  "steps": [
+   "Bacakların sabitlenmiş şekilde ters eğimli sehpaya uzan; başının arkasındaki barı omuzdan geniş, üstten tutuşla kavrayıp kollarınla yerden kaldır.",
+   "Kolların tamamen uzanmış ve yere dik olsun.",
+   "Nefes alarak barı yere koyacakmış gibi yarım daire çizerek geriye indir, kolların yere paralel olunca dur; kolların hep düz, hareket yalnızca omuzdan olsun.",
+   "Nefes vererek barı tam kontrolle başlangıca kaldır.",
+   "Set bitince barı baş hizasına kadar yavaşça indir ve bırak."
+  ]
+ },
+ "Wide-Grip_Pulldown_Behind_The_Neck": {
+  "name": "Geniş tutuş boyun arkası pulldown",
+  "steps": [
+   "Üst makarasına geniş bar takılı pulldown makinesine otur ve diz pedini boyuna göre ayarla.",
+   "Barı avuçlar öne bakacak şekilde geniş tutuşla, ellerin omuzdan geniş olacak şekilde kavra.",
+   "Kolların önünde uzanmışken gövdeni ve başını öne al; barın ortasından enseye hayali bir çizgi olsun.",
+   "Nefes vererek omuzlarını ve üst kollarını aşağı ve geriye çekip barı ensene değene kadar indir; yalnızca kolların hareket etsin, sırtını sık.",
+   "Kürek kemiklerini bir saniye sıkıştır, nefes alarak kolların tamamen uzanıp lat kasları esneyene kadar barı yavaşça kaldır."
+  ]
+ },
+ "Wide-Grip_Rear_Pull-Up": {
+  "name": "Geniş tutuş boyun arkası barfiks",
+  "steps": [
+   "Barfiks barını avuçlar öne bakacak şekilde geniş tutuşla kavra.",
+   "Kolların önünde uzanmışken gövdeni ve başını öne al; bardan enseye hayali bir çizgi olsun.",
+   "Nefes vererek omuzlarını ve üst kollarını aşağı ve geriye çekip başını hafifçe öne eğerek bar ensene yaklaşana kadar gövdeni yukarı çek.",
+   "Tepede sırt kaslarını sık; yalnızca kolların hareket etsin.",
+   "Bir saniye bekle, nefes alarak kolların tamamen uzanıp lat kasları esneyene kadar yavaşça in."
+  ]
+ },
+ "Wide-Grip_Standing_Barbell_Curl": {
+  "name": "Ayakta geniş tutuş barbell curl",
+  "steps": [
+   "Gövden dik, barı dış taraftan geniş tutuşla, avuçlar öne bakacak şekilde tut; dirseklerin gövdene yakın olsun.",
+   "Üst kolların sabit, nefes vererek bicepsini kasıp barı curl yap; yalnızca ön kolların hareket etsin.",
+   "Bar omuz hizasına gelince bir saniye bicepsini sıkıca sık.",
+   "Nefes alarak barı yavaşça başlangıca indir."
+  ]
+ },
+ "Wide_Stance_Barbell_Squat": {
+  "name": "Geniş duruş barbell squat",
+  "steps": [
+   "Squat rack içinde barı boyuna uygun yüksekliğe ayarla; altına girip omuzlarının arkasına yerleştir.",
+   "Barı iki yandan tut ve bacaklarınla iterek rack'ten kaldır.",
+   "Geri çekil; ayaklarını omuzdan geniş, parmak uçları hafif dışa dönük aç; başın yukarıda, sırtın düz olsun.",
+   "Nefes alarak dizlerini bükerek uylukların paralelin biraz altına inene kadar yavaşça alçal; dizlerin parmak uçlarını geçmesin.",
+   "Nefes vererek topuklarınla yeri itip bacaklarını düzleştir ve başlangıca dön."
+  ]
+ },
+ "Wide_Stance_Stiff_Legs": {
+  "name": "Geniş duruş stiff-leg deadlift",
+  "steps": [
+   "Yüklü bar yerdeyken geniş dur ve kalçandan eğilerek barı kavra.",
+   "Kalçan olabildiğince geride, bacakların neredeyse düz olsun; sırtın düz, başın ve göğsün yukarıda tut.",
+   "Kollarını düz sarkıtarak kalçanı öne sür.",
+   "Tamamen dik konuma gelene kadar devam et, ardından ağırlığı yavaşça başlangıca indir.",
+   "Ardışık tekrarlarda ağırlığın yere değmesi gerekmez."
+  ]
+ },
+ "Wind_Sprints": {
+  "name": "Wind sprint (asılı diz kaldırma)",
+  "steps": [
+   "Barfiks barına üstten tutuşla asıl; kolların ve bacakların uzanmış olsun.",
+   "Bir dizini olabildiğince hızlı ve yükseğe kaldır; vücudunu ya da bacaklarını sallama.",
+   "Hemen hareketi tersine çevirip o bacağı başlangıca götürürken aynı anda diğer dizini olabildiğince yükseğe kaldır.",
+   "Set bitene kadar bacakları dönüşümlü değiştir."
+  ]
+ },
+ "Windmills": {
+  "name": "Yerde windmill esnemesi",
+  "steps": [
+   "Sırtüstü uzan; kolların yanlara açık, bacakların düz olsun.",
+   "Bir bacağını kaldır ve hızla vücudunun üstünden geçirerek karşı elinin yakınında yere değdirmeye çalış.",
+   "Başlangıca dön ve diğer bacakla tekrarla.",
+   "10-20 tekrar dönüşümlü devam et."
+  ]
+ },
+ "Worlds_Greatest_Stretch": {
+  "name": "Dünyanın en iyi esnemesi",
+  "steps": [
+   "Bu üç aşamalı bir esnemedir; ön ayağın yerde düz, arka ayağın parmak uçlarında olacak şekilde öne lunge yap.",
+   "Dizlerini bükerek arka dizin neredeyse yere değene kadar çömel; gövdeni dik tut ve 10-20 saniye bekle.",
+   "Ön bacağınla aynı taraftaki kolunu dirseğin ayağının yanında olacak şekilde yere koy; diğer elini destek için ön bacağına paralel şekilde yere yerleştir.",
+   "10-20 saniye sonra ellerini ön ayağının iki yanına koy, ön ayağının parmaklarını yerden kaldır ve bacağını düzleştir; gerekirse arka bacağının yerini ayarla.",
+   "10-20 saniye tut, ardından tüm diziyi diğer tarafta tekrarla."
+  ]
+ },
+ "Wrist_Circles": {
+  "name": "Bilek çevirme",
+  "steps": [
+   "Ayakların omuz genişliğinde dik dur.",
+   "Kollarını omuz hizasında yere paralel olacak şekilde yanlara tamamen uzat; gövden ve kolların \"T\" harfi oluştursun, avuçların aşağı baksın.",
+   "Bilekler dışında tüm vücudun sabitken iki bileğini öne doğru dairesel hareketle döndür.",
+   "Ellerinle fırça gibi daire çiziyormuş gibi düşün ve normal nefes al."
+  ]
+ },
+ "Wrist_Roller": {
+  "name": "Bilek silindiri (wrist roller)",
+  "steps": [
+   "Bilek silindirini avuçlar aşağı bakacak şekilde tutarak dik dur; ayakların omuz genişliğinde olsun.",
+   "İki kolunu önünde yere paralel olacak şekilde tamamen uzanana kadar yavaşça kaldır; ip silindire sarılı olmasın, yalnızca ön kolların hareket etsin.",
+   "Bileklerini sırayla yukarı doğru döndürerek ipi silindire sar ve ağırlığı bara kadar kaldır.",
+   "Ağırlık bara ulaşınca bileklerini aşağı doğru döndürerek ağırlığı yavaşça başlangıca indir."
+  ]
+ },
+ "Wrist_Rotations_with_Straight_Bar": {
+  "name": "Düz barla bilek rotasyonu",
+  "steps": [
+   "Barı iki elinle, avuçlar aşağı bakacak şekilde yaklaşık omuz genişliğinde tut.",
+   "Ellerini dönüşümlü kullanarak gazete rulosu sarıyormuş gibi bileklerini aç.",
+   "Tükenene kadar dönüşümlü devam et.",
+   "Ardından bileklerini bükerek ters yöne sar ve tükenene kadar dönüşümlü devam et."
+  ]
+ },
+ "Yoke_Walk": {
+  "name": "Yoke yürüyüşü",
+  "steps": [
+   "Yoke genelde bir yoke aletiyle yapılır, bazen buzdolabı gibi ağır nesnelerle de görülür.",
+   "Aleti omuzlarının arkasına yerleştir.",
+   "Başın önde, sırtın kavisli şekilde topuklarından iterek yoke'u kaldır.",
+   "Kısa, hızlı adımlarla olabildiğince hızlı yürü; sabit tutmak için yan direklere tutunabilirsin.",
+   "Belirlenen mesafeyi, genelde 23-30 metreyi, olabildiğince hızlı tamamla."
+  ]
+ },
+ "Zercher_Squats": {
+  "name": "Zercher squat",
+  "steps": [
+   "Squat rack içinde barı belinin üstü ile göğsünün altı arasında bir yüksekliğe ayarla.",
+   "Ellerini kenetle ve barı ön kol ile üst kolun arasına, kollarının üstüne yerleştir; kollarını çaprazlamış gibi görünür.",
+   "Barı ön kollarının üstünde kaldır, rack'ten geri çekil; ayaklar omuz genişliğinde, parmak uçları hafif dışa dönük, başın yukarıda ve sırtın düz olsun.",
+   "Nefes alarak dizlerini bükerek uylukların paralelin biraz altına inene kadar alçal; dizlerin parmak uçlarını geçmesin.",
+   "Nefes vererek ağırlıklı olarak ayaklarının ön tarafıyla iterek bacaklarını düzleştir ve başlangıca dön."
+  ]
+ },
+ "Zottman_Curl": {
+  "name": "Zottman curl",
+  "steps": [
+   "Gövden dik, her elinde bir dumbbell kolların uzanmış şekilde dur; dirseklerin gövdene yakın, avuçların birbirine baksın.",
+   "Üst kolların sabit, nefes vererek bicepsini kasıp curl yaparken bileklerini avuçların yukarı bakacak şekilde döndür.",
+   "Dumbbell'lar omuz hizasına gelince bir saniye bicepsini sık.",
+   "Bu pozisyonda bileklerini avuçlar aşağı bakacak ve başparmak serçe parmaktan yukarıda olacak şekilde çevir.",
+   "Dumbbell'ları bu tutuşla yavaşça indir; uyluklarına yaklaşınca bileklerini nötr tutuşa döndür."
+  ]
+ },
+ "Zottman_Preacher_Curl": {
+  "name": "Zottman preacher curl",
+  "steps": [
+   "Her elinde bir dumbbell, üst kollarını preacher ya da eğimli sehpanın üstüne yerleştir; dumbbell'lar omuz hizasında, dirsekler bükülü ve avuçlar aşağı baksın.",
+   "Nefes alarak avuçların aşağıda, üst kolun uzanıp biceps tam esneyene kadar dumbbell'ları yavaşça indir.",
+   "Hareketin altında bileklerini avuçlar yukarı bakacak şekilde çevir.",
+   "Nefes vererek bicepslerinle ağırlıkları omuz hizasına kadar curl yap; tam kasılma için serçe parmağını başparmağından yukarı getir.",
+   "Bicepsini bir saniye sıkıca sık ve bileklerini yeniden avuçlar aşağı bakacak şekilde çevir."
+  ]
+ }
+}
