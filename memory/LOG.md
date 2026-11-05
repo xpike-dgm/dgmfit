@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 4a tamamlandı (sahte sağlayıcıyla)
+- OpenAI belgesi web okuma ajanıyla okundu (models/pricing/images-vision/error-codes + openai-node README): `gpt-6-luna` ($0,10/$0,50), Responses API `input_image` + base64 data URL, `text.format` json_schema, 429 kodları (credit_balance_exhausted, *_spend_limit_exceeded, *_usage_limit_exceeded, slow_down), 503 server_is_overloaded. Claude tarafı: claude-api rehberi + SDK tipleri (`output_config.format: {type:'json_schema', schema}`).
+- SDK sürümleri: @anthropic-ai/sdk 1.5.0, openai 7.51.0. Kurulu SDK kaynağından doğrulandı: Anthropic SDK 1.x anahtarı `Authorization: Bearer` ile gönderir (x-api-key değil) ve ortamdaki ANTHROPIC_BASE_URL'e düşer → resmi adresler açıkça verildi, `authToken: null`.
+- Bulunan kusurlar (e2e/inceleme): bu bulut ortamında ANTHROPIC_BASE_URL tanımlıydı (SDK'yı başka yere yönlendirebilirdi); kullanıcı günlük hakkı başarısız çağrıları da sayıyordu; JSON Schema dönüştürmede SDK yardımcısı `enum`'u açıklamaya taşıyordu → kendi alt küme dönüştürücüsü. Test kaynaklı: önceki çalıştırmanın önbelleği ve anahtarları (benzersiz PNG + başta temizlik).
+- Doğrulama: birim 99/99; verify.sh VERIFY OK (8 e2e); release `2026-11-05T02-16-18-490Z` RELEASE OK; canlı container ortamı kontrol edildi (DGFIT_ADMINS=deneme; test/sahte değişkenler yok); 7 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 4a başladı
 - Faz başı: memory-check geçti; son commit `2d6a857` STATE ile uyumlu; çalışma ağacı temiz.
 - Spesifikasyon bölüm 10 Claude Docs bağlayıcısıyla okundu. Kullanıcı kararları (AskUserQuestion): 3 sağlayıcı ve limit dolunca geçiş (Claude, OpenAI, "Evren"; Evren bilgisi yok → şimdilik iki sağlayıcı), her yerde Haiku, anahtarlar yönetici sayfasından. Faz 4 ikiye bölündü.

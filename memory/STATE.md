@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 4a — AI altyapısı + Yemek/Su AI kaydı (devam ediyor, başlangıç 2026-11-05)**
+**Şu anki faz: Faz 4a tamamlandı (2026-11-05 05:20) — gerçek sağlayıcıyla deneme kullanıcının anahtarı girmesini bekliyor. Sıradaki: Faz 4b**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -15,7 +15,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 2b | Fit: günlük hedef kaydı (`daily_targets`), akıllı kalori dengeleme, adaptif TDEE, kilo trendi + haftalık check-in, plan ekranı, kalori bankası | tamamlandı | commit `0910d1e` + `6f491b8`; birim test 67/67; verify.sh VERIFY OK (fit tohumlu e2e + food + onboarding + push + su); canlı fit/food/onboarding/su e2e OK, canlıda `/api/test/fit` 404 (deploy `2026-11-04T19-53-42-460Z`); 4 test kullanıcısı silindi |
 | 3a | Fitness çekirdeği: hareket kütüphanesi, program oluşturucu + şablonlar, canlı antrenman, ağırlık öneri motoru, PR, kardiyo, Fit/Su/Yemek entegrasyonu | tamamlandı | commit `52efebb` + `900c804` + `e0d3e53` + `e6bb8da` + `673afef`; birim test 86/86; verify.sh VERIFY OK (fitness + fit + food + onboarding + push + su e2e); `release.sh` RELEASE OK: canlı fitness/fit/food/onboarding/su e2e (deploy `2026-11-04T21-27-04-578Z`); canlıda exercises 876 (93 küratörlü), görsel 200, çevrimdışı kuyruktaki antrenman canlıda kaydedildi; 5 test kullanıcısı silindi |
 | 3b | Fitness gelişim: grafikler, ısı haritası, plato, ölçüler + şifreli fotoğraf, kuvvet seviyesi, alternatif, periyodizasyon + deload, GZCLP tam, 783 hareketin Türkçesi, çevrimdışı canlı mod, kilit ekranı dinlenme push'u | tamamlandı | commit `eda136d` + `ff6ec3b` + `cd79683` + `8bee39b` + `b8c341c` (+ test düzeltmeleri); birim test 94/94; verify.sh VERIFY OK (7 e2e, progress tohumlu mod dahil); canlı fit/fitness/food/onboarding/su + progress e2e OK (deploy `2026-11-05T01-04-41-798Z`); canlıda 872/876 hareket Türkçe adımlı, medya şifreli (düz JPEG/PNG imzası 0/4); 9 test kullanıcısı silindi |
-| 4a | AI altyapısı (sağlayıcı katmanı, Claude → OpenAI yedeği, kota, önbellek, yönetici AI ayarları, şifreli anahtarlar) + yemek fotoğrafı tanıma + sesli/yazılı öğün ve su kaydı + etiket okuma | devam ediyor | — |
+| 4a | AI altyapısı (sağlayıcı katmanı, Claude → OpenAI yedeği, kota, önbellek, yönetici AI ayarları, şifreli anahtarlar) + yemek fotoğrafı tanıma + sesli/yazılı öğün ve su kaydı + etiket okuma | tamamlandı (sahte sağlayıcıyla) | commit `8ff0175` + `d3777b6`; birim test 99/99; verify.sh VERIFY OK (8 e2e, AI e2e sahte Claude/OpenAI ile); release deploy `2026-11-05T02-16-18-490Z` canlı e2e OK; canlıda DGFIT_ADMINS=deneme, test kancası ve sahte adresler yok, oturumsuz 401. **Gerçek Claude/OpenAI çağrısı henüz yapılmadı** (anahtar yok) |
 | 4b | AI koç (sohbet, onaylı eylemler, kişilik), günlük proaktif içgörü, haftalık rapor, menü/tarif önerisi, AI program oluşturucu, yeme bozukluğu sınırları | planlandı | — |
 | 5 | Sosyal | planlandı | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı | — |
@@ -113,21 +113,25 @@ Kaynak: spesifikasyon 4.1, 4.2, 4.4, 4.5, 9 ve 3a'dan devredilenler.
 
 E2E kanıtı `tests/e2e/progress.e2e.cjs`: e1RM grafiği 6 seans, plato haftası ve kuvvet seviyesi `lib/progress.ts` ile hesaplanan değere eşit, alternatifler, takvim, ısı haritası, kas başına set, toparlanma "Dinlendir", ölçü farkı Bel −2, iki fotoğraf + kıyas, başka kullanıcı 404 / oturumsuz 401, GZCLP 100 → 105 kg → 6×2, DUP hafif gün hedefi, canlı modda alternatif, çevrimdışı yeniden yüklemede canlı sayfa + taslak, dinlenme ucu. Yakıt uyarısı ve canlı plato notu e2e'de tetiklenmedi (birim testli fonksiyonlar).
 
-## Faz 4a kapsamı ve kabul kriterleri
+## Faz 4a kapsamı ve kabul kriterleri (tamamlandı, gerçek sağlayıcı denemesi bekliyor)
 
 Kaynak: spesifikasyon bölüm 10; kullanıcı kararları 2026-11-05: Claude'da her yerde Haiku (`claude-haiku-5-5`), limit dolunca OpenAI'ye geçiş (üçüncü sağlayıcı "Evren" bilgi gelince), anahtarlar uygulamadaki yönetici sayfasından.
 
-- [ ] Sağlayıcı katmanı: tek arayüz (metin + görsel → doğrulanmış JSON), Claude resmi SDK, OpenAI resmi SDK (model ve çağrı biçimi resmi belgeden), sıra + otomatik geçiş (kota/limit/sunucu hatasında sonrakine), sağlayıcı başına günlük/aylık bütçe (token), kullanıcı başına günlük adil kullanım kotası, aynı isteğe önbellek
-- [ ] Yönetici AI ayarları (`DGFIT_ADMINS`): anahtarlar şifreli (AES-256-GCM) DB'de, ekranda yalnızca son 4 karakter, sıra, model, limitler, kullanım ve son hatalar; anahtar sohbete/depoya girmez
-- [ ] Yemek fotoğrafı: görü modeli besinleri + tahmini gramı çıkarır → besin veritabanıyla eşleşir → kalori/makro motor hesaplar → kullanıcı onaylar/düzeltir → öğüne eklenir
-- [ ] Sesli/yazılı öğün kaydı: konuşma tanıma (tarayıcı) ya da yazı → dil modeli kalemleri ayırır → aynı eşleşme ve onay akışı; içecekler Su'ya da düşer
-- [ ] Etiket okuma (OCR): besin değeri tablosu fotoğrafından 100 g değerleri + ad → özel besin formunu doldurur, kullanıcı onaylar
-- [ ] Sınırlar: tıbbi tavsiye yok; kullanıcı verisi yalnızca o isteğe; AI kapalı/kota dolu durumunda net mesaj ve manuel yol
-- [ ] Testler: birim (ayrıştırma, eşleşme, geçiş, kota) + e2e (sahte Claude ve OpenAI sunucusu; Claude kota hatası → OpenAI'ye geçiş) + verify.sh + canlı e2e + hafıza
+- [x] Sağlayıcı katmanı: tek arayüz (metin + görsel → doğrulanmış JSON), Claude resmi SDK, OpenAI resmi SDK (model ve çağrı biçimi resmi belgeden), sıra + otomatik geçiş (kota/limit/sunucu hatasında sonrakine), sağlayıcı başına günlük/aylık bütçe (token), kullanıcı başına günlük adil kullanım kotası, aynı isteğe önbellek
+- [x] Yönetici AI ayarları (`DGFIT_ADMINS`): anahtarlar şifreli (AES-256-GCM) DB'de, ekranda yalnızca son 4 karakter, sıra, model, limitler, kullanım ve son hatalar; anahtar sohbete/depoya girmez
+- [x] Yemek fotoğrafı: görü modeli besinleri + tahmini gramı çıkarır → besin veritabanıyla eşleşir → kalori/makro motor hesaplar → kullanıcı onaylar/düzeltir → öğüne eklenir
+- [x] Sesli/yazılı öğün kaydı: konuşma tanıma (tarayıcı) ya da yazı → dil modeli kalemleri ayırır → aynı eşleşme ve onay akışı; içecekler Su'ya da düşer
+- [x] Etiket okuma (OCR): besin değeri tablosu fotoğrafından 100 g değerleri + ad → özel besin formunu doldurur, kullanıcı onaylar
+- [x] Sınırlar: tıbbi tavsiye yok; kullanıcı verisi yalnızca o isteğe; AI kapalı/kota dolu durumunda net mesaj ve manuel yol
+- [x] Testler: birim (ayrıştırma, eşleşme, geçiş, kota) + e2e (sahte Claude ve OpenAI sunucusu; Claude kota hatası → OpenAI'ye geçiş) + verify.sh + canlı e2e + hafıza
+
+Kanıt `tests/e2e/ai.e2e.cjs` (sahte sunucular :3190/:3191): anahtar yokken AI gizli; yönetici olmayana 404; anahtar yalnızca ••••son4; fotoğrafla 3 kalem → kalori = veritabanı 100 g × gram (çorba, simit); ayran Su'ya `effectiveMl`; etiket porsiyon (40 g) → 100 g (kcal 400, sodyum 200 mg); Claude isteği: Haiku 5.5, `output_config.format.json_schema`, base64 görsel, anahtar tek kimlik; Claude 429 → OpenAI (gpt-6-luna, `text.format` json_schema strict); yöneticide hata + bekleme; aynı metin önbellekten (sağlayıcıya gitmez); günlük hak 3 → 4. istek reddedildi.
+**Açık:** gerçek API'lerle hiç denenmedi; ilk gerçek kullanımda Haiku 5.5'in `output_config.format` + `effort: low` kabulü ve gpt-6-luna'nın görsel + strict şema kabulü doğrulanmalı.
 
 ## Sıradaki işler
 
-1. Faz 4a'yı kriterlere göre tamamla; ardından 4b, sonra Faz 5 (Sosyal).
+1. Kullanıcı `deneme` ile giriş yapıp Profil → AI ayarları'ndan Claude ve OpenAI anahtarlarını girsin; ardından gerçek fotoğraf/yazı denemesi (yönetici sayfasında hata/kullanım görünür).
+2. Faz 4b (koç, içgörü, rapor, menü/program önerisi), sonra Faz 5 (Sosyal).
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
 3. E-posta doğrulama kodu (Mailu SMTP) — ertelendi.
 

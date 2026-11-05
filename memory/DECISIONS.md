@@ -76,3 +76,8 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-05 | AI modeli: Claude'da her yerde `claude-haiku-5-5`; sağlayıcı sırası Claude → OpenAI, kota/limit/sunucu hatasında otomatik geçiş; üçüncü sağlayıcı ("Evren") bilgisi gelince | Kullanıcı kararı (maliyet) | Ürün |
 | 2026-11-05 | AI anahtarları yönetici sayfasından girilir, DB'de AES-256-GCM ile şifreli; yönetici `DGFIT_ADMINS` (başlangıç: `deneme`) | Anahtar sohbete/depoya girmesin (kullanıcı kararı) | Güvenlik |
 | 2026-11-05 | Faz 4 ikiye bölündü: 4a altyapı + Yemek/Su AI kaydı, 4b koç/rapor/öneri | Kapsam | Kapsam |
+| 2026-11-05 | OpenAI varsayılan modeli `gpt-6-luna` (resmi modeller sayfası: "cost-sensitive, high-volume"; $0,10/$0,50); yönetici sayfasından değiştirilebilir | Haiku 5.5 ile aynı fiyat düzeyi | Ürün |
+| 2026-11-05 | AI yalnızca ad + gram (fotoğraf/metin) ya da etikette yazan sayıları verir; kalori/makro besin veritabanından motor hesaplar; kullanıcı onaylamadan hiçbir şey kaydedilmez | Spesifikasyon 10: "Sayıları her zaman motorlar hesaplar" | Ürün |
+| 2026-11-05 | Önbellek görev + girdi özeti (sha256) ile sunucu geneli, 30 gün; içerik saklanmaz, yalnızca sonuç JSON'u | Maliyet; kişisel veri tutulmaz | Teknik |
+| 2026-11-05 | Kullanıcı başına günlük AI hakkı varsayılan 25 başarılı çağrı (önbellek sayılmaz), yönetici değiştirir | Spesifikasyon 10 "adil kullanım kotası" | Ürün |
+| 2026-11-05 | Hata → geçiş: 429 kota (6 sa bekleme), 429 hız (60 sn), 401/403 (30 dk), 5xx/529 (30 sn), bağlantı (15 sn); hepsinde sıradaki sağlayıcı | Kullanıcı isteği "limit bitince diğerine geçsin" | Teknik |
