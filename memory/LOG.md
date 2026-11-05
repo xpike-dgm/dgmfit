@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 4b tamamlandı (sahte sağlayıcıyla)
+- Saf motorlar: `lib/weekly.ts` (DayFacts, weekStats, ruleSuggestions, numbersAllowed), `lib/safety.ts`, `lib/insights.ts`, `lib/coach-calc.ts`; birim testler `tests/coach.test.ts` (13).
+- Veri katmanı `lib/coach-data.ts`, migration 0009, ekranlar `/koc`, `/rapor`, Bugün `InsightCard`, zamanlayıcıda Pazar 19.00 rapor push'u.
+- Bulunan sorunlar: yerel e2e 11 hesap açınca kayıt hız sınırı (IP başına saatte 10) push ve su e2e'sini kırdı → sınır yalnızca `DGFIT_TEST_HOOKS=1` iken 200 (canlıda 10). Süreli hareket koç etiketinde "3 × 1" görünüyordu → "3 × 45 sn". Ekran görüntüsünde fark edildi: "pizza" araması USDA "Pizza rolls" kaydını buluyor (açık iş).
+- Doğrulama: commit `ec9ae94`; verify.sh VERIFY OK (birim 112/112, 10 e2e); release `2026-11-05T03-05-14-235Z` RELEASE OK; canlıda 4 tablo + `0009_coach.sql`, `/api/test/coach` POST 404, app logunda hata yok; 7 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 4b başladı
 - Faz başı: memory-check geçti; son commit `5c9d997` STATE ile uyumlu; çalışma ağacı temiz. Spesifikasyon bölüm 10, 5.6, 6.4, 7.4, 13, 11.5 Claude Docs'tan okundu.
 - Kapsam kararı: 4b = koç + içgörü + rapor + sınırlar; menü/tarif/restoran/program oluşturucu 4c.

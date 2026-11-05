@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 4b devam ediyor (2026-11-05 başladı) — AI koç, günlük içgörü, haftalık rapor, güvenlik sınırları. 4a'nın gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
+**Şu anki faz: Faz 4b tamamlandı (2026-11-05, sahte sağlayıcıyla). Sıradaki: Faz 4c (AI menü/program). 4a ve 4b'nin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -16,7 +16,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 3a | Fitness çekirdeği: hareket kütüphanesi, program oluşturucu + şablonlar, canlı antrenman, ağırlık öneri motoru, PR, kardiyo, Fit/Su/Yemek entegrasyonu | tamamlandı | commit `52efebb` + `900c804` + `e0d3e53` + `e6bb8da` + `673afef`; birim test 86/86; verify.sh VERIFY OK (fitness + fit + food + onboarding + push + su e2e); `release.sh` RELEASE OK: canlı fitness/fit/food/onboarding/su e2e (deploy `2026-11-04T21-27-04-578Z`); canlıda exercises 876 (93 küratörlü), görsel 200, çevrimdışı kuyruktaki antrenman canlıda kaydedildi; 5 test kullanıcısı silindi |
 | 3b | Fitness gelişim: grafikler, ısı haritası, plato, ölçüler + şifreli fotoğraf, kuvvet seviyesi, alternatif, periyodizasyon + deload, GZCLP tam, 783 hareketin Türkçesi, çevrimdışı canlı mod, kilit ekranı dinlenme push'u | tamamlandı | commit `eda136d` + `ff6ec3b` + `cd79683` + `8bee39b` + `b8c341c` (+ test düzeltmeleri); birim test 94/94; verify.sh VERIFY OK (7 e2e, progress tohumlu mod dahil); canlı fit/fitness/food/onboarding/su + progress e2e OK (deploy `2026-11-05T01-04-41-798Z`); canlıda 872/876 hareket Türkçe adımlı, medya şifreli (düz JPEG/PNG imzası 0/4); 9 test kullanıcısı silindi |
 | 4a | AI altyapısı (sağlayıcı katmanı, Claude → OpenAI yedeği, kota, önbellek, yönetici AI ayarları, şifreli anahtarlar) + yemek fotoğrafı tanıma + sesli/yazılı öğün ve su kaydı + etiket okuma | tamamlandı (sahte sağlayıcıyla) | commit `8ff0175` + `d3777b6`; birim test 99/99; verify.sh VERIFY OK (8 e2e, AI e2e sahte Claude/OpenAI ile); release deploy `2026-11-05T02-16-18-490Z` canlı e2e OK; canlıda DGFIT_ADMINS=deneme, test kancası ve sahte adresler yok, oturumsuz 401. **Gerçek Claude/OpenAI çağrısı henüz yapılmadı** (anahtar yok) |
-| 4b | AI koç (sohbet, onaylı eylemler, kişilik, "ne olur" kartı), günlük proaktif içgörü, haftalık rapor + push, yeme bozukluğu / aşırı antrenman sınırları | devam ediyor | — |
+| 4b | AI koç (sohbet, onaylı eylemler, kişilik, "ne olur" kartı), günlük proaktif içgörü, haftalık rapor + push, yeme bozukluğu / aşırı antrenman sınırları | tamamlandı (sahte sağlayıcıyla) | commit `ec9ae94`; birim test 112/112; verify.sh VERIFY OK (10 e2e, koç e2e sahte Claude ile); release deploy `2026-11-05T03-05-14-235Z` RELEASE OK; canlıda 0009 uygulandı (4 tablo), `/api/test/coach` POST 404, `/api/coach/insight` oturumsuz 401, `/koc` `/rapor` girişe yönlendirir; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
 | 4c | AI haftalık menü + alışveriş listesi, "elimde bunlar var" tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü, karb döngüsü | planlandı | — |
 | 5 | Sosyal | planlandı | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı | — |
@@ -130,22 +130,25 @@ Kanıt `tests/e2e/ai.e2e.cjs` (sahte sunucular :3190/:3191): anahtar yokken AI g
 **Karma model eki (2026-11-05):** commit `368883d`; verify.sh VERIFY OK (AI e2e: fotoğraf ve etiket `claude-opus-5-5` + `fallbacks: default` + `anthropic-beta: server-side-fallback-2026-07-01`; yazı `claude-haiku-5-5` yedeksiz; yöneticide maliyet tablosu ve görev modelleri); release deploy `2026-11-05T02-34-13-285Z` RELEASE OK; canlıda `ai_calls.model` sütunu var, `ai_providers` satırı henüz yok (ilk yönetici ziyaretinde Opus varsayılanlarıyla oluşur); 7 test kullanıcısı silindi.
 **Açık:** gerçek API'lerle hiç denenmedi; ilk gerçek kullanımda Opus 5.5 (beta yedekli) ve Haiku 5.5'in `output_config.format` + `effort: low` kabulü ve gpt-6-luna'nın görsel + strict şema kabulü doğrulanmalı.
 
-## Faz 4b kapsamı ve kabul kriterleri (devam ediyor)
+## Faz 4b kapsamı ve kabul kriterleri (tamamlandı, gerçek sağlayıcı denemesi bekliyor)
 
 Kaynak: spesifikasyon 10 (AI Koç, Sınırlar), 5.6 (haftalık rapor, davranış analizi, "pizza yersem" sohbeti), 7.4 (haftalık su raporu, koça soru), 13 (yeme bozukluğu koruması), 11.5 (kota yalnızca fotoğraf/ses ve koç sohbetinde). Menü/tarif/program oluşturucu 4c'ye ayrıldı (DECISIONS).
 
-- [ ] Koç sohbeti `/koc`: tüm modüllerden motorların hesapladığı özet bağlam (profil, hedef, bugünkü bütçe, son 7 gün kalori/makro uyumu, kilo trendi + adaptif TDEE, su, antrenman, PR, program); son 10 mesaj; kişilik destekleyici / disiplinli / bilimsel; sesle soru; sohbeti silme; kullanıcı günlük AI hakkına sayılır
-- [ ] Onaylı eylemler (koç önerir, kullanıcı onaylar, sunucu doğrular + sahiplik): hedef tarihini N hafta uzat/kısalt (kısaltma `computePlan` güvenli değilse ya da güvenlik bayrağı varsa reddedilir), aktif programın bir gününe hareket ekle (ad → kütüphane eşleşmesi onaydan önce gösterilir), su ekle
-- [ ] "Ne olur" kartı: koç besin adı + gram verir, kalori besin veritabanından, kalan bütçe ve fark dağıtımı Fit motorundan (`distributeDiff`) hesaplanır; dil modeli sayı yazmaz
-- [ ] Günlük proaktif içgörü: kural motoru adayları (`lib/insights.ts`, saf, testli) → dil modeli kişiliğe göre ifade eder (AI yoksa kural metni) → günde en fazla 1, Bugün'de tek kart, kapatılabilir, "Koça sor"; son 7 günde aynı konu tekrarlanmaz
-- [ ] Haftalık rapor `/rapor`: motor istatistikleri (`lib/weekly.ts`, saf, testli: ortalama kalori, hedef uyumu, protein uyumu, en zor günler, hafta sonu/hafta içi farkı, trend kilo değişimi, su ortalaması + hedef günleri, antrenman sayısı/hacim, PR) + dil modeli özet ve en fazla 3 öneri; Pazar 18.00'den sonra hazır; Pazar 19.00 sonrası haftada bir push; geçmiş raporlar
-- [ ] Sınırlar (`lib/safety.ts`, saf, testli): tekrarlayan çok düşük kalori günleri ve aşırı antrenman bayrakları → Bugün'de nazik destek kartı (uzmana yönlendirme, acilde 112), koç bağlamında bayrak, hedef kısaltma engeli; sohbette riskli ifade (sunucu anahtar kelime + model bayrağı) → destek kartı; tıbbi teşhis/tedavi yok
-- [ ] Testler: birim (içgörü seçimi, haftalık istatistik, güvenlik bayrakları, koç şemaları) + e2e (sahte sağlayıcıyla sohbet, eylem onayı, ne olur kartı, içgörü kartı, rapor, güvenlik kartı, kota) + verify.sh + canlı e2e + hafıza
+- [x] Koç sohbeti `/koc`: tüm modüllerden motorların hesapladığı özet bağlam (profil, hedef, bugünkü bütçe, son 7 gün kalori/makro uyumu, kilo trendi + adaptif TDEE, su, antrenman, PR, program); son 10 mesaj; kişilik destekleyici / disiplinli / bilimsel; sesle soru; sohbeti silme; kullanıcı günlük AI hakkına sayılır
+- [x] Onaylı eylemler (koç önerir, kullanıcı onaylar, sunucu doğrular + sahiplik): hedef tarihini N hafta uzat/kısalt (kısaltma `computePlan` güvenli değilse ya da güvenlik bayrağı varsa reddedilir), aktif programın bir gününe hareket ekle (ad → kütüphane eşleşmesi onaydan önce gösterilir), su ekle
+- [x] "Ne olur" kartı: koç besin adı + gram verir, kalori besin veritabanından, kalan bütçe ve fark dağıtımı Fit motorundan (`distributeDiff`) hesaplanır; dil modeli sayı yazmaz
+- [x] Günlük proaktif içgörü: kural motoru adayları (`lib/insights.ts`, saf, testli) → dil modeli kişiliğe göre ifade eder (AI yoksa kural metni) → günde en fazla 1, Bugün'de tek kart, kapatılabilir, "Koça sor"; son 7 günde aynı konu tekrarlanmaz
+- [x] Haftalık rapor `/rapor`: motor istatistikleri (`lib/weekly.ts`, saf, testli: ortalama kalori, hedef uyumu, protein uyumu, en zor günler, hafta sonu/hafta içi farkı, trend kilo değişimi, su ortalaması + hedef günleri, antrenman sayısı/hacim, PR) + dil modeli özet ve en fazla 3 öneri; Pazar 18.00'den sonra hazır; Pazar 19.00 sonrası haftada bir push; geçmiş raporlar
+- [x] Sınırlar (`lib/safety.ts`, saf, testli): tekrarlayan çok düşük kalori günleri ve aşırı antrenman bayrakları → Bugün'de nazik destek kartı (uzmana yönlendirme, acilde 112), koç bağlamında bayrak, hedef kısaltma engeli; sohbette riskli ifade (sunucu anahtar kelime + model bayrağı) → destek kartı; tıbbi teşhis/tedavi yok
+- [x] Testler: birim (içgörü seçimi, haftalık istatistik, güvenlik bayrakları, koç şemaları) + e2e (sahte sağlayıcıyla sohbet, eylem onayı, ne olur kartı, içgörü kartı, rapor, güvenlik kartı, kota) + verify.sh + canlı e2e + hafıza
+
+Kanıt `tests/e2e/coach.e2e.cjs` (sahte Claude :3190, OpenAI 503): veri yokken "start" içgörüsü AI'sız ve kapatılabilir; 3 gün 600 kcal → Bugün'de "Kendine nazik ol" destek kartı; koç isteği Haiku 5.5, bağlamda BAĞLAM + taban 1200 + düşük kalori bayrağı + aktif program + kişilik + kurallar; ikinci mesajda geçmiş 3 mesaj; pizza 300 g kalorisi = veritabanı 100 g × 3, kalan bütçe önce − kcal = sonra; hedef +2 hafta onayla → Bugün'de tarih değişti; −2 hafta güvenlik bayrağıyla reddedildi; Plank programın ilk gününe eklendi; 300 ml su eklendi; "kusuyorum" → destek kartı, model eylem/ne olur önerse de kaldırıldı, modele uyarı gitti; kişilik disiplinli sonraki isteğe yansıdı; kalan hak = başlangıç − koç çağrısı; 9 gün önceki haftanın raporu AI özetiyle, yeniden açılışta yeniden üretilmedi; sohbet silindi; ikinci kullanıcıda "kayıt boşluğu" içgörüsü AI ifadesiyle (sayı denetiminden geçti).
+**Açık:** gerçek modellerle denenmedi; gerçek push teslimi (Pazar 19.00) cihazda denenmeli; besin araması "pizza" için USDA'daki "Pizza rolls" kaydını buluyor (arama kalitesi, ne olur kartını etkiler).
 
 ## Sıradaki işler
 
-1. Kullanıcı `deneme` ile giriş yapıp Profil → AI ayarları'ndan Claude ve OpenAI anahtarlarını girsin; ardından gerçek fotoğraf/yazı denemesi (yönetici sayfasında hata/kullanım görünür).
-2. Faz 4b (koç, içgörü, rapor, menü/program önerisi), sonra Faz 5 (Sosyal).
+1. Kullanıcı `deneme` ile giriş yapıp Profil → AI ayarları'ndan Claude ve OpenAI anahtarlarını girsin; ardından gerçek fotoğraf/yazı ve koç denemesi (yönetici sayfasında hata/kullanım/maliyet görünür).
+2. Faz 4c (AI menü + alışveriş listesi, elimdekiler tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü), sonra Faz 5 (Sosyal).
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
 3. E-posta doğrulama kodu (Mailu SMTP) — ertelendi.
 
