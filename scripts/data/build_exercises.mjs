@@ -67,8 +67,11 @@ for (const x of src) {
   if (!tr.category[x.category]) errors.push(`kategori çevirisi yok: ${x.category}`)
   const c = tr.curated[x.name]
   const a = auto[x.id]
-  const nameTr = c?.name ?? a?.name ?? autoName(x.name)
-  const aliases = c?.aliases ?? []
+  // Kullanıcı kararı (2026-11-05): görünen ad İngilizce kalır (salonda kullanılan adlar). `name_tr` sütunu = görünen ad;
+  // Türkçe ad takma adların başında tutulur (aramada ve hareket sayfasında alt başlık olarak).
+  const turkish = c?.name ?? a?.name ?? autoName(x.name)
+  const nameTr = x.name
+  const aliases = [...new Set([turkish, ...(c?.aliases ?? [])].filter((t) => t && t !== x.name))]
   items.push({
     key: x.id, nameEn: x.name, nameTr, aliases, category: x.category, equipment: x.equipment ?? 'body only', level: x.level,
     force: x.force ?? null, mechanic: x.mechanic ?? null, primary: x.primaryMuscles, secondary: x.secondaryMuscles,
@@ -84,4 +87,4 @@ const curatedN = items.filter((i) => i.curated).length
 const withSteps = items.filter((i) => i.steps.length).length
 console.log(`hareket: ${items.length}, küratörlü: ${curatedN}, Türkçe adımlı: ${withSteps}, çeviri dosyasından: ${Object.keys(auto).length}, sürüm ${version}`)
 console.log('tür dağılımı:', JSON.stringify(Object.entries(items.reduce((a, i) => ((a[i.kind] = (a[i.kind] ?? 0) + 1), a), {}))))
-console.log('örnek otomatik adlar:', items.filter((i) => !i.curated).slice(0, 12).map((i) => `${i.nameEn} → ${i.nameTr}`).join(' | '))
+console.log('örnek adlar:', items.slice(0, 12).map((i) => `${i.nameTr} (${i.aliases[0] ?? '-'})`).join(' | '))

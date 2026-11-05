@@ -106,7 +106,7 @@ async function register(b, prefix) {
   await d1.getByTestId('gz-row').first().getByText('T1 · ilk seans').waitFor().catch(() => fail('GZCLP T1 ilk seans görünmüyor'))
   const runSquat = async (fill) => {
     await p.goto(gzUrl); await p.getByTestId('program-day').first().getByRole('link', { name: /Başla|Bu günü yap/ }).click(); await p.waitForURL('**/fitness/antrenman?gun=*')
-    const sq = p.locator('section[data-testid="live-exercise"]', { hasText: 'Squat (barbell)' }).first()
+    const sq = p.locator('section[data-testid="live-exercise"]', { hasText: 'Barbell Squat' }).first()
     await fill(sq)
     await p.getByRole('button', { name: 'Bitir' }).click(); await p.getByRole('button', { name: 'Kaydet ve özete geç' }).click()
     await p.waitForURL(/\/fitness\/antrenman\/[0-9a-f-]{36}\?yeni=1/)
@@ -139,19 +139,19 @@ async function register(b, prefix) {
   const tgt = P.periodTarget({ scheme: 'dup', week: 0, session: 2, base: { sets: 3, repMin: 6, repMax: 10, rir: 2 }, deloadEvery: 0 })
   await p.getByTestId('program-day').first().getByRole('link', { name: /Başla|Bu günü yap/ }).click(); await p.waitForURL('**/fitness/antrenman?gun=*')
   const liveUrl = p.url()
-  const sq = p.locator('section[data-testid="live-exercise"]', { hasText: 'Squat (barbell)' }).first()
+  const sq = p.locator('section[data-testid="live-exercise"]', { hasText: 'Barbell Squat' }).first()
   await sq.getByTestId('target-chip').getByText(tgt.label).waitFor().catch(() => fail('DUP etiketi ' + tgt.label))
   await sq.getByText(`Hedef ${tgt.sets} × ${tgt.repMin}–${tgt.repMax} · ${tgt.rir} tekrar yedek`).waitFor().catch(() => fail('DUP hedefi'))
 
   // 7) Canlı modda alternatif: bench → listeden ilk alternatif
-  await p.getByRole('button', { name: 'Bench press (barbell) seçenekleri' }).click()
+  await p.getByRole('button', { name: 'Barbell Bench Press - Medium Grip seçenekleri' }).click()
   await p.getByRole('button', { name: /İstasyon dolu/ }).click()
   const alt = p.getByTestId('alt-list').getByRole('button').first()
   await alt.waitFor().catch(() => fail('alternatif listesi boş'))
   const altName = (await alt.locator('span').first().innerText()).trim()
   await alt.click()
   await p.locator('section[data-testid="live-exercise"]', { hasText: altName }).first().waitFor().catch(() => fail('alternatif harekete geçilmedi: ' + altName))
-  if (await p.locator('section[data-testid="live-exercise"]', { hasText: 'Bench press (barbell)' }).count()) fail('bench kartı değiştirilmedi')
+  if (await p.locator('section[data-testid="live-exercise"]', { hasText: 'Barbell Bench Press - Medium Grip' }).count()) fail('bench kartı değiştirilmedi')
 
   // 8) Çevrimdışı: canlı antrenman sayfası önbellekten açılır, taslak sürer
   await p.reload(); await p.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller)

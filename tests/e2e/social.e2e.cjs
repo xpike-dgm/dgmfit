@@ -74,7 +74,7 @@ function fake(port, handler) {
   await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pa.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
   await pa.goto(BASE + '/sosyal/ayarlar/gorunenler')
   await pa.getByLabel('PR vitrini', { exact: true }).selectOption('friends'); await pa.getByLabel('İstatistik kartları').selectOption('friends')
-  await pa.getByRole('button', { name: 'Squat (barbell)' }).click()
+  await pa.getByRole('button', { name: 'Barbell Squat' }).click()
   await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await pa.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor()
   // ayrı sayfada kaydetmek diğer sayfanın verisini bozmaz
   await pa.goto(BASE + '/sosyal/ayarlar/profil'); if ((await pa.inputValue('#sp-bio')) !== 'Bench sever, sabah sporcusu') fail('biyografi kayboldu')
@@ -114,7 +114,7 @@ function fake(port, handler) {
   await pa.getByLabel('Paylaşılacak kayıt').selectOption({ index: 1 })
   await pa.fill('#post-body', 'Bugün bacak günü 💪'); await pa.getByRole('button', { name: 'Paylaş', exact: true }).click()
   await pa.waitForURL(/\/sosyal\/p\/[0-9a-f-]{36}$/); const workoutPost = pa.url().split('/').pop()
-  await pa.getByTestId('post-workout').getByText('Squat (barbell)').waitFor()
+  await pa.getByTestId('post-workout').getByText('Barbell Squat').waitFor()
   await pb.goto(BASE + '/sosyal?g=kronolojik')
   const wp = pb.locator(`[data-testid=post][data-id="${workoutPost}"]`)
   await wp.waitFor().catch(() => fail('B akışında A\'nın antrenmanı yok'))
@@ -123,7 +123,7 @@ function fake(port, handler) {
   await pb.fill('#comment-input', 'Harika!'); await pb.getByRole('button', { name: 'Gönder', exact: true }).click()
   await pb.getByTestId('comment').getByText('Harika!').waitFor()
   await pb.getByRole('button', { name: 'Bu antrenmanı kopyala' }).click()
-  await pb.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/); await pb.getByText('Squat (barbell)').first().waitFor().catch(() => fail('kopyalanan programda squat yok'))
+  await pb.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/); await pb.getByText('Barbell Squat').first().waitFor().catch(() => fail('kopyalanan programda squat yok'))
   await pa.goto(BASE + '/sosyal/bildirimler')
   await pa.locator('[data-testid=notification][data-kind=reaction]').waitFor(); await pa.locator('[data-testid=notification][data-kind=comment]').waitFor()
 

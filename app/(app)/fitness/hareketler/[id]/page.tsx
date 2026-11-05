@@ -25,7 +25,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
       <TopBar back="/fitness/hareketler" title="Hareket" />
       <section className="card p-5 flex flex-col gap-3">
         <h1 className="text-[22px] font-extrabold leading-tight">{x.nameTr}</h1>
-        {x.nameEn && x.nameEn !== x.nameTr ? <span className="text-[13px] text-mute -mt-2">{x.nameEn}</span> : null}
+        {x.source !== 'user' && x.aliases?.[0] && x.aliases[0] !== x.nameTr ? <span className="text-[13px] text-mute -mt-2" data-testid="ex-tr-name">Türkçe: {x.aliases[0]}</span> : null}
         {x.photoId ? <img src={`/api/media/${x.photoId}`} alt={x.nameTr} className="w-full aspect-[4/3] object-cover rounded-2xl bg-surface-2" /> : null}
         {x.source === 'user' ? <ExercisePhoto exerciseId={x.id} has={!!x.photoId} /> : null}
         {x.images.length ? (
