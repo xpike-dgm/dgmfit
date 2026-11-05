@@ -58,12 +58,12 @@ export default async function StatsPage() {
       </>}
 
       <section className="card p-5 flex flex-col gap-3" aria-label="Kas ısı haritası">
-        <Eyebrow>Son 7 gün · kas grupları</Eyebrow>
+        <Eyebrow>Son 7 gün · kas ısı haritası</Eyebrow>
         <BodyMap heat={s.heat.map((h) => ({ muscle: h.muscle, sets: h.sets7, status: h.status }))} />
         <div className="flex gap-3 text-[12px] text-ink-2">
           {Object.values(STATUS).map((v) => <span key={v.t} className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ background: v.c }} />{v.t}</span>)}
         </div>
-        <p className="text-[11px] text-mute">Çubuk son 7 gündeki set sayısı, nokta rengi toparlanma (24 saatten yeni ya da 48 saatte 4+ set: dinlendir; 72 saatten yeni: toparlanıyor). Yaklaşık bir rehberdir.</p>
+        <p className="text-[11px] text-mute">Renk yoğunluğu son 7 gündeki set sayısı; dokununca toparlanma durumu (nokta rengi) (24 saatten yeni ya da 48 saatte 4+ set: dinlendir; 72 saatten yeni: toparlanıyor). Yaklaşık bir rehberdir.</p>
       </section>
 
       <section className="card p-5 flex flex-col gap-2.5" aria-label="Kas başına haftalık set" data-testid="weekly-sets">

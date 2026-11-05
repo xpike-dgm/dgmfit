@@ -11,7 +11,7 @@ import { createPostAction } from '../actions'
 type Opt = { id: string; label: string }
 const AUD = [['friends', 'Arkadaşlar'], ['public', 'Herkese açık'], ['selected', 'Seçilenler']] as const
 
-export default function Composer(p: { initialKind: string; initialRef: string | null; today: string; mediaOn: boolean; workouts: Opt[]; prs: Opt[]; recipes: Opt[]; friends: { id: string; username: string }[]; progress: Opt[] }) {
+export default function Composer(p: { initialKind: string; initialRef: string | null; today: string; mediaOn: boolean; workouts: Opt[]; prs: Opt[]; recipes: Opt[]; programs: Opt[]; friends: { id: string; username: string }[]; progress: Opt[] }) {
   const [kind, setKind] = useState<PostKind>(p.initialKind as PostKind)
   const [ref, setRef] = useState<string | null>(p.initialRef)
   const [meal, setMeal] = useState<MealId>('lunch')
@@ -23,7 +23,7 @@ export default function Composer(p: { initialKind: string; initialRef: string | 
   const [err, setErr] = useState<string | null>(null)
   const [support, setSupport] = useState<'ed' | 'crisis' | null>(null)
   const router = useRouter()
-  const options: Record<string, Opt[]> = { workout: p.workouts, pr: p.prs, recipe: p.recipes, progress: p.progress }
+  const options: Record<string, Opt[]> = { workout: p.workouts, pr: p.prs, recipe: p.recipes, program: p.programs, progress: p.progress }
   const list = options[kind]
   const upload = async (f: File) => {
     setErr(null)
@@ -65,6 +65,7 @@ export default function Composer(p: { initialKind: string; initialRef: string | 
       ) : null}
       {kind === 'meal' ? <label className="flex flex-col gap-1 text-[13px] font-semibold">Bugünkü öğün<select value={meal} onChange={(e) => setMeal(e.target.value as MealId)} className="h-12 rounded-xl bg-surface-2 border border-line px-3 font-normal">{(Object.keys(MEAL_LABEL) as MealId[]).map((k) => <option key={k} value={k}>{MEAL_LABEL[k]}</option>)}</select></label> : null}
       {kind === 'milestone' ? <p className="text-[13px] text-mute">Yalnızca değişim paylaşılır (ör. "−6 kg"); kilon görünmez.</p> : null}
+      {kind === 'program' ? <p className="text-[13px] text-mute">Programın tüm günleri ve hareketleri paylaşılır; görenler kendi programlarına kaydedebilir. Kişisel (kendi eklediğin) hareketler paylaşılmaz.</p> : null}
       {kind === 'streak' ? <p className="text-[13px] text-mute">Güncel su serin paylaşılır.</p> : null}
       <label htmlFor="post-body" className="sr-only">Metin</label>
       <textarea id="post-body" rows={3} maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Bir şeyler yaz…" className="rounded-2xl bg-surface-2 border border-line px-4 py-3" />

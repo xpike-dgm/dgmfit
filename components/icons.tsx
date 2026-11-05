@@ -50,3 +50,5 @@ export const Target = (p: P) => <svg {...base(p)}><circle cx="12" cy="12" r="8.5
 export const Bell = (p: P) => <svg {...base(p)}><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9z" /><path d="M10 19a2 2 0 0 0 4 0" /></svg>
 export const Close = (p: P) => <svg {...base(p)}><path d="M6 6l12 12M18 6L6 18" /></svg>
 export const Pencil = (p: P) => <svg {...base(p)}><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M14 6l4 4" /></svg>
+export const Chat = (p: P) => <svg {...base(p)}><path d="M4 5h16v11H9l-5 4z" /><path d="M8 9h8M8 12h5" /></svg>
+export const Send = (p: P) => <svg {...base({ strokeWidth: 2.4, ...p })}><path d="M12 19V5M6 11l6-6 6 6" /></svg>

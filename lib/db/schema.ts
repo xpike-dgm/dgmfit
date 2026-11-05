@@ -669,7 +669,7 @@ export const userBlocks = pgTable('user_blocks', {
 export const posts = pgTable('posts', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  kind: text('kind').notNull(), // text | workout | pr | recipe | meal | streak | milestone | progress
+  kind: text('kind').notNull(), // text | workout | pr | recipe | program | meal | streak | milestone | progress
   body: text('body').notNull().default(''),
   data: jsonb('data').$type<Record<string, unknown>>().notNull().default({}), // paylaşım anındaki anlık görüntü
   mediaIds: jsonb('media_ids').$type<string[]>().notNull().default([]),

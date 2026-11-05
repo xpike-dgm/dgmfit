@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Sheet from '@/components/Sheet'
 import { btn, TopBar, hdrIcon } from '@/components/ui'
-import { Gear, Mic, Spark, Trash } from '@/components/icons'
+import { Chat, Gear, Mic, Next, Plus, Send, Spark, Trash } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import { SUPPORT } from '@/lib/safety'
 import type { MessageView, StoredAction } from '@/lib/coach-data'
@@ -73,52 +73,76 @@ export default function CoachChat(p: {
   }
   const persona = p.personas.find((x) => x.id === prefs.persona) ?? p.personas[0]
 
+  const grow = (el: HTMLTextAreaElement | null) => { if (!el) return; el.style.height = 'auto'; el.style.height = `${Math.min(el.scrollHeight, 148)}px` }
+  const can = p.aiOn && !busy && text.trim().length >= 2
+
   return (
-    <div className="px-4 flex flex-col gap-3 min-h-[calc(100dvh-140px)]">
-      <TopBar back="/" title="Koç" sub={`Kişilik: ${persona.label}`} right={<button type="button" className={hdrIcon} aria-label="Koç ayarları" onClick={() => setSheet('settings')}><Gear size={20} /></button>} />
-      <div className="flex items-center gap-2 px-1">
-        <button type="button" className="ml-auto h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold" onClick={() => setSheet('history')}>Sohbetler</button>
-        <Link href="/koc?yeni=1" className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center">Yeni</Link>
-      </div>
+    <div className="px-4 flex flex-col h-dvh">
+      <TopBar back="/" title="Koç" sub={<>{persona.label} · <span data-testid="coach-left">bugün {left} AI hakkı</span></>} right={
+        <div className="flex gap-1.5">
+          <button type="button" className={hdrIcon} aria-label="Sohbetler" onClick={() => setSheet('history')}><Chat size={19} /></button>
+          <Link href="/koc?yeni=1" className={hdrIcon} aria-label="Yeni sohbet"><Plus size={19} /></Link>
+          <button type="button" className={hdrIcon} aria-label="Koç ayarları" onClick={() => setSheet('settings')}><Gear size={19} /></button>
+        </div>
+      } />
 
-      {!p.aiOn ? <AiOff what="AI koç sohbeti" alt={{ href: '/rapor', label: 'Kural tabanlı haftalık rapor' }} /> : null}
-
-      <div className="flex flex-col gap-3 flex-1" aria-live="polite" data-testid="coach-messages">
+      <div className="flex-1 overflow-y-auto overscroll-contain -mx-4 px-4 py-4 flex flex-col gap-3" aria-live="polite" data-testid="coach-messages">
+        {!p.aiOn ? <AiOff what="AI koç sohbeti" alt={{ href: '/rapor', label: 'Kural tabanlı haftalık rapor' }} /> : null}
         {!msgs.length ? (
-          <div className="card p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2"><Spark size={18} className="text-acc" /><span className="font-bold">Merhaba! Tüm verilerine bakarak cevap veririm.</span></div>
-            <p className="text-[13px] text-mute">Kalori, su, antrenman ve kilo trendini birlikte yorumlarım. Hedef tarihini değiştirmek, programa hareket eklemek ya da su kaydı gibi işleri önerebilirim; sen onaylamadan hiçbir şey değişmez.</p>
-            <div className="flex flex-wrap gap-2">{SUGGEST.map((s) => <button key={s} type="button" className="text-left text-[13px] px-3 py-2 rounded-2xl bg-surface-2" disabled={!p.aiOn || busy} onClick={() => void send(s)}>{s}</button>)}</div>
+          <div className="flex flex-col items-center text-center gap-3 pt-4">
+            <span className="w-16 h-16 rounded-[22px] band flex items-center justify-center shadow-sm"><Spark size={30} /></span>
+            <h2 className="text-[20px] font-extrabold leading-tight">Merhaba, ben koçun</h2>
+            <p className="text-[14px] text-ink-2 leading-relaxed max-w-[34ch]">Kalori, su, antrenman ve kilo verilerine bakarak cevap veririm. Önerdiğim bir değişiklik sen onaylamadan uygulanmaz.</p>
+            <div className="w-full flex flex-col gap-2 mt-2">
+              {SUGGEST.map((q) => (
+                <button key={q} type="button" disabled={!p.aiOn || busy} onClick={() => void send(q)}
+                  className="w-full text-left text-[14px] font-semibold px-4 min-h-12 rounded-2xl bg-surface border border-line flex items-center justify-between gap-3 disabled:opacity-50">
+                  <span>{q}</span><Next size={16} className="text-acc shrink-0" />
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
         {msgs.map((m) => (m.role === 'user' ? (
-          <div key={m.id} className="self-end max-w-[85%] rounded-[20px] rounded-br-md bg-acc text-acc-ink px-4 py-2.5 text-[15px] whitespace-pre-wrap" data-testid="msg-user">{m.content}</div>
+          <div key={m.id} className="self-end max-w-[85%] rounded-[22px] rounded-br-md bg-acc text-acc-ink px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap break-words" data-testid="msg-user">{m.content}</div>
         ) : (
-          <div key={m.id} className="self-start max-w-[92%] flex flex-col gap-2" data-testid="msg-coach">
-            {m.safety === 'crisis' || m.safety === 'ed' ? <SupportCard kind={m.safety} /> : null}
-            <div className="rounded-[20px] rounded-bl-md bg-surface-2 px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap">{m.content}</div>
-            {m.safety === 'medical' ? <p className="text-[12px] text-mute px-1">Sağlık sorunu, ilaç ya da sakatlık konusunda hekimine danış; koç tıbbi tavsiye vermez.</p> : null}
-            {m.whatIf ? <WhatIfCard w={m.whatIf} /> : null}
-            {m.actions.map((a, i) => <ActionCard key={i} a={a} onDecide={(d) => decide(m, i, d)} />)}
-            {m.provider ? <span className="text-[11px] text-faint px-1">{PROVIDER[m.provider] ?? m.provider}</span> : null}
+          <div key={m.id} className="self-start w-full flex gap-2 items-start" data-testid="msg-coach">
+            <span className="w-8 h-8 rounded-xl band flex items-center justify-center shrink-0 mt-0.5" aria-hidden><Spark size={16} /></span>
+            <div className="flex-1 min-w-0 flex flex-col gap-2 max-w-[calc(100%-40px)]">
+              {m.safety === 'crisis' || m.safety === 'ed' ? <SupportCard kind={m.safety} /> : null}
+              <div className="self-start rounded-[22px] rounded-tl-md bg-surface border border-line px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</div>
+              {m.safety === 'medical' ? <p className="text-[12px] text-mute px-1">Sağlık sorunu, ilaç ya da sakatlık konusunda hekimine danış; koç tıbbi tavsiye vermez.</p> : null}
+              {m.whatIf ? <WhatIfCard w={m.whatIf} /> : null}
+              {m.actions.map((a, i) => <ActionCard key={i} a={a} onDecide={(d) => decide(m, i, d)} />)}
+              {m.provider ? <span className="text-[11px] text-faint px-1">{PROVIDER[m.provider] ?? m.provider}</span> : null}
+            </div>
           </div>
         )))}
-        {busy ? <div className="self-start rounded-[20px] bg-surface-2 px-4 py-3 text-[14px] text-mute animate-pulse" aria-busy="true">Koç düşünüyor…</div> : null}
+        {busy ? (
+          <div className="self-start flex gap-2 items-center" aria-busy="true" aria-label="Koç düşünüyor">
+            <span className="w-8 h-8 rounded-xl band flex items-center justify-center shrink-0" aria-hidden><Spark size={16} /></span>
+            <span className="rounded-[22px] rounded-tl-md bg-surface border border-line px-4 py-3.5 flex gap-1.5" aria-hidden>
+              {[0, 1, 2].map((i) => <span key={i} className="w-2 h-2 rounded-full bg-mute animate-bounce" style={{ animationDelay: `${i * 140}ms` }} />)}
+            </span>
+          </div>
+        ) : null}
         <div ref={end} />
       </div>
 
-      {err ? <p role="alert" className="text-[13px] text-orange px-1">{err}</p> : null}
-      <form className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] bg-bg pt-2 pb-1 flex flex-col gap-1" onSubmit={(e) => { e.preventDefault(); void send(text) }}>
-        <div className="flex gap-2 items-end">
+      <form className="shrink-0 pt-2 pb-[max(env(safe-area-inset-bottom),10px)] flex flex-col gap-1.5" onSubmit={(e) => { e.preventDefault(); void send(text) }}>
+        {err ? <p role="alert" className="text-[13px] text-danger px-2">{err}</p> : null}
+        <div className={`flex items-end gap-1 rounded-[26px] bg-surface border px-2 py-1.5 transition-colors ${p.aiOn ? 'border-line focus-within:border-acc' : 'border-line opacity-60'}`}>
           <label htmlFor="coach-input" className="sr-only">Koça yaz</label>
-          <textarea id="coach-input" rows={1} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} disabled={!p.aiOn}
+          <textarea id="coach-input" ref={(el) => grow(el)} rows={1} maxLength={1000} value={text} disabled={!p.aiOn}
+            onChange={(e) => { setText(e.target.value); grow(e.target) }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(text) } }}
-            placeholder="Koça sor…" className="flex-1 min-h-12 max-h-32 rounded-[22px] bg-surface-2 border border-line px-4 py-3 text-ink resize-none" />
+            placeholder="Koça bir şey sor…" className="flex-1 min-w-0 bg-transparent px-2.5 py-2 text-[16px] leading-6 text-ink resize-none outline-none placeholder:text-faint" />
           {speech ? <button type="button" onClick={() => (listening ? rec.current?.stop() : listen())} aria-pressed={listening} aria-label={listening ? 'Dinlemeyi durdur' : 'Söyle'} disabled={!p.aiOn}
-            className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${listening ? 'bg-acc text-acc-ink animate-pulse' : 'bg-surface-2 text-acc'}`}><Mic size={22} /></button> : null}
-          <button type="submit" className="h-12 px-5 rounded-full bg-acc text-acc-ink font-extrabold shrink-0 disabled:opacity-40" disabled={!p.aiOn || busy || text.trim().length < 2}>Gönder</button>
+            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${listening ? 'bg-acc text-acc-ink animate-pulse' : 'text-mute'}`}><Mic size={20} /></button> : null}
+          <button type="submit" aria-label="Gönder" disabled={!can}
+            className="w-10 h-10 rounded-full bg-acc text-acc-ink flex items-center justify-center shrink-0 transition disabled:opacity-30 active:scale-95"><Send size={18} /></button>
         </div>
-        <span className="text-[11px] text-faint px-2" data-testid="coach-left">Bugün kalan AI hakkı: {left} · Koç tıbbi tavsiye vermez.</span>
+        <span className="text-[11px] text-faint text-center">Koç tıbbi tavsiye vermez · Enter gönderir, Shift+Enter yeni satır</span>
       </form>
 
       <Sheet open={sheet === 'settings'} onClose={() => setSheet(null)} title="Koç ayarları">

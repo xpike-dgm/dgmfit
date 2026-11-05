@@ -63,7 +63,7 @@ export const WeeklyResult = z.strictObject({
   suggestions: z.array(z.string().min(1).max(220)).min(1).max(3).describe('Somut, uygulanabilir öneriler'),
 })
 
-const Named = z.strictObject({ name: z.string().min(1).max(80).describe('KATALOG\'daki adı aynen yaz; katalogda yoksa Türkçe genel ad'), grams: z.number().min(5).max(1500).describe('Gram (sıvıda ml ≈ g)') })
+const Named = z.strictObject({ name: z.string().min(1).max(80).describe('KATALOG\'daki adı aynen yaz; katalogda yoksa Türkçe genel ad'), grams: z.number().min(0.5).max(1500).describe('Gram (sıvıda ml ≈ g; tuz/baharat gibi az miktarlar da olabilir)') })
 export const MenuResult = z.strictObject({
   days: z.array(z.strictObject({
     meals: z.array(z.strictObject({ meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']), items: z.array(Named).min(1).max(6) })).min(2).max(5),
@@ -199,10 +199,28 @@ export function jsonSchemaFor(task: Task): J {
 }
 
 /** Dönen metni JSON olarak ayrıştırır ve şemayla doğrular; geçersizse hata. */
+/**
+ * Model yanıtını şemayla doğrular. Yalnızca sayı sınırı aşımı varsa (ör. tuz 2 g, süre 200 dk) değer sınıra çekilip
+ * bir kez daha denenir: tek bir küçük sapma yüzünden tüm yanıt atılmaz. Diğer hatalar (eksik alan, yanlış tür) reddedilir.
+ */
 export function parseResult<T extends Task>(task: T, text: string): z.infer<(typeof TASKS)[T]['schema']> {
   const start = text.indexOf('{'), end = text.lastIndexOf('}')
   if (start < 0 || end < start) throw new Error('AI yanıtı JSON değil')
-  return TASKS[task].schema.parse(JSON.parse(text.slice(start, end + 1))) as never
+  const raw = JSON.parse(text.slice(start, end + 1))
+  const schema = TASKS[task].schema
+  const first = schema.safeParse(raw)
+  if (first.success) return first.data as never
+  const issues = first.error.issues
+  if (!issues.every((i) => (i.code === 'too_small' || i.code === 'too_big') && 'origin' in i && i.origin === 'number')) throw first.error
+  for (const i of issues) {
+    let o: Record<string | number, unknown> = raw
+    for (const k of i.path.slice(0, -1)) o = o?.[k as string] as Record<string | number, unknown>
+    const last = i.path.at(-1) as string
+    if (!o || typeof o[last] !== 'number' || (o[last] as number) < 0) throw first.error // negatif değer anlamsız: düzeltilmez
+    const lim = Number((i as { minimum?: number | bigint; maximum?: number | bigint }).minimum ?? (i as { maximum?: number | bigint }).maximum)
+    o[last] = lim
+  }
+  return schema.parse(raw) as never
 }
 
 /** Etiket "porsiyon" bazındaysa 100 g'a çevirir (motor hesaplar, model değil). */

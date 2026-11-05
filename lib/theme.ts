@@ -34,7 +34,8 @@ export function tabFor(path: string): TabId {
   return m === 'coach' || m === 'profile' ? 'today' : m
 }
 
-/** Alt barın gizlendiği odak ekranları (canlı antrenman). */
+/** Alt barın gizlendiği odak ekranları (canlı antrenman, koç sohbeti: yazma alanı ekranın altında). */
 export function hidesNav(path: string): boolean {
-  return path.split('?')[0] === '/fitness/antrenman'
+  const p = path.split('?')[0]
+  return p === '/fitness/antrenman' || p === '/koc'
 }

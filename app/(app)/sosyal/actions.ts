@@ -6,7 +6,7 @@ import { isAdmin } from '@/lib/admin'
 import { ITEMS, POST_KINDS, REACTIONS, type PostKind, type Reaction } from '@/lib/social'
 import {
   acceptFriend, comment, copyWorkout, createPost, deleteComment, deletePost, dismissReport, follow, markAllRead, react, removeFriend, report,
-  requestFriend, resolveComment, resolvePost, saveRecipeCopy, setBlock, setClose, toggleSave, updateSocialProfile,
+  requestFriend, resolveComment, resolvePost, saveProgramCopy, saveRecipeCopy, setBlock, setClose, toggleSave, updateSocialProfile,
 } from '@/lib/social-data'
 import { addMealItem } from '../yemek/actions'
 
@@ -44,6 +44,7 @@ export async function commentAction(postId: string, body: string): Promise<R<{ p
 export async function deleteCommentAction(id: string, postId: string): Promise<R> { const me = await uid(); return run(async () => { await deleteComment(me, id); return {} }, [`/sosyal/p/${postId}`]) }
 export async function saveAction(postId: string, on: boolean): Promise<R> { const me = await uid(); return run(async () => { await toggleSave(me, postId, on); return {} }, []) }
 export async function copyWorkoutAction(postId: string): Promise<R<{ id: string }>> { const me = await uid(); return run(async () => ({ id: await copyWorkout(me, postId) }), ['/fitness']) }
+export async function saveProgramAction(postId: string): Promise<R<{ id: string }>> { const me = await uid(); return run(async () => ({ id: await saveProgramCopy(me, postId) })) }
 export async function saveRecipeAction(postId: string): Promise<R<{ foodId: number }>> { const me = await uid(); return run(async () => ({ foodId: await saveRecipeCopy(me, postId) }), ['/yemek']) }
 /** "Öğün olarak ekle": önce tarifin kopyası kaydedilir (yazarın besini izleyiciye özel değildir), sonra 1 porsiyon günlüğe eklenir. */
 export async function addRecipeMealAction(postId: string, meal: string): Promise<R<{ kcal: number }>> {

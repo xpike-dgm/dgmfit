@@ -126,6 +126,18 @@ function fake(port, handler) {
   await pa.goto(BASE + '/sosyal/bildirimler')
   await pa.locator('[data-testid=notification][data-kind=reaction]').waitFor(); await pa.locator('[data-testid=notification][data-kind=comment]').waitFor()
 
+  // 5b) Program paylaşımı: A şablondan program kurar, paylaşır → B "Programlarıma kaydet" ile tüm günleri alır
+  await pa.goto(BASE + '/fitness/programlar/sablonlar/ppl'); await pa.getByRole('button', { name: 'Bu şablonu kullan' }).click(); await pa.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/)
+  await pa.getByRole('link', { name: 'Paylaş', exact: true }).click(); await pa.waitForURL('**/sosyal/yeni?tur=program*')
+  if (!(await pa.getByLabel('Paylaşılacak kayıt').inputValue())) fail('program önceden seçili değil')
+  await pa.getByRole('button', { name: 'Paylaş', exact: true }).click(); await pa.waitForURL(/\/sosyal\/p\/[0-9a-f-]{36}$/)
+  const progPost = pa.url().split('/').pop()
+  await pa.getByTestId('post-program').getByText(/3 gün/).waitFor().catch(() => fail('program gönderisinde 3 gün yok'))
+  await pb.goto(`${BASE}/sosyal/p/${progPost}`); await pb.getByRole('button', { name: 'Programlarıma kaydet' }).click()
+  await pb.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/)
+  if ((await pb.getByTestId('program-day').count()) !== 3) fail('kaydedilen programda 3 gün olmalı')
+  await pb.getByText(/paylaşımından kaydedildi/).first().waitFor().catch(() => fail('kaynak notu yok'))
+
   // 6) Tarif gönderisi → B kaydeder ve öğün olarak ekler
   const { recipeId } = await post(pa, '/api/test/social', { recipe: true })
   await pa.goto(`${BASE}/sosyal/yeni?tur=recipe&ref=${recipeId}`); await pa.getByRole('button', { name: 'Paylaş', exact: true }).click(); await pa.waitForURL(/\/sosyal\/p\//)

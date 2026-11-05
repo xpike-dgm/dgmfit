@@ -6,7 +6,7 @@ import { fmtNum } from '@/lib/calc'
 import { MEAL_LABEL, type MealId } from '@/lib/food'
 import { POST_KINDS, REACTIONS, type Reaction } from '@/lib/social'
 import type { PostView } from '@/lib/social-data'
-import { addRecipeMealAction, copyWorkoutAction, deletePostAction, friendAction, reactAction, reportAction, saveAction, saveRecipeAction } from '@/app/(app)/sosyal/actions'
+import { addRecipeMealAction, copyWorkoutAction, saveProgramAction, deletePostAction, friendAction, reactAction, reportAction, saveAction, saveRecipeAction } from '@/app/(app)/sosyal/actions'
 
 export function Avatar({ src, name, size = 40 }: { src: string | null; name: string; size?: number }) {
   // eslint-disable-next-line @next/next/no-img-element
@@ -41,6 +41,27 @@ function Body({ p, onMsg }: { p: PostView; onMsg: (m: string) => void }) {
     )
   }
   if (p.kind === 'pr') return <div className="rounded-2xl bg-coach border border-coach-line px-3.5 py-3 text-[15px]" data-testid="post-pr">🏆 <b>{String(d.name)}</b> · {String(d.label)}: <b className="num">{fmtNum(Number(d.value), 1)}{d.type === 'reps' ? ' tekrar' : ' kg'}</b>{d.previous ? <span className="text-mute"> (önceki {fmtNum(Number(d.previous), 1)})</span> : null}</div>
+  if (p.kind === 'program') {
+    const g = d as { name: string; days: { name: string; focus: string; exercises: { name: string; sets: number; repMin: number; repMax: number; seconds: number | null }[] }[] }
+    return (
+      <div className="rounded-2xl bg-surface-2 px-3.5 py-3 flex flex-col gap-2" data-testid="post-program">
+        <div className="flex justify-between gap-2"><b className="min-w-0 truncate">{g.name}</b><span className="text-[13px] text-mute num shrink-0">{g.days.length} gün · {g.days.reduce((a, x) => a + x.exercises.length, 0)} hareket</span></div>
+        <details className="text-[13px]">
+          <summary className="cursor-pointer text-ink-2 font-semibold">{g.days.map((x) => x.name).join(' · ')}</summary>
+          <div className="flex flex-col gap-2 mt-2">
+            {g.days.map((x, i) => (
+              <div key={i} className="flex flex-col gap-0.5">
+                <b className="text-[12.5px]">{x.name}{x.focus ? <span className="text-mute font-normal"> · {x.focus}</span> : null}</b>
+                {x.exercises.map((e, j) => <span key={j} className="flex justify-between gap-2 text-ink-2"><span className="truncate">{e.name}</span><span className="num shrink-0">{e.sets} × {e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}</span></span>)}
+              </div>
+            ))}
+          </div>
+        </details>
+        {!p.mine ? <button type="button" className="self-start h-9 px-3 rounded-full bg-acc text-acc-ink text-[12px] font-bold" disabled={pending}
+          onClick={() => start(async () => { const r = await saveProgramAction(p.id); if (r.ok) router.push(`/fitness/programlar/${r.id}`); else onMsg(r.error) })}>Programlarıma kaydet</button> : null}
+      </div>
+    )
+  }
   if (p.kind === 'recipe') {
     const r = d as { name: string; per100: Record<string, number>; portions: { label: string; g: number }[]; recipe: { ingredients?: { name: string; g: number }[] } | null }
     const g = r.portions?.[0]?.g ?? 100

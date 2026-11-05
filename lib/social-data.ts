@@ -9,7 +9,7 @@ import { sendToUser } from './push'
 import { mediaMeta } from './media'
 import { activeGoal, weightSeries } from './fit-data'
 import { addDays } from './time'
-import { insertProgram, workoutSummary } from './fitness-data'
+import { getProgram, insertProgram, workoutSummary } from './fitness-data'
 import { getToday } from './today'
 import { getWaterInsights } from './water-data'
 import { PR_LABEL, type PrType } from './training'
@@ -277,6 +277,16 @@ async function snapshot(userId: string, kind: PostKind, ref: string | null | und
       prs: s.prs.map((p) => ({ name: p.name, type: p.type, value: p.value })),
     }
   }
+  if (kind === 'program') {
+    const p = ref && /^[0-9a-f-]{36}$/.test(ref) ? await getProgram(userId, ref) : null
+    if (!p) throw new Error('Program bulunamadı')
+    // yalnızca ortak kütüphane hareketleri paylaşılır (kişisel hareketler başkasının kütüphanesinde yok)
+    const lib = new Map((await db.select({ id: schema.exercises.id, key: schema.exercises.key }).from(schema.exercises)
+      .where(and(inArray(schema.exercises.id, p.days.flatMap((d) => d.exercises.map((e) => e.exerciseId)).concat([-1])), isNull(schema.exercises.userId)))).map((r) => [r.id, r.key]))
+    const days = p.days.map((d) => ({ name: d.name, focus: d.focus ?? '', exercises: d.exercises.filter((e) => lib.has(e.exerciseId)).map((e) => ({ key: lib.get(e.exerciseId)!, name: e.name, kind: e.kind, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds })) })).filter((d) => d.exercises.length)
+    if (!days.length) throw new Error('Programda paylaşılacak hareket yok')
+    return { programId: p.id, name: p.name, days, skipped: p.days.reduce((a, d) => a + d.exercises.filter((e) => !lib.has(e.exerciseId)).length, 0) }
+  }
   if (kind === 'pr') {
     const id = Number(ref)
     const [r] = Number.isInteger(id) ? await db.select({ pr: schema.personalRecords, name: schema.exercises.nameTr }).from(schema.personalRecords).innerJoin(schema.exercises, eq(schema.exercises.id, schema.personalRecords.exerciseId)).where(and(eq(schema.personalRecords.id, id), eq(schema.personalRecords.userId, userId))).limit(1) : []
@@ -479,6 +489,16 @@ export async function copyWorkout(viewerId: string, postId: string): Promise<str
   return insertProgram(viewerId, `${post.author.username}: ${data.name}`.slice(0, 60), 'shared', [{ name: data.name.slice(0, 40), focus: '', exercises: exs }], [`@${post.author.username} paylaşımından kopyalandı.`], false)
 }
 
+/** "Programlarıma kaydet": paylaşılan programın tüm günleri izleyiciye kopyalanır (aktif yapılmaz). */
+export async function saveProgramCopy(viewerId: string, postId: string): Promise<string> {
+  const { post } = await visiblePost(viewerId, postId)
+  if (post.kind !== 'program') throw new Error('Program gönderisi değil')
+  const d = post.data as { name: string; days: { name: string; focus: string; exercises: { key: string; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null }[] }[] }
+  const days = d.days.map((x) => ({ name: x.name.slice(0, 40), focus: x.focus ?? '', exercises: x.exercises.map((e, i) => ({ key: e.key, role: (i === 0 ? 'ana' : 'yardımcı') as 'ana', sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds ?? undefined })) }))
+  if (!days.length) throw new Error('Kaydedilecek gün yok')
+  return insertProgram(viewerId, `${d.name}`.slice(0, 60), 'shared', days, [`@${post.author.username} paylaşımından kaydedildi.`], false)
+}
+
 /** "Tariflerime kaydet": tarifin besin değerleri ve malzeme listesiyle izleyiciye ait tarif kopyası. */
 export async function saveRecipeCopy(viewerId: string, postId: string): Promise<number> {
   const { post } = await visiblePost(viewerId, postId)
@@ -548,12 +568,13 @@ export async function avatarMedia(viewerId: string, userId: string) {
 
 /** Paylaşım ekranı için kaynak listeleri (kullanıcının kendi verisi). */
 export async function shareSources(userId: string) {
-  const [workouts, prs, recipes, friends] = await Promise.all([
+  const [workouts, prs, recipes, friends, programs] = await Promise.all([
     db.select({ id: schema.workouts.id, name: schema.workouts.name, day: schema.workouts.day }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt))).orderBy(desc(schema.workouts.startedAt)).limit(10),
     db.select({ id: schema.personalRecords.id, type: schema.personalRecords.type, value: schema.personalRecords.value, name: schema.exercises.nameTr }).from(schema.personalRecords).innerJoin(schema.exercises, eq(schema.exercises.id, schema.personalRecords.exerciseId)).where(eq(schema.personalRecords.userId, userId)).orderBy(desc(schema.personalRecords.createdAt)).limit(10),
     db.select({ id: schema.foods.id, name: schema.foods.nameTr }).from(schema.foods).where(and(eq(schema.foods.userId, userId), eq(schema.foods.source, 'user-recipe'), isNull(schema.foods.deletedAt))).orderBy(desc(schema.foods.createdAt)).limit(20),
     friendsOverview(userId).then((f) => f.friends),
+    db.select({ id: schema.programs.id, name: schema.programs.name }).from(schema.programs).where(and(eq(schema.programs.userId, userId), isNull(schema.programs.deletedAt))).orderBy(desc(schema.programs.updatedAt)).limit(20),
   ])
-  return { workouts, prs: prs.map((p) => ({ ...p, label: PR_LABEL[p.type as PrType] ?? p.type })), recipes, friends }
+  return { workouts, prs: prs.map((p) => ({ ...p, label: PR_LABEL[p.type as PrType] ?? p.type })), recipes, friends, programs }
 }
 export { ITEMS }

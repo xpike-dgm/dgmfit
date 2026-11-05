@@ -205,7 +205,10 @@
     "app/(app)/fit/load.ts",
     "app/(app)/profil/plan-actions.ts",
     "app/(app)/profil/PlanForm.tsx",
-    "app/(app)/fitness/hareketler/FilterSheet.tsx"
+    "app/(app)/fitness/hareketler/FilterSheet.tsx",
+    "lib/body-map-paths.ts",
+    "scripts/data/build_bodymap.py",
+    "data/body-map-source.webp"
   ],
   "tables": [
     "users",

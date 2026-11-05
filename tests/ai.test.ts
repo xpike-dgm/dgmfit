@@ -58,3 +58,15 @@ test('etiket: porsiyon bazlı değerler 100 g\'a çevrilir; okunamadıysa null',
   assert.equal(labelPer100({ ...base, basis: 'porsiyon', servingGrams: null }), null)
   assert.equal(labelPer100({ ...base, basis: 'okunamadı' }), null)
 })
+
+test('sınır dışı sayı yanıtı atmaz, sınıra çekilir; negatif ve eksik alan reddedilir', () => {
+  const recipe = (grams: number, minutes: number) => JSON.stringify({ recipes: [{ title: 'Patatesli pilav', minutes, servings: 2, ingredients: [{ name: 'Pirinç', grams: 150 }, { name: 'Tuz', grams }], steps: ['Pişir'] }], note: null })
+  // canlıdaki gerçek hata: tuz 2 g → eskiden tüm yanıt reddediliyordu
+  const a = parseResult('pantry', recipe(2, 30)) as { recipes: { minutes: number; ingredients: { grams: number }[] }[] }
+  assert.equal(a.recipes[0].ingredients[1].grams, 2)
+  const b = parseResult('pantry', recipe(0.1, 400)) as { recipes: { minutes: number; ingredients: { grams: number }[] }[] }
+  assert.equal(b.recipes[0].ingredients[1].grams, 0.5)
+  assert.equal(b.recipes[0].minutes, 180)
+  assert.throws(() => parseResult('pantry', recipe(-3, 30)))
+  assert.throws(() => parseResult('pantry', JSON.stringify({ recipes: [{ title: 'x' }], note: null })))
+})
