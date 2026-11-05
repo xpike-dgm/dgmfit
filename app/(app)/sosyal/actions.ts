@@ -111,3 +111,87 @@ export async function moderateAction(input: { type: 'post' | 'comment' | 'report
     return {}
   }, ['/yonetim/moderasyon', '/sosyal'])
 }
+
+// ───────── Faz 5b ─────────
+import {
+  attachProof, copyPartnerProgram, createChallenge, createGroup, createStory, deleteStory, inviteToGroup, leaveGroup, nudge, postGroupMessage,
+  respondChallenge, respondGroup, resolveProof, sendDM, setPartner, setRankOptIn, witnessPR,
+} from '@/lib/social2-data'
+import { METRICS, NUDGE, type Metric, type NudgeKind } from '@/lib/social-rank'
+
+export async function groupAction(input: { op: 'create' | 'invite' | 'accept' | 'decline' | 'leave' | 'remove' | 'optin' | 'optout' | 'message'; groupId?: string; userId?: string; name?: string; description?: string; body?: string }): Promise<R<{ id?: string; support?: 'ed' | 'crisis' | null }>> {
+  const me = await uid()
+  if (!rateLimit('group:' + me, 120, 3600_000)) return { ok: false, error: 'Çok fazla işlem; biraz bekle' }
+  const gid = input.groupId && Uuid.safeParse(input.groupId).success ? input.groupId : null
+  const tid = input.userId && Uuid.safeParse(input.userId).success ? input.userId : null
+  return run(async () => {
+    switch (input.op) {
+      case 'create': { const n = (input.name ?? '').trim(); if (n.length < 2) throw new Error('Grup adı en az 2 karakter'); return { id: await createGroup(me, n, input.description ?? null) } }
+      case 'invite': await inviteToGroup(me, gid!, tid!); break
+      case 'accept': case 'decline': await respondGroup(me, gid!, input.op === 'accept'); break
+      case 'leave': await leaveGroup(me, gid!); break
+      case 'remove': await leaveGroup(me, gid!, tid!); break
+      case 'optin': case 'optout': await setRankOptIn(me, gid!, input.op === 'optin'); break
+      case 'message': return { support: (await postGroupMessage(me, gid!, input.body ?? '')).support }
+    }
+    return {}
+  }, ['/sosyal/gruplar'])
+}
+
+const ChIn = z.object({
+  template: z.string().max(20).nullable().optional(), title: z.string().trim().max(80).optional(), metric: z.enum(Object.keys(METRICS) as [Metric, ...Metric[]]).optional(),
+  param: z.number().min(0).max(10000).nullable().optional(), target: z.number().min(1).max(1e7).nullable().optional(), days: z.number().int().min(1).max(90).optional(),
+  scope: z.enum(['friends', 'group', 'duel']), inviteIds: z.array(Uuid).max(50), groupId: Uuid.nullable().optional(),
+})
+export async function createChallengeAction(input: z.input<typeof ChIn>): Promise<R<{ id: string }>> {
+  const p = ChIn.safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz meydan okuma' }
+  const me = await uid()
+  if (!rateLimit('challenge:' + me, 10, 3600_000)) return { ok: false, error: 'Saatte en fazla 10 meydan okuma' }
+  return run(async () => ({ id: await createChallenge(me, p.data) }), ['/sosyal/meydan'])
+}
+export async function respondChallengeAction(id: string, status: 'joined' | 'declined' | 'left'): Promise<R> {
+  if (!Uuid.safeParse(id).success || !['joined', 'declined', 'left'].includes(status)) return { ok: false, error: 'Geçersiz' }
+  const me = await uid()
+  return run(async () => { await respondChallenge(me, id, status); return {} }, ['/sosyal/meydan'])
+}
+
+export async function sendDMAction(input: { to: string; body: string; postId?: string | null }): Promise<R<{ support: 'ed' | 'crisis' | null }>> {
+  const p = z.object({ to: z.string().min(3).max(30), body: z.string().max(2000), postId: Uuid.nullable().optional() }).safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz mesaj' }
+  const me = await uid()
+  if (!rateLimit('dm:' + me, 120, 3600_000)) return { ok: false, error: 'Çok fazla mesaj; biraz bekle' }
+  return run(() => sendDM(me, p.data.to, p.data.body, p.data.postId ?? null), ['/sosyal/mesaj'])
+}
+export async function nudgeAction(userId: string, kind: string): Promise<R> {
+  if (!Uuid.safeParse(userId).success || !(kind in NUDGE)) return { ok: false, error: 'Geçersiz' }
+  const me = await uid()
+  return run(async () => { await nudge(me, userId, kind as NudgeKind); return {} }, [])
+}
+export async function partnerAction(userId: string, op: 'on' | 'off' | 'copy'): Promise<R<{ id?: string }>> {
+  if (!Uuid.safeParse(userId).success) return { ok: false, error: 'Geçersiz' }
+  const me = await uid()
+  return run(async () => (op === 'copy' ? { id: await copyPartnerProgram(me, userId) } : (await setPartner(me, userId, op === 'on'), {})), ['/u', '/fitness'])
+}
+export async function storyAction(input: { op: 'create' | 'delete'; body?: string; mediaId?: string | null; id?: string }): Promise<R> {
+  const me = await uid()
+  return run(async () => {
+    if (input.op === 'delete') { if (input.id && Uuid.safeParse(input.id).success) await deleteStory(me, input.id) }
+    else await createStory(me, String(input.body ?? ''), input.mediaId && Uuid.safeParse(input.mediaId).success ? input.mediaId : null)
+    return {}
+  })
+}
+export async function prVerifyAction(input: { op: 'witness' | 'proof'; prId: number; mediaId?: string }): Promise<R<{ verified?: boolean; witnesses?: number }>> {
+  if (!Number.isInteger(input.prId)) return { ok: false, error: 'Geçersiz' }
+  const me = await uid()
+  return run(async () => {
+    if (input.op === 'witness') return await witnessPR(me, input.prId)
+    if (!input.mediaId || !Uuid.safeParse(input.mediaId).success) throw new Error('Fotoğraf seç')
+    await attachProof(me, input.prId, input.mediaId); return {}
+  }, ['/u'])
+}
+export async function proofDecisionAction(prId: number, approve: boolean): Promise<R> {
+  await admin()
+  if (!Number.isInteger(prId)) return { ok: false, error: 'Geçersiz' }
+  return run(async () => { await resolveProof(prId, approve); return {} }, ['/yonetim/moderasyon'])
+}

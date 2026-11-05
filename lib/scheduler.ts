@@ -25,6 +25,11 @@ export function startScheduler() {
       gte(schema.waterReminders.sentAt, new Date(Date.now() - ACT_WINDOW_MIN * 60000)),
     ))
   })
+  // Antrenman partneri (Faz 5b): karşılıklı partnerlere "antrenmanını bitirdi" bildirimi
+  on('workout.finished', async (userId, payload) => {
+    const { notifyPartners } = await import('./social2-data')
+    await notifyPartners(userId, Number(payload.minutes ?? 0))
+  })
   console.log('[dgfit] hatırlatma zamanlayıcısı başladı')
 }
 

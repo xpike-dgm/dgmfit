@@ -420,6 +420,10 @@ export const personalRecords = pgTable('personal_records', {
   type: text('type').notNull(),
   value: real('value').notNull(),
   previous: real('previous'),
+  suspect: text('suspect'), // null = olağan; dolu = şüphe nedeni (Faz 5b)
+  verified: boolean('verified').notNull().default(false),
+  witnesses: jsonb('witnesses').$type<string[]>().notNull().default([]),
+  proofMediaId: uuid('proof_media_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index('personal_records_user_idx').on(t.userId, t.createdAt)])
 
@@ -643,6 +647,7 @@ export const friendLinks = pgTable('friend_links', {
   friendId: uuid('friend_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   status: text('status').notNull(),
   close: boolean('close').notNull().default(false),
+  partner: boolean('partner').notNull().default(false), // antrenman partneri (bu yönde işaret; karşılıklıysa etkin)
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }),
 }, (t) => [primaryKey({ columns: [t.userId, t.friendId] }), index('friend_links_friend_idx').on(t.friendId)])
@@ -721,3 +726,85 @@ export const notifications = pgTable('notifications', {
   readAt: timestamp('read_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index('notifications_user_idx').on(t.userId, t.createdAt)])
+
+// ───────── Sosyal genişleme (Faz 5b) ─────────
+
+export const groups = pgTable('groups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+})
+export const groupMembers = pgTable('group_members', {
+  groupId: uuid('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status').notNull(), // invited | joined
+  rankOptIn: boolean('rank_opt_in').notNull().default(false), // grup sıralamasında görün
+  invitedBy: uuid('invited_by'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.groupId, t.userId] }), index('group_members_user_idx').on(t.userId)])
+export const groupMessages = pgTable('group_messages', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  groupId: uuid('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  body: text('body').notNull(),
+  flagged: text('flagged'), // kural moderasyonu nedeni
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('group_messages_group_idx').on(t.groupId, t.createdAt)])
+
+/** Meydan okuma ve düello (scope=duel). İlerleme kayıtlardan hesaplanır, saklanmaz. */
+export const challenges = pgTable('challenges', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  creatorId: uuid('creator_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  metric: text('metric').notNull(),
+  param: real('param'),
+  target: real('target'),
+  startDay: date('start_day').notNull(),
+  endDay: date('end_day').notNull(),
+  scope: text('scope').notNull(), // friends | group | duel
+  groupId: uuid('group_id').references(() => groups.id, { onDelete: 'cascade' }),
+  template: text('template'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+})
+export const challengeMembers = pgTable('challenge_members', {
+  challengeId: uuid('challenge_id').notNull().references(() => challenges.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status').notNull(), // invited | joined | declined | left
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.challengeId, t.userId] }), index('challenge_members_user_idx').on(t.userId)])
+
+/** Birebir mesaj (yalnızca arkadaşlar). post_id: mesajla paylaşılan gönderi. */
+export const directMessages = pgTable('direct_messages', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  senderId: uuid('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  recipientId: uuid('recipient_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  body: text('body').notNull().default(''),
+  postId: uuid('post_id').references(() => posts.id, { onDelete: 'set null' }),
+  flagged: text('flagged'),
+  readAt: timestamp('read_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('dm_pair_idx').on(t.senderId, t.recipientId, t.createdAt), index('dm_recipient_idx').on(t.recipientId, t.readAt)])
+
+export const nudges = pgTable('nudges', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  senderId: uuid('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  recipientId: uuid('recipient_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // water | workout
+  day: date('day').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('nudges_sender_idx').on(t.senderId, t.day)])
+
+/** 24 saatlik "Bugün salondaydım" kartları (arkadaşlara). */
+export const stories = pgTable('stories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  body: text('body').notNull().default(''),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull().default({}),
+  mediaId: uuid('media_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('stories_user_idx').on(t.userId, t.createdAt)])

@@ -7,6 +7,8 @@ import { fmtNum } from '@/lib/calc'
 import { TopBar } from '@/components/ui'
 import PostCard, { Avatar } from '@/components/social/PostCard'
 import { RelButton } from '../../sosyal/SocialClient'
+import { partnerStatus, pendingPRs } from '@/lib/social2-data'
+import { FriendTools, PendingPRs } from './ProfileExtras'
 
 export const metadata: Metadata = { title: 'Profil · DgFit' }
 const VIS: Record<string, string> = { public: 'Herkese açık profil', friends: 'Yalnızca arkadaşlar', private: 'Gizli profil' }
@@ -31,6 +33,7 @@ export default async function Page(props: { params: Promise<{ username: string }
     </div>
   )
   const self = v.rel === 'self'
+  const [partner, pend] = await Promise.all([v.rel === 'friend' ? partnerStatus(me.id, v.id) : null, self || (v.rel === 'friend' && v.showcase) ? pendingPRs(v.id) : []])
   return (
     <div className="px-4 pt-5 flex flex-col gap-3" data-testid="profile">
       <TopBar back="/sosyal" title={v.username} right={self ? <Link href="/sosyal/ayarlar" className="h-11 px-3 rounded-full bg-surface-2 text-[13px] font-bold inline-flex items-center">Düzenle</Link> : undefined} />
@@ -58,6 +61,8 @@ export default async function Page(props: { params: Promise<{ username: string }
         ) : null}
       </section>
 
+      {partner ? <FriendTools userId={v.id} username={v.username} partner={partner} /> : null}
+      <PendingPRs prs={pend} self={self} canWitness={v.rel === 'friend'} />
       {v.showcase ? (
         <section className="card p-5 flex flex-col gap-2" aria-label="PR vitrini" data-testid="showcase">
           <span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">PR vitrini</span>

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin'
 import { moderationQueue } from '@/lib/social-data'
+import { proofQueue } from '@/lib/social2-data'
+import { ProofButton } from './ModButton'
 import { TopBar } from '@/components/ui'
 import { ModButton } from './ModButton'
 
@@ -9,7 +11,7 @@ export const metadata: Metadata = { title: 'Moderasyon · DgFit' }
 
 export default async function Page() {
   await requireAdmin()
-  const q = await moderationQueue()
+  const [q, proofs] = await Promise.all([moderationQueue(), proofQueue()])
   return (
     <div className="px-4 pt-5 flex flex-col gap-3" data-testid="moderation">
       <TopBar back="/profil" title="Moderasyon" />
@@ -25,6 +27,16 @@ export default async function Page() {
       </section>
       <section className="card p-4 flex flex-col gap-2"><span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Bekleyen yorumlar ({q.comments.length})</span>
         {q.comments.map((c) => <div key={c.id} className="flex flex-col gap-1 border-b border-line last:border-0 pb-2"><span className="text-[13px]"><b>{c.username}</b>: {c.body}</span><div className="flex gap-2"><ModButton type="comment" id={c.id} approve label="Yayınla" /><ModButton type="comment" id={c.id} approve={false} label="Sil" /></div></div>)}
+      </section>
+      <section className="card p-4 flex flex-col gap-2" data-testid="mod-proofs"><span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Rekor kanıtları ({proofs.length})</span>
+        {proofs.map((p) => (
+          <div key={p.id} className="flex flex-col gap-1 border-b border-line last:border-0 pb-2" data-testid="mod-proof">
+            <span className="text-[13px]"><b>{p.username}</b> · {p.name} {p.value} kg · {p.reason}</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={p.proof} alt="Kanıt" className="w-40 rounded-xl" />
+            <div className="flex gap-2"><ProofButton id={p.id} approve label="Onayla" /><ProofButton id={p.id} approve={false} label="Reddet" /></div>
+          </div>
+        ))}
       </section>
       <section className="card p-4 flex flex-col gap-2"><span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Açık şikayetler ({q.reports.length})</span>
         {q.reports.map((r) => (

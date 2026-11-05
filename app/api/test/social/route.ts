@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { getUser } from '@/lib/auth'
 import { db, schema } from '@/lib/db'
+import { createFromTemplate, saveWorkout } from '@/lib/fitness-data'
 
 /**
  * Yalnızca DGFIT_TEST_HOOKS=1 ile (canlıda 404). `records`: hareket anahtarı + kg → rekor kaydı (vitrin testi için).
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
   if (process.env.DGFIT_TEST_HOOKS !== '1') return new NextResponse(null, { status: 404 })
   const u = await getUser()
   if (!u) return NextResponse.json({ error: 'oturum yok' }, { status: 401 })
-  const { records = [], recipe = false } = (await req.json().catch(() => ({}))) as { records?: { key: string; kg: number }[]; recipe?: boolean }
+  const { records = [], recipe = false, finishWorkout = null, program = false } = (await req.json().catch(() => ({}))) as { records?: { key: string; kg: number }[]; recipe?: boolean; finishWorkout?: { key: string; kg: number; reps: number; sets: number } | null; program?: boolean }
   for (const r of records.slice(0, 5)) {
     const [x] = await db.select({ id: schema.exercises.id }).from(schema.exercises).where(eq(schema.exercises.key, r.key)).limit(1)
     if (!x) continue
@@ -27,5 +28,16 @@ export async function POST(req: Request) {
       portions: [{ label: '1 porsiyon (250 g)', g: 250 }, { label: '100 g', g: 100 }], recipe: { yield: 500, raw: 500, servings: 2, ingredients: [{ foodId: null, name: 'Yulaf ezmesi', g: 100 }, { foodId: null, name: 'Süt (yarım yağlı)', g: 400 }] }, search: 'test yulaf kasesi', approx: true }).returning({ id: schema.foods.id })
     recipeId = f.id
   }
-  return NextResponse.json({ ok: true, recipeId })
+  // Gerçek kayıt yolu (saveWorkout → rekor/şüphe + workout.finished olayı → partner bildirimi)
+  let workout: unknown = null
+  if (finishWorkout) {
+    const [x] = await db.select({ id: schema.exercises.id }).from(schema.exercises).where(eq(schema.exercises.key, finishWorkout.key)).limit(1)
+    if (x) {
+      const now = Date.now()
+      workout = await saveWorkout(u.id, { clientId: 'test-' + crypto.randomUUID(), programDayId: null, name: 'Test antrenmanı', startedAt: new Date(now - 40 * 60000).toISOString(), endedAt: new Date(now).toISOString(), notes: null, pain: false,
+        exercises: [{ exerciseId: x.id, sets: Array.from({ length: finishWorkout.sets }, (_, i) => ({ kg: finishWorkout.kg, reps: finishWorkout.reps, rir: 1, type: 'normal' as const, completedAt: new Date(now - (finishWorkout.sets - i) * 120000).toISOString(), suggestedKg: null, suggestedReps: null, feedback: null })) }] })
+    }
+  }
+  const programId = program ? await createFromTemplate(u.id, 'fullbody') : null
+  return NextResponse.json({ ok: true, recipeId, workout, programId })
 }

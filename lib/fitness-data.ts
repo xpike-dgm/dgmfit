@@ -10,6 +10,7 @@ import { cardioKcal, detectPRs, e1rm, mergeRecords, sessionRecords, setVolume, s
 import { TEMPLATES, generateProgram, instantiate, type ProgramDay } from './programs'
 import { detectPlateau, periodTarget, weekIndex, type Periodization } from './progress'
 import { gzAdvance, gzSets, type GzState, type Tier } from './schemes'
+import { prSuspicious } from './social-rank'
 import { dayMacros } from './food-data'
 import { minuteOfDay } from './water-data'
 
@@ -346,7 +347,17 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
   const day = dayString(started)
   const prevRecs = ids.length ? await db.select().from(schema.exerciseRecords).where(and(eq(schema.exerciseRecords.userId, userId), inArray(schema.exerciseRecords.exerciseId, ids))) : []
   const prevBy = new Map(prevRecs.map((r) => [r.exerciseId, r.records as unknown as Records]))
-  const prs: { exerciseId: number; type: string; value: number; previous: number }[] = []
+  const prs: { exerciseId: number; type: string; value: number; previous: number; suspect?: string | null }[] = []
+  // PR doğrulama (Faz 5b): 7 gün önceki en iyi set (kg ve e1RM) ve vücut ağırlığı oranı
+  const weekAgo = new Date(Date.now() - 7 * 86400000)
+  const old7 = ids.length ? await db.select({ exerciseId: schema.workoutSets.exerciseId, kg: schema.workoutSets.kg, reps: schema.workoutSets.reps, rir: schema.workoutSets.rir }).from(schema.workoutSets)
+    .where(and(eq(schema.workoutSets.userId, userId), inArray(schema.workoutSets.exerciseId, ids), sql`${schema.workoutSets.completedAt} <= ${weekAgo.toISOString()}`, sql`${schema.workoutSets.type} <> 'warmup'`)) : []
+  const keyOf = new Map((ids.length ? await db.select({ id: schema.exercises.id, key: schema.exercises.key }).from(schema.exercises).where(inArray(schema.exercises.id, ids)) : []).map((r) => [r.id, r.key]))
+  const best7 = (exId: number, type: string) => {
+    const xs = old7.filter((x) => x.exerciseId === exId)
+    if (!xs.length) return null
+    return type === 'kg' ? Math.max(...xs.map((x) => x.kg)) : Math.max(...xs.map((x) => e1rm(x.kg, x.reps, x.rir)))
+  }
 
   const id = await db.transaction(async (tx) => {
     const [w] = await tx.insert(schema.workouts).values({
@@ -367,7 +378,8 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
       await tx.insert(schema.exerciseRecords).values({ userId, exerciseId: e.exerciseId, records: merged as unknown as Record<string, number> })
         .onConflictDoUpdate({ target: [schema.exerciseRecords.userId, schema.exerciseRecords.exerciseId], set: { records: merged as unknown as Record<string, number>, updatedAt: new Date() } })
     }
-    if (prs.length) await tx.insert(schema.personalRecords).values(prs.map((r) => ({ userId, exerciseId: r.exerciseId, workoutId: w.id, type: r.type, value: r.value, previous: r.previous })))
+    for (const r of prs) r.suspect = prSuspicious({ type: r.type, value: r.value, best7dAgo: best7(r.exerciseId, r.type === 'kg' ? 'kg' : 'e1rm'), exerciseKey: keyOf.get(r.exerciseId) ?? '', bodyKg, sex: (profile?.sex as 'male' | 'female') ?? 'male' })
+    if (prs.length) await tx.insert(schema.personalRecords).values(prs.map((r) => ({ userId, exerciseId: r.exerciseId, workoutId: w.id, type: r.type, value: r.value, previous: r.previous, suspect: r.suspect ?? null })))
     if (p.programDayId) {
       const [d] = await tx.select({ programId: schema.programDays.programId, idx: schema.programDays.idx }).from(schema.programDays).where(eq(schema.programDays.id, p.programDayId)).limit(1)
       if (d) {

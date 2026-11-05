@@ -41,10 +41,10 @@ export async function relationOf(viewerId: string, targetId: string): Promise<Re
   const [fo] = await db.select({ x: schema.follows.followerId }).from(schema.follows).where(and(eq(schema.follows.followerId, viewerId), eq(schema.follows.followeeId, targetId))).limit(1)
   return fo ? 'follower' : 'none'
 }
-async function friendIds(userId: string): Promise<string[]> {
+export async function friendIds(userId: string): Promise<string[]> {
   return (await db.select({ id: schema.friendLinks.friendId }).from(schema.friendLinks).where(and(eq(schema.friendLinks.userId, userId), eq(schema.friendLinks.status, 'accepted')))).map((r) => r.id)
 }
-async function hiddenIds(userId: string): Promise<{ blocked: Set<string>; muted: Set<string> }> {
+export async function hiddenIds(userId: string): Promise<{ blocked: Set<string>; muted: Set<string> }> {
   const rows = await db.select().from(schema.userBlocks).where(or(eq(schema.userBlocks.userId, userId), and(eq(schema.userBlocks.targetId, userId), eq(schema.userBlocks.kind, 'block'))))
   const blocked = new Set<string>(), muted = new Set<string>()
   for (const r of rows) {
@@ -56,15 +56,18 @@ async function hiddenIds(userId: string): Promise<{ blocked: Set<string>; muted:
 
 // ───────── Bildirim ─────────
 
-export const NOTIFY_KINDS = { friend_request: 'Arkadaşlık isteği', friend_accept: 'İstek kabulü', reaction: 'Tepkiler', comment: 'Yorumlar', follow: 'Yeni takipçi' } as const
+export const NOTIFY_KINDS = { friend_request: 'Arkadaşlık isteği', friend_accept: 'İstek kabulü', reaction: 'Tepkiler', comment: 'Yorumlar', follow: 'Yeni takipçi', message: 'Mesajlar', nudge: 'Dürtmeler', group_invite: 'Grup davetleri', challenge_invite: 'Meydan okuma davetleri', partner_workout: 'Partner antrenmanı', pr_witness: 'Rekor tanıklığı' } as const
 export type NotifyKind = keyof typeof NOTIFY_KINDS
 const TEXT: Record<NotifyKind, (n: string) => string> = {
   friend_request: (n) => `${n} sana arkadaşlık isteği gönderdi`, friend_accept: (n) => `${n} arkadaşlık isteğini kabul etti`,
   reaction: (n) => `${n} gönderine tepki verdi`, comment: (n) => `${n} gönderine yorum yaptı`, follow: (n) => `${n} seni takip etmeye başladı`,
+  message: (n) => `${n} sana mesaj gönderdi`, nudge: (n) => `${n} seni dürttü`, group_invite: (n) => `${n} seni bir gruba davet etti`,
+  challenge_invite: (n) => `${n} seni bir meydan okumaya davet etti`, partner_workout: (n) => `Partnerin ${n} antrenmanını bitirdi 💪`, pr_witness: (n) => `${n} rekoruna tanıklık etti`,
 }
 export const notifyText = (kind: string, actor: string) => (TEXT[kind as NotifyKind] ?? (() => 'Yeni bildirim'))(actor)
 
-async function notify(userId: string, kind: NotifyKind, actorId: string, postId: string | null = null) {
+/** Bildirim: uygulama içi kayıt + tercih açıksa push. `extra`: push metnine ek (ör. dürtme mesajı), `url`: dokununca açılacak sayfa. */
+export async function notify(userId: string, kind: NotifyKind, actorId: string, postId: string | null = null, opt: { extra?: string; url?: string } = {}) {
   if (userId === actorId || (await relationOf(userId, actorId)) === 'blocked') return
   // tepki bildirimi gönderi başına saatte 1 (yığılmasın)
   if (kind === 'reaction' && postId) {
@@ -75,7 +78,7 @@ async function notify(userId: string, kind: NotifyKind, actorId: string, postId:
   const p = await socialProfile(userId)
   if ((p.notify as Record<string, boolean>)[kind] === false) return
   const [a] = await db.select({ username: schema.users.username }).from(schema.users).where(eq(schema.users.id, actorId)).limit(1)
-  try { await sendToUser(userId, { title: 'DgFit Sosyal', body: notifyText(kind, a?.username ?? 'Biri'), tag: 'social-' + kind, url: postId ? `/sosyal/p/${postId}` : '/sosyal/bildirimler' }) } catch { /* push yoksa uygulama içi kalır */ }
+  try { await sendToUser(userId, { title: 'DgFit Sosyal', body: notifyText(kind, a?.username ?? 'Biri') + (opt.extra ? ': ' + opt.extra : ''), tag: 'social-' + kind, url: opt.url ?? (postId ? `/sosyal/p/${postId}` : '/sosyal/bildirimler') }) } catch { /* push yoksa uygulama içi kalır */ }
 }
 export async function notificationsFor(userId: string) {
   const rows = await db.select({ n: schema.notifications, actor: schema.users.username }).from(schema.notifications)

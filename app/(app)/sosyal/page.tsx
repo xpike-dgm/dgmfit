@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
 import { feed, suggestions, unreadCount } from '@/lib/social-data'
+import { storyStrip, unreadDMs } from '@/lib/social2-data'
+import Stories from './Stories'
+import { mediaEnabled } from '@/lib/media'
 import PostCard, { Avatar } from '@/components/social/PostCard'
 import { SuggestButton } from './SocialClient'
 
@@ -12,7 +15,7 @@ export default async function Page(props: { searchParams: Promise<{ g?: string }
   const u = await requireUser()
   const { g } = await props.searchParams
   const tab = g === 'kronolojik' || g === 'kaydedilen' ? g : 'onerilen'
-  const [posts, unread, sugg] = await Promise.all([feed(u.id, tab === 'kaydedilen' ? 'kronolojik' : tab, tab === 'kaydedilen'), unreadCount(u.id), suggestions(u.id)])
+  const [posts, unread, sugg, stories, dms] = await Promise.all([feed(u.id, tab === 'kaydedilen' ? 'kronolojik' : tab, tab === 'kaydedilen'), unreadCount(u.id), suggestions(u.id), storyStrip(u.id), unreadDMs(u.id)])
   return (
     <div className="px-4 pt-5 flex flex-col gap-3">
       <header className="flex items-center gap-2">
@@ -23,6 +26,12 @@ export default async function Page(props: { searchParams: Promise<{ g?: string }
           🔔{unread ? <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-orange text-[11px] font-bold text-bg flex items-center justify-center num">{unread}</span> : null}
         </Link>
       </header>
+      <nav className="grid grid-cols-3 gap-2" aria-label="Sosyal bölümler">
+        <Link href="/sosyal/mesaj" className="relative h-11 rounded-2xl bg-surface-2 text-[13px] font-bold inline-flex items-center justify-center" data-testid="dm-link">Mesajlar{dms ? <span className="ml-1.5 min-w-5 h-5 px-1 rounded-full bg-orange text-[11px] text-bg num inline-flex items-center justify-center">{dms}</span> : null}</Link>
+        <Link href="/sosyal/meydan" className="h-11 rounded-2xl bg-surface-2 text-[13px] font-bold inline-flex items-center justify-center">Meydan okuma</Link>
+        <Link href="/sosyal/gruplar" className="h-11 rounded-2xl bg-surface-2 text-[13px] font-bold inline-flex items-center justify-center">Gruplar</Link>
+      </nav>
+      <Stories stories={stories} mediaOn={mediaEnabled()} />
       <div className="flex gap-2">
         <Link href="/sosyal/yeni" className="flex-1 h-12 rounded-full bg-lime text-lime-ink font-extrabold inline-flex items-center justify-center">Paylaş</Link>
         <Link href={`/u/${u.username}`} className="h-12 px-4 rounded-full border border-line-2 font-bold inline-flex items-center">Profilim</Link>

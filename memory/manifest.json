@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "5a",
+  "phase": "5b",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -175,7 +175,23 @@
     "app/api/social/avatar/[userId]/route.ts",
     "app/api/test/social/route.ts",
     "tests/social.test.ts",
-    "tests/e2e/social.e2e.cjs"
+    "tests/e2e/social.e2e.cjs",
+    "lib/social-rank.ts",
+    "lib/social2-data.ts",
+    "app/(app)/sosyal/Stories.tsx",
+    "app/(app)/sosyal/meydan/page.tsx",
+    "app/(app)/sosyal/meydan/NewChallenge.tsx",
+    "app/(app)/sosyal/meydan/[id]/page.tsx",
+    "app/(app)/sosyal/gruplar/page.tsx",
+    "app/(app)/sosyal/gruplar/GroupClient.tsx",
+    "app/(app)/sosyal/gruplar/[id]/page.tsx",
+    "app/(app)/sosyal/mesaj/page.tsx",
+    "app/(app)/sosyal/mesaj/[username]/Thread.tsx",
+    "app/(app)/u/[username]/ProfileExtras.tsx",
+    "app/api/social/story/[id]/route.ts",
+    "app/api/social/proof/[id]/route.ts",
+    "tests/social2.test.ts",
+    "tests/e2e/social2.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -229,7 +245,15 @@
     "post_comments",
     "post_saves",
     "reports",
-    "notifications"
+    "notifications",
+    "groups",
+    "group_members",
+    "group_messages",
+    "challenges",
+    "challenge_members",
+    "direct_messages",
+    "nudges",
+    "stories"
   ],
   "routes": [
     "/",
@@ -297,7 +321,15 @@
     "/yonetim/moderasyon",
     "/api/social/media/[postId]/[idx]",
     "/api/social/avatar/[userId]",
-    "/api/test/social"
+    "/api/test/social",
+    "/sosyal/meydan",
+    "/sosyal/meydan/[id]",
+    "/sosyal/gruplar",
+    "/sosyal/gruplar/[id]",
+    "/sosyal/mesaj",
+    "/sosyal/mesaj/[username]",
+    "/api/social/story/[id]",
+    "/api/social/proof/[id]"
   ],
   "events": [
     "profile.onboarded",
@@ -654,6 +686,35 @@
       "saveRecipeCopy",
       "report",
       "moderationQueue"
+    ],
+    "lib/social-rank.ts": [
+      "dots",
+      "consistency",
+      "progressOf",
+      "rankBoard",
+      "duelResult",
+      "prSuspicious",
+      "nudgeAllowed",
+      "storyAlive"
+    ],
+    "lib/social2-data.ts": [
+      "createGroup",
+      "groupView",
+      "strengthScore",
+      "consistencyScore",
+      "createChallenge",
+      "challengeView",
+      "sendDM",
+      "thread",
+      "nudge",
+      "setPartner",
+      "notifyPartners",
+      "copyPartnerProgram",
+      "createStory",
+      "storyStrip",
+      "witnessPR",
+      "attachProof",
+      "resolveProof"
     ]
   },
   "dependencies": {
@@ -682,6 +743,7 @@
     "0008_ai_task_models.sql",
     "0009_coach.sql",
     "0010_planner.sql",
-    "0011_social.sql"
+    "0011_social.sql",
+    "0012_social2.sql"
   ]
 }
