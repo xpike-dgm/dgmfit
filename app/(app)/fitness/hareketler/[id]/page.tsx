@@ -6,6 +6,8 @@ import { getExercise, imageUrl } from '@/lib/fitness-data'
 import { exerciseProgress } from '@/lib/fitness-stats'
 import { LEVELS } from '@/lib/progress'
 import ExercisePhoto from './ExercisePhoto'
+import ExerciseVideos from './ExerciseVideos'
+import { AG_MUSCLE_TR, AG_SOURCE, FEATURE_LABEL, featureDescription, hasLicensedFile, licensedUrl } from '@/lib/licensed'
 import { CATEGORY, EQUIPMENT, KIND, LEVEL, MUSCLES } from '@/lib/exercise-labels'
 import { e1rm, PR_LABEL, type PrType } from '@/lib/training'
 import { shortDate } from '@/lib/time'
@@ -19,6 +21,10 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
   if (!/^\d+$/.test(id)) notFound()
   const [x, pr] = await Promise.all([getExercise(u.id, Number(id)), exerciseProgress(u.id, Number(id))])
   if (!x || !pr) notFound()
+  const L = x.licensed
+  const vids = L ? { right: hasLicensedFile('videos', L.video.right) ? licensedUrl('videos', L.video.right) : null, wrong: hasLicensedFile('videos', L.video.wrong) ? licensedUrl('videos', L.video.wrong) : null } : null
+  const scores = L ? Object.entries(L.muscles).sort((a, b) => b[1] - a[1]) : []
+  const desc = L ? (L.desc.tr || L.desc.en) : ''
   const recs = x.records ? (Object.entries(x.records) as [PrType, number][]).filter(([, v]) => v > 0) : []
   return (
     <div className="flex flex-col gap-3 px-4">
@@ -28,7 +34,8 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
         {x.source !== 'user' && x.aliases?.[0] && x.aliases[0] !== x.nameTr ? <span className="text-[13px] text-mute -mt-2" data-testid="ex-tr-name">Türkçe: {x.aliases[0]}</span> : null}
         {x.photoId ? <img src={`/api/media/${x.photoId}`} alt={x.nameTr} className="w-full aspect-[4/3] object-cover rounded-2xl bg-surface-2" /> : null}
         {x.source === 'user' ? <ExercisePhoto exerciseId={x.id} has={!!x.photoId} /> : null}
-        {x.images.length ? (
+        {vids && (vids.right || vids.wrong) ? <ExerciseVideos right={vids.right} wrong={vids.wrong} name={x.nameTr} /> : null}
+        {x.images.length && !(vids && (vids.right || vids.wrong)) ? (
           <div className="grid grid-cols-2 gap-2">
             {x.images.slice(0, 2).map((im, i) => <ExImg key={im} src={imageUrl(im)} alt={`${x.nameTr} ${i === 0 ? 'başlangıç' : 'bitiş'} pozisyonu`} size={300} className="w-full aspect-square rounded-2xl" />)}
           </div>
@@ -39,6 +46,38 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
         <p className="text-[14px]"><span className="text-mute">Birincil:</span> <b>{x.primary.map((m) => MUSCLES[m] ?? m).join(', ') || '—'}</b>{x.secondary.length ? <><br /><span className="text-mute">İkincil:</span> {x.secondary.map((m) => MUSCLES[m] ?? m).join(', ')}</> : null}</p>
         <Link href={`/fitness/antrenman?hareket=${x.id}`} className={btn.primary}><Dumbbell size={20} />Bu hareketle antrenman başlat</Link>
       </section>
+      {L ? (
+        <section className="card p-5 flex flex-col gap-3" aria-label="Kas etkisi" data-testid="ex-licensed">
+          <div className="flex items-center justify-between gap-2">
+            <Eyebrow>Kas etkisi</Eyebrow>
+            {L.cns !== null ? <span className="text-[12.5px] font-bold px-2.5 py-1 rounded-full bg-surface-2 num" data-testid="ex-cns" title="Merkezi sinir sistemi (MSS) yorgunluk puanı">MSS yükü {fmtNum(L.cns)}/10</span> : null}
+          </div>
+          <div className="flex flex-col gap-2">
+            {scores.map(([k, r]) => (
+              <div key={k} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_28px] items-center gap-2 text-[13px]">
+                <span className="truncate font-semibold">{AG_MUSCLE_TR[k] ?? k}</span>
+                <span className="h-2.5 rounded-full bg-surface-3 overflow-hidden"><span className="block h-full rounded-full bg-acc" style={{ width: `${r * 10}%`, opacity: 0.45 + r / 20 }} /></span>
+                <b className="num text-right">{fmtNum(r)}</b>
+              </div>
+            ))}
+          </div>
+          {L.features.length ? (
+            <div className="flex flex-col gap-2 border-t border-line pt-3">
+              {L.features.map((f) => {
+                const d = featureDescription(f)
+                return (
+                  <details key={f} className="group">
+                    <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-acc/15 text-acc text-[12.5px] font-bold">{FEATURE_LABEL[f] ?? f}{d ? <span className="opacity-70 group-open:rotate-90 transition">›</span> : null}</summary>
+                    {d ? <p className="text-[13px] text-ink-2 leading-relaxed mt-1.5">{d}</p> : null}
+                  </details>
+                )
+              })}
+            </div>
+          ) : null}
+          {desc ? <p className="text-[14px] text-ink-2 leading-relaxed border-t border-line pt-3">{desc}</p> : null}
+          <a href={AG_SOURCE.url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-mute self-start" data-testid="ag-source">Kaynak: <b className="text-ink-2">{AG_SOURCE.label}</b> ↗</a>
+        </section>
+      ) : null}
       {x.steps.length ? (
         <section className="card p-5 flex flex-col gap-2" aria-label="Teknik">
           <Eyebrow>Teknik</Eyebrow>
@@ -48,7 +87,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
             <ul className="list-disc pl-5 flex flex-col gap-1 text-[14px] text-ink-2">{x.mistakes.map((s) => <li key={s}>{s}</li>)}</ul>
           </> : null}
         </section>
-      ) : <p className="card p-5 text-[13px] text-mute">{x.source === 'user' ? 'Kendi hareketin: teknik notu yok.' : 'Bu hareketin kaynakta adım adım talimatı yok. Görseller başlangıç ve bitiş pozisyonunu gösteriyor.'}</p>}
+      ) : L ? null : <p className="card p-5 text-[13px] text-mute">{x.source === 'user' ? 'Kendi hareketin: teknik notu yok.' : 'Bu hareketin kaynakta adım adım talimatı yok. Görseller başlangıç ve bitiş pozisyonunu gösteriyor.'}</p>}
       {pr.series.length >= 2 ? <E1rmChart series={pr.series} /> : null}
       {pr.plateau.plateau ? (
         <section className="card p-5 flex flex-col gap-2 border border-coach-line" aria-label="Plato" data-testid="plateau">

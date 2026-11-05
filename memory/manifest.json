@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-05",
-  "phase": "5g",
+  "phase": "5h",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -227,7 +227,11 @@
     "tests/day-card.test.ts",
     "app/api/yemek/gorsel/route.tsx",
     "app/(app)/yemek/DayCardSheet.tsx",
-    "public/fonts/manrope-700.ttf"
+    "public/fonts/manrope-700.ttf",
+    "lib/licensed.ts",
+    "scripts/licensed-map.mjs",
+    "tests/licensed.test.ts",
+    "tests/e2e/licensed.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -407,7 +411,8 @@
     "/yemek/takviyeler",
     "/yemek/takviyeler/yeni",
     "/yemek/takviyeler/[id]",
-    "/api/yemek/gorsel"
+    "/api/yemek/gorsel",
+    "/api/lisansli/[kind]/[file]"
   ],
   "events": [
     "profile.onboarded",
@@ -871,6 +876,7 @@
     "0012_social2.sql",
     "0013_design.sql",
     "0014_whitelist.sql",
-    "0015_supplements.sql"
+    "0015_supplements.sql",
+    "0016_licensed.sql"
   ]
 }

@@ -27,7 +27,7 @@ export async function ensureGym(userId: string) {
   return n
 }
 
-const visible = (userId: string) => and(isNull(schema.exercises.deletedAt), or(eq(schema.exercises.source, 'fedb'), eq(schema.exercises.userId, userId)))
+const visible = (userId: string) => and(isNull(schema.exercises.deletedAt), or(isNull(schema.exercises.userId), eq(schema.exercises.userId, userId)))
 
 export interface ExerciseFilter { q?: string; muscle?: string; equipment?: string; pattern?: string; level?: string; limit?: number }
 
@@ -46,8 +46,9 @@ export async function searchExercises(userId: string, f: ExerciseFilter) {
     id: schema.exercises.id, key: schema.exercises.key, nameTr: schema.exercises.nameTr, nameEn: schema.exercises.nameEn, equipment: schema.exercises.equipment,
     primary: schema.exercises.primary, kind: schema.exercises.kind, pattern: schema.exercises.pattern, level: schema.exercises.level, images: schema.exercises.images,
     curated: schema.exercises.curated, source: schema.exercises.source, category: schema.exercises.category,
+    video: sql<boolean>`(${schema.exercises.licensed}->'video'->>'right') is not null`,
   }).from(schema.exercises).where(and(...conds))
-    .orderBy(...score, desc(sql`${schema.exercises.source} = 'user'`), desc(schema.exercises.curated), asc(schema.exercises.nameTr))
+    .orderBy(...score, desc(sql`${schema.exercises.source} = 'user'`), desc(sql`${schema.exercises.licensed} is not null`), desc(schema.exercises.curated), asc(schema.exercises.nameTr))
     .limit(f.limit ?? 60)
 }
 

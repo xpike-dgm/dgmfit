@@ -10,7 +10,9 @@ mkdir -p dist/.next && cp -a .next/static dist/.next/static
 mkdir -p dist/public && cp -a public/. dist/public/
 [ -f dist/public/sw.js ] && [ -f dist/public/fonts/manrope-700.ttf ] || { echo "PAKET: public eksik"; exit 1; }
 cp -a drizzle dist/drizzle
-cp scripts/migrate.mjs dist/migrate.mjs
+cp scripts/migrate.mjs scripts/licensed-map.mjs dist/
+# Lisanslı içerik paketi depoda değildir; yalnızca sunucuya tek seferlik taşımak için açıkça istenirse pakete girer
+if [ -n "${DGFIT_LICENSED_PACK:-}" ]; then cp -a "$DGFIT_LICENSED_PACK" dist/licensed-pack; echo "lisanslı paket eklendi (tek seferlik)"; fi
 mkdir -p dist/data && cp data/foods-seed.json.gz data/exercises-seed.json.gz dist/data/
 rm -rf dist/node_modules/postgres && cp -a node_modules/postgres dist/node_modules/postgres
 # kaynak kod yedeği (sunucuda arşivlenir)

@@ -74,3 +74,11 @@ Beyaz liste (Faz 5e): canlı e2e kayıtları davet koduyla açılır. Kod repo d
 
 Test kullanıcıları `test_` / `dbg_` önekiyle açılır ve testten sonra silinir (kullanıcının `deneme` hesabı korunur):
 `docker compose exec -T db psql -U dgfit -d dgfit -c "delete from users where username like 'test\_%' or username like 'dbg\_%'"`
+
+## Lisanslı içerik paketi (Ağırsağlam, 2026-11-06)
+- Yer: `/opt/dgfit-pwa/licensed/agirsaglam/` → kapsayıcıda `/licensed/agirsaglam` (compose: `./licensed:/licensed:ro`, `DGFIT_LICENSED_DIR`). İçerik: `exercises.json`, `programs.free.json` (yalnızca Free), `anatomy/`, `plates/`, `texts/`, `videos/` (700 mp4, kaynak CDN'den indirildi), `NOTICE.txt` (izin özeti).
+- **Depoya asla girmez** (depo herkese açık; `.gitignore`: `licensed/`, `licensed-pack/`). Yedek: `/opt/dgfit-pwa/backups/licensed-agirsaglam-pack.tgz` (videosuz; videolar `exercises.json` içindeki adreslerden yeniden indirilebilir).
+- Yeniden içe aktarma: paket ya da `scripts/licensed-map.mjs` değişince migrate sürüm özetini (app_config `licensed_agirsaglam`) karşılaştırır ve yeniler.
+- Yerel test: paketin kopyası yalnızca oturumun geçici klasöründe; `DGFIT_LICENSED_DIR=<yol> ./scripts/verify.sh`. Paket yoksa lisanslı e2e kendini atlar.
+- İlk taşıma: tek seferlik `DGFIT_LICENSED_PACK=<yol> ./scripts/bundle.sh` → deploy → sunucuda `current/licensed-pack` taşınır (normal paketlerde yok).
+

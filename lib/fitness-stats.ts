@@ -41,7 +41,7 @@ export async function statsOverview(userId: string) {
 }
 
 export async function exerciseProgress(userId: string, exerciseId: number) {
-  const [x] = await db.select().from(schema.exercises).where(and(eq(schema.exercises.id, exerciseId), isNull(schema.exercises.deletedAt), or(eq(schema.exercises.source, 'fedb'), eq(schema.exercises.userId, userId)))).limit(1)
+  const [x] = await db.select().from(schema.exercises).where(and(eq(schema.exercises.id, exerciseId), isNull(schema.exercises.deletedAt), or(isNull(schema.exercises.userId), eq(schema.exercises.userId, userId)))).limit(1)
   if (!x) return null
   const hist = (await exerciseHistory(userId, [exerciseId], 60)).get(exerciseId) ?? []
   const series = hist.map((h) => ({ day: h.day, e1rm: Math.max(0, ...h.sets.filter((s) => s.type !== ('warmup' as SetType)).map((s) => e1rm(s.kg, s.reps, s.rir))) }))
@@ -61,7 +61,7 @@ export async function exerciseProgress(userId: string, exerciseId: number) {
   const pool = await db.select({
     id: schema.exercises.id, nameTr: schema.exercises.nameTr, primary: schema.exercises.primary, secondary: schema.exercises.secondary, equipment: schema.exercises.equipment,
     kind: schema.exercises.kind, pattern: schema.exercises.pattern, mechanic: schema.exercises.mechanic, curated: schema.exercises.curated, category: schema.exercises.category,
-  }).from(schema.exercises).where(and(isNull(schema.exercises.deletedAt), or(eq(schema.exercises.source, 'fedb'), eq(schema.exercises.userId, userId)), sql`${schema.exercises.primary} ->> 0 = ${x.primary[0] ?? ''}`))
+  }).from(schema.exercises).where(and(isNull(schema.exercises.deletedAt), or(isNull(schema.exercises.userId), eq(schema.exercises.userId, userId)), sql`${schema.exercises.primary} ->> 0 = ${x.primary[0] ?? ''}`))
   const alts = x.primary.length ? alternatives(x as unknown as ExLite, pool as ExLite[], gym ? new Set(gym.equipment) : undefined) : []
   return { exercise: x, series, plateau, level, lift, best, alternatives: alts }
 }

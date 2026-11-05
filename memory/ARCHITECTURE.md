@@ -72,6 +72,8 @@ Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 
 ## Veri modeli
 
+Faz 5h (lisanslı içerik): `exercises.licensed` jsonb (Ağırsağlam kas puanları 23 anahtar → 1–10, MSS puanı, etiketler, doğru/yanlış video dosyası, açıklama; 0016). Ad eşleşen kütüphane hareketine yazılır; eşleşmeyenler `source='agirsaglam'`, `key='ag-<id>'`, `curated=true`. Kütüphane görünürlüğü: `user_id is null or user_id = ben`. Eşleme `scripts/licensed-map.mjs` (migrate ve test ortak), okuma `lib/licensed.ts`, dosya ucu `app/api/lisansli/[kind]/[file]` (oturum, Range).
+
 Hareket adları (2026-11-05): `exercises.name_tr` = görünen ad (kütüphanede İngilizce kaynak adı), Türkçe ad `aliases[0]`; arama `search` iki dili de içerir.
 
 Faz 5g (günlük özet görseli): `GET /api/yemek/gorsel?gun=&tip=a|b` → PNG (`next/og` ImageResponse; Satori yalnızca flex; TTF yazı tipleri `public/fonts` Manrope + Space Grotesk, OFL). A koyu kart 1080×1350 (10 mikro), B açık hikâye 1080×1920 (6 mikro). Mikro referansları ve tonlar `lib/day-card.ts` (saf, testli). Yemek bandının sağ üstünde indirme düğmesi → `DayCardSheet` (iki önizleme, Kaydet = indirme, destekleyen cihazda Paylaş). Görselde kullanıcı adı yok.

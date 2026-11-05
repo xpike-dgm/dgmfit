@@ -6,3 +6,7 @@ next-env.d.ts
 .env*
 release.tgz
 .claude/settings.local.json
+
+# Lisanslı içerik paketi (Ağırsağlam) asla depoya girmez
+licensed/
+licensed-pack/

@@ -333,7 +333,7 @@ export const kcalAdjustments = pgTable('kcal_adjustments', {
 export const exercises = pgTable('exercises', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
   key: text('key').notNull(), // fedb: veri setindeki id; user: u-<uuid>
-  source: text('source').notNull(), // fedb | user
+  source: text('source').notNull(), // fedb | user | agirsaglam (lisanslı paket)
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   nameTr: text('name_tr').notNull(),
   nameEn: text('name_en'),
@@ -352,6 +352,8 @@ export const exercises = pgTable('exercises', {
   mistakes: jsonb('mistakes').$type<string[]>().notNull().default([]),
   curated: boolean('curated').notNull().default(false),
   photoId: uuid('photo_id'), // özel hareket fotoğrafı (media_blobs)
+  /** Lisanslı içerik (Ağırsağlam, DgFit'e özel izin): kas puanları (Ağırsağlam kas anahtarı → 1–10), MSS yorgunluk puanı, etiketler, doğru/yanlış video dosyası, açıklama */
+  licensed: jsonb('licensed').$type<{ src: 'agirsaglam'; id: number; muscles: Record<string, number>; cns: number | null; features: string[]; video: { right: string | null; wrong: string | null }; desc: { tr: string; en: string } }>(),
   search: text('search').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
