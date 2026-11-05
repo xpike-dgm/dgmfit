@@ -121,3 +121,8 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-05 | Yeni tasarım (onaylı artifact `2smYSfpGdAX2739CrrjZ3v`): modül paletleri, dengeli koyu (zemin #14161B) + açık (#F3F4F6) + otomatik tema; tema cihaz başına çerezde (hesapta değil), sunucu ilk çizimde basar | Kullanıcı incelemesi 6/10 | Tasarım |
 | 2026-11-05 | Su ilerlemesi bandın halkasıyla; varsayılan "şişe" ayarı halkaya taşındı (0013), şişe/dalga ayarlardan seçilebilir ve bant içinde beyaz çizilir | Onaylı tasarım "bire bir" | Tasarım |
 | 2026-11-05 | Ayarlar menü + ayrı sayfalar; ayrı sayfalar aynı kaydetme aksiyonunu tüm durumla çağırır (yalnızca kendi bölümü görünür), veri modeli değişmedi | Kullanıcı: "her şey için farklı sayfa" | Teknik |
+| 2026-11-05 | Geri düğmesi: sekme içi gezinme izi (sessionStorage) varsa tarayıcı geçmişi, yoksa sayfanın üst sayfası | Kullanıcı: "o buton nereden gönderdiyse oraya" | UX |
+| 2026-11-05 | Profil/hedef değişikliği yeni hedef satırıyla bugünden başlar (başlangıç = güncel trend kilo); geçmiş günlerin hedefleri değişmez; kurulumdaki tempo kuralları aynen geçerli | Veri bütünlüğü | Ürün |
+| 2026-11-05 | Aktivite seviyesi antrenman dışı günlük hayatı anlatır (çarpanlar değişmedi); antrenman ve kardiyo kalorisi ayrıca eklenir | Çift sayımı önlemek; dış inceleme UX-13 | Hesap |
+| 2026-11-05 | Kas ısı haritası çizimi kaldırıldı; profesyonel anatomi görseli gelene kadar kas grubu listesi | Kullanıcı: "acemi işler yapma, görsel gerekirse söyle" | Tasarım |
+| 2026-11-05 | free-exercise-db kamu malı (Unlicense) olduğundan arayüzdeki kaynak yazısı kaldırıldı; kaynak DECISIONS'ta kayıtlı | Kullanıcı isteği; lisans atıf istemiyor | Kaynak |

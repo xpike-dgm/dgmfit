@@ -2,6 +2,15 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5d tamamlandı
+- Ortak: `components/Sheet.tsx` `useSheet` (tutamaç/başlıktan aşağı çekince 90 px ya da hızlı kaydırmada kapanır, az çekince geri döner; boşluk/Esc/Kapat aynı animasyon), QuickAdd aynı davranışa geçti; `BackButton` (ModShell sekme içi gezinme izi tutar; iz varsa tarayıcı geri, yoksa üst sayfa); genel `input{min-width:0}` + `button{flex-shrink:0}`; `ExImg` yer tutucu; alt bar 350 px altında yalnız simge.
+- Bugün: hafta şeridi bantta, makrolar tek satır, Fit/Su/Antrenman kutuları, koç kartı 3 satır. Fit: 5 araç ayrı sayfa (`/fit/{gunler,banka,checkin,senaryo,karb}`, ortak `load.ts`). Su: kaplar 3 sütun ızgara.
+- Fitness: program oluştur 3 seçenek (`olustur` ortam → ekipman açılır menüsü, `sablonlar` + `[id]` inceleme, `bos`); düzenleyicide hareket Düzenle/Sil ve `removeDay` (geçmiş antrenman korunur, sıra yeniden numaralanır); periyodizasyon en alta; kardiyo türü açılır menü, nabız açılır; canlı antrenman set tablosu (Set · Önceki · kg · Tekrar · RIR · ✓), ilerleme çubuğu, "tekrar yedek" açıklaması; Fitness ana sayfasında gün seçici (tamamlanan gün sırayı ondan sonrasına alır — mevcut kural); kas ısı haritası çizimi kaldırıldı → grup listesi; hareket filtreleri tek pencere + kaldırılabilir etiket; kaynak yazıları kaldırıldı (veri kamu malı); kendi hareketine oluştururken fotoğraf.
+- Profil: `replanAction` (boy, aktivite, hedef türü/kilo/süre → güncel trend kiloyla bugünden yeni hedef; 1,5 kg/hf sınırı) + önizlemeli `PlanForm`.
+- UX: aktivite açıklamaları antrenman hariç günlük hayat; kurulumda değere dokunup yazma, Atla üstte; ölçü birimleri; faz metni silindi; su ilk durumda olumsuz mesaj yok; boş istatistikte grafik yok; sosyal kısa düğmeler; alışveriş boş durumunda Menü oluştur; AI yok mesajı tek bileşen (`AiOff`); meydan okuma tarihleri; yönetici model alanları tam genişlik; bildirim satırları 52 px.
+- Bulunan kusurlar: koç ve progress e2e eski program sayfası/"@ RIR" metnine bağlıydı → güncellendi; ux e2e ilk sürümünde açılış animasyonu bitmeden tutamaç ölçülüyordu ve boş programın varsayılan "Gün 1"i sayılmıyordu (uygulama doğru).
+- Doğrulama: commit `e474925`; verify.sh VERIFY OK; release `2026-11-05T14-37-46-231Z` RELEASE OK; 8 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 5d başladı (kullanıcı düzeltmeleri + dış inceleme paketi)
 - Faz başı: memory-check geçti; son commit `45b274f` (paketteki incelenen commit ile aynı). ASSET-01 canlıda doğrulandı: görsel 200; yalnızca yerel ortamda görsel yok.
 
