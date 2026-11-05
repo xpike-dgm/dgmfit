@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 4a başladı
+- Faz başı: memory-check geçti; son commit `2d6a857` STATE ile uyumlu; çalışma ağacı temiz.
+- Spesifikasyon bölüm 10 Claude Docs bağlayıcısıyla okundu. Kullanıcı kararları (AskUserQuestion): 3 sağlayıcı ve limit dolunca geçiş (Claude, OpenAI, "Evren"; Evren bilgisi yok → şimdilik iki sağlayıcı), her yerde Haiku, anahtarlar yönetici sayfasından. Faz 4 ikiye bölündü.
+
 ## 2026-11-05 — Faz 3b tamamlandı
 - Kaynak doğrulama (web okuma ajanı): 5/3/1 t-nation 404, jimwendler.com'da yüzde yok, gzclp.com 503, Reddit engelli. Yalnızca GZCLP kuralları ikincil kaynaktan (saynotobroscience.com/gzclp-infographic) doğrulandı → GZCLP yapıldı, 5/3/1 ve nSuns ezberden yazılmadı.
 - Çeviri: kullanıcı "kısa Türkçe özet" seçti (AskUserQuestion). Tek arka plan ajanı 783 hareketi `data/exercises-tr-auto/part1-4.json`'a yazdı (kendi doğrulaması PASS); benim builder doğrulamam geçti; 12 birim dönüşümü (inç/ft/lb → cm/m/kg) elle kontrol edildi, doğru; 3 ondalık nokta virgüle çevrildi; 4 rastgele örnek kaynağa sadık.

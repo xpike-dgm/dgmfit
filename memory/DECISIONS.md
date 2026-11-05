@@ -73,3 +73,6 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-05 | Fotoğraflar DB'de AES-256-GCM (anahtar sunucu `.env` `DGFIT_MEDIA_KEY`, AAD kullanıcı kimliği); istemcide 1280 px JPEG'e küçültülür (EXIF/konum düşer); yalnızca sahibine `/api/media/[id]`, başkasına 404; silmede şifreli veri boşaltılır | Spesifikasyon 4.5 "özel ve şifreli"; yedekte de şifreli kalır | Güvenlik |
 | 2026-11-05 | Kilit ekranı dinlenme bildirimi: sunucu tek süreçte setTimeout ile Web Push (kullanıcı başına 1); uygulama görünürken SW göstermez | Sayfa uykudayken JS çalışmaz | Teknik |
 | 2026-11-05 | 783 hareket için tam çeviri yerine kaynaktan kısa Türkçe özet (3–5 adım) | Kullanıcı seçimi (maliyet) | Ürün |
+| 2026-11-05 | AI modeli: Claude'da her yerde `claude-haiku-5-5`; sağlayıcı sırası Claude → OpenAI, kota/limit/sunucu hatasında otomatik geçiş; üçüncü sağlayıcı ("Evren") bilgisi gelince | Kullanıcı kararı (maliyet) | Ürün |
+| 2026-11-05 | AI anahtarları yönetici sayfasından girilir, DB'de AES-256-GCM ile şifreli; yönetici `DGFIT_ADMINS` (başlangıç: `deneme`) | Anahtar sohbete/depoya girmesin (kullanıcı kararı) | Güvenlik |
+| 2026-11-05 | Faz 4 ikiye bölündü: 4a altyapı + Yemek/Su AI kaydı, 4b koç/rapor/öneri | Kapsam | Kapsam |
