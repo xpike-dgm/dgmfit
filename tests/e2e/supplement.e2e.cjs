@@ -73,7 +73,27 @@ const fail = (m) => { throw new Error(m) }
   const search = await p.evaluate(async () => (await (await fetch('/api/food/search?q=whey')).json()))
   if (JSON.stringify(search).includes('user-supplement')) fail('takviye besin aramasında çıkıyor')
 
-  // 4) 320 px
+  // 4) Günlük özet görseli: sağ üstte Kaydet → iki şablon önizlemesi → indir; PNG boyutları; oturumsuz 401
+  await p.goto(BASE + '/yemek/ekle?ogun=lunch'); await p.fill('#food-q', 'mercimek çorbası')
+  await p.getByRole('button', { name: /^Mercimek çorbası/ }).first().click(); await p.getByRole('button', { name: '1 kase', exact: true }).waitFor()
+  await p.getByRole('button', { name: 'Öğle yemeğine ekle' }).click(); await p.getByText(/Mercimek çorbası · \d+ kcal/).waitFor()
+  await p.goto(BASE + '/yemek'); await p.getByTestId('daycard-open').click(); await p.getByTestId('daycard-sheet').waitFor()
+  for (const k of ['a', 'b']) {
+    const ok = await p.getByTestId('daycard-' + k).locator('img').evaluate((i) => new Promise((r) => (i.complete && i.naturalWidth ? r(i.naturalWidth) : (i.onload = () => r(i.naturalWidth), i.onerror = () => r(0)))), null, { timeout: 30000 })
+    if (ok !== 1080) fail(`şablon ${k} önizlemesi açılmadı: ${ok}`)
+  }
+  const dims = await p.evaluate(async () => Promise.all(['a', 'b'].map(async (k) => { const r = await fetch('/api/yemek/gorsel?tip=' + k); const b = new DataView(await r.arrayBuffer()); return [r.headers.get('content-type'), b.getUint32(16), b.getUint32(20)] })))
+  if (JSON.stringify(dims) !== JSON.stringify([['image/png', 1080, 1350], ['image/png', 1080, 1920]])) fail('görsel boyutları: ' + JSON.stringify(dims))
+  await p.getByTestId('daycard-b').click()
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.getByTestId('daycard-save').click()])
+  if (!/^dgfit-\d{4}-\d{2}-\d{2}-hikaye\.png$/.test(dl.suggestedFilename())) fail('indirilen dosya adı: ' + dl.suggestedFilename())
+  await dl.saveAs(`${OUT}/supp-gun-hikaye.png`)
+  await (await b.newContext()).newPage().then(async (q) => { const r = await q.goto(BASE + '/api/yemek/gorsel'); if (r.status() !== 401) fail('oturumsuz görsel ' + r.status()); await q.close() })
+  const a = await p.evaluate(async () => { const r = await fetch('/api/yemek/gorsel?tip=a'); const bl = await r.blob(); return await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(bl) }) })
+  require('fs').writeFileSync(`${OUT}/supp-gun-kart.png`, Buffer.from(String(a).split(',')[1], 'base64'))
+  await p.keyboard.press('Escape')
+
+  // 5) 320 px
   await p.setViewportSize({ width: 320, height: 640 })
   for (const path of ['/yemek', '/yemek/takviyeler', '/yemek/takviyeler/yeni']) {
     await p.goto(BASE + path); await p.waitForTimeout(300)

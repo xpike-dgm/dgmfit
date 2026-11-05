@@ -6,7 +6,9 @@ rm -rf dist && mkdir -p dist
 NEXT_TELEMETRY_DISABLED=1 npx next build >/tmp/dgfit-build.log 2>&1 || { tail -50 /tmp/dgfit-build.log; exit 1; }
 cp -a .next/standalone/. dist/
 mkdir -p dist/.next && cp -a .next/static dist/.next/static
-cp -a public dist/public
+# standalone çıktısı izlenen public dosyalarını (ör. görsel yazı tipleri) zaten kopyalar; iç içe "public/public" olmasın
+mkdir -p dist/public && cp -a public/. dist/public/
+[ -f dist/public/sw.js ] && [ -f dist/public/fonts/manrope-700.ttf ] || { echo "PAKET: public eksik"; exit 1; }
 cp -a drizzle dist/drizzle
 cp scripts/migrate.mjs dist/migrate.mjs
 mkdir -p dist/data && cp data/foods-seed.json.gz data/exercises-seed.json.gz dist/data/

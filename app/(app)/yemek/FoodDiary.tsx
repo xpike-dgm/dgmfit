@@ -9,6 +9,7 @@ import { fmtNum } from '@/lib/calc'
 import { MEALS, MEAL_LABEL, type MealId } from '@/lib/food'
 import { NUTRIENT_INFO, type NutrientKey } from '@/lib/nutrition'
 import { addQuickCalories, copyMeal, deleteMealItem, saveMealAsTemplate, updateMealItem } from './actions'
+import DayCardSheet from './DayCardSheet'
 
 interface Item { id: number; meal: MealId; name: string; grams: number; portionLabel: string | null; portionQty: number | null; kcal: number; protein: number; carb: number; fat: number; source: string }
 interface MealBlock { id: MealId; label: string; share: number; items: Item[]; totals: { kcal: number; protein: number; carb: number; fat: number } }
@@ -45,7 +46,7 @@ export default function FoodDiary(p: {
   return (
     <div className="px-4 flex flex-col gap-3">
       <Band title="Yemek" sub={<span className="capitalize">{p.isToday ? `Bugün · ${p.dayLabel}` : p.dayLabel}</span>}
-        right={!p.isToday ? <Link href="/yemek" className={hdrBtn}>Bugüne dön</Link> : undefined}
+        right={<div className="flex items-center gap-2 shrink-0">{!p.isToday ? <Link href="/yemek" className={hdrBtn}>Bugüne dön</Link> : null}<DayCardSheet day={p.day} /></div>}
         ring={{ value: budget > 0 ? Math.min(1, p.totals.kcal / budget) : 0, big: fmtNum(Math.abs(left)), small: left >= 0 ? 'kalan kcal' : 'kcal aşım', label: `Bütçenin yüzde ${budget > 0 ? Math.round((p.totals.kcal / budget) * 100) : 0}'i` }}
         pills={macro.map((m) => [m.name, `${fmtNum(m.v)} / ${fmtNum(m.g)} g`] as [string, string])} />
 

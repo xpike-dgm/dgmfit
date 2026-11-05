@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-05",
-  "phase": "5f",
+  "phase": "5g",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -222,7 +222,12 @@
     "lib/supplement-data.ts",
     "tests/supplements.test.ts",
     "tests/e2e/supplement.e2e.cjs",
-    "app/(app)/yemek/takviyeler/SupplementCard.tsx"
+    "app/(app)/yemek/takviyeler/SupplementCard.tsx",
+    "lib/day-card.ts",
+    "tests/day-card.test.ts",
+    "app/api/yemek/gorsel/route.tsx",
+    "app/(app)/yemek/DayCardSheet.tsx",
+    "public/fonts/manrope-700.ttf"
   ],
   "tables": [
     "users",
@@ -401,7 +406,8 @@
     "/api/feedback/[id]/image",
     "/yemek/takviyeler",
     "/yemek/takviyeler/yeni",
-    "/yemek/takviyeler/[id]"
+    "/yemek/takviyeler/[id]",
+    "/api/yemek/gorsel"
   ],
   "events": [
     "profile.onboarded",
@@ -827,6 +833,12 @@
       "limitWarnings",
       "suppError",
       "servingLabel"
+    ],
+    "lib/day-card.ts": [
+      "microRows",
+      "toneFor",
+      "MICRO_REF",
+      "CARD_KINDS"
     ]
   },
   "dependencies": {

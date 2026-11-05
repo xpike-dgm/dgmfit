@@ -35,7 +35,7 @@ const walk = (dir) => {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name)
     if (e.isDirectory()) walk(p)
-    else if (e.name === 'page.tsx' || e.name === 'route.ts') {
+    else if (e.name === 'page.tsx' || e.name === 'route.ts' || e.name === 'route.tsx') {
       const segs = path.relative(rel('app'), dir).split(path.sep).filter((s) => s && !/^\(.*\)$/.test(s))
       routes.push('/' + segs.join('/'))
     }
