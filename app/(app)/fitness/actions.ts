@@ -119,7 +119,7 @@ export async function removeProgramExerciseAction(peId: string): Promise<R> {
 }
 
 const SetIn = z.object({
-  kg: z.number().min(0).max(1000), reps: z.number().int().min(0).max(500), rir: z.number().int().min(0).max(10).nullable(), type: z.enum(setTypes),
+  kg: z.number().min(0).max(1000), reps: z.number().int().min(0).max(500), rir: z.number().min(0).max(10).refine((v) => Number.isInteger(v * 2), 'RIR yarım adımlı olmalı').nullable(), type: z.enum(setTypes),
   seconds: z.number().int().min(0).max(36000).nullable().optional(), distanceM: z.number().min(0).max(200000).nullable().optional(),
   completedAt: z.string().datetime({ offset: true }), suggestedKg: z.number().min(0).max(1000).nullable(), suggestedReps: z.number().int().min(0).max(500).nullable(),
   feedback: z.enum(['too_heavy', 'too_light', 'no_equipment']).nullable(),

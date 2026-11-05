@@ -1,6 +1,7 @@
 import 'server-only'
 import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { db, schema } from './db'
+import { exerciseMedia } from './licensed'
 import { addDays, dayString } from './time'
 import { publish } from './events'
 import { normalizeSearch } from './nutrition'
@@ -119,10 +120,10 @@ export async function getProgram(userId: string, id: string) {
   if (!p) return null
   const days = await db.select().from(schema.programDays).where(eq(schema.programDays.programId, id)).orderBy(asc(schema.programDays.idx))
   const exs = days.length ? await db.select({
-    pe: schema.programExercises, name: schema.exercises.nameTr, kind: schema.exercises.kind, equipment: schema.exercises.equipment, images: schema.exercises.images, primary: schema.exercises.primary,
+    pe: schema.programExercises, name: schema.exercises.nameTr, kind: schema.exercises.kind, equipment: schema.exercises.equipment, images: schema.exercises.images, primary: schema.exercises.primary, licensed: schema.exercises.licensed,
   }).from(schema.programExercises).innerJoin(schema.exercises, eq(schema.exercises.id, schema.programExercises.exerciseId))
     .where(inArray(schema.programExercises.dayId, days.map((d) => d.id))).orderBy(asc(schema.programExercises.idx)) : []
-  return { ...p, days: days.map((d) => ({ ...d, exercises: exs.filter((e) => e.pe.dayId === d.id).map((e) => ({ ...e.pe, name: e.name, kind: e.kind as ExKind, equipment: e.equipment, images: e.images, primary: e.primary })) })) }
+  return { ...p, days: days.map((d) => ({ ...d, exercises: exs.filter((e) => e.pe.dayId === d.id).map((e) => ({ ...e.pe, name: e.name, kind: e.kind as ExKind, equipment: e.equipment, images: e.images, primary: e.primary, ...exerciseMedia(e.licensed) })) })) }
 }
 
 async function keyToId(keys: string[]) {
@@ -263,6 +264,8 @@ export async function deleteProgram(userId: string, id: string) {
 
 export interface LiveExercise {
   exerciseId: number; name: string; kind: ExKind; equipment: string; images: string[]; primary: string[]
+  /** Faz 5h-3: lisanslı küçük resim ve video (yoksa null) */
+  thumb?: string | null; video?: string | null
   sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: SetType
   history: Session[]; records: Records | null; feedback: { tooHeavy: number; tooLight: number }
   /** Faz 3b: GZCLP kademesi (ağırlık ve setler sabit), periyodizasyon etiketi, plato notu */
@@ -288,13 +291,13 @@ export async function liveSession(userId: string, programDayId: string | null, e
       if (day) {
         name = day.name
         meta = { periodization: p!.periodization as Periodization, deloadEvery: p!.deloadEvery, startDay: p!.startDay }
-        rows = day.exercises.map((e) => ({ exerciseId: e.exerciseId, name: e.name, kind: e.kind, equipment: e.equipment, images: e.images, primary: e.primary, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType as SetType, schemeKey: e.scheme, schemeState: e.schemeState }))
+        rows = day.exercises.map((e) => ({ exerciseId: e.exerciseId, name: e.name, kind: e.kind, equipment: e.equipment, images: e.images, primary: e.primary, thumb: e.thumb, video: e.video, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType as SetType, schemeKey: e.scheme, schemeState: e.schemeState }))
       }
     }
   }
   if (extraExerciseIds.length) {
     const xs = await db.select().from(schema.exercises).where(and(inArray(schema.exercises.id, extraExerciseIds), visible(userId)))
-    for (const x of xs) if (!rows.some((r) => r.exerciseId === x.id)) rows.push({ exerciseId: x.id, name: x.nameTr, kind: x.kind as ExKind, equipment: x.equipment, images: x.images, primary: x.primary, sets: 3, repMin: x.kind === 'time' ? 1 : 8, repMax: x.kind === 'time' ? 1 : 12, rir: 2, rest: 90, seconds: x.kind === 'time' ? 45 : null, setType: 'normal' })
+    for (const x of xs) if (!rows.some((r) => r.exerciseId === x.id)) rows.push({ exerciseId: x.id, name: x.nameTr, kind: x.kind as ExKind, equipment: x.equipment, images: x.images, primary: x.primary, ...exerciseMedia(x.licensed), sets: 3, repMin: x.kind === 'time' ? 1 : 8, repMax: x.kind === 'time' ? 1 : 12, rir: 2, rest: 90, seconds: x.kind === 'time' ? 45 : null, setType: 'normal' })
   }
   const ids = rows.map((r) => r.exerciseId)
   const [hist, recs, fb] = await Promise.all([

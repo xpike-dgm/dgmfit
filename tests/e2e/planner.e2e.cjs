@@ -156,8 +156,8 @@ function fake(port, handler) {
   if ((await p.getByTestId('program-day').count()) !== 3) fail('3 gün bekleniyordu (fazla gün atılmalı)')
   if (await p.getByText('Uçan halı', { exact: true }).count()) fail('bilinmeyen hareket programa girdi')
   await p.getByText(/Çıkarılan: .*Uçan halı/).first().waitFor().catch(() => fail('çıkarılan hareket notu yok'))
-  const sets = await p.getByTestId('program-day').first().getByText(/^\d+ ×/).allInnerTexts().catch(() => [])
-  if (sets.some((s) => num(s.split('×')[0]) > 4)) fail('yeni başlayanda set sınırı uygulanmadı: ' + sets.join(','))
+  const sets = await p.getByTestId('program-day').first().getByText(/^\d+ set$/).allInnerTexts().catch(() => [])
+  if (!sets.length || sets.some((s) => num(s) > 4)) fail('yeni başlayanda set sınırı uygulanmadı: ' + sets.join(','))
 
   // 7) Senaryo simülatörü: haftada 3 gün koşu → daha erken varış
   await p.goto(BASE + '/fit/senaryo')

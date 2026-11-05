@@ -127,6 +127,13 @@
       "when": 1793918983009,
       "tag": "0017_favorites",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793920204365,
+      "tag": "0018_rir_half",
+      "breakpoints": true
     }
   ]
 }

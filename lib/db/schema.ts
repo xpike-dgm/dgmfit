@@ -436,7 +436,8 @@ export const workoutSets = pgTable('workout_sets', {
   type: text('type').notNull().default('normal'),
   kg: real('kg').notNull().default(0),
   reps: integer('reps').notNull().default(0),
-  rir: integer('rir'),
+  /** 0–4 yarım adımlı (0,5), 5 = "4+" */
+  rir: real('rir'),
   seconds: integer('seconds'),
   distanceM: real('distance_m'),
   suggestedKg: real('suggested_kg'),

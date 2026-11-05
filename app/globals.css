@@ -106,3 +106,10 @@
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @keyframes wave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+
+/* RiR kaydırıcısı (canlı antrenman): kırmızıdan koyuya ray, beyaz tutamaç */
+.rir-range { -webkit-appearance: none; appearance: none; height: 34px; background: transparent; }
+.rir-range::-webkit-slider-runnable-track { height: 16px; border-radius: 99px; background: linear-gradient(90deg, #E53935 0%, #B3261E 55%, #4A1A18 100%); }
+.rir-range::-moz-range-track { height: 16px; border-radius: 99px; background: linear-gradient(90deg, #E53935 0%, #B3261E 55%, #4A1A18 100%); }
+.rir-range::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; margin-top: -9px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+.rir-range::-moz-range-thumb { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }

@@ -71,3 +71,9 @@ export const Anchor = (p: P) => <svg {...base(p)}><circle cx="12" cy="5" r="2" /
 export const Stretch = (p: P) => <svg {...base(p)}><path d="M5 19L19 5M14 5h5v5M10 19H5v-5" /></svg>
 export const Balance = (p: P) => <svg {...base(p)}><circle cx="7" cy="8" r="2.2" /><circle cx="17" cy="8" r="2.2" /><path d="M3 13h18M12 13l-3.5 7h7z" /></svg>
 export const Single = (p: P) => <svg {...base(p)}><path d="M12 3v18M8 7h8M8 17h8" /><circle cx="12" cy="12" r="2" /></svg>
+export const Play = (p: P) => <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M10 8.5l5.5 3.5-5.5 3.5z" fill="currentColor" /></svg>
+export const History = (p: P) => <svg {...base(p)}><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5M12 7v5l3 2" /></svg>
+export const SetsIcon = (p: P) => <svg {...base(p)}><rect x="4" y="9" width="16" height="10" rx="2" /><path d="M7 6h10M9 3h6" /></svg>
+export const Repeat = (p: P) => <svg {...base(p)}><path d="M4 11V9a3 3 0 0 1 3-3h12l-3-3M20 13v2a3 3 0 0 1-3 3H5l3 3" /></svg>
+export const Gauge = (p: P) => <svg {...base(p)}><path d="M4 17a8 8 0 1 1 16 0" /><path d="M12 17l4-5" /><path d="M4 17h16" /></svg>
+export const EditSquare = (p: P) => <svg {...base(p)}><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" /><path d="M17.5 3.5l3 3L12 15H9v-3z" /></svg>

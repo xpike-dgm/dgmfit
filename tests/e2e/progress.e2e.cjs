@@ -144,6 +144,7 @@ async function register(b, prefix) {
   await sq.getByText(`Hedef ${tgt.sets} × ${tgt.repMin}–${tgt.repMax} · ${tgt.rir} tekrar yedek`).waitFor().catch(() => fail('DUP hedefi'))
 
   // 7) Canlı modda alternatif: bench → listeden ilk alternatif
+  await p.getByTestId('live-strip').getByRole('tab', { name: 'Barbell Bench Press - Medium Grip', exact: true }).click()
   await p.getByRole('button', { name: 'Barbell Bench Press - Medium Grip seçenekleri' }).click()
   await p.getByRole('button', { name: /İstasyon dolu/ }).click()
   const alt = p.getByTestId('alt-list').getByRole('button').first()
@@ -159,7 +160,7 @@ async function register(b, prefix) {
   offline = true; await ctx.setOffline(true)
   await p.reload()
   await p.locator('section[data-testid="live-exercise"]').first().waitFor({ timeout: 15000 }).catch(() => fail('çevrimdışı canlı antrenman açılmadı'))
-  await p.locator('section[data-testid="live-exercise"]', { hasText: altName }).first().waitFor().catch(() => fail('çevrimdışı taslak (alternatif) korunmadı'))
+  await p.getByTestId('live-strip').getByRole('tab', { name: altName, exact: true }).waitFor().catch(() => fail('çevrimdışı taslak (alternatif) korunmadı'))
   await ctx.setOffline(false); offline = false
   await shot('05-canli')
 

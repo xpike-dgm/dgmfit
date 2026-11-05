@@ -1,0 +1,1 @@
+ALTER TABLE "workout_sets" ALTER COLUMN "rir" SET DATA TYPE real;

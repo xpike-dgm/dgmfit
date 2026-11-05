@@ -4,14 +4,15 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Sheet from '@/components/Sheet'
 import { btn, Eyebrow } from '@/components/ui'
-import { Dumbbell, Pencil, Plus, Trash } from '@/components/icons'
+import ExImg from '@/components/ExImg'
+import { Dumbbell, EditSquare, Gauge, Play, Plus, Repeat, SetsIcon, Trash } from '@/components/icons'
 import { SET_TYPES, type SetType } from '@/lib/training'
 import { PERIODIZATION, weekIndex, isDeloadWeek, type Periodization } from '@/lib/progress'
 import { gzSets, type GzState } from '@/lib/schemes'
 import { addDayAction, addExerciseToDayAction, removeDayAction, removeProgramExerciseAction, setActiveProgramAction, setSchemeKgAction, updateProgramExerciseAction, updateProgramSettingsAction } from '../../actions'
 import { ExercisePicker } from '../../antrenman/LiveWorkout'
 
-type Ex = { id: string; exerciseId: number; name: string; kind: string; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null }
+type Ex = { id: string; exerciseId: number; name: string; kind: string; thumb?: string | null; images?: string[]; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null }
 type Day = { id: string; name: string; focus: string; exercises: Ex[] }
 
 export default function ProgramEditor({ program }: { program: { id: string; name: string; active: boolean; notes: string[]; nextDayIdx: number; periodization: string; deloadEvery: number; startDay: string; days: Day[] } }) {
@@ -35,19 +36,28 @@ export default function ProgramEditor({ program }: { program: { id: string; name
         <section key={d.id} aria-label={d.name} className="card p-5 flex flex-col gap-2" data-testid="program-day">
           <div className="flex justify-between items-center gap-2">
             <span className="flex flex-col"><span className="font-extrabold">{d.name}</span>{d.focus ? <span className="text-[12px] text-mute">{d.focus}</span> : null}</span>
-            {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[13px] font-bold flex items-center gap-1.5"><Dumbbell size={15} />{di === next && program.active ? 'Başla' : 'Bu günü yap'}</Link> : null}
+            {di === next && program.active ? <span className="text-[11.5px] font-bold px-2 py-1 rounded-full bg-acc/15 text-acc shrink-0">Sıradaki</span> : null}
           </div>
           {d.exercises.map((e) => (
-            <div key={e.id} className="flex items-center gap-2 min-h-[52px] border-b border-line last:border-0">
-              <button type="button" onClick={() => setEdit(e)} className="flex-1 min-w-0 flex flex-col text-left py-1.5">
-                <span className="font-semibold text-[15px] truncate">{e.name}</span>
-                {e.scheme ? <span className="num text-[12.5px] text-mute" data-testid="gz-row">{schemeLine(e)}</span>
-                  : <span className="num text-[12.5px] text-mute">{e.sets} × {e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}{e.seconds ? '' : ` · ${e.rir} tekrar yedek`}</span>}
+            <div key={e.id} className="flex items-center gap-3 py-3 border-b border-line last:border-0" data-testid="program-ex">
+              <button type="button" onClick={() => setEdit(e)} className="w-[68px] h-[68px] rounded-2xl overflow-hidden bg-surface-2 shrink-0" aria-hidden tabIndex={-1}>
+                {e.thumb ? <img src={e.thumb} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
+                  : e.images?.[0] ? <ExImg src={`/media/exercises/${e.images[0]}`} size={68} className="w-full h-full" /> : <span className="w-full h-full flex items-center justify-center text-mute"><Dumbbell size={22} /></span>}
               </button>
-              <button type="button" aria-label={`${e.name} düzenle`} onClick={() => setEdit(e)} className="w-10 h-10 rounded-full bg-surface-2 text-ink-2 flex items-center justify-center"><Pencil size={16} /></button>
-              <button type="button" aria-label={`${e.name} sil`} disabled={pending} onClick={() => { if (confirm(`${e.name} bu günden çıkarılsın mı?`)) go(() => removeProgramExerciseAction(e.id)) }} className="w-10 h-10 rounded-full bg-danger-bg text-danger flex items-center justify-center"><Trash size={16} /></button>
+              <button type="button" onClick={() => setEdit(e)} className="flex-1 min-w-0 flex flex-col gap-1 text-left">
+                <span className="font-semibold text-[16px] leading-snug line-clamp-2">{e.name}</span>
+                {e.scheme ? <span className="num text-[12.5px] text-mute" data-testid="gz-row">{schemeLine(e)}</span>
+                  : <span className="num text-[13.5px] text-ink-2 flex items-center gap-3 flex-wrap">
+                    <span className="flex items-center gap-1"><SetsIcon size={16} />{e.sets} set</span>
+                    <span className="flex items-center gap-1"><Repeat size={16} />{e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? `${e.repMin} tekrar` : `${e.repMin}–${e.repMax} tekrar`}</span>
+                    {e.seconds ? null : <span className="flex items-center gap-1" title="Tekrar yedeği"><Gauge size={16} />{e.rir.toFixed(1).replace('.', ',')} RiR</span>}
+                  </span>}
+              </button>
+              <button type="button" aria-label={`${e.name} düzenle`} onClick={() => setEdit(e)} className="w-11 h-11 rounded-full text-ink flex items-center justify-center shrink-0"><EditSquare size={26} /></button>
+              <button type="button" aria-label={`${e.name} sil`} disabled={pending} onClick={() => { if (confirm(`${e.name} bu günden çıkarılsın mı?`)) go(() => removeProgramExerciseAction(e.id)) }} className="w-9 h-9 rounded-full text-danger flex items-center justify-center shrink-0"><Trash size={16} /></button>
             </div>
           ))}
+          {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-14 mt-1 rounded-2xl bg-[#E53935] text-white font-extrabold text-[17px] flex items-center justify-center gap-2"><Play size={22} />Antrenmana Başla</Link> : null}
           <div className="flex gap-2">
             <button type="button" className="flex-1 h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5" onClick={() => setPick(d.id)}><Plus size={16} />Hareket ekle</button>
             <button type="button" aria-label={`${d.name} gününü sil`} disabled={pending} onClick={() => { if (confirm(`${d.name} günü programdan silinsin mi? Geçmiş antrenmanların korunur.`)) go(() => removeDayAction(d.id)) }} className="h-10 px-3 rounded-full text-[13px] font-bold text-danger border border-danger-line flex items-center gap-1.5"><Trash size={15} />Günü sil</button>

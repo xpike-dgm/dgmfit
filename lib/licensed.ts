@@ -8,7 +8,7 @@ import path from 'node:path'
  */
 export const LICENSED_DIR = process.env.DGFIT_LICENSED_DIR ?? ''
 export const AG_SOURCE = { label: 'Ağırsağlam', url: 'https://www.agirsaglam.com' }
-export const LICENSED_KINDS = ['videos', 'anatomy', 'plates'] as const
+export const LICENSED_KINDS = ['videos', 'anatomy', 'plates', 'thumbs'] as const
 
 /** Güvenli dosya yolu: yalnızca izinli alt klasör + düz dosya adı. */
 export function licensedPath(kind: string, file: string): string | null {
@@ -43,4 +43,19 @@ export const AG_MUSCLE_TR: Record<string, string> = {
   anteriorDeltoid: 'Ön omuz', middleDeltoid: 'Orta omuz', posteriorDeltoid: 'Arka omuz', pectoralisClavicular: 'Üst göğüs', pectoralisSternal: 'Orta-alt göğüs',
   lats: 'Kanat (lat)', upperTraps: 'Üst trapez', lowerTraps: 'Orta-alt trapez', rotatorCuff: 'Rotator manşet', spinalErectors: 'Bel (omurga dikleştirici)',
   glutes: 'Kalça', quads: 'Ön bacak', hams: 'Arka bacak', adductors: 'İç bacak', calves: 'Baldır', hipFlexors: 'Kalça bükücü', neckFlexors: 'Boyun',
+}
+
+type Lic = { video: { right: string | null; wrong: string | null } } | null | undefined
+/** Lisanslı hareketin küçük resmi (videodan üretilmiş kare) ve doğru yapılış videosu; dosya yoksa null. */
+export function exerciseMedia(l: Lic): { thumb: string | null; video: string | null } {
+  const v = l?.video.right ?? null
+  const t = v ? v.replace(/\.mp4$/, '.jpg') : null
+  return { thumb: t && hasLicensedFile('thumbs', t) ? licensedUrl('thumbs', t) : null, video: v && hasLicensedFile('videos', v) ? licensedUrl('videos', v) : null }
+}
+
+/** RiR kaydırıcısı açıklamaları (0, 0,5 … 4, 4+ = 10 kademe): paket metni, yoksa DgFit'in kısa metni. */
+const RIR_FALLBACK = ['Tükeniş: bir tekrar daha çıkmaz.', 'Belki bir tekrar daha.', '1 tekrar daha vardı.', '1–2 tekrar daha vardı.', '2 tekrar daha vardı.', '2–3 tekrar daha vardı.', '3 tekrar daha vardı.', '3–4 tekrar daha vardı.', '4 tekrar daha vardı.', 'Çok hafif: tükenişten uzak.']
+export function rirTexts(): { steps: string[]; info: string } {
+  const r = licensedText<{ premium?: { exercise_logs?: { rir?: Record<string, string> } } }>('tam-ekran-metinleri.tr')?.premium?.exercise_logs?.rir
+  return { steps: RIR_FALLBACK.map((f, i) => r?.[String(i)] ?? f), info: r?.info ?? 'RIR: setin sonunda kaç tekrar daha yapabilirdin. 0 = tükendim, 4+ = çok hafifti.' }
 }
