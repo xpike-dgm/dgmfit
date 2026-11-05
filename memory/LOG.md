@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 4c başladı
+- Faz başı: memory-check geçti; son commit `6b72158` STATE ile uyumlu; çalışma ağacı temiz. Kapsam spesifikasyon 6.4, 4.2, 5.6, 10'dan.
+
 ## 2026-11-05 — Faz 4b tamamlandı (sahte sağlayıcıyla)
 - Saf motorlar: `lib/weekly.ts` (DayFacts, weekStats, ruleSuggestions, numbersAllowed), `lib/safety.ts`, `lib/insights.ts`, `lib/coach-calc.ts`; birim testler `tests/coach.test.ts` (13).
 - Veri katmanı `lib/coach-data.ts`, migration 0009, ekranlar `/koc`, `/rapor`, Bugün `InsightCard`, zamanlayıcıda Pazar 19.00 rapor push'u.
