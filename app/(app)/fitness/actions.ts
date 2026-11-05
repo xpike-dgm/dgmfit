@@ -8,7 +8,7 @@ import { addDays, dayString } from '@/lib/time'
 import { TEMPLATES, ALL_EQUIPMENT } from '@/lib/programs'
 import { CARDIO, SET_TYPES } from '@/lib/training'
 import {
-  addDay, addExerciseToDay, copyProgram, createCustomExercise, createEmptyProgram, createFromTemplate, createGenerated, deleteCardio,
+  addDay, addExerciseToDay, copyProgram, createFromAgProgram, linkSuperset, createCustomExercise, createEmptyProgram, createFromTemplate, createGenerated, deleteCardio,
   deleteProgram, deleteWorkout, ensureGym, liveSession, logCardio, removeProgramExercise, saveWorkout, setActiveProgram, updateProgramExercise,
   setSchemeKg, updateProgramSettings,
   type LiveExercise, removeDay } from '@/lib/fitness-data'
@@ -31,6 +31,11 @@ async function run<T extends object>(fn: () => Promise<T>): Promise<R<T>> {
   try { const r = await fn(); refresh(); return { ok: true, ...r } } catch (e) { return { ok: false, error: (e as Error).message || 'Bir hata oldu' } }
 }
 
+export async function createFromAgProgramAction(id: string): Promise<R<{ id: string }>> {
+  const userId = await uid()
+  if (!/^ag-[0-9a-f-]{36}$/.test(id)) return { ok: false, error: 'Şablon yok' }
+  return run(async () => ({ id: await createFromAgProgram(userId, id) }))
+}
 export async function createFromTemplateAction(templateId: string): Promise<R<{ id: string }>> {
   const userId = await uid()
   if (!TEMPLATES.some((t) => t.id === templateId)) return { ok: false, error: 'Şablon yok' }
@@ -111,6 +116,11 @@ export async function updateProgramExerciseAction(peId: string, input: z.input<t
   const p = PeInput.safeParse(input)
   if (!Uuid.safeParse(peId).success || !p.success) return { ok: false, error: p.success ? 'Geçersiz' : p.error.issues[0]?.message ?? 'Geçersiz değer' }
   return run(async () => { await updateProgramExercise(userId, peId, p.data); return {} })
+}
+export async function linkSupersetAction(peId: string, withNext: boolean): Promise<R> {
+  const userId = await uid()
+  if (!Uuid.safeParse(peId).success || typeof withNext !== 'boolean') return { ok: false, error: 'Geçersiz' }
+  return run(async () => { await linkSuperset(userId, peId, withNext); return {} })
 }
 export async function removeProgramExerciseAction(peId: string): Promise<R> {
   const userId = await uid()

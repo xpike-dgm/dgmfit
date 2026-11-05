@@ -236,7 +236,14 @@
     "lib/anatomy-data.ts",
     "components/BodyFigure.tsx",
     "tests/anatomy.test.ts",
-    "tests/e2e/anatomy.e2e.cjs"
+    "tests/e2e/anatomy.e2e.cjs",
+    "lib/ag-programs.ts",
+    "lib/ag-program-data.ts",
+    "lib/supersets.ts",
+    "app/(app)/fitness/programlar/sablonlar/[id]/AgTemplate.tsx",
+    "tests/ag-programs.test.ts",
+    "tests/supersets.test.ts",
+    "tests/e2e/agprogram.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -888,6 +895,7 @@
     "0015_supplements.sql",
     "0016_licensed.sql",
     "0017_favorites.sql",
-    "0018_rir_half.sql"
+    "0018_rir_half.sql",
+    "0019_supersets.sql"
   ]
 }

@@ -9,10 +9,11 @@ import { Dumbbell, EditSquare, Gauge, Play, Plus, Repeat, SetsIcon, Trash } from
 import { SET_TYPES, type SetType } from '@/lib/training'
 import { PERIODIZATION, weekIndex, isDeloadWeek, type Periodization } from '@/lib/progress'
 import { gzSets, type GzState } from '@/lib/schemes'
-import { addDayAction, addExerciseToDayAction, removeDayAction, removeProgramExerciseAction, setActiveProgramAction, setSchemeKgAction, updateProgramExerciseAction, updateProgramSettingsAction } from '../../actions'
+import { addDayAction, addExerciseToDayAction, removeDayAction, removeProgramExerciseAction, setActiveProgramAction, setSchemeKgAction, updateProgramExerciseAction, updateProgramSettingsAction, linkSupersetAction } from '../../actions'
+import { supersetBlocks } from '@/lib/supersets'
 import { ExercisePicker } from '../../antrenman/LiveWorkout'
 
-type Ex = { id: string; exerciseId: number; name: string; kind: string; thumb?: string | null; images?: string[]; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null }
+type Ex = { id: string; exerciseId: number; name: string; kind: string; thumb?: string | null; images?: string[]; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null; superset?: number | null; note?: string | null }
 type Day = { id: string; name: string; focus: string; exercises: Ex[] }
 
 export default function ProgramEditor({ program }: { program: { id: string; name: string; active: boolean; notes: string[]; nextDayIdx: number; periodization: string; deloadEvery: number; startDay: string; days: Day[] } }) {
@@ -24,6 +25,26 @@ export default function ProgramEditor({ program }: { program: { id: string; name
   const router = useRouter()
   const go = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) => start(async () => { setErr(null); const r = await fn(); if (!r.ok) { setErr(r.error ?? 'Hata'); return } after?.(); router.refresh() })
   const next = program.days.length ? program.nextDayIdx % program.days.length : 0
+  const exRow = (e: Ex) => (
+            <div key={e.id} className="flex items-center gap-3 py-3 border-b border-line last:border-0" data-testid="program-ex">
+              <button type="button" onClick={() => setEdit(e)} className="w-[68px] h-[68px] rounded-2xl overflow-hidden bg-surface-2 shrink-0" aria-hidden tabIndex={-1}>
+                {e.thumb ? <img src={e.thumb} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
+                  : e.images?.[0] ? <ExImg src={`/media/exercises/${e.images[0]}`} size={68} className="w-full h-full" /> : <span className="w-full h-full flex items-center justify-center text-mute"><Dumbbell size={22} /></span>}
+              </button>
+              <button type="button" onClick={() => setEdit(e)} className="flex-1 min-w-0 flex flex-col gap-1 text-left">
+                <span className="font-semibold text-[16px] leading-snug line-clamp-2">{e.name}</span>
+                {e.scheme ? <span className="num text-[12.5px] text-mute" data-testid="gz-row">{schemeLine(e)}</span>
+                  : <span className="num text-[13.5px] text-ink-2 flex items-center gap-3 flex-wrap">
+                    <span className="flex items-center gap-1"><SetsIcon size={16} />{e.sets} set</span>
+                    <span className="flex items-center gap-1"><Repeat size={16} />{e.seconds ? `${e.seconds} sn` : e.setType === 'amrap' ? 'maks. tekrar' : e.repMin === e.repMax ? `${e.repMin} tekrar` : `${e.repMin}–${e.repMax} tekrar`}</span>
+                    {e.seconds ? null : <span className="flex items-center gap-1" title="Tekrar yedeği"><Gauge size={16} />{e.rir.toFixed(1).replace('.', ',')} RiR</span>}
+                  </span>}
+                {e.note ? <span className="text-[12px] text-mute" data-testid="ex-note">{e.note}</span> : null}
+              </button>
+              <button type="button" aria-label={`${e.name} düzenle`} onClick={() => setEdit(e)} className="w-11 h-11 rounded-full text-ink flex items-center justify-center shrink-0"><EditSquare size={26} /></button>
+              <button type="button" aria-label={`${e.name} sil`} disabled={pending} onClick={() => { if (confirm(`${e.name} bu günden çıkarılsın mı?`)) go(() => removeProgramExerciseAction(e.id)) }} className="w-9 h-9 rounded-full text-danger flex items-center justify-center shrink-0"><Trash size={16} /></button>
+            </div>
+  )
   return (
     <>
       <section className="card p-5 flex flex-col gap-2">
@@ -38,23 +59,10 @@ export default function ProgramEditor({ program }: { program: { id: string; name
             <span className="flex flex-col"><span className="font-extrabold">{d.name}</span>{d.focus ? <span className="text-[12px] text-mute">{d.focus}</span> : null}</span>
             {di === next && program.active ? <span className="text-[11.5px] font-bold px-2 py-1 rounded-full bg-acc/15 text-acc shrink-0">Sıradaki</span> : null}
           </div>
-          {d.exercises.map((e) => (
-            <div key={e.id} className="flex items-center gap-3 py-3 border-b border-line last:border-0" data-testid="program-ex">
-              <button type="button" onClick={() => setEdit(e)} className="w-[68px] h-[68px] rounded-2xl overflow-hidden bg-surface-2 shrink-0" aria-hidden tabIndex={-1}>
-                {e.thumb ? <img src={e.thumb} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
-                  : e.images?.[0] ? <ExImg src={`/media/exercises/${e.images[0]}`} size={68} className="w-full h-full" /> : <span className="w-full h-full flex items-center justify-center text-mute"><Dumbbell size={22} /></span>}
-              </button>
-              <button type="button" onClick={() => setEdit(e)} className="flex-1 min-w-0 flex flex-col gap-1 text-left">
-                <span className="font-semibold text-[16px] leading-snug line-clamp-2">{e.name}</span>
-                {e.scheme ? <span className="num text-[12.5px] text-mute" data-testid="gz-row">{schemeLine(e)}</span>
-                  : <span className="num text-[13.5px] text-ink-2 flex items-center gap-3 flex-wrap">
-                    <span className="flex items-center gap-1"><SetsIcon size={16} />{e.sets} set</span>
-                    <span className="flex items-center gap-1"><Repeat size={16} />{e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? `${e.repMin} tekrar` : `${e.repMin}–${e.repMax} tekrar`}</span>
-                    {e.seconds ? null : <span className="flex items-center gap-1" title="Tekrar yedeği"><Gauge size={16} />{e.rir.toFixed(1).replace('.', ',')} RiR</span>}
-                  </span>}
-              </button>
-              <button type="button" aria-label={`${e.name} düzenle`} onClick={() => setEdit(e)} className="w-11 h-11 rounded-full text-ink flex items-center justify-center shrink-0"><EditSquare size={26} /></button>
-              <button type="button" aria-label={`${e.name} sil`} disabled={pending} onClick={() => { if (confirm(`${e.name} bu günden çıkarılsın mı?`)) go(() => removeProgramExerciseAction(e.id)) }} className="w-9 h-9 rounded-full text-danger flex items-center justify-center shrink-0"><Trash size={16} /></button>
+          {supersetBlocks(d.exercises).map((b) => b.group == null ? exRow(d.exercises[b.idx[0]]) : (
+            <div key={'ss-' + d.exercises[b.idx[0]].id} className="flex flex-col pl-3 border-l-[3px] border-[#E53935] my-1" data-testid="superset-block" aria-label={`Süperset: ${b.idx.map((i) => d.exercises[i].name).join(', ')}`}>
+              <span className="text-[11.5px] font-extrabold text-[#E53935] uppercase tracking-wide pt-1">Süperset · {b.idx.length} hareket · dinlenme turun sonunda</span>
+              {b.idx.map((i) => exRow(d.exercises[i]))}
             </div>
           ))}
           {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-14 mt-1 rounded-2xl bg-[#E53935] text-white font-extrabold text-[17px] flex items-center justify-center gap-2"><Play size={22} />Antrenmana Başla</Link> : null}
@@ -77,13 +85,24 @@ export default function ProgramEditor({ program }: { program: { id: string; name
       </Sheet>
       <Sheet open={!!edit} onClose={() => setEdit(null)} title={edit?.name ?? ''}>
         {edit?.scheme ? <SchemeEdit ex={edit} pending={pending} onSave={(kg) => go(() => setSchemeKgAction(edit.id, kg), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} />
-          : edit ? <EditTarget ex={edit} pending={pending} onSave={(v) => go(() => updateProgramExerciseAction(edit.id, v), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} /> : null}
+          : edit ? <EditTarget ex={edit} pending={pending} link={linkState(program.days, edit.id)} onLink={(on) => go(() => linkSupersetAction(edit.id, on), () => setEdit(null))} onSave={(v) => go(() => updateProgramExerciseAction(edit.id, v), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} /> : null}
       </Sheet>
     </>
   )
 }
 
-function EditTarget({ ex, pending, onSave, onRemove }: { ex: Ex; pending: boolean; onSave: (v: { sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string }) => void; onRemove: () => void }) {
+/** Düzenlenen hareket sonrakiyle süperset mi; sonrası var mı. */
+function linkState(days: Day[], peId: string): { canLink: boolean; linked: boolean; next: string | null } {
+  for (const d of days) {
+    const i = d.exercises.findIndex((e) => e.id === peId)
+    if (i < 0) continue
+    const e = d.exercises[i], n = d.exercises[i + 1]
+    return { canLink: !!n && !e.scheme && !n.scheme, linked: !!n && e.superset != null && e.superset === n.superset, next: n?.name ?? null }
+  }
+  return { canLink: false, linked: false, next: null }
+}
+
+function EditTarget({ ex, pending, link, onLink, onSave, onRemove }: { ex: Ex; pending: boolean; link: { canLink: boolean; linked: boolean; next: string | null }; onLink: (on: boolean) => void; onSave: (v: { sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string }) => void; onRemove: () => void }) {
   const [v, setV] = useState({ sets: ex.sets, repMin: ex.repMin, repMax: ex.repMax, rir: ex.rir, rest: ex.rest, seconds: ex.seconds, setType: ex.setType })
   const time = ex.kind === 'time'
   const Row = ({ label, k, min, max, step = 1 }: { label: string; k: 'sets' | 'repMin' | 'repMax' | 'rir' | 'rest' | 'seconds'; min: number; max: number; step?: number }) => (
@@ -110,6 +129,12 @@ function EditTarget({ ex, pending, onSave, onRemove }: { ex: Ex; pending: boolea
           {Object.entries(SET_TYPES).map(([k, t]) => <option key={k} value={k}>{t.label}</option>)}
         </select>
       </label>
+      {link.canLink ? (
+        <button type="button" aria-pressed={link.linked} disabled={pending} onClick={() => onLink(!link.linked)} data-testid="superset-toggle"
+          className={`mt-2 min-h-[52px] rounded-2xl px-4 py-2 text-left text-[14px] font-semibold border-2 ${link.linked ? 'border-[#E53935] text-[#E53935]' : 'border-line text-ink-2'}`}>
+          {link.linked ? `Süperseti boz (${link.next})` : `Sonraki hareketle süperset yap (${link.next})`}
+        </button>
+      ) : null}
       <button type="button" className={btn.primary + ' mt-3'} disabled={pending || (!time && v.repMax < v.repMin)} onClick={() => onSave({ ...v, setType: v.setType as SetType, seconds: time ? v.seconds ?? 45 : null })}>Kaydet</button>
       <button type="button" className={`${btn.ghost} text-danger mt-1`} disabled={pending} onClick={onRemove}><Trash size={18} />Programdan çıkar</button>
     </div>

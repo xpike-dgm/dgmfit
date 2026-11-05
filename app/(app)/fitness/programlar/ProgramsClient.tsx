@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
 import { EQUIPMENT, MUSCLES } from '@/lib/exercise-labels'
 import { ALL_EQUIPMENT } from '@/lib/programs'
-import { copyProgramAction, createAiProgramAction, createEmptyProgramAction, createFromTemplateAction, createGeneratedAction, deleteProgramAction, setActiveProgramAction } from '../actions'
+import { copyProgramAction, createAiProgramAction, createEmptyProgramAction, createFromAgProgramAction, createFromTemplateAction, createGeneratedAction, deleteProgramAction, setActiveProgramAction } from '../actions'
 
 type R = { ok: true; id?: string } | { ok: false; error: string }
 
@@ -106,7 +106,7 @@ export function UseTemplate({ id }: { id: string }) {
   const router = useRouter()
   return (
     <>
-      <button type="button" disabled={pending} className={btn.primary} onClick={() => start(async () => { setErr(null); const r = await createFromTemplateAction(id); if (!r.ok) { setErr(r.error); return } router.push(`/fitness/programlar/${r.id}`) })}>{pending ? 'Oluşturuluyor…' : 'Bu şablonu kullan'}</button>
+      <button type="button" disabled={pending} className={btn.primary} onClick={() => start(async () => { setErr(null); const r = id.startsWith('ag-') ? await createFromAgProgramAction(id) : await createFromTemplateAction(id); if (!r.ok) { setErr(r.error); return } router.push(`/fitness/programlar/${r.id}`) })}>{pending ? 'Oluşturuluyor…' : 'Bu şablonu kullan'}</button>
       {err ? <p role="alert" className="text-[13px] text-danger">{err}</p> : null}
     </>
   )

@@ -5,6 +5,8 @@ import { db, schema } from '@/lib/db'
 import { TEMPLATES } from '@/lib/programs'
 import { TopBar } from '@/components/ui'
 import { UseTemplate } from '../../ProgramsClient'
+import { agProgramPreview } from '@/lib/ag-program-data'
+import AgTemplate from './AgTemplate'
 
 export const metadata = { title: 'Şablon · DgFit' }
 const LEVEL = { new: 'Başlangıç', mid: 'Orta', adv: 'İleri' }
@@ -13,6 +15,11 @@ const ROLE: Record<string, string> = { ana: 'Ana', yardımcı: 'Yardımcı', izo
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   await requireUser()
   const { id } = await props.params
+  if (id.startsWith('ag-')) {
+    const p = await agProgramPreview(id)
+    if (!p) notFound()
+    return <AgTemplate p={p} />
+  }
   const t = TEMPLATES.find((x) => x.id === id)
   if (!t) notFound()
   const keys = [...new Set(t.days.flatMap((d) => d.slots.flatMap((s) => s.alts)))]

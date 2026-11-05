@@ -12,6 +12,7 @@ import type { LiveExercise } from '@/lib/fitness-data'
 import { alternativesAction, liveExerciseAction, saveWorkoutAction } from '../actions'
 import { LIVE_KEY, queuePending, readJson, writeJson } from '../live-store'
 import { EQUIPMENT } from '@/lib/exercise-labels'
+import { afterSupersetSet, supersetBlocks, supersetMembers } from '@/lib/supersets'
 
 type LSet = { kg: string; reps: string; rir: number | null; type: SetType; seconds: string; done: boolean; completedAt: string | null; feedback: string | null; ph: { kg: number; reps: number; seconds: number } }
 type LEx = Omit<LiveExercise, 'sets'> & { targetSets: number; sets: LSet[]; suggestion: Suggestion | null }
@@ -125,6 +126,8 @@ export default function LiveWorkout(p: Props) {
     const s0 = d.exercises[ei].sets[si], k0 = d.exercises[ei].kind
     if (!s0.done && k0 === 'weight_reps' && s0.kg === '' && !(s0.ph.kg > 0)) { setMsg(`${d.exercises[ei].name}: önce ağırlığı gir (geçmiş kayıt yok).`); return }
     setMsg(null)
+    // Faz 5h-4: süperset — tur içinde dinlenmeden sıradaki harekete, tur sonunda dinlenme ve ilk üyeye dönüş
+    const ss = s0.done ? null : afterSupersetSet(d.exercises.map((y, i) => (i === ei ? { ...y, sets: y.sets.map((t, j) => (j === si ? { ...t, done: true } : t)) } : y)), ei)
     update((x) => {
       const e = x.exercises[ei], s = e.sets[si]
       if (s.done) { s.done = false; s.completedAt = null; return x }
@@ -134,18 +137,20 @@ export default function LiveWorkout(p: Props) {
       s.done = true; s.completedAt = new Date().toISOString()
       // sonraki setlerin gri değerleri az önce yapılanı izler
       for (const t of e.sets.slice(si + 1)) if (!t.done && t.type === s.type) { t.ph = { kg: n(s.kg) || t.ph.kg, reps: n(s.reps) || t.ph.reps, seconds: n(s.seconds) || t.ph.seconds } }
+      if (ss && !ss.rest) { x.restEndsAt = null; x.restFor = ''; return x }
       const nextSet = e.sets.find((t) => !t.done)
-      const nextEx = nextSet ? e : x.exercises.slice(ei + 1).find((y) => y.sets.some((t) => !t.done))
+      const nextEx = ss?.focus != null ? x.exercises[ss.focus] : nextSet ? e : x.exercises.slice(ei + 1).find((y) => y.sets.some((t) => !t.done))
       const rest = s.type === 'warmup' ? Math.min(60, e.rest) : e.rest
       x.restEndsAt = Date.now() + rest * 1000; x.restTotal = rest; x.restFor = nextEx ? nextEx.name : ''; x.restPush = false
       return x
     })
     const e0 = d.exercises[ei]
-    if (!s0.done && e0.sets.every((t, i) => i === si || t.done)) {
+    if (ss?.focus != null) { const f = ss.focus; if (f !== ei) setTimeout(() => { setSel(f); setRirAt(null) }, ss.rest ? 700 : 350) }
+    else if (!s0.done && e0.sets.every((t, i) => i === si || t.done)) {
       const nx = d.exercises.findIndex((y, i) => i > ei && y.sets.some((t) => !t.done))
       if (nx >= 0) setTimeout(() => { setSel(nx); setRirAt(null) }, 700)
     }
-    if (!s0.done) pushRest(s0.type === 'warmup' ? Math.min(60, e0.rest) : e0.rest, e0.sets.some((t, i) => i !== si && !t.done) ? e0.name : (d.exercises.slice(ei + 1).find((y) => y.sets.some((t) => !t.done))?.name ?? ''))
+    if (!s0.done && ss?.rest !== false) pushRest(s0.type === 'warmup' ? Math.min(60, e0.rest) : e0.rest, ss?.focus != null ? d.exercises[ss.focus].name : e0.sets.some((t, i) => i !== si && !t.done) ? e0.name : (d.exercises.slice(ei + 1).find((y) => y.sets.some((t) => !t.done))?.name ?? ''))
   }
 
   const finish = async () => {
@@ -175,6 +180,8 @@ export default function LiveWorkout(p: Props) {
 
   const cur = sheet && 'ex' in sheet ? d.exercises[sheet.ex] : null
   const se = Math.min(sel, Math.max(0, d.exercises.length - 1))
+  const ssNo = new Map<number, number>()
+  supersetBlocks(d.exercises).filter((b) => b.group != null).forEach((b, k) => b.idx.forEach((i) => ssNo.set(i, k + 1)))
   const allSets = d.exercises.reduce((t, e) => t + e.sets.length, 0), doneSets = d.exercises.reduce((t, e) => t + e.sets.filter((x) => x.done).length, 0)
   const ra = rirAt ? d.exercises[rirAt.ei]?.sets[rirAt.si] : null
   const raIdx = rirAt && ra ? rirIdx(ra.rir ?? d.exercises[rirAt.ei].rir) : 0
@@ -211,6 +218,7 @@ export default function LiveWorkout(p: Props) {
                 : e.images?.[0] ? <ExImg src={`/media/exercises/${e.images[0]}`} size={112} className="w-full h-full" />
                   : <span className="absolute inset-0 p-2 text-[11.5px] font-bold leading-tight text-left text-ink-2">{e.name}</span>}
               {fin ? <span className="absolute inset-0 bg-black/50 flex items-center justify-center text-white"><Check size={28} /></span> : null}
+              {ssNo.get(ei) ? <span className="absolute bottom-1.5 left-1.5 h-5 px-1.5 rounded-md bg-[#E53935] text-white text-[10.5px] font-extrabold flex items-center" aria-hidden>S{ssNo.get(ei)}</span> : null}
             </button>
           )
         })}
@@ -235,6 +243,11 @@ export default function LiveWorkout(p: Props) {
             </span>
             <button type="button" className={btn.icon} aria-label={`${e.name} seçenekleri`} onClick={() => setSheet({ kind: 'menu', ex: ei })}><Dots size={20} /></button>
           </div>
+          {ssNo.get(ei) ? (() => { const m = supersetMembers(d.exercises, ei), nx = m[(m.indexOf(ei) + 1) % m.length]; return (
+            <button type="button" onClick={() => { setSel(nx); setRirAt(null) }} className="self-start h-8 px-3 rounded-full bg-[#E53935]/12 text-[#E53935] text-[12.5px] font-bold flex items-center gap-1.5" data-testid="superset-chip">
+              Süperset {ssNo.get(ei)} · {m.indexOf(ei) + 1}/{m.length} · sonra: {d.exercises[nx].name}
+            </button>) })() : null}
+          {e.note ? <p className="text-[13px] text-ink-2" data-testid="ex-note">Not: {e.note}</p> : null}
           <div className="grid grid-cols-2 gap-2.5">
             <button type="button" onClick={() => setSheet({ kind: 'history', ex: ei })} className="h-12 rounded-xl border-2 border-[#E53935] text-[#E53935] font-bold text-[16px] flex items-center justify-center gap-2" data-testid="live-history"><History size={20} />Tarih</button>
             <button type="button" onClick={() => setSheet({ kind: 'video', ex: ei })} className="h-12 rounded-xl border-2 border-[#E53935] text-[#E53935] font-bold text-[16px] flex items-center justify-center gap-2" data-testid="live-video"><Play size={20} />Video</button>
@@ -362,7 +375,7 @@ export default function LiveWorkout(p: Props) {
                 if (!r.ok) { setMsg(r.error); return }
                 const old = d.exercises[sheet.ex]
                 // hedefler korunur, yeni hareketin geçmişi ve önerisi gelir; tamamlanmış setler eski harekette kalır
-                const nx = buildExercise({ ...r.exercise, sets: old.targetSets, repMin: old.repMin, repMax: old.repMax, rir: old.rir, rest: old.rest }, p.gym.increment, p.deficitKcal)
+                const nx = buildExercise({ ...r.exercise, sets: old.targetSets, repMin: old.repMin, repMax: old.repMax, rir: old.rir, rest: old.rest, superset: old.superset, note: old.note }, p.gym.increment, p.deficitKcal)
                 update((x) => { const o = x.exercises[sheet.ex]; if (o.sets.some((t) => t.done)) { o.sets = o.sets.filter((t) => t.done); x.exercises.splice(sheet.ex + 1, 0, nx) } else x.exercises[sheet.ex] = nx; return x })
                 setSheet(null)
               }}><span className="font-semibold">{a.nameTr}</span><span className="text-[12px] text-mute">{EQUIPMENT[a.equipment] ?? a.equipment}</span></button>

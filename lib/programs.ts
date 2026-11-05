@@ -101,7 +101,7 @@ const EQUIV: Record<string, string[]> = {
 /** Vücut ağırlığıyla kolay kalan hareketlerde tekrar aralığı (ağırlık yuvasına düştüklerinde). */
 const BW_REPS: Record<string, [number, number]> = { Bodyweight_Squat: [15, 25], Pushups: [8, 20], Inverted_Row: [8, 15], Glute_Kickback: [12, 20] }
 
-export interface ProgramExercise extends SlotTarget { key: string; role: Slot['role'] }
+export interface ProgramExercise extends SlotTarget { key: string; role: Slot['role']; /** Faz 5h-4: gün içi süperset grubu (aynı numara = birlikte) */ superset?: number | null; note?: string | null }
 export interface ProgramDay { name: string; focus: string; exercises: ProgramExercise[] }
 export interface GeneratedProgram { templateId: string; name: string; days: ProgramDay[]; notes: string[] }
 

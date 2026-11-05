@@ -402,6 +402,8 @@ export const programExercises = pgTable('program_exercises', {
   setType: text('set_type').notNull().default('normal'),
   scheme: text('scheme'), // gzclp-t1 | gzclp-t2 | gzclp-t3 (Faz 3b); null = çift aşamalı
   schemeState: jsonb('scheme_state').$type<{ tier: 't1' | 't2' | 't3'; stage: number; kg: number; lastBaseKg: number | null }>(),
+  superset: integer('superset'), // Faz 5h-4: gün içi süperset grubu; aynı numaralı ardışık hareketler birlikte yapılır
+  note: text('note'), // Faz 5h-4: hareket notu (ör. "iki taraf")
 }, (t) => [index('program_exercises_day_idx').on(t.dayId)])
 
 /** Tamamlanmış antrenman. client_id çevrimdışı kaydın iki kez gönderilmesini engeller. */

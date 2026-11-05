@@ -2,6 +2,8 @@ import 'server-only'
 import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { exerciseMedia } from './licensed'
+import { agProgramPlan } from './ag-program-data'
+import { relinkSuperset } from './supersets'
 import { addDays, dayString } from './time'
 import { publish } from './events'
 import { normalizeSearch } from './nutrition'
@@ -146,7 +148,7 @@ export async function insertProgram(userId: string, name: string, templateId: st
     for (const [i, d] of days.entries()) {
       const [day] = await tx.insert(schema.programDays).values({ programId: p.id, idx: i, name: d.name, focus: d.focus }).returning({ id: schema.programDays.id })
       const rows = d.exercises.filter((e) => ids.has(e.key)).map((e, j) => ({
-        dayId: day.id, idx: j, exerciseId: ids.get(e.key)!, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds ?? null, setType: e.type ?? 'normal', scheme: e.scheme ?? null,
+        dayId: day.id, idx: j, exerciseId: ids.get(e.key)!, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds ?? null, setType: e.type ?? 'normal', scheme: e.scheme ?? null, superset: e.superset ?? null, note: e.note ?? null,
       }))
       if (rows.length) await tx.insert(schema.programExercises).values(rows)
     }
@@ -161,6 +163,14 @@ export async function createFromTemplate(userId: string, templateId: string) {
   const days = instantiate(t, await equipmentMap(), new Set(gym.equipment))
   const has = (await listPrograms(userId)).some((p) => p.active)
   return insertProgram(userId, t.name, t.id, days, [], !has)
+}
+
+/** Faz 5h-4: Ağırsağlam ücretsiz programından kullanıcı programı. */
+export async function createFromAgProgram(userId: string, id: string) {
+  const plan = await agProgramPlan(id)
+  if (!plan) throw new Error('Şablon yok')
+  const has = (await listPrograms(userId)).some((p) => p.active)
+  return insertProgram(userId, plan.program.name, id, plan.days, [], !has)
 }
 
 export async function createGenerated(userId: string, i: { days: number; minutes: number; equipment: string[] }) {
@@ -186,7 +196,7 @@ export async function copyProgram(userId: string, id: string) {
     const [n] = await tx.insert(schema.programs).values({ userId, name: p.name + ' (kopya)', templateId: p.templateId, notes: p.notes, active: false }).returning({ id: schema.programs.id })
     for (const d of p.days) {
       const [day] = await tx.insert(schema.programDays).values({ programId: n.id, idx: d.idx, name: d.name, focus: d.focus }).returning({ id: schema.programDays.id })
-      if (d.exercises.length) await tx.insert(schema.programExercises).values(d.exercises.map((e) => ({ dayId: day.id, idx: e.idx, exerciseId: e.exerciseId, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType, scheme: e.scheme, schemeState: e.schemeState })))
+      if (d.exercises.length) await tx.insert(schema.programExercises).values(d.exercises.map((e) => ({ dayId: day.id, idx: e.idx, exerciseId: e.exerciseId, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType, scheme: e.scheme, schemeState: e.schemeState, superset: e.superset, note: e.note })))
     }
     return n.id
   })
@@ -245,6 +255,18 @@ export async function updateProgramExercise(userId: string, peId: string, v: { s
   if (!r) throw new Error('Kayıt yok')
   await db.update(schema.programExercises).set(v).where(eq(schema.programExercises.id, peId))
 }
+/** Faz 5h-4: hareketi gün içinde sonrakiyle süperset yap / bağı çöz. */
+export async function linkSuperset(userId: string, peId: string, withNext: boolean) {
+  const r = await ownsProgramExercise(userId, peId)
+  if (!r) throw new Error('Kayıt yok')
+  const rows = await db.select({ id: schema.programExercises.id, superset: schema.programExercises.superset }).from(schema.programExercises).where(eq(schema.programExercises.dayId, r.dayId)).orderBy(asc(schema.programExercises.idx))
+  const i = rows.findIndex((x) => x.id === peId)
+  if (withNext && i === rows.length - 1) throw new Error('Sonrasında hareket yok')
+  const g = relinkSuperset(rows.map((x) => x.superset), i, withNext)
+  await db.transaction(async (tx) => {
+    for (const [j, x] of rows.entries()) if (x.superset !== g[j]) await tx.update(schema.programExercises).set({ superset: g[j] }).where(eq(schema.programExercises.id, x.id))
+  })
+}
 export async function removeProgramExercise(userId: string, peId: string) {
   const r = await ownsProgramExercise(userId, peId)
   if (!r) throw new Error('Kayıt yok')
@@ -266,6 +288,8 @@ export interface LiveExercise {
   exerciseId: number; name: string; kind: ExKind; equipment: string; images: string[]; primary: string[]
   /** Faz 5h-3: lisanslı küçük resim ve video (yoksa null) */
   thumb?: string | null; video?: string | null
+  /** Faz 5h-4: süperset grubu (aynı numara = sırayla, dinlenme turun sonunda) ve hareket notu */
+  superset?: number | null; note?: string | null
   sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: SetType
   history: Session[]; records: Records | null; feedback: { tooHeavy: number; tooLight: number }
   /** Faz 3b: GZCLP kademesi (ağırlık ve setler sabit), periyodizasyon etiketi, plato notu */
@@ -291,7 +315,7 @@ export async function liveSession(userId: string, programDayId: string | null, e
       if (day) {
         name = day.name
         meta = { periodization: p!.periodization as Periodization, deloadEvery: p!.deloadEvery, startDay: p!.startDay }
-        rows = day.exercises.map((e) => ({ exerciseId: e.exerciseId, name: e.name, kind: e.kind, equipment: e.equipment, images: e.images, primary: e.primary, thumb: e.thumb, video: e.video, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType as SetType, schemeKey: e.scheme, schemeState: e.schemeState }))
+        rows = day.exercises.map((e) => ({ exerciseId: e.exerciseId, name: e.name, kind: e.kind, equipment: e.equipment, images: e.images, primary: e.primary, thumb: e.thumb, video: e.video, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType as SetType, schemeKey: e.scheme, schemeState: e.schemeState, superset: e.superset, note: e.note }))
       }
     }
   }
