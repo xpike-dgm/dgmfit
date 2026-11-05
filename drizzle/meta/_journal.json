@@ -50,6 +50,13 @@
       "when": 1793829651020,
       "tag": "0006_fitness_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793844013893,
+      "tag": "0007_ai",
+      "breakpoints": true
     }
   ]
 }

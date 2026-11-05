@@ -479,3 +479,44 @@ export const mediaBlobs = pgTable('media_blobs', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [index('media_blobs_user_idx').on(t.userId, t.kind, t.day)])
+
+// ───────── AI katmanı (Faz 4a) ─────────
+
+/** Sağlayıcı ayarları (yönetici sayfası). Anahtar AES-256-GCM ile şifreli (DGFIT_MEDIA_KEY, AAD "ai-key:<id>"). */
+export const aiProviders = pgTable('ai_providers', {
+  id: text('id').primaryKey(), // claude | openai
+  enabled: boolean('enabled').notNull().default(true),
+  priority: integer('priority').notNull().default(0), // küçük olan önce
+  model: text('model').notNull(),
+  keyIv: bytea('key_iv'), keyTag: bytea('key_tag'), keyData: bytea('key_data'), keyLast4: text('key_last4'),
+  dailyTokenLimit: integer('daily_token_limit').notNull().default(0), // 0 = sınırsız
+  monthlyTokenLimit: integer('monthly_token_limit').notNull().default(0),
+  cooldownUntil: timestamp('cooldown_until', { withTimezone: true }),
+  lastError: text('last_error'),
+  lastErrorAt: timestamp('last_error_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+/** Her AI çağrısının kaydı (kota, maliyet takibi, hata). İçerik saklanmaz. */
+export const aiCalls = pgTable('ai_calls', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  task: text('task').notNull(), // meal-photo | meal-text | label
+  provider: text('provider'), // null = önbellek ya da hiçbiri
+  ok: boolean('ok').notNull(),
+  cached: boolean('cached').notNull().default(false),
+  inputTokens: integer('input_tokens').notNull().default(0),
+  outputTokens: integer('output_tokens').notNull().default(0),
+  ms: integer('ms').notNull().default(0),
+  error: text('error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('ai_calls_user_idx').on(t.userId, t.createdAt), index('ai_calls_provider_idx').on(t.provider, t.createdAt)])
+
+/** Aynı isteğin sonucu (görev + girdi özeti) 30 gün önbellekte; kullanıcıya bağlı değil, kişisel veri içermez. */
+export const aiCache = pgTable('ai_cache', {
+  hash: text('hash').primaryKey(),
+  task: text('task').notNull(),
+  result: jsonb('result').notNull(),
+  provider: text('provider').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})

@@ -48,7 +48,7 @@ const AddInput = z.object({
   portionQty: z.number().min(0.05).max(5000).nullable().optional(),
   meal: Meal,
   day: Day.optional(),
-  source: z.enum(['search', 'recent', 'barcode', 'saved', 'recipe']).default('search'),
+  source: z.enum(['search', 'recent', 'barcode', 'saved', 'recipe', 'ai']).default('search'),
 })
 
 export async function addMealItem(input: z.input<typeof AddInput>): Promise<R<{ id: number; kcal: number }>> {

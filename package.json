@@ -11,10 +11,12 @@
     "test": "node --test --experimental-strip-types tests/*.test.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.5.0",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
     "drizzle-orm": "^0.45.4",
     "next": "^16.4.5",
+    "openai": "^7.51.0",
     "postgres": "^3.4.9",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
