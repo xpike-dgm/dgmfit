@@ -126,7 +126,8 @@ Kaynak: spesifikasyon bölüm 10; kullanıcı kararları 2026-11-05: Claude'da h
 - [x] Testler: birim (ayrıştırma, eşleşme, geçiş, kota) + e2e (sahte Claude ve OpenAI sunucusu; Claude kota hatası → OpenAI'ye geçiş) + verify.sh + canlı e2e + hafıza
 
 Kanıt `tests/e2e/ai.e2e.cjs` (sahte sunucular :3190/:3191): anahtar yokken AI gizli; yönetici olmayana 404; anahtar yalnızca ••••son4; fotoğrafla 3 kalem → kalori = veritabanı 100 g × gram (çorba, simit); ayran Su'ya `effectiveMl`; etiket porsiyon (40 g) → 100 g (kcal 400, sodyum 200 mg); Claude isteği: Haiku 5.5, `output_config.format.json_schema`, base64 görsel, anahtar tek kimlik; Claude 429 → OpenAI (gpt-6-luna, `text.format` json_schema strict); yöneticide hata + bekleme; aynı metin önbellekten (sağlayıcıya gitmez); günlük hak 3 → 4. istek reddedildi.
-**Açık:** gerçek API'lerle hiç denenmedi; ilk gerçek kullanımda Haiku 5.5'in `output_config.format` + `effort: low` kabulü ve gpt-6-luna'nın görsel + strict şema kabulü doğrulanmalı.
+**Karma model eki (2026-11-05):** commit `368883d`; verify.sh VERIFY OK (AI e2e: fotoğraf ve etiket `claude-opus-5-5` + `fallbacks: default` + `anthropic-beta: server-side-fallback-2026-07-01`; yazı `claude-haiku-5-5` yedeksiz; yöneticide maliyet tablosu ve görev modelleri); release deploy `2026-11-05T02-34-13-285Z` RELEASE OK; canlıda `ai_calls.model` sütunu var, `ai_providers` satırı henüz yok (ilk yönetici ziyaretinde Opus varsayılanlarıyla oluşur); 7 test kullanıcısı silindi.
+**Açık:** gerçek API'lerle hiç denenmedi; ilk gerçek kullanımda Opus 5.5 (beta yedekli) ve Haiku 5.5'in `output_config.format` + `effort: low` kabulü ve gpt-6-luna'nın görsel + strict şema kabulü doğrulanmalı.
 
 ## Sıradaki işler
 

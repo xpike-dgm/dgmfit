@@ -72,7 +72,7 @@ Faz 1a (Su): `water_logs` (ham `ml` + `effective_ml` = ml × hidrasyon; `source`
 
 Faz 1b: `app_config` · `push_subscriptions` (endpoint benzersiz) · `water_reminders` (gün, dakika, tür remind/summary/test, öneri ml, teslim sayısı, açılma, etkili olma, aksiyon) · `water_settings`'e `reminders_enabled`, `quiet`, `max_per_day`, `summary_enabled`.
 
-Faz 4a: `ai_providers` (anahtar iv/tag/data, son4, limitler, bekleme, son hata) · `ai_calls` (içeriksiz kayıt) · `ai_cache`.
+Faz 4a: `ai_providers` (anahtar iv/tag/data, son4, limitler, bekleme, son hata, `task_models` görev→model, 0008) · `ai_calls` (içeriksiz kayıt, kullanılan `model`, 0008) · `ai_cache`. Model seçimi `modelFor(p, task)` (lib/ai/engine.ts); maliyet `PRICES` × gerçek token.
 
 Faz 3b: `body_measurements` · `media_blobs` (bytea iv/tag/data) · `programs.periodization/deload_every/start_day` · `program_exercises.scheme/scheme_state` · `exercises.photo_id`.
 

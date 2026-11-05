@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — 4a eki: karma model (fotoğraf/etiket Opus, yazı Haiku)
+- Kullanıcı kararı: "evet karma modeli ekle, fotoğrafa opus". Migration 0008 (`ai_providers.task_models`, `ai_calls.model`), `modelFor`, `PRICES`, Opus için sunucu tarafı yedek; yönetici sayfasında görev başına model + bu ayın tahmini maliyet tablosu.
+- Bulunan kusur: zod 4'te `z.record(z.enum(...))` tüm anahtarları zorunlu kılıyor → kaydetme sessizce reddediliyordu (AI e2e "Kaydedildi" beklerken zaman aşımı) → `z.partialRecord`.
+- Doğrulama: commit `368883d`; verify.sh VERIFY OK (birim 99/99, 8 e2e); release `2026-11-05T02-34-13-285Z` RELEASE OK; canlı DB'de `ai_calls.model` mevcut; 7 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 4a tamamlandı (sahte sağlayıcıyla)
 - OpenAI belgesi web okuma ajanıyla okundu (models/pricing/images-vision/error-codes + openai-node README): `gpt-6-luna` ($0,10/$0,50), Responses API `input_image` + base64 data URL, `text.format` json_schema, 429 kodları (credit_balance_exhausted, *_spend_limit_exceeded, *_usage_limit_exceeded, slow_down), 503 server_is_overloaded. Claude tarafı: claude-api rehberi + SDK tipleri (`output_config.format: {type:'json_schema', schema}`).
 - SDK sürümleri: @anthropic-ai/sdk 1.5.0, openai 7.51.0. Kurulu SDK kaynağından doğrulandı: Anthropic SDK 1.x anahtarı `Authorization: Bearer` ile gönderir (x-api-key değil) ve ortamdaki ANTHROPIC_BASE_URL'e düşer → resmi adresler açıkça verildi, `authToken: null`.
