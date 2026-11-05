@@ -6,6 +6,8 @@ import { shortDate, addDays } from '@/lib/time'
 import { logoutAction } from '@/app/(auth)/actions'
 import { btn, TopBar } from '@/components/ui'
 import { Logout } from '@/components/icons'
+import Link from 'next/link'
+import { isAdmin } from '@/lib/admin'
 
 export const metadata = { title: 'Profil' }
 
@@ -62,6 +64,7 @@ export default async function Page() {
         </dl>
       </section>
 
+      {isAdmin(u.username) ? <Link href="/yonetim/ai" className={btn.secondary + ' w-full h-12'}>AI ayarları (yönetici)</Link> : null}
       <form action={logoutAction}>
         <button type="submit" className={btn.secondary + ' w-full h-12'}><Logout size={18} /> Çıkış yap</button>
       </form>

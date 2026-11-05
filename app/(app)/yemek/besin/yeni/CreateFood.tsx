@@ -1,17 +1,36 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { shrinkImage } from '@/lib/client-image'
+import { btn } from '@/components/ui'
 import { TopBar } from '@/components/ui'
 import { createFood } from '../../actions'
 
 const input = 'h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink outline-none focus:border-lime w-full'
 
-export default function CreateFood({ name, barcode, back }: { name: string; barcode: string; back: string }) {
+export default function CreateFood({ name, barcode, back, aiOn = false }: { name: string; barcode: string; back: string; aiOn?: boolean }) {
   const router = useRouter()
   const [v, setV] = useState({ name, brand: '', barcode, servingG: '', servingLabel: '', kcal: '', protein: '', carb: '', fat: '', fiber: '', sugar: '', satFat: '', sodium: '' })
   const [basis, setBasis] = useState<'100g' | 'serving'>('100g')
   const [err, setErr] = useState<string | null>(null)
   const [pending, start] = useTransition()
+  const [ocr, setOcr] = useState<{ busy: boolean; msg: string | null }>({ busy: false, msg: null })
+  /** Etiket fotoğrafı → AI yalnızca tabloda yazanı okur; porsiyon bazlıysa 100 g'a sunucu çevirir. Tuz (g) → sodyum (mg) = tuz × 400. */
+  const readLabel = async (f: File) => {
+    setOcr({ busy: true, msg: null })
+    try {
+      const fd = new FormData(); fd.set('file', await shrinkImage(f, 1600, 0.9), 'etiket.jpg')
+      const r = await fetch('/api/ai/label', { method: 'POST', body: fd })
+      const j = await r.json().catch(() => ({ error: 'Yanıt okunamadı' }))
+      if (!r.ok) { setOcr({ busy: false, msg: j.error ?? 'Etiket okunamadı' }); return }
+      if (!j.per100) { setOcr({ busy: false, msg: 'Tablo okunamadı; daha yakından ve düz çekmeyi dene.' }); return }
+      const p = j.per100 as Record<string, number | null>
+      const str = (x: number | null | undefined) => (x === null || x === undefined ? '' : String(x).replace('.', ','))
+      setBasis('100g')
+      setV((o) => ({ ...o, name: o.name || j.label.name || '', brand: o.brand || j.label.brand || '', kcal: str(p.kcal), protein: str(p.protein), carb: str(p.carb), fat: str(p.fat), fiber: str(p.fiber), sugar: str(p.sugar), satFat: str(p.satFat), sodium: p.salt === null || p.salt === undefined ? '' : String(Math.round(p.salt * 400)), servingG: j.label.servingGrams ? String(j.label.servingGrams) : o.servingG }))
+      setOcr({ busy: false, msg: 'Etiketten dolduruldu (100 g başına). Kaydetmeden önce paketteki değerlerle karşılaştır.' })
+    } catch (x) { setOcr({ busy: false, msg: (x as Error).message || 'Bağlantı yok' }) }
+  }
   const n = (s: string) => (s.trim() ? Number(s.replace(',', '.')) : undefined)
   const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement>) => setV({ ...v, [k]: e.target.value })
   const num = (k: keyof typeof v, label: string, unit: string) => (
@@ -35,6 +54,15 @@ export default function CreateFood({ name, barcode, back }: { name: string; barc
   return (
     <div className="px-4 pt-4 flex flex-col gap-3 pb-8">
       <TopBar back={back} title="Yeni besin" />
+      {aiOn ? (
+        <section className="card p-4 flex flex-col gap-2 mt-2" data-testid="label-ocr">
+          <label className={`${btn.secondary} cursor-pointer ${ocr.busy ? 'opacity-50' : ''}`}>
+            {ocr.busy ? 'Etiket okunuyor…' : 'Besin değeri tablosunu fotoğrafla (AI)'}
+            <input type="file" accept="image/*" capture="environment" className="sr-only" data-testid="label-input" disabled={ocr.busy} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void readLabel(f) }} />
+          </label>
+          {ocr.msg ? <p role="status" className="text-[13px] text-ink-2">{ocr.msg}</p> : null}
+        </section>
+      ) : null}
       <section className="card p-5 flex flex-col gap-3 mt-2">
         <div className="flex flex-col gap-1"><label htmlFor="cf-name" className="text-xs text-mute">Ad</label><input id="cf-name" value={v.name} onChange={set('name')} className={input} placeholder="Ör. Ev yapımı granola" /></div>
         <div className="grid grid-cols-2 gap-2">

@@ -10,11 +10,12 @@ import { Back, Check, Plus } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import { MEAL_LABEL, type MealId } from '@/lib/food'
 import { addMealItem, addSavedMeal, deleteUserFood } from '../actions'
+import AiMeal from './AiMeal'
 
 interface Hit extends SheetFood { kcal: number; source: string; count?: number }
 
-export default function AddFood({ day, meal, remaining, recent, saved, mine, startBarcode }: {
-  day: string; meal: MealId; remaining: number; recent: Hit[]; saved: { id: string; name: string; count: number }[]; mine: Hit[]; startBarcode: boolean
+export default function AddFood({ day, meal, remaining, recent, saved, mine, startBarcode, aiOn }: {
+  day: string; meal: MealId; remaining: number; recent: Hit[]; saved: { id: string; name: string; count: number }[]; mine: Hit[]; startBarcode: boolean; aiOn: boolean
 }) {
   const router = useRouter()
   const [q, setQ] = useState('')
@@ -78,6 +79,8 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
           className="w-full h-14 rounded-2xl bg-surface border border-line pl-4 pr-28 text-[16px] text-ink placeholder:text-faint outline-none focus:border-lime" autoComplete="off" />
         <button type="button" onClick={() => setScan(true)} className="absolute right-1.5 top-1/2 -translate-y-1/2 h-11 px-4 rounded-xl bg-surface-2 text-sm font-bold">Barkod</button>
       </div>
+
+      {aiOn ? <AiMeal day={day} meal={meal} onAdded={(lines, kcal) => { setAdded((a) => [...lines, ...a].slice(0, 6)); setLeft((l) => l - kcal) }} /> : null}
 
       {added.length ? (
         <div className="rounded-2xl bg-coach border border-coach-line px-4 py-3 text-sm flex flex-col gap-1" role="status">

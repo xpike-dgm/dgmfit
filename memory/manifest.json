@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "3b",
+  "phase": "4a",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -118,7 +118,18 @@
     "data/exercises-tr-auto/part1.json",
     "data/exercises-tr-auto/part2.json",
     "data/exercises-tr-auto/part3.json",
-    "data/exercises-tr-auto/part4.json"
+    "data/exercises-tr-auto/part4.json",
+    "lib/ai/engine.ts",
+    "lib/ai/schemas.ts",
+    "lib/ai/policy.ts",
+    "lib/ai/meal.ts",
+    "lib/admin.ts",
+    "lib/client-image.ts",
+    "tests/ai.test.ts",
+    "tests/e2e/ai.e2e.cjs",
+    "app/(app)/yemek/ekle/AiMeal.tsx",
+    "app/(app)/yonetim/ai/AiAdmin.tsx",
+    "app/(app)/yonetim/ai/actions.ts"
   ],
   "tables": [
     "users",
@@ -151,7 +162,10 @@
     "cardio_sessions",
     "gym_settings",
     "body_measurements",
-    "media_blobs"
+    "media_blobs",
+    "ai_providers",
+    "ai_calls",
+    "ai_cache"
   ],
   "routes": [
     "/",
@@ -196,7 +210,10 @@
     "/api/media",
     "/api/media/[id]",
     "/api/push/rest",
-    "/api/test/fitness"
+    "/api/test/fitness",
+    "/yonetim/ai",
+    "/api/ai/meal",
+    "/api/ai/label"
   ],
   "events": [
     "profile.onboarded",
@@ -454,6 +471,24 @@
       "alternativesFor",
       "listMeasurements",
       "addMeasurement"
+    ],
+    "lib/ai/policy.ts": [
+      "pickProviders",
+      "classifyError"
+    ],
+    "lib/ai/schemas.ts": [
+      "jsonSchemaFor",
+      "strictSubset",
+      "parseResult",
+      "labelPer100"
+    ],
+    "lib/ai/engine.ts": [
+      "runTask",
+      "sealKey",
+      "ensureProviders",
+      "providerOverview",
+      "aiAvailable",
+      "userCallsToday"
     ]
   },
   "dependencies": {
@@ -465,7 +500,9 @@
     "tailwindcss": "4",
     "typescript": "5",
     "web-push": "3",
-    "@zxing/browser": "0"
+    "@zxing/browser": "0",
+    "@anthropic-ai/sdk": "1",
+    "openai": "7"
   },
   "migrations": [
     "0000_init.sql",
@@ -474,6 +511,7 @@
     "0003_food.sql",
     "0004_fit.sql",
     "0005_fitness.sql",
-    "0006_fitness_progress.sql"
+    "0006_fitness_progress.sql",
+    "0007_ai.sql"
   ]
 }

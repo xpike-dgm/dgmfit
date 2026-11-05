@@ -1,6 +1,6 @@
 import 'server-only'
 import crypto from 'node:crypto'
-import { and, eq, gte, isNull, sql } from 'drizzle-orm'
+import { and, eq, gte, sql } from 'drizzle-orm'
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
 import { db, schema } from '../db'
@@ -53,9 +53,14 @@ export async function aiSettings(): Promise<{ userDaily: number }> {
 }
 
 /** Test kancası: yalnızca DGFIT_TEST_HOOKS=1 iken sahte sağlayıcı adresleri (canlıda asla). */
-function baseUrl(id: ProviderId): string | undefined {
-  if (process.env.DGFIT_TEST_HOOKS !== '1') return undefined
-  return id === 'claude' ? process.env.DGFIT_AI_TEST_CLAUDE_URL || undefined : process.env.DGFIT_AI_TEST_OPENAI_URL || undefined
+/** Resmi API adresleri açıkça verilir: SDK'lar ANTHROPIC_BASE_URL / OPENAI_BASE_URL ortam değişkenine düşmesin. */
+const OFFICIAL: Record<ProviderId, string> = { claude: 'https://api.anthropic.com', openai: 'https://api.openai.com/v1' }
+function baseUrl(id: ProviderId): string {
+  if (process.env.DGFIT_TEST_HOOKS === '1') {
+    const t = id === 'claude' ? process.env.DGFIT_AI_TEST_CLAUDE_URL : process.env.DGFIT_AI_TEST_OPENAI_URL
+    if (t) return t
+  }
+  return OFFICIAL[id]
 }
 
 interface CallInput { text: string; image?: { mime: string; data: Buffer } }
@@ -64,7 +69,8 @@ interface CallOut { json: unknown; inputTokens: number; outputTokens: number }
 class ProviderError extends Error { constructor(message: string, readonly status: number | null, readonly code: string | null) { super(message) } }
 
 async function callClaude(key: string, model: string, task: Task, input: CallInput): Promise<CallOut> {
-  const client = new Anthropic({ apiKey: key, baseURL: baseUrl('claude'), maxRetries: 0, timeout: 60_000 })
+  // authToken: null → ortamdaki ANTHROPIC_AUTH_TOKEN ya da profil devreye girmez; yalnızca şifreli saklanan anahtar (SDK 1.x: Authorization: Bearer)
+  const client = new Anthropic({ apiKey: key, authToken: null, baseURL: baseUrl('claude'), maxRetries: 0, timeout: 60_000 })
   try {
     const content: Anthropic.ContentBlockParam[] = []
     if (input.image) content.push({ type: 'image', source: { type: 'base64', media_type: input.image.mime as 'image/jpeg', data: input.image.data.toString('base64') } })
@@ -114,7 +120,7 @@ async function usageByProvider(): Promise<Map<string, { today: number; month: nu
 export async function userCallsToday(userId: string): Promise<number> {
   const [start] = dayBounds(dayString())
   const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.aiCalls)
-    .where(and(eq(schema.aiCalls.userId, userId), gte(schema.aiCalls.createdAt, start), eq(schema.aiCalls.cached, false), sql`${schema.aiCalls.provider} is not null`))
+    .where(and(eq(schema.aiCalls.userId, userId), gte(schema.aiCalls.createdAt, start), eq(schema.aiCalls.cached, false), eq(schema.aiCalls.ok, true)))
   return Number(r?.n ?? 0)
 }
 
@@ -189,9 +195,8 @@ export async function providerOverview() {
   }
 }
 
+/** Etkin ve anahtarı olan en az bir sağlayıcı var mı (ekranda AI düğmelerini göstermek için; bekleme/limit çağrıda kontrol edilir). */
 export async function aiAvailable(): Promise<boolean> {
-  const rows = await db.select({ enabled: schema.aiProviders.enabled, keyLast4: schema.aiProviders.keyLast4 }).from(schema.aiProviders).where(and(eq(schema.aiProviders.enabled, true), isNull(schema.aiProviders.cooldownUntil)))
-  if (rows.some((r) => r.keyLast4)) return true
   const any = await db.select({ id: schema.aiProviders.id }).from(schema.aiProviders).where(and(eq(schema.aiProviders.enabled, true), sql`${schema.aiProviders.keyLast4} is not null`)).limit(1)
   return any.length > 0
 }

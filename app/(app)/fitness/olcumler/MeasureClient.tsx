@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { btn, Eyebrow } from '@/components/ui'
 import { Trash } from '@/components/icons'
 import { addMeasurementAction, deleteMeasurementAction, deleteMediaAction } from '../actions'
+import { shrinkImage } from '@/lib/client-image'
 
 const FIELDS = [['waistCm', 'Bel'], ['chestCm', 'Göğüs'], ['hipsCm', 'Kalça'], ['armCm', 'Kol'], ['thighCm', 'Uyluk'], ['calfCm', 'Baldır'], ['neckCm', 'Boyun'], ['bodyFatPct', 'Yağ %']] as const
 type Key = (typeof FIELDS)[number][0]
@@ -49,19 +50,9 @@ export function DeleteMeasure({ id }: { id: number }) {
   return <button type="button" aria-label="Ölçüyü sil" disabled={pending} className="w-9 h-9 flex items-center justify-center text-mute" onClick={() => start(async () => { const r = await deleteMeasurementAction(id); if (r.ok) router.refresh() })}><Trash size={16} /></button>
 }
 
-/** Fotoğrafı tarayıcıda küçült (uzun kenar en çok 1280 px, JPEG %85) — EXIF/konum bilgisi de böylece düşer. */
-async function shrink(file: File): Promise<Blob> {
-  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' } as ImageBitmapOptions)
-  const s = Math.min(1, 1280 / Math.max(bmp.width, bmp.height))
-  const c = document.createElement('canvas')
-  c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s)
-  c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height)
-  return await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('Fotoğraf işlenemedi'))), 'image/jpeg', 0.85))
-}
-
 export async function uploadPhoto(file: File, fields: Record<string, string>): Promise<{ id?: string; error?: string }> {
   const fd = new FormData()
-  fd.set('file', await shrink(file), 'foto.jpg')
+  fd.set('file', await shrinkImage(file), 'foto.jpg')
   for (const [k, v] of Object.entries(fields)) fd.set(k, v)
   const r = await fetch('/api/media', { method: 'POST', body: fd })
   const j = await r.json().catch(() => ({ error: 'Yükleme başarısız' }))
