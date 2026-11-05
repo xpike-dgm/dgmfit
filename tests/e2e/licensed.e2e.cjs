@@ -42,7 +42,7 @@ const fail = (m) => { throw new Error(m) }
   await p.getByRole('tab', { name: 'Yanlış yapılış' }).click()
   if (!(await p.getByTestId('ex-video').getAttribute('src')).includes('Wrong')) fail('yanlış yapılış videosu açılmadı')
   const bad = await p.evaluate(async () => (await fetch('/api/lisansli/videos/..%2F..%2Fexercises.json')).status)
-  if (bad !== 404) fail('yol dışına çıkılabiliyor: ' + bad)
+  if (bad !== 404 && bad !== 403) fail('yol dışına çıkılabiliyor: ' + bad) // canlıda Caddy %2F içeren yolu 403 ile keser
   await p.screenshot({ path: `${OUT}/licensed-02-video.png`, fullPage: true })
   console.log('LİSANSLI E2E OK user=', u)
   console.log(errors.length ? 'KONSOL HATALARI:\n' + errors.join('\n') : 'no console errors')

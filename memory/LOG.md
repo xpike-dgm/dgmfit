@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Faz 5h-1: Ağırsağlam lisanslı içerik (hareket verisi + videolar)
+- İzin: team@lightweightapp.com (kullanıcı ekran görüntüleriyle paylaştı; şartlar DECISIONS). Depo herkese açık → içerik sunucuda, depoda yalnızca kod.
+- Kod: `scripts/licensed-map.mjs`, migrate `seedLicensed`, 0016 `exercises.licensed`, `lib/licensed.ts`, `/api/lisansli/[kind]/[file]` (oturum + Range), hareket sayfası video/kas etkisi/MSS/etiket/açıklama/kaynak satırı, listede VİDEO rozeti, kütüphane görünürlüğü `user_id is null`.
+- Süreç: kullanıcı iki kez "Dur" dedi; onay almadan başlanmıştı (kullanıcı uyardı). Bundan sonra açık "başla/devam" olmadan iş yok. Kullanıcı: "elimizdekilerle yapalım, sırayla başla ve hepsini hallet" (kas vurgusu çokgenle, metinler paketten; kaynak satırı en küçük haliyle — izin şartı).
+- Doğrulama: commit `9f9a34a`; verify.sh VERIFY OK (149 birim, 16 e2e); tek seferlik paketli deploy `2026-11-05T22-41-16-200Z`; 698 video indirildi; release `2026-11-05T22-43-48-661Z`; canlı lisanslı e2e OK (Range 206, yanlış yapılış sekmesi, yol dışı 403), oturumsuz 401.
+
 ## 2026-11-05 — Hareket adları İngilizce
 - Kullanıcı isteği: Fitness'ta hareket adları İngilizce kalsın. `scripts/data/build_exercises.mjs`: görünen ad = kaynak adı, Türkçe ad takma adların başına; hareket verisi sürümü 6b1d9d0883fb (veri özeti, commit değil). Hareket sayfası alt başlığı "Türkçe: …". e2e'lerde Türkçe hareket adları İngilizceye çevrildi (fitness, progress, social).
 - Doğrulama: commit `3805ab9`; verify.sh VERIFY OK (146 birim, 15 e2e); release `2026-11-05T17-57-24-577Z` RELEASE OK; canlı DB: `Barbell Squat [Squat (barbell)]`, `Pullups [Barfiks]`, 876 hareket; test kullanıcıları silindi.
