@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Faz 5h-4: ücretsiz programlar + süperset
+- 35 ücretsiz program şablon listesinde (süzgeç: Ev/Salon/Başlangıç/Orta/Tek antrenman/Haftalık), ayrıntı sayfası (küçük resim, hedef, dinlenme, not, süperset blokları, kaynak satırı), "Bu şablonu kullan" → kullanıcı programı. Paket çalışma anında okunur, DB'ye şablon kopyalanmaz. 0019: `program_exercises.superset`, `note`.
+- Süperset: editörde kırmızı çizgili blok + "Sonraki hareketle süperset yap / Süperseti boz"; canlıda S1 rozeti, "Süperset 1 · 1/3 · sonra: …" çipi, tur içinde dinlenmeden geçiş, tur sonunda dinlenme ve ilk üyeye dönüş.
+- Hatalar: program sayfası editöre alanları tek tek aktarıyordu → `superset`/`note` ve 5h-3'ten kalan `thumb`/`images` eksikti (5h-3'te program satırları hep simge gösteriyordu), eklendi; yerel sunucu eski süreç portu tuttuğu için yeniden başlamamıştı (`fuser -k 3100/tcp`); ilk tasarımda süperset setleri "S" tipindeydi → set numarası görünmüyordu, normal tipe alındı; şerit rozeti adın üstüne biniyordu → alt köşeye.
+- Doğrulama: commit `b9fd4ca`; verify.sh VERIFY OK (157 birim, 18 e2e); release `2026-11-05T23-49-37-793Z` RELEASE OK; logda hata 0; 12 test kullanıcısı silindi.
+
 ## 2026-11-06 — Faz 5h-3: program günü + canlı antrenman yeni düzeni
 - Kullanıcının gönderdiği ekranlara göre: program günü satırları küçük resim + "N set · X tekrar · R RiR", gün başına "Antrenmana Başla"; canlı ekranda hareket şeridi, ilerleme çubuğu, tek hareket görünümü, Tarih/Video pencereleri, SET/KG/TEKRAR/RIR/✓ tablosu, RiR kaydırıcısı (yarım adım, paket metinleri), son sette otomatik sonraki hareket. 0018: `workout_sets.rir` real.
 - e2e'ler şeride uyarlandı (fitness, progress, planner); anatomi e2e'ye program → canlı → RiR 2,5 → Tarih adımı eklendi.
