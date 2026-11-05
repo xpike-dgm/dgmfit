@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — xpike yönetici yapıldı
+- Kullanıcı isteği: `/opt/dgfit-pwa/docker-compose.yml` `DGFIT_ADMINS: deneme` → `deneme,xpike` (önce yedek: `docker-compose.yml.bak-<zaman>`), `docker compose up -d app`. Kanıt: container `printenv DGFIT_ADMINS` = `deneme,xpike`, sağlık `{"ok":true,"db":true}`.
+
 ## 2026-11-05 — Faz 5d tamamlandı
 - Ortak: `components/Sheet.tsx` `useSheet` (tutamaç/başlıktan aşağı çekince 90 px ya da hızlı kaydırmada kapanır, az çekince geri döner; boşluk/Esc/Kapat aynı animasyon), QuickAdd aynı davranışa geçti; `BackButton` (ModShell sekme içi gezinme izi tutar; iz varsa tarayıcı geri, yoksa üst sayfa); genel `input{min-width:0}` + `button{flex-shrink:0}`; `ExImg` yer tutucu; alt bar 350 px altında yalnız simge.
 - Bugün: hafta şeridi bantta, makrolar tek satır, Fit/Su/Antrenman kutuları, koç kartı 3 satır. Fit: 5 araç ayrı sayfa (`/fit/{gunler,banka,checkin,senaryo,karb}`, ortak `load.ts`). Su: kaplar 3 sütun ızgara.

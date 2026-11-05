@@ -126,3 +126,4 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-05 | Aktivite seviyesi antrenman dışı günlük hayatı anlatır (çarpanlar değişmedi); antrenman ve kardiyo kalorisi ayrıca eklenir | Çift sayımı önlemek; dış inceleme UX-13 | Hesap |
 | 2026-11-05 | Kas ısı haritası çizimi kaldırıldı; profesyonel anatomi görseli gelene kadar kas grubu listesi | Kullanıcı: "acemi işler yapma, görsel gerekirse söyle" | Tasarım |
 | 2026-11-05 | free-exercise-db kamu malı (Unlicense) olduğundan arayüzdeki kaynak yazısı kaldırıldı; kaynak DECISIONS'ta kayıtlı | Kullanıcı isteği; lisans atıf istemiyor | Kaynak |
+| 2026-11-05 | Yöneticiler: `deneme`, `xpike` (`DGFIT_ADMINS`, sunucu compose dosyasında; sürüm yüklemesi bu dosyayı değiştirmez) | Kullanıcı isteği | Altyapı |
