@@ -1,4 +1,5 @@
 'use client'
+import AiOff from '@/components/AiOff'
 import Link from 'next/link'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -80,7 +81,7 @@ export default function CoachChat(p: {
         <Link href="/koc?yeni=1" className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center">Yeni</Link>
       </div>
 
-      {!p.aiOn ? <p role="alert" className="card p-4 text-[14px] text-orange">AI koç şu an kullanılamıyor (sağlayıcı yok ya da limitler doldu). Günlük içgörü ve haftalık rapor kural tabanlı çalışmaya devam eder.</p> : null}
+      {!p.aiOn ? <AiOff what="AI koç sohbeti" alt={{ href: '/rapor', label: 'Kural tabanlı haftalık rapor' }} /> : null}
 
       <div className="flex flex-col gap-3 flex-1" aria-live="polite" data-testid="coach-messages">
         {!msgs.length ? (

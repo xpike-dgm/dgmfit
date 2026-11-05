@@ -103,7 +103,7 @@ export default function WaterScreen({ data }: { data: Data }) {
     <div className="px-4 flex flex-col gap-3">
       <Band
         title={data.isToday ? 'Su' : dayLabel(data.day)}
-        sub={<>{data.isToday ? (ahead >= 0 ? `Tempondasın · ${fmtNum(ahead)} ml öndesin` : `${fmtNum(-ahead)} ml gerideysin`) : 'Geçmiş gün'} · seri {data.streak.current} gün</>}
+        sub={<>{data.isToday ? (!logs.length ? 'Günün ilk suyunu ekle' : ahead >= 0 ? `Tempondasın · ${fmtNum(ahead)} ml öndesin` : `İdeale ${fmtNum(-ahead)} ml kaldı`) : 'Geçmiş gün'} · seri {data.streak.current} gün</>}
         right={<Link href="/su/ayarlar" aria-label="Su ayarları" className={hdrIcon}><Gear size={20} /></Link>}
         visual={data.progressStyle === 'ring' ? undefined : <Progress style={data.progressStyle} frac={frac} idealFrac={data.goal ? ideal / data.goal : 0} pop={pop} total={total} />}
         ring={{ value: Math.min(1, frac), big: <span aria-live="polite">{fmtNum(total)}</span>, small: `ml · %${Math.round(frac * 100)}`, label: `Hedefin yüzde ${Math.round(frac * 100)}'i` }}
@@ -116,7 +116,7 @@ export default function WaterScreen({ data }: { data: Data }) {
         </div>
       </Band>
 
-      {data.prediction ? <PredictionCard p={data.prediction} goal={data.goal} total={total} /> : null}
+      {data.prediction && logs.length ? <PredictionCard p={data.prediction} goal={data.goal} total={total} /> : null}
 
       {!data.isToday ? (
         <div className="card px-4 py-3 flex items-center gap-3">
@@ -172,12 +172,12 @@ export default function WaterScreen({ data }: { data: Data }) {
           <h2 className="font-extrabold">Kapların</h2>
           <Link href="/su/ayarlar/kaplar" className="text-sm text-acc font-bold">Düzenle</Link>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
+        <div className="grid grid-cols-3 gap-2">
           {data.containers.map((c) => {
             const I = KIND_ICON[c.kind] ?? Glass
             return (
               <button key={c.id} type="button" onClick={() => setSheet({ container: c })}
-                className={`shrink-0 w-[112px] h-[104px] rounded-[22px] p-3 flex flex-col justify-between text-left ${c.isDefault ? 'bg-coach border border-coach-line' : 'bg-surface'}`}>
+                className={`min-w-0 h-[100px] rounded-[20px] p-3 flex flex-col justify-between text-left ${c.isDefault ? 'bg-water-bg border border-water-line' : 'bg-surface'}`}>
                 <I size={22} className="text-water" />
                 <span className="flex flex-col"><span className="font-bold text-sm truncate">{c.name}</span><span className="num text-xs text-mute">{fmtNum(c.capacityMl)} ml</span></span>
               </button>

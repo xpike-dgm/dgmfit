@@ -44,9 +44,10 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
       </nav>
 
       {s.activeDays === 0 ? (
-        <section className="card p-5 text-sm text-ink-2">Bu aralıkta henüz su kaydı yok. Kayıt ekledikçe grafikler ve analizler burada oluşacak.</section>
+        <section className="card p-5 text-sm text-ink-2">Bu aralıkta henüz su kaydı yok. İlk kayıtlarından sonra günlük grafik, saatlik dağılım, takvim ve koç analizi burada oluşur. <a href="/su" className="text-acc font-bold">Su ekle</a></section>
       ) : null}
 
+      {s.activeDays === 0 ? null : (<>
       <div className="grid grid-cols-2 gap-2">
         <Stat label="Günlük ortalama" value={`${fmtNum(s.avg)} ml`} sub={change !== null ? `${change >= 0 ? '+' : '−'}%${Math.abs(change)} önceki ${range === 365 ? 'yıla' : `${range} güne`} göre` : 'Karşılaştırma için veri az'} />
         <Stat label="Hedef tamamlama" value={`%${Math.round(s.metRate * 100)}`} sub={`${s.days.filter((d) => d.total >= d.goal && d.day !== today).length} gün`} />
@@ -137,6 +138,7 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
         </div>
         <p className="text-xs text-mute">Renk koyulaştıkça hedefe yaklaşılmış demektir; rakamlar litre. Bir güne dokunup kayıtlarını görebilir ve ekleyebilirsin.</p>
       </section>
+      </>)}
       <section aria-label="Aylık rapor" className="card p-4 flex flex-col gap-2">
         <h2 className="font-extrabold text-[15px]">Aylara göre gelişim</h2>
         <table className="w-full text-sm">

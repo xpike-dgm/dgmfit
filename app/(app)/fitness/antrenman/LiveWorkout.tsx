@@ -1,4 +1,5 @@
 'use client'
+import ExImg from '@/components/ExImg'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -175,20 +176,26 @@ export default function LiveWorkout(p: Props) {
           <Stat label="Set" value={String(stats.sets)} />
           <Stat label="Kalori" value={`${stats.kcal}`} />
         </div>
+        {(() => { const all = d.exercises.reduce((t, e) => t + e.sets.length, 0), done = d.exercises.reduce((t, e) => t + e.sets.filter((x) => x.done).length, 0); return all ? (
+          <div className="flex items-center gap-2" aria-label={`${done} / ${all} set tamamlandı`}>
+            <span className="flex-1 h-1.5 rounded-full bg-surface-3 overflow-hidden"><span className="block h-full rounded-full bg-acc transition-[width] duration-300" style={{ width: `${(done / all) * 100}%` }} /></span>
+            <span className="num text-[12px] font-bold text-mute">{done}/{all}</span>
+          </div>
+        ) : null })()}
       </header>
 
       {d.exercises.map((e, ei) => (
         <section key={e.exerciseId + '-' + ei} className="card p-4 flex flex-col gap-3" aria-label={e.name} data-testid="live-exercise">
           <div className="flex items-start justify-between gap-2">
             <span className="flex flex-col min-w-0">
-              <span className="font-extrabold text-[17px] leading-snug">{e.name}</span>
-              <span className="text-[12px] text-mute">Hedef {e.targetSets} × {e.kind === 'time' ? `${e.seconds ?? 45} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}{e.kind === 'time' || e.kind === 'distance_time' ? '' : ` @ RIR ${e.rir}`} · dinlenme {mmss(e.rest)}</span>
+              <Link href={`/fitness/hareketler/${e.exerciseId}`} className="font-extrabold text-[17px] leading-snug text-acc">{e.name}</Link>
+              <span className="text-[12px] text-mute">Hedef {e.targetSets} × {e.kind === 'time' ? `${e.seconds ?? 45} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}{e.kind === 'time' || e.kind === 'distance_time' ? '' : ` · ${e.rir} tekrar yedek`} · dinlenme {mmss(e.rest)}</span>
             </span>
             <button type="button" className={btn.icon} aria-label={`${e.name} seçenekleri`} onClick={() => setSheet({ kind: 'menu', ex: ei })}><Dots size={20} /></button>
           </div>
           {e.scheme || e.period ? <span className={`self-start text-[12px] font-bold px-2.5 h-7 rounded-full flex items-center ${e.period?.deload ? 'bg-water/20 text-water' : 'bg-surface-2 text-ink-2'}`} data-testid="target-chip">{e.scheme?.label ?? e.period?.label}</span> : null}
           {e.plateau ? <p className="text-[12px] text-orange" data-testid="plateau-note">{e.plateau.weeks} haftadır ilerleme yok. {e.plateau.tip}</p> : null}
-          {e.history.length ? <p className="text-[13px] text-mute" data-testid="last-time">Geçen ({e.history.at(-1)!.day.slice(8)}.{e.history.at(-1)!.day.slice(5, 7)}): {lastLine(e)}</p> : <p className="text-[13px] text-mute">İlk kez yapıyorsun: rahat bir ağırlıkla başla, RIR'ı dürüst gir.</p>}
+          {e.history.length ? <p className="text-[13px] text-mute" data-testid="last-time">Geçen ({e.history.at(-1)!.day.slice(8)}.{e.history.at(-1)!.day.slice(5, 7)}): {lastLine(e)}</p> : <p className="text-[13px] text-mute">İlk kez yapıyorsun: rahat bir ağırlıkla başla. RIR = setin sonunda kaç tekrar daha yapabilirdin (0 = tükendim, 2 = iki tekrar daha yapardım).</p>}
           {e.suggestion ? (
             <div className="rounded-2xl bg-coach border border-coach-line px-3.5 py-3 flex flex-col gap-2" data-testid="suggestion">
               <span className="text-[14px]"><b className="text-acc">Öneri: {e.kind === 'time' ? e.suggestion.reason : `${fmt(e.suggestion.kg)} kg × ${e.suggestion.reps}`}</b> <span className="text-[12px] text-mute">· güven {e.suggestion.confidence}</span></span>
@@ -201,27 +208,36 @@ export default function LiveWorkout(p: Props) {
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-1.5">
-            {e.sets.map((s, si) => (
-              <div key={si} className={`grid items-center gap-1.5 ${s.done ? 'opacity-70' : ''}`} style={{ gridTemplateColumns: '34px 1fr 1fr 52px 48px' }} data-testid="set-row">
+          <div className="flex flex-col -mx-2" role="table" aria-label={`${e.name} setleri`}>
+            <div role="row" className="grid items-center gap-1.5 px-2 pb-1 text-[10.5px] font-bold uppercase tracking-wide text-mute" style={{ gridTemplateColumns: COLS }}>
+              <span role="columnheader" className="text-center">Set</span><span role="columnheader">Önceki</span>
+              <span role="columnheader" className="text-center">{e.kind === 'time' || e.kind === 'distance_time' ? 'Süre' : e.kind === 'assisted' ? '−kg' : e.kind === 'bodyweight' ? '+kg' : 'kg'}</span>
+              <span role="columnheader" className="text-center">{e.kind === 'time' || e.kind === 'distance_time' ? '' : 'Tekrar'}</span>
+              <span role="columnheader" className="text-center" title="Tekrar yedeği: sette kaç tekrar daha yapabilirdin">{e.kind === 'time' || e.kind === 'distance_time' ? '' : 'RIR'}</span><span />
+            </div>
+            {e.sets.map((s, si) => {
+              const prev = prevSet(e, si)
+              return (
+              <div key={si} role="row" className={`grid items-center gap-1.5 px-2 py-1 rounded-xl transition-colors ${s.done ? 'bg-acc/15' : ''}`} style={{ gridTemplateColumns: COLS }} data-testid="set-row">
                 <button type="button" aria-label={`Set ${si + 1} türü: ${SET_TYPES[s.type].label}`} onClick={() => update((x) => { const t = x.exercises[ei].sets[si]; t.type = TYPE_CYCLE[(TYPE_CYCLE.indexOf(t.type) + 1) % TYPE_CYCLE.length]; return x })}
-                  className={`h-11 rounded-xl text-[13px] font-bold ${s.type === 'normal' ? 'bg-surface-2 text-ink-2' : 'bg-orange/20 text-orange'}`}>{SET_TYPES[s.type].short || si + 1}</button>
+                  className={`h-10 rounded-lg text-[13px] font-extrabold num ${s.type === 'normal' ? 'text-ink-2' : 'text-orange'}`}>{SET_TYPES[s.type].short || si + 1}</button>
+                <span className="text-[12px] text-mute num truncate">{prev ?? '—'}</span>
                 {e.kind === 'time' || e.kind === 'distance_time' ? (
-                  <NumField label={`Set ${si + 1} süre (sn)`} unit="sn" value={s.seconds} ph={s.ph.seconds} step={5} onChange={(v) => update((x) => { x.exercises[ei].sets[si].seconds = v; return x })} />
+                  <NumField label={`Set ${si + 1} süre (sn)`} value={s.seconds} ph={s.ph.seconds} onChange={(v) => update((x) => { x.exercises[ei].sets[si].seconds = v; return x })} />
                 ) : (
-                  <NumField label={`Set ${si + 1} ${e.kind === 'assisted' ? 'destek' : e.kind === 'bodyweight' ? 'ek yük' : 'ağırlık'} (kg)`} unit={e.kind === 'assisted' ? '−kg' : e.kind === 'bodyweight' ? '+kg' : 'kg'} value={s.kg} ph={s.ph.kg} step={p.gym.increment} decimal onChange={(v) => update((x) => { x.exercises[ei].sets[si].kg = v; return x })} />
+                  <NumField label={`Set ${si + 1} ${e.kind === 'assisted' ? 'destek' : e.kind === 'bodyweight' ? 'ek yük' : 'ağırlık'} (kg)`} value={s.kg} ph={s.ph.kg} decimal onChange={(v) => update((x) => { x.exercises[ei].sets[si].kg = v; return x })} />
                 )}
                 {e.kind === 'time' || e.kind === 'distance_time' ? <span /> : (
-                  <NumField label={`Set ${si + 1} tekrar`} unit="tkr" value={s.reps} ph={s.ph.reps} step={1} onChange={(v) => update((x) => { x.exercises[ei].sets[si].reps = v; return x })} />
+                  <NumField label={`Set ${si + 1} tekrar`} value={s.reps} ph={s.ph.reps} onChange={(v) => update((x) => { x.exercises[ei].sets[si].reps = v; return x })} />
                 )}
                 {e.kind === 'time' || e.kind === 'distance_time' ? <span /> : (
                   <button type="button" aria-label={`Set ${si + 1} RIR: ${s.rir ?? 'yok'}`} onClick={() => update((x) => { const t = x.exercises[ei].sets[si]; t.rir = t.rir === null ? 0 : t.rir >= 4 ? null : t.rir + 1; return x })}
-                    className="h-11 rounded-xl bg-surface-2 text-[12px] font-bold leading-tight"><span className="block text-[10px] text-mute">RIR</span>{s.rir ?? '–'}</button>
+                    className="h-10 rounded-lg bg-surface-2 text-[14px] font-bold num">{s.rir ?? '–'}</button>
                 )}
                 <button type="button" aria-label={`Set ${si + 1} ${s.done ? 'geri al' : 'tamamla'}`} onClick={() => complete(ei, si)}
-                  className={`h-11 rounded-xl flex items-center justify-center ${s.done ? 'bg-acc text-acc-ink' : 'border border-line-2 text-ink'}`}><Check size={20} /></button>
+                  className={`h-10 rounded-lg flex items-center justify-center transition ${s.done ? 'bg-acc text-acc-ink' : 'bg-surface-2 text-mute'}`}><Check size={18} /></button>
               </div>
-            ))}
+            ) })}
           </div>
           <button type="button" className="h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5"
             onClick={() => update((x) => { const ex = x.exercises[ei], last = ex.sets.at(-1); ex.sets.push({ kg: '', reps: '', seconds: '', rir: last?.rir ?? ex.rir, type: 'normal', done: false, completedAt: null, feedback: null, ph: last ? { kg: n(last.kg) || last.ph.kg, reps: n(last.reps) || last.ph.reps, seconds: n(last.seconds) || last.ph.seconds } : { kg: 0, reps: ex.repMin, seconds: 45 } }); return x })}>
@@ -348,21 +364,26 @@ function Stat({ label, value }: { label: string; value: string }) {
   return <span className="flex flex-col rounded-xl bg-surface px-1 py-1.5"><span className="text-[10px] text-mute uppercase tracking-wide">{label}</span><span className="num text-[15px] font-bold">{value}</span></span>
 }
 
-function NumField({ label, unit, value, ph, step, decimal, onChange }: { label: string; unit: string; value: string; ph: number; step: number; decimal?: boolean; onChange: (v: string) => void }) {
-  const base = n(value)
-  const bump = (dir: number) => { const cur = Number.isFinite(base) && value !== '' ? base : ph; onChange(String(Math.max(0, Math.round((cur + dir * step) * 100) / 100))) }
+/** Set tablosu sütunları: set · önceki · ağırlık/süre · tekrar · RIR · tamamla */
+const COLS = '28px minmax(0,1fr) 62px 54px 38px 40px'
+
+function NumField({ label, value, ph, decimal, onChange }: { label: string; value: string; ph: number; decimal?: boolean; onChange: (v: string) => void }) {
   return (
-    <div className="flex items-stretch h-11 rounded-xl bg-surface-2 overflow-hidden">
-      <button type="button" aria-label={`${label} azalt`} className="w-8 text-mute text-lg" onClick={() => bump(-1)}>−</button>
-      <label className="flex-1 flex flex-col items-center justify-center min-w-0">
-        <span className="sr-only">{label}</span>
-        <input aria-label={label} inputMode={decimal ? 'decimal' : 'numeric'} value={value} placeholder={fmt(ph)} onChange={(ev) => onChange(ev.target.value.replace(/[^\d.,]/g, '').slice(0, 6))}
-          className="w-full bg-transparent text-center num text-[17px] font-bold placeholder:text-faint placeholder:font-semibold outline-none" />
-        <span className="text-[9px] text-mute -mt-1">{unit}</span>
-      </label>
-      <button type="button" aria-label={`${label} artır`} className="w-8 text-mute text-lg" onClick={() => bump(1)}>+</button>
-    </div>
+    <input aria-label={label} inputMode={decimal ? 'decimal' : 'numeric'} value={value} placeholder={fmt(ph)} onFocus={(ev) => ev.target.select()}
+      onChange={(ev) => onChange(ev.target.value.replace(/[^\d.,]/g, '').slice(0, 6))}
+      className="w-full h-10 rounded-lg bg-surface-2 text-center num text-[16px] font-bold placeholder:text-faint placeholder:font-semibold outline-none focus:ring-2 focus:ring-acc" />
   )
+}
+
+/** Geçen seansın aynı sıradaki çalışma seti ("60 × 10"). */
+function prevSet(e: LEx, si: number): string | null {
+  const last = e.history.at(-1)
+  if (!last) return null
+  const work = last.sets.filter((s) => s.type !== 'warmup')
+  const x = work[si] ?? null
+  if (!x) return null
+  if (e.kind === 'time' || e.kind === 'distance_time') return `${x.seconds ?? 0} sn`
+  return `${fmt(x.kg)} × ${x.reps}`
 }
 
 function PlateCalc({ initial, gym }: { initial: number; gym: { barKg: number; plates: number[]; increment: number } }) {
@@ -401,7 +422,7 @@ export function ExercisePicker({ onPick }: { onPick: (id: number) => void | Prom
         {res.map((r) => (
           <li key={r.id}>
             <button type="button" disabled={busy} onClick={async () => { setBusy(true); try { await onPick(r.id) } finally { setBusy(false) } }} className="w-full flex items-center gap-3 min-h-[56px] text-left">
-              {r.image ? <img src={r.image} alt="" width={44} height={44} loading="lazy" className="w-11 h-11 rounded-lg object-cover bg-surface-2" /> : <span className="w-11 h-11 rounded-lg bg-surface-2" />}
+              {r.image ? <ExImg src={r.image} size={44} className="w-11 h-11 rounded-lg shrink-0" /> : <span className="w-11 h-11 rounded-lg bg-surface-2" />}
               <span className="flex flex-col"><span className="font-semibold">{r.nameTr}</span><span className="text-[12px] text-mute">{EQUIPMENT[r.equipment] ?? r.equipment}</span></span>
             </button>
           </li>

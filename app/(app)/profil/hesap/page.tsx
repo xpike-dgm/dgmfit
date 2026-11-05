@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { getToday } from '@/lib/today'
-import { ACTIVITY, bmi, bmiCategory, fmtNum, type Activity } from '@/lib/calc'
+import { ACTIVITY, bmi, bmiCategory, fmtNum, type Activity, type GoalType, type Sex } from '@/lib/calc'
+import PlanForm from '../PlanForm'
 import { TopBar } from '@/components/ui'
 
 export const metadata = { title: 'Hesap ve kişisel bilgiler' }
@@ -32,7 +33,9 @@ export default async function Page() {
           ))}
         </dl>
       </section>
-      <p className="text-[13px] text-mute px-1 leading-relaxed">Kilonu + düğmesinden “Kilo gir” ile güncellersin; plan trend kilona göre kendini ayarlar.</p>
+      <h2 className="text-[13px] font-bold tracking-[0.06em] uppercase text-mute px-1 pt-1">Düzenle</h2>
+      <PlanForm mode="body" base={{ sex: t.profile.sex as Sex, age: t.age, nowKg: Math.round(t.weight.trend * 10) / 10, heightCm: t.profile.heightCm, activity: t.profile.activity as Activity, goal: (t.goal?.type ?? t.profile.goal) as GoalType, targetWeightKg: t.goal?.targetWeightKg ?? t.profile.targetWeightKg, daysLeft: Math.max(7, t.totalDays - t.dayIndex + 1) }} />
+      <p className="text-[13px] text-mute px-1 leading-relaxed">Kilonu + düğmesinden “Kilo gir” ile güncellersin; plan trend kilona göre kendini ayarlar. Boy ya da günlük hareket değişince kalori hedefin bugünden yeniden hesaplanır.</p>
     </div>
   )
 }

@@ -6,12 +6,13 @@ export type GoalType = 'lose' | 'gain' | 'recomp'
 
 export const KCAL_PER_KG = 7700
 
+// Açıklamalar antrenman dışındaki günlük hareketi anlatır; antrenman ve kardiyo kalorisi ayrıca bütçeye eklenir.
 export const ACTIVITY: Record<Activity, { factor: number; label: string; hint: string }> = {
-  sedentary: { factor: 1.2, label: 'Hareketsiz', hint: 'Masa başı iş, spor yok' },
-  light: { factor: 1.375, label: 'Az hareketli', hint: 'Haftada 1–3 gün hafif spor' },
-  moderate: { factor: 1.55, label: 'Orta hareketli', hint: 'Haftada 3–5 gün spor' },
-  active: { factor: 1.725, label: 'Çok hareketli', hint: 'Haftada 6–7 gün yoğun spor' },
-  very_active: { factor: 1.9, label: 'Aşırı hareketli', hint: 'Ağır fiziksel iş + günlük antrenman' },
+  sedentary: { factor: 1.2, label: 'Hareketsiz', hint: 'Masa başı iş, gün içinde az yürüyüş' },
+  light: { factor: 1.375, label: 'Az hareketli', hint: 'Çoğunlukla oturarak; günde 30–60 dk yürüyüş' },
+  moderate: { factor: 1.55, label: 'Orta hareketli', hint: 'Gün boyu ayakta ya da sık yürüyen iş (öğretmen, satış)' },
+  active: { factor: 1.725, label: 'Çok hareketli', hint: 'Fiziksel iş (garson, kurye, depo)' },
+  very_active: { factor: 1.9, label: 'Aşırı hareketli', hint: 'Ağır fiziksel iş (inşaat, tarım)' },
 }
 
 export const GOALS: Record<GoalType, { label: string; hint: string }> = {

@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth'
 import { feed, friendIds, suggestions, unreadCount } from '@/lib/social-data'
 import { myChallenges, storyStrip, unreadDMs } from '@/lib/social2-data'
 import { Band, hdrBtn, hdrIcon } from '@/components/ui'
-import { Bell, Next } from '@/components/icons'
+import { Bell } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import Stories from './Stories'
 import { mediaEnabled } from '@/lib/media'
@@ -34,11 +34,12 @@ export default async function Page(props: { searchParams: Promise<{ g?: string }
         }
         ring={{ value: friends ? 1 : 0, big: fmtNum(friends), small: 'arkadaş', label: `${friends} arkadaş` }}
         pills={[['Meydan okuma', `${activeCh} aktif`], ['Mesaj', dms ? `${dms} yeni` : 'yok'], ['Bildirim', unread ? `${unread} yeni` : 'yok']]} />
-      <nav className="card px-4 py-1 flex flex-col" aria-label="Sosyal bölümler">
-        <Link href="/sosyal/mesaj" className="flex items-center justify-between min-h-12 text-[14px] font-semibold" data-testid="dm-link">Mesajlar<span className="flex items-center gap-1.5 text-mute">{dms ? <span className="min-w-5 h-5 px-1 rounded-full bg-acc text-[11px] text-acc-ink num inline-flex items-center justify-center">{dms}</span> : null}<Next size={16} /></span></Link>
-        <Link href="/sosyal/meydan" className="flex items-center justify-between min-h-12 text-[14px] font-semibold border-t border-line">Meydan okumalar<Next size={16} className="text-mute" /></Link>
-        <Link href="/sosyal/gruplar" className="flex items-center justify-between min-h-12 text-[14px] font-semibold border-t border-line">Gruplar<Next size={16} className="text-mute" /></Link>
-        <Link href="/sosyal/arkadaslar" className="flex items-center justify-between min-h-12 text-[14px] font-semibold border-t border-line">Arkadaşlar<Next size={16} className="text-mute" /></Link>
+      <nav className="grid grid-cols-4 gap-2" aria-label="Sosyal bölümler">
+        {([['/sosyal/mesaj', 'Mesajlar', dms, 'dm-link'], ['/sosyal/meydan', 'Meydan', activeCh, undefined], ['/sosyal/gruplar', 'Gruplar', 0, undefined], ['/sosyal/arkadaslar', 'Arkadaşlar', 0, undefined]] as const).map(([href, label, n, tid]) => (
+          <Link key={href} href={href} data-testid={tid} className="relative card h-12 px-1 text-[12.5px] font-bold inline-flex items-center justify-center text-center">
+            {label}{n ? <span className="absolute -top-1.5 -right-1 min-w-5 h-5 px-1 rounded-full bg-acc text-[11px] text-acc-ink num inline-flex items-center justify-center">{n}</span> : null}
+          </Link>
+        ))}
       </nav>
       <Stories stories={stories} mediaOn={mediaEnabled()} />
       <div className="flex gap-2">

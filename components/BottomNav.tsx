@@ -30,7 +30,7 @@ export default function BottomNav() {
             it ? (
               <Link key={it.href} href={it.href} data-mod={TAB_MOD[it.id]} aria-current={tab === it.id ? 'page' : undefined}
                 className="mx-0.5 flex flex-col items-center justify-center gap-1 h-[52px] rounded-2xl text-[10.5px] font-bold text-mute aria-[current=page]:text-acc aria-[current=page]:bg-[color-mix(in_oklab,var(--color-acc)_15%,transparent)]">
-                <it.Icon size={21} />{it.label}
+                <it.Icon size={21} /><span className="max-[350px]:sr-only">{it.label}</span>
               </Link>
             ) : (
               <button key={i} type="button" onClick={() => setOpen(true)} aria-label="Hızlı ekle" aria-haspopup="dialog"

@@ -46,13 +46,16 @@ const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Eur
     const adjToday = expected.adjustments[0].kcal
     if ((await todayTarget()) !== base + adjToday) fail(`bugünkü hedef ${await todayTarget()} beklenen ${base + adjToday}`)
     await p.getByTestId('balance-card').getByText(/400 kcal üstündeydin/).waitFor().catch(() => fail('dengeleme kartında 400 kcal fazla yok'))
-    const chips = await p.getByTestId('next-days').getByText(/Dengeleme/).count()
-    if (chips !== 7) fail('7 günde dengeleme etiketi beklendi: ' + chips)
     await p.getByTestId('forecast').getByText(/kg\/hafta/).waitFor().catch(() => fail('tahmin metni yok'))
     // Ölçülen harcama ≈ ortalama alım + kayıp × 7.700 (tartılar 0,1 kg'a yuvarlı → ±80 kcal pay)
     const trueTdee = base + 400 / 20 + 0.08 * 7700
     const measured = num(await p.locator('div.card', { hasText: 'Ölçülen harcama' }).locator('.num').innerText())
     if (Math.abs(measured - trueTdee) > 80) fail(`ölçülen harcama ${measured}, gerçek ${trueTdee}`)
+    // Araçlar ayrı sayfalarda: düğmeden açılır, geri düğmesi Fit'e döner
+    await p.getByRole('link', { name: /Önümüzdeki 7 gün/ }).click(); await p.waitForURL('**/fit/gunler')
+    const chips = await p.getByTestId('next-days').getByText(/Dengeleme/).count()
+    if (chips !== 7) fail('7 günde dengeleme etiketi beklendi: ' + chips)
+    await p.getByRole('link', { name: 'Geri' }).click(); await p.waitForURL(BASE + '/fit')
     await shot('01-plan')
 
     // 2) Bugün ve Yemek ekranları düzeltilmiş hedefi açıklar
@@ -70,6 +73,7 @@ const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Eur
     if ((await todayTarget()) !== base) fail('istisna sonrası bugünkü hedef plana dönmedi: ' + (await todayTarget()))
 
     // 4) Haftalık check-in: ölçülen harcama hesaplandı, öneri ±150 içinde
+    await p.goto(BASE + '/fit/checkin')
     const ci = p.getByTestId('checkin')
     await ci.getByText(/Ölçülen harcama \d+ günlük trend/).waitFor().catch(() => fail('check-in verisi yok'))
     if (await ci.getByRole('button', { name: 'Uygula' }).count()) {
@@ -84,6 +88,7 @@ const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Eur
   // 5) Kalori bankası: 4. seçenek (bugün+5) için 500 kcal → 4 gün biriktirme
   await p.goto(BASE + '/fit')
   const cur = await todayTarget()
+  await p.goto(BASE + '/fit/banka')
   await p.getByRole('button', { name: 'Etkinlik ekle' }).click()
   const evDay = await p.locator('#bank-day').inputValue()
   if (evDay !== istDay(5)) fail('varsayılan etkinlik günü ' + evDay)
@@ -93,8 +98,10 @@ const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Eur
   await p.getByRole('button', { name: 'Biriktirmeye başla' }).click()
   await status(new RegExp(`Hazır: 4 gün boyunca günde ${plan.perDay} kcal`))
   await p.getByTestId('bank-item').getByText(/Düğün/).waitFor()
-  if ((await p.getByTestId('next-days').getByText(/Banka birikimi/).count()) !== 4) fail('4 biriktirme günü görünmüyor')
   await shot('03-banka')
+  await p.goto(BASE + '/fit/gunler')
+  if ((await p.getByTestId('next-days').getByText(/Banka birikimi/).count()) !== 4) fail('4 biriktirme günü görünmüyor')
+  await p.goto(BASE + '/fit/banka')
   acceptDialog = true
   await p.getByTestId('bank-item').getByRole('button', { name: 'İptal' }).click()
   await p.getByTestId('bank-item').waitFor({ state: 'detached' }).catch(() => fail('banka iptal edilmedi'))

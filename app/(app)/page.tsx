@@ -10,7 +10,7 @@ import { Band, Bar, Ring, hdrIcon } from '@/components/ui'
 import QuickWaterButton from '@/components/QuickWaterButton'
 import InsightCard from '@/components/InsightCard'
 import { latestReportWeek, mondayOf } from '@/lib/coach-data'
-import { Drop, Dumbbell, Flame, Pulse, User } from '@/components/icons'
+import { Drop, Dumbbell, Flame, Pulse, Target, User } from '@/components/icons'
 
 export default async function Today() {
   const user = await requireUser()
@@ -35,7 +35,7 @@ export default async function Today() {
     { name: 'Yağ', val: t.eaten.fat, goal: t.target.fat, color: 'var(--color-violet)' },
   ]
 
-  const stripe = 'card p-4 flex flex-col gap-3 border-l-4 border-acc'
+  const tile = 'card p-3.5 flex flex-col gap-2 border-t-4 border-acc min-w-0'
   const trained = tr.workouts || tr.cardio
 
   return (
@@ -54,100 +54,79 @@ export default async function Today() {
           }
           ring={{ value: usedFrac, big: fmtNum(left), small: 'kalan kcal', label: `Kalorinin yüzde ${Math.round(usedFrac * 100)}'i tüketildi` }}
           pills={[['Hedef', `${fmtNum(t.target.kcal)} kcal`], ['Yenen', t.eaten.kcal ? fmtNum(t.eaten.kcal) : '0'], ['Egzersiz', '+' + fmtNum(t.burned)]]}
-        />
-
-        <nav aria-label="Bu hafta" className="card px-2 py-2 grid grid-cols-7 gap-1">
-          {t.week.map((d) => (
-            <div key={d.day} className={`flex flex-col items-center gap-1 py-1.5 rounded-2xl ${d.today ? 'bg-surface-2' : ''}`} aria-current={d.today ? 'date' : undefined}>
-              <span className={`text-[11px] font-bold ${d.today ? 'text-acc' : 'text-mute'}`}>{d.label}</span>
-              <Ring size={28} stroke={3} value={d.frac} color={d.frac >= 1 ? 'var(--color-acc)' : 'var(--color-ink-2)'} track="var(--color-line)">
-                <span className={`num text-[10.5px] font-semibold ${d.future ? 'text-faint' : 'text-ink'}`}>{d.num}</span>
-              </Ring>
-            </div>
-          ))}
-        </nav>
-
-        <div className="card p-4 flex flex-col gap-3">
-          <h2 className="text-[15px] font-extrabold">Makrolar</h2>
-          {macros.map((m) => (
-            <div key={m.name} className="flex flex-col gap-1.5">
-              <div className="flex justify-between text-sm">
-                <span className="flex items-center gap-2 font-semibold"><span className="w-2 h-2 rounded-full" style={{ background: m.color }} />{m.name}</span>
-                <span className="text-mute"><b className="num text-ink font-semibold">{fmtNum(m.val)}</b> / {fmtNum(m.goal)} g</span>
+        >
+          <nav aria-label="Bu hafta" className="grid grid-cols-7 gap-1 mt-3">
+            {t.week.map((d) => (
+              <div key={d.day} className={`flex flex-col items-center gap-0.5 py-1 rounded-xl ${d.today ? 'bg-white/20' : ''}`} aria-current={d.today ? 'date' : undefined}>
+                <span className="text-[10.5px] font-bold opacity-90">{d.label}</span>
+                <Ring size={24} stroke={2.5} value={d.frac} color="#fff" track="rgba(255,255,255,0.3)">
+                  <span className={`num text-[10px] font-semibold ${d.future ? 'opacity-60' : ''}`}>{d.num}</span>
+                </Ring>
               </div>
-              <Bar value={m.goal ? m.val / m.goal : 0} color={m.color} />
-            </div>
-          ))}
-          <div className="flex gap-2.5 items-start px-3.5 py-3 rounded-2xl bg-surface-2">
-            <Pulse size={18} className="text-mute shrink-0 mt-0.5" />
-            <span className="text-[13px] leading-relaxed text-ink-2">
-              {t.target.adjustment
-                ? <>{adjustText(t.target.reasons)} Plan {fmtNum(t.target.base)} kcal → bugün <b className="text-ink">{fmtNum(t.target.kcal)} kcal</b>.</>
-                : <>Bir gün hedefin üstünde ya da altında kalırsan fark, sonraki günlere dengeli şekilde dağıtılır.</>}
-              {' '}<Link href="/fit" className="text-acc font-semibold whitespace-nowrap">Plan ayrıntıları</Link>
-            </span>
-          </div>
-        </div>
-      </section>
+            ))}
+          </nav>
+        </Band>
 
-      <Link href="/fit" data-mod="plan" aria-label="Kilo hedefi ve plan" className={stripe}>
-        <div className="flex justify-between items-center">
-          <span className="text-[15px] font-extrabold">Fit · plan</span>
-          <span className="text-[13px] font-bold text-acc">Aç ›</span>
-        </div>
-        <div className="flex justify-between items-end">
-          <div className="flex flex-col">
-            <span className="text-[13px] text-mute">Trend kilo</span>
-            <span className="num text-[28px] font-bold tracking-[-0.02em] leading-tight">{fmtNum(w.trend, 1)} <span className="text-base text-mute">kg</span></span>
+        <div className="card p-3.5 flex flex-col gap-2.5">
+          <div className="grid grid-cols-3 gap-3">
+            {macros.map((m) => (
+              <Link href="/yemek" key={m.name} className="flex flex-col gap-1 min-w-0">
+                <div className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-2 min-w-0"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} /><span className="truncate">{m.name}</span></div>
+                <span className="text-[13px] text-mute"><b className="num text-ink font-semibold">{fmtNum(m.val)}</b> / {fmtNum(m.goal)} g</span>
+                <Bar value={m.goal ? m.val / m.goal : 0} color={m.color} height={5} />
+              </Link>
+            ))}
           </div>
-          {t.goal && !recomp ? (
-            <span className="text-right text-[13px] text-mute">Hedef tarih<br /><b className="text-ink">{shortDate(addDays(t.goal.startDate, t.totalDays - 1))}</b></span>
+          {t.target.adjustment ? (
+            <Link href="/fit" className="flex gap-2 items-start text-[12.5px] leading-snug text-ink-2 border-t border-line pt-2.5">
+              <Pulse size={15} className="text-mute shrink-0 mt-0.5" />
+              <span>{adjustText(t.target.reasons)} Plan {fmtNum(t.target.base)} kcal → bugün <b className="text-ink">{fmtNum(t.target.kcal)} kcal</b>.</span>
+            </Link>
           ) : null}
         </div>
-        {!recomp ? (
-          <div className="flex flex-col gap-2">
-            <div className="relative h-2.5 rounded-full bg-surface-3">
-              <div className="absolute inset-y-0 left-0 rounded-full bg-acc transition-[width] duration-500" style={{ width: `${Math.max(2, w.progress * 100)}%` }} />
-              <div className="absolute -top-1 w-0.5 h-[18px] rounded bg-ink" style={{ left: `calc(${w.planned * 100}% - 1px)` }} aria-hidden />
-            </div>
-            <div className="flex justify-between text-[12.5px] text-mute">
-              <span className="num">{fmtNum(w.start, 1)} kg</span>
-              <span className="text-ink-2">Gün {t.dayIndex} / {t.totalDays}{t.dayIndex > 1 ? ` · ${Math.abs(diffPlan) < 0.05 ? 'planla aynı' : `planın ${fmtNum(Math.abs(diffPlan), 1)} kg ${diffPlan > 0 ? 'önünde' : 'gerisinde'}`}` : ''}</span>
-              <span className="num">{fmtNum(w.target, 1)} kg</span>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-ink-2">Rekompozisyon: kilonu koruyup kas kazanıyorsun. Haftalık tartı ve ölçüleri takip et.</p>
-        )}
-      </Link>
-
-      <section aria-label="Su" data-mod="water" className={stripe}>
-        <Link href="/su" className="flex flex-col gap-2">
-          <span className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-[15px] font-extrabold"><Drop size={18} className="text-acc" />Su</span>
-            <span className="text-[13px] font-bold text-acc">%{Math.round(waterFrac * 100)}</span>
-          </span>
-          <span className="flex items-baseline gap-1.5">
-            <span className="num text-[26px] font-bold tracking-[-0.02em]">{fmtNum(t.waterMl)}</span>
-            <span className="text-[13px] text-ink-2">/ {fmtNum(t.target.water)} ml</span>
-          </span>
-          <Bar value={waterFrac} color="var(--color-acc)" />
-        </Link>
-        <QuickWaterButton />
       </section>
 
-      <Link href={trained || !tr.next ? '/fitness' : `/fitness/antrenman?gun=${tr.next.id}`} aria-label="Antrenman" data-mod="fitness" className={stripe} data-testid="today-training">
-        <div className="flex items-center gap-2"><Dumbbell size={18} className="text-acc" /><span className="text-[15px] font-extrabold">Antrenman</span></div>
-        <div className="flex items-end justify-between gap-3">
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-lg font-extrabold leading-snug">{trained ? `${tr.minutes} dk tamamlandı` : tr.next ? `Sıradaki: ${tr.next.name}` : 'Bugün kayıt yok'}</span>
-            <span className="text-[13px] text-mute">{trained ? `+${fmtNum(t.burned)} kcal bütçeye eklendi` : tr.next ? 'Sıradaki program günü' : t.profile.trainingDays ? `Haftalık hedef · ${t.profile.trainingDays} gün` : 'Program oluşturarak başla'}</span>
-          </div>
-          <span className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center shrink-0">{trained ? 'Detay' : 'Başlat'}</span>
-        </div>
-      </Link>
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/fit" data-mod="plan" aria-label="Kilo hedefi ve plan" className={tile}>
+          <span className="flex items-center justify-between text-[13px] font-extrabold"><span className="flex items-center gap-1.5"><Target size={16} className="text-acc" />Fit</span><span className="text-acc text-[12px]">›</span></span>
+          <span className="num text-[22px] font-bold leading-none">{fmtNum(w.trend, 1)} <span className="text-[13px] text-mute">kg</span></span>
+          {!recomp ? (
+            <>
+              <div className="relative h-2 rounded-full bg-surface-3">
+                <div className="absolute inset-y-0 left-0 rounded-full bg-acc" style={{ width: `${Math.max(3, w.progress * 100)}%` }} />
+                <div className="absolute -top-0.5 w-0.5 h-3 rounded bg-ink" style={{ left: `calc(${w.planned * 100}% - 1px)` }} aria-hidden />
+              </div>
+              <span className="text-[12px] text-mute leading-tight">{t.goal ? <>Hedef tarih <b className="text-ink">{shortDate(addDays(t.goal.startDate, t.totalDays - 1))}</b></> : null}</span>
+              {t.dayIndex > 1 ? <span className="text-[11.5px] text-ink-2 leading-tight">{Math.abs(diffPlan) < 0.05 ? 'Planla aynı' : `Planın ${fmtNum(Math.abs(diffPlan), 1)} kg ${diffPlan > 0 ? 'önünde' : 'gerisinde'}`}</span> : <span className="text-[11.5px] text-ink-2">Gün {t.dayIndex} / {t.totalDays}</span>}
+            </>
+          ) : <span className="text-[12px] text-ink-2 leading-snug">Rekompozisyon: kilonu koru, kas kazan.</span>}
+        </Link>
 
-      <div data-mod="coach"><InsightCard fallback={coachLine(t)} weeklyReady={weeklyReady} /></div>
+        <section aria-label="Su" data-mod="water" className={tile}>
+          <Link href="/su" className="flex flex-col gap-2">
+            <span className="flex items-center justify-between text-[13px] font-extrabold"><span className="flex items-center gap-1.5"><Drop size={16} className="text-acc" />Su</span><span className="text-acc text-[12px]">%{Math.round(waterFrac * 100)}</span></span>
+            <span className="flex items-baseline gap-1 flex-wrap">
+              <span className="num text-[22px] font-bold leading-none">{fmtNum(t.waterMl)}</span>
+              <span className="text-[12px] text-mute">/ {fmtNum(t.target.water)} ml</span>
+            </span>
+            <Bar value={waterFrac} color="var(--color-acc)" height={6} />
+          </Link>
+          <QuickWaterButton compact />
+        </section>
+
+        <Link href={trained || !tr.next ? '/fitness' : `/fitness/antrenman?gun=${tr.next.id}`} aria-label="Antrenman" data-mod="fitness" className={tile + ' col-span-2'} data-testid="today-training">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col min-w-0">
+              <span className="flex items-center gap-1.5 text-[13px] font-extrabold"><Dumbbell size={16} className="text-acc" />Antrenman</span>
+              <span className="text-[15px] font-extrabold leading-snug truncate mt-1">{trained ? `${tr.minutes} dk tamamlandı` : tr.next ? `Sıradaki: ${tr.next.name}` : 'Bugün kayıt yok'}</span>
+              <span className="text-[12px] text-mute truncate">{trained ? `+${fmtNum(t.burned)} kcal bütçeye eklendi` : tr.next ? 'Programdan istediğin günü seçebilirsin' : t.profile.trainingDays ? `Haftalık hedef · ${t.profile.trainingDays} gün` : 'Program oluşturarak başla'}</span>
+            </div>
+            <span className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center shrink-0">{trained ? 'Detay' : 'Başlat'}</span>
+          </div>
+        </Link>
+      </div>
+
+      <div data-mod="coach"><InsightCard fallback={coachLine(t)} weeklyReady={weeklyReady} compact /></div>
     </div>
   )
 }

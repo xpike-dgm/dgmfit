@@ -1,4 +1,5 @@
 'use client'
+import AiOff from '@/components/AiOff'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
@@ -28,6 +29,7 @@ export default function PantryClient({ aiOn, meal }: { aiOn: boolean; meal: Meal
         <label htmlFor="pantry-text" className="text-[13px] font-semibold">Buzdolabında ve dolapta ne var?</label>
         <textarea id="pantry-text" rows={3} maxLength={500} value={text} onChange={(e) => setText(e.target.value)} placeholder="Ör: yumurta, domates, biber, beyaz peynir, yarım paket makarna" className="rounded-xl bg-surface-2 border border-line px-3 py-2" />
         {err ? <p role="alert" className="text-[13px] text-orange">{err}</p> : null}
+        {!aiOn ? <AiOff what="Tarif önerisi" alt={{ href: '/yemek/ekle', label: 'Elle öğün ekle' }} /> : null}
         <button type="submit" className={btn.primary} disabled={!aiOn || busy || text.trim().length < 3}>{busy ? 'Tarifler hazırlanıyor…' : 'Tarif öner'}</button>
       </form>
       {res ? (

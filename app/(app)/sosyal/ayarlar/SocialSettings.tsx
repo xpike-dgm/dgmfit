@@ -78,7 +78,7 @@ export default function SocialSettings({ initial, mediaOn, invite, qr, exercises
       {part === 'notify' ? (
         <section className="card p-5 flex flex-col gap-2" aria-label="Bildirimler">
           <span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Sosyal bildirimler</span>
-          {notifyKinds.map(([k, l]) => <label key={k} className="flex items-center justify-between text-[14px]">{l}<input type="checkbox" checked={v.notify[k] !== false} onChange={(e) => setV({ ...v, notify: { ...v.notify, [k]: e.target.checked } })} className="w-5 h-5" /></label>)}
+          {notifyKinds.map(([k, l]) => <label key={k} className="flex items-center justify-between gap-3 min-h-[52px] border-t border-line first-of-type:border-t-0 text-[15px] cursor-pointer">{l}<input type="checkbox" checked={v.notify[k] !== false} onChange={(e) => setV({ ...v, notify: { ...v.notify, [k]: e.target.checked } })} className="w-6 h-6 shrink-0" /></label>)}
         </section>
       ) : null}
       {part !== 'invite' ? <>

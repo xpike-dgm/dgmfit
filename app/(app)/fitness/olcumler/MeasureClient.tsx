@@ -6,7 +6,7 @@ import { Trash } from '@/components/icons'
 import { addMeasurementAction, deleteMeasurementAction, deleteMediaAction } from '../actions'
 import { shrinkImage } from '@/lib/client-image'
 
-const FIELDS = [['waistCm', 'Bel'], ['chestCm', 'Göğüs'], ['hipsCm', 'Kalça'], ['armCm', 'Kol'], ['thighCm', 'Uyluk'], ['calfCm', 'Baldır'], ['neckCm', 'Boyun'], ['bodyFatPct', 'Yağ %']] as const
+const FIELDS = [['waistCm', 'Bel'], ['chestCm', 'Göğüs'], ['hipsCm', 'Kalça'], ['armCm', 'Kol'], ['thighCm', 'Uyluk'], ['calfCm', 'Baldır'], ['neckCm', 'Boyun'], ['bodyFatPct', 'Yağ']] as const
 type Key = (typeof FIELDS)[number][0]
 const num = (s: string) => (s.trim() ? Number(s.replace(',', '.')) : null)
 const short = (d: string) => new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d + 'T12:00:00Z'))
@@ -32,7 +32,7 @@ export function MeasureForm({ today }: { today: string }) {
       </label>
       <div className="grid grid-cols-4 gap-2">
         {FIELDS.map(([k, label]) => (
-          <label key={k} htmlFor={`m-${k}`} className="flex flex-col gap-1 text-[12px] font-semibold">{label}
+          <label key={k} htmlFor={`m-${k}`} className="flex flex-col gap-1 text-[12px] font-semibold">{label} <span className="text-mute font-normal">({k === 'bodyFatPct' ? '%' : 'cm'})</span>
             <input id={`m-${k}`} inputMode="decimal" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} className="h-11 rounded-xl bg-surface-2 border border-line px-2 num text-ink text-center" />
           </label>
         ))}

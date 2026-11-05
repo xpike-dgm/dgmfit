@@ -59,7 +59,7 @@ async function register(b, prefix) {
   // 2) İstatistik + ısı haritası
   await p.goto(BASE + '/fitness/istatistik')
   await p.getByTestId('volume-chart').waitFor()
-  const cells = await p.getByTestId('calendar').locator('span.bg-orange').count()
+  const cells = await p.getByTestId('calendar').locator('span.bg-acc').count()
   if (cells < 5) fail('takvimde en az 5 antrenman günü bekleniyordu: ' + cells)
   await p.getByTestId('body-map').waitFor()
   await p.getByTestId('weekly-sets').getByText('Göğüs').waitFor().catch(() => fail('kas başına sette göğüs yok'))
@@ -96,8 +96,9 @@ async function register(b, prefix) {
   await shot('03-olcu')
 
   // 5) GZCLP: ilk seans ağırlığı belirler, başarı +5 (alt vücut), başarısızlık 6×2
-  await p.goto(BASE + '/fitness/programlar')
-  await p.locator('section[aria-label="Hazır şablonlar"] div', { hasText: /^GZCLP/ }).first().getByRole('button', { name: 'Bu şablonu kullan' }).click()
+  await p.goto(BASE + '/fitness/programlar/sablonlar')
+  await p.getByTestId('template-item').filter({ hasText: /^GZCLP/ }).first().click(); await p.getByTestId('template-day').first().waitFor()
+  await p.getByRole('button', { name: 'Bu şablonu kullan' }).click()
   await p.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/)
   const gzUrl = p.url()
   const d1 = p.getByTestId('program-day').first()
@@ -128,8 +129,8 @@ async function register(b, prefix) {
   await shot('04-gzclp')
 
   // 6) DUP periyodizasyonu: squat'ın 3. seansı → hafif gün
-  await p.goto(BASE + '/fitness/programlar')
-  await p.locator('section[aria-label="Hazır şablonlar"] div', { hasText: /^Full Body/ }).first().getByRole('button', { name: 'Bu şablonu kullan' }).click()
+  await p.goto(BASE + '/fitness/programlar/sablonlar/fullbody')
+  await p.getByRole('button', { name: 'Bu şablonu kullan' }).click()
   await p.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/)
   await p.getByTestId('period-settings').getByRole('button', { name: /Dalgalı/ }).click()
   await p.getByTestId('period-settings').getByRole('button', { name: 'Kaydet' }).click()
@@ -139,7 +140,7 @@ async function register(b, prefix) {
   const liveUrl = p.url()
   const sq = p.locator('section[data-testid="live-exercise"]', { hasText: 'Squat (barbell)' }).first()
   await sq.getByTestId('target-chip').getByText(tgt.label).waitFor().catch(() => fail('DUP etiketi ' + tgt.label))
-  await sq.getByText(`Hedef ${tgt.sets} × ${tgt.repMin}–${tgt.repMax} @ RIR ${tgt.rir}`).waitFor().catch(() => fail('DUP hedefi'))
+  await sq.getByText(`Hedef ${tgt.sets} × ${tgt.repMin}–${tgt.repMax} · ${tgt.rir} tekrar yedek`).waitFor().catch(() => fail('DUP hedefi'))
 
   // 7) Canlı modda alternatif: bench → listeden ilk alternatif
   await p.getByRole('button', { name: 'Bench press (barbell) seçenekleri' }).click()

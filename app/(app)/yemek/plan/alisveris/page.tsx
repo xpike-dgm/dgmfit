@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { requireUser } from '@/lib/auth'
 import { currentPlan, shoppingFor } from '@/lib/planner-data'
@@ -16,7 +17,12 @@ export default async function Page(props: { searchParams: Promise<{ id?: string 
   return (
     <div className="px-4 flex flex-col gap-3">
       <TopBar back={plan ? `/yemek/plan?id=${plan.id}` : '/yemek/plan'} title="Alışveriş listesi" />
-      {plan ? <ShopList groups={groups} /> : <p className="card p-5 text-[14px] text-mute">Önce bir AI menüsü oluştur.</p>}
+      {plan ? <ShopList groups={groups} /> : (
+        <div className="card p-5 flex flex-col gap-3">
+          <p className="text-[14px] text-ink-2">Alışveriş listesi haftalık menüden çıkarılır. Önce bir menü oluştur.</p>
+          <Link href="/yemek/plan" className="h-12 rounded-full bg-acc text-acc-ink font-extrabold inline-flex items-center justify-center">Menü oluştur</Link>
+        </div>
+      )}
     </div>
   )
 }

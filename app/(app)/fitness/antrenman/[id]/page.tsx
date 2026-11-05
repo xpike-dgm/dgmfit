@@ -88,7 +88,6 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
         {w.notes ? <p className="text-[13px] text-ink-2 border-t border-line pt-3">Not: {w.notes}{w.pain ? ' · ağrı işaretlendi' : ''}</p> : w.pain ? <p className="text-[13px] text-orange">Ağrı işaretlendi: sonraki öneriler temkinli.</p> : null}
       </section>
 
-      <p className="text-[12px] text-mute px-1">Sosyalde paylaşma Sosyal modülüyle (Faz 5) gelecek.</p>
       <Link href="/fitness" className={btn.primary}>Fitness'a dön</Link>
       <Link href={`/sosyal/yeni?tur=workout&ref=${w.id}`} className={btn.secondary + ' w-full h-12'} data-testid="share-workout">Antrenmanı paylaş</Link>
       <DeleteWorkout id={w.id} />

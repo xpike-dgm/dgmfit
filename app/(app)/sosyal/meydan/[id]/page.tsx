@@ -1,3 +1,4 @@
+import { shortDate } from '@/lib/time'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
@@ -19,7 +20,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
       <TopBar back="/sosyal/meydan" title={c.scope === 'duel' ? 'Düello' : 'Meydan okuma'} />
       <section className="card p-5 flex flex-col gap-1" data-testid="challenge">
         <b className="text-[20px]">{c.title}</b>
-        <span className="text-[13px] text-mute">{c.metricLabel}{c.param ? ` (≥ ${fmtNum(c.param)} ml)` : ''}{c.target ? ` · hedef ${fmtNum(c.target)} ${c.unit}` : ''} · {c.startDay} – {c.endDay}{c.ended ? ' · bitti' : ''}</span>
+        <span className="text-[13px] text-mute">{c.metricLabel}{c.param ? ` (≥ ${fmtNum(c.param)} ml)` : ''}{c.target ? ` · hedef ${fmtNum(c.target)} ${c.unit}` : ''} · {shortDate(c.startDay)} – {shortDate(c.endDay)}{c.ended ? ' · bitti' : ''}</span>
         {c.scope === 'duel' ? <span className="mt-1 font-bold text-acc" data-testid="duel-result">{!c.duel ? 'Rakip henüz katılmadı' : c.duel.winner ? `Kazanan: ${c.board.find((b) => b.userId === c.duel!.winner)?.name}` : lead ? `Önde: ${c.board.find((b) => b.userId === lead)?.name}` : 'Berabere'}</span> : null}
       </section>
       <ChallengeButtons id={c.id} status={c.myStatus} ended={c.ended} />

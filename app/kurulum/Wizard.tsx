@@ -144,7 +144,8 @@ export default function Wizard({ username }: { username: string }) {
               <span key={i} className="h-[5px] rounded-full transition-colors" style={{ background: i < visibleIndex ? 'var(--color-acc)' : 'var(--color-line)' }} />
             ))}
           </div>
-          <span className="num text-sm text-mute w-10 text-right">{visibleIndex}/{visibleTotal - 1}</span>
+          {s.step === 9 ? <button type="button" onClick={() => go(1)} className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-bold">Atla</button>
+            : <span className="num text-sm text-mute w-10 text-right">{visibleIndex}/{visibleTotal - 1}</span>}
         </div>
       ) : null}
 
@@ -187,8 +188,8 @@ export default function Wizard({ username }: { username: string }) {
         )}
 
         {s.step === 3 && (
-          <Q eyebrow="Profil" title="Boyun kaç?" sub="Cetveli kaydır veya ± butonlarını kullan.">
-            <Big value={fmtNum(s.heightCm)} unit="cm" />
+          <Q eyebrow="Profil" title="Boyun kaç?" sub="Sayıya dokunup yaz, cetveli kaydır ya da ± kullan.">
+            <Big value={fmtNum(s.heightCm)} unit="cm" label="Boy" min={120} max={230} onSet={(v) => set({ heightCm: v })} />
             <Ruler label="Boy" min={120} max={230} step={1} majorEvery={10} value={s.heightCm} onChange={(v) => set({ heightCm: v })} />
             <Steppers onMinus={() => set({ heightCm: Math.max(120, s.heightCm - 1) })} onPlus={() => set({ heightCm: Math.min(230, s.heightCm + 1) })} />
           </Q>
@@ -196,7 +197,7 @@ export default function Wizard({ username }: { username: string }) {
 
         {s.step === 4 && (
           <Q eyebrow="Profil" title="Şu anki kilon?" sub="Sabah aç karnına tartıldığın değer en doğrusudur.">
-            <Big value={fmtNum(s.weightKg, 1)} unit="kg" />
+            <Big value={fmtNum(s.weightKg, 1)} unit="kg" label="Kilo" min={30} max={250} decimal onSet={(v) => set({ weightKg: v })} />
             <div className="flex justify-center gap-2 mb-5">
               <Chip>VKİ {fmtNum(bmiNow, 1)} · {bmiCategory(bmiNow)}</Chip>
             </div>
@@ -207,7 +208,7 @@ export default function Wizard({ username }: { username: string }) {
         )}
 
         {s.step === 5 && (
-          <Q eyebrow="Yaşam tarzı" title="Ne kadar hareketlisin?" sub="Gün içindeki genel hareketini düşün; antrenmanlar ayrıca hesaba katılacak.">
+          <Q eyebrow="Yaşam tarzı" title="Ne kadar hareketlisin?" sub="Antrenman dışındaki günlük hayatını düşün (iş, yürüyüş, ev işi). Spor yaptığın günler ayrıca eklenir; burada sayma.">
             <div className="flex flex-col gap-2.5">
               {(Object.keys(ACTIVITY) as Activity[]).map((a) => (
                 <Choice key={a} selected={s.activity === a} onClick={() => set({ activity: a })} className="min-h-[68px] justify-between text-left">
@@ -233,7 +234,7 @@ export default function Wizard({ username }: { username: string }) {
 
         {s.step === 7 && !recomp && (
           <Q eyebrow={`Hedefin · ${GOALS[s.goal ?? 'lose'].label}`} title="Hedef kilon kaç?" sub={`Şu an ${fmtNum(s.weightKg, 1)} kg'sın. Yeşil bant boyun için sağlıklı aralık (${fmtNum(hMin)}–${fmtNum(hMax)} kg).`}>
-            <Big value={fmtNum(s.targetWeightKg, 1)} unit="kg" />
+            <Big value={fmtNum(s.targetWeightKg, 1)} unit="kg" label="Hedef kilo" min={30} max={250} decimal onSet={(v) => set({ targetWeightKg: v })} />
             <div className="flex justify-center gap-2 mb-5">
               <Chip>{s.targetWeightKg - s.weightKg > 0 ? '+' : '−'}{fmtNum(Math.abs(s.targetWeightKg - s.weightKg), 1)} kg</Chip>
               <Chip accent={bmiTarget >= 18.5 && bmiTarget < 25}>VKİ {fmtNum(bmiTarget, 1)} · {bmiCategory(bmiTarget)}</Chip>
@@ -355,7 +356,6 @@ export default function Wizard({ username }: { username: string }) {
             {pending ? 'Kaydediliyor…' : 'Planı başlat'} <Arrow size={20} />
           </button>
         )}
-        {s.step === 9 ? <button type="button" className={btn.ghost} onClick={() => go(1)}>Atla</button> : null}
       </div>
     </main>
   )
@@ -386,10 +386,24 @@ function Choice({ selected, onClick, children, className = '' }: { selected: boo
   )
 }
 
-function Big({ value, unit }: { value: string; unit: string }) {
+/** Büyük değer: dokununca klavyeyle yazılır (cetvel ve ± düğmeleri de çalışır). */
+function Big({ value, unit, label, min, max, decimal, onSet }: { value: string; unit: string; label: string; min: number; max: number; decimal?: boolean; onSet: (v: number) => void }) {
+  const [edit, setEdit] = useState<string | null>(null)
+  const commit = () => {
+    if (edit === null) return
+    const v = Number(edit.replace(',', '.'))
+    if (Number.isFinite(v) && v >= min && v <= max) onSet(decimal ? Math.round(v * 2) / 2 : Math.round(v))
+    setEdit(null)
+  }
   return (
     <div className="flex items-baseline justify-center gap-1.5 mb-5">
-      <span className="num text-[76px] leading-none font-bold tracking-[-0.04em]">{value}</span>
+      {edit === null ? (
+        <button type="button" onClick={() => setEdit(value.replace('.', ''))} aria-label={`${label}: ${value} ${unit}, yazarak değiştir`} className="num text-[76px] leading-none font-bold tracking-[-0.04em] underline decoration-dotted decoration-line-2 underline-offset-8">{value}</button>
+      ) : (
+        <input autoFocus aria-label={`${label} (${unit})`} inputMode={decimal ? 'decimal' : 'numeric'} value={edit} onChange={(e) => setEdit(e.target.value.replace(/[^\d.,]/g, '').slice(0, 5))}
+          onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit() } }}
+          className="w-[200px] bg-transparent text-center num text-[76px] leading-none font-bold tracking-[-0.04em] outline-none border-b-2 border-acc" />
+      )}
       <span className="text-xl font-bold text-mute">{unit}</span>
     </div>
   )

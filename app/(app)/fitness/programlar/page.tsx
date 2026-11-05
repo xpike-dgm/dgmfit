@@ -1,27 +1,23 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
-import { aiAvailable } from '@/lib/ai/engine'
-import { ensureGym, listPrograms } from '@/lib/fitness-data'
-import { TEMPLATES } from '@/lib/programs'
+import { listPrograms } from '@/lib/fitness-data'
 import { Eyebrow, TopBar } from '@/components/ui'
-import { Next } from '@/components/icons'
-import { db, schema } from '@/lib/db'
-import { eq } from 'drizzle-orm'
-import { CreateProgram, ProgramActions } from './ProgramsClient'
+import { Dumbbell, Next, Plus, Spark } from '@/components/icons'
+import { ProgramActions } from './ProgramsClient'
 
 export const metadata = { title: 'Programlar · DgFit' }
-const LEVEL = { new: 'Başlangıç', mid: 'Orta', adv: 'İleri' }
 
 export default async function ProgramsPage() {
   const u = await requireUser()
-  const [programs, gym, [profile], aiOn] = await Promise.all([
-    listPrograms(u.id), ensureGym(u.id),
-    db.select({ trainingDays: schema.profiles.trainingDays, experience: schema.profiles.experience }).from(schema.profiles).where(eq(schema.profiles.userId, u.id)).limit(1),
-    aiAvailable(),
-  ])
+  const programs = await listPrograms(u.id)
+  const opts = [
+    { href: '/fitness/programlar/olustur', title: 'Benim için oluştur', sub: 'Ortamına, gün sayına ve süreye göre otomatik', Icon: Spark },
+    { href: '/fitness/programlar/sablonlar', title: 'Hazır şablonlar', sub: 'Full Body, Upper/Lower, PPL, GZCLP… incele ve seç', Icon: Dumbbell },
+    { href: '/fitness/programlar/bos', title: 'Boş program', sub: 'Günleri ve hareketleri kendin kur', Icon: Plus },
+  ]
   return (
     <div className="flex flex-col gap-3 px-4">
-      <TopBar back="/fitness" title="Programlar" />
+      <TopBar back="/fitness" title="Programlar" sub={programs.length ? `${programs.length} program` : 'Henüz program yok'} />
       {programs.length ? (
         <section aria-label="Programlarım" className="card p-5 flex flex-col gap-1">
           <Eyebrow>Programlarım</Eyebrow>
@@ -37,10 +33,16 @@ export default async function ProgramsPage() {
           ))}
         </section>
       ) : null}
-      <CreateProgram
-        templates={TEMPLATES.map((t) => ({ id: t.id, name: t.name, description: t.description, days: t.daysPerWeek, level: LEVEL[t.level], dayNames: t.days.map((d) => d.name) }))}
-        defaults={{ days: profile?.trainingDays ?? 3, minutes: gym.sessionMinutes, equipment: gym.equipment }} aiOn={aiOn}
-      />
+      <section aria-label="Program oluştur" className="flex flex-col gap-2">
+        <h2 className="text-[13px] font-bold tracking-[0.06em] uppercase text-mute px-1 pt-1">Program oluştur</h2>
+        {opts.map((o) => (
+          <Link key={o.href} href={o.href} className="card p-4 flex items-center gap-3 min-h-[72px]">
+            <span className="w-11 h-11 rounded-2xl bg-acc text-acc-ink flex items-center justify-center shrink-0"><o.Icon size={20} /></span>
+            <span className="flex-1 flex flex-col min-w-0"><b className="text-[15px]">{o.title}</b><span className="text-[12.5px] text-mute">{o.sub}</span></span>
+            <Next size={18} className="text-mute shrink-0" />
+          </Link>
+        ))}
+      </section>
     </div>
   )
 }

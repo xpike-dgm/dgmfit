@@ -1,4 +1,5 @@
 'use client'
+import AiOff from '@/components/AiOff'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
@@ -44,6 +45,7 @@ export default function RestaurantClient({ aiOn, meal }: { aiOn: boolean; meal: 
     <div className="flex flex-col gap-3" data-testid="restaurant">
       <section className="card p-5 flex flex-col gap-3">
         <p className="text-[13px] text-mute">Menünün fotoğrafını çek; yemeklerin kalorisi veritabanından hesaplanır ve kalan bütçene en uygun 3 seçenek öne çıkar.</p>
+        {!aiOn ? <AiOff what="Menü fotoğrafı okuma" alt={{ href: '/yemek/ekle', label: 'Yemeği aramayla ekle' }} /> : null}
         <label className={`${btn.primary} cursor-pointer ${busy || !aiOn ? 'opacity-50' : ''}`}>
           {busy ? 'Menü okunuyor…' : 'Menünün fotoğrafını çek'}
           <input type="file" accept="image/*" capture="environment" className="sr-only" data-testid="rest-photo" disabled={busy || !aiOn} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void send(f) }} />

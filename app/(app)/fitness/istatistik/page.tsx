@@ -19,7 +19,10 @@ export default async function StatsPage() {
   const worked = s.heat.filter((h) => h.week > 0 || h.sets7 > 0)
   return (
     <div className="flex flex-col gap-3 px-4">
-      <TopBar back="/fitness" title="İstatistik" />
+      <TopBar back="/fitness" title="İstatistik" sub="Son 12 hafta" />
+      {s.calendar.length === 0 ? (
+        <section className="card p-5 text-[14px] text-ink-2 leading-relaxed">Henüz kayıtlı antrenman yok. İlk antrenmanından sonra haftalık hacim, takvim, kas grupları ve set dağılımı burada oluşur. <a href="/fitness" className="text-acc font-bold">Antrenmana başla</a></section>
+      ) : <>
 
       <section className="card p-5 flex flex-col gap-2" aria-label="Haftalık hacim">
         <Eyebrow>Haftalık hacim (kg × tekrar)</Eyebrow>
@@ -47,19 +50,20 @@ export default async function StatsPage() {
           {Array.from({ length: 84 }, (_, i) => {
             const d = addDays(s.from, i)
             const on = trained.has(d), future = d > s.today
-            return <span key={d} title={`${shortDate(d)}${on ? ' · antrenman' : ''}`} className={`aspect-square rounded-[4px] ${on ? 'bg-orange' : future ? 'bg-transparent' : 'bg-surface-3'}`} />
+            return <span key={d} title={`${shortDate(d)}${on ? ' · antrenman' : ''}`} className={`aspect-square rounded-[4px] ${on ? 'bg-acc' : future ? 'bg-transparent' : 'bg-surface-3'}`} />
           })}
         </div>
-        <span className="text-[11px] text-mute">Sütunlar hafta (Pazartesi üstte), turuncu kare antrenman günü.</span>
+        <span className="text-[11px] text-mute">Sütunlar hafta (Pazartesi üstte), renkli kare antrenman günü.</span>
       </section>
+      </>}
 
       <section className="card p-5 flex flex-col gap-3" aria-label="Kas ısı haritası">
-        <Eyebrow>Son 7 gün · kas ısı haritası</Eyebrow>
+        <Eyebrow>Son 7 gün · kas grupları</Eyebrow>
         <BodyMap heat={s.heat.map((h) => ({ muscle: h.muscle, sets: h.sets7, status: h.status }))} />
         <div className="flex gap-3 text-[12px] text-ink-2">
           {Object.values(STATUS).map((v) => <span key={v.t} className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ background: v.c }} />{v.t}</span>)}
         </div>
-        <p className="text-[11px] text-mute">Renk yoğunluğu son 7 gündeki set sayısı, kenar rengi toparlanma (24 saatten yeni ya da 48 saatte 4+ set: dinlendir; 72 saatten yeni: toparlanıyor). Yaklaşık bir rehberdir.</p>
+        <p className="text-[11px] text-mute">Çubuk son 7 gündeki set sayısı, nokta rengi toparlanma (24 saatten yeni ya da 48 saatte 4+ set: dinlendir; 72 saatten yeni: toparlanıyor). Yaklaşık bir rehberdir.</p>
       </section>
 
       <section className="card p-5 flex flex-col gap-2.5" aria-label="Kas başına haftalık set" data-testid="weekly-sets">

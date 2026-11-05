@@ -211,6 +211,23 @@ export async function addDay(userId: string, programId: string, name: string) {
   await db.insert(schema.programDays).values({ programId, idx: p.days.length, name, focus: '' })
   await touch(programId)
 }
+/** Programdan gün siler: hareketleri silinir (cascade), geçmiş antrenmanlar korunur (program_day_id → null); sıra yeniden numaralanır. */
+export async function removeDay(userId: string, dayId: string) {
+  const d = await ownsDay(userId, dayId)
+  if (!d) throw new Error('Gün yok')
+  await db.transaction(async (tx) => {
+    const [p] = await tx.select({ nextDayIdx: schema.programs.nextDayIdx }).from(schema.programs).where(eq(schema.programs.id, d.programId)).limit(1)
+    const days = await tx.select({ id: schema.programDays.id }).from(schema.programDays).where(eq(schema.programDays.programId, d.programId)).orderBy(asc(schema.programDays.idx))
+    const at = days.findIndex((x) => x.id === dayId)
+    await tx.delete(schema.programDays).where(eq(schema.programDays.id, dayId))
+    const rest = days.filter((x) => x.id !== dayId)
+    for (let i = 0; i < rest.length; i++) await tx.update(schema.programDays).set({ idx: i }).where(eq(schema.programDays.id, rest[i].id))
+    const n = rest.length
+    const cur = p ? p.nextDayIdx % Math.max(1, days.length) : 0
+    const next = n ? (cur > at ? cur - 1 : cur === at ? at % n : cur) : 0
+    await tx.update(schema.programs).set({ nextDayIdx: next, updatedAt: new Date() }).where(eq(schema.programs.id, d.programId))
+  })
+}
 export async function addExerciseToDay(userId: string, dayId: string, exerciseId: number) {
   const d = await ownsDay(userId, dayId)
   if (!d) throw new Error('Gün yok')

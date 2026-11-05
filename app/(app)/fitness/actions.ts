@@ -11,8 +11,7 @@ import {
   addDay, addExerciseToDay, copyProgram, createCustomExercise, createEmptyProgram, createFromTemplate, createGenerated, deleteCardio,
   deleteProgram, deleteWorkout, ensureGym, liveSession, logCardio, removeProgramExercise, saveWorkout, setActiveProgram, updateProgramExercise,
   setSchemeKg, updateProgramSettings,
-  type LiveExercise,
-} from '@/lib/fitness-data'
+  type LiveExercise, removeDay } from '@/lib/fitness-data'
 import { addMeasurement, alternativesFor, deleteMeasurement, MEASURES } from '@/lib/fitness-stats'
 import { deleteMedia } from '@/lib/media'
 import { createAiProgram } from '@/lib/planner-data'
@@ -90,6 +89,11 @@ export async function addDayAction(programId: string, name: string): Promise<R> 
   const n = z.string().trim().min(1).max(40).safeParse(name)
   if (!Uuid.safeParse(programId).success || !n.success) return { ok: false, error: 'Gün adı 1–40 karakter olmalı' }
   return run(async () => { await addDay(userId, programId, n.data); return {} })
+}
+export async function removeDayAction(dayId: string): Promise<R> {
+  const userId = await uid()
+  if (!Uuid.safeParse(dayId).success) return { ok: false, error: 'Geçersiz' }
+  return run(async () => { await removeDay(userId, dayId); return {} })
 }
 export async function addExerciseToDayAction(dayId: string, exerciseId: number): Promise<R> {
   const userId = await uid()

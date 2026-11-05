@@ -7,7 +7,8 @@ import { dismissInsightAction } from '@/app/(app)/koc/actions'
 type Insight = { id: string; key: string; tone: 'good' | 'warn' | 'info' | 'care'; title: string; body: string; ask: string | null; provider: string | null }
 
 /** Bugün ekranındaki tek koç kartı: günün içgörüsü (günde en fazla 1) ya da güvenlik destek kartı. */
-export default function InsightCard({ fallback, weeklyReady }: { fallback: string; weeklyReady: boolean }) {
+export default function InsightCard({ fallback, weeklyReady, compact = false }: { fallback: string; weeklyReady: boolean; compact?: boolean }) {
+  const clamp = compact ? ' line-clamp-3' : ''
   const [ins, setIns] = useState<Insight | null | undefined>(undefined)
   const [hidden, setHidden] = useState(false)
   useEffect(() => {
@@ -23,13 +24,13 @@ export default function InsightCard({ fallback, weeklyReady }: { fallback: strin
         <span className={`text-[13px] font-bold tracking-[0.08em] uppercase ${care ? 'text-water' : 'text-acc'}`}>Koç</span>
         {ins && !hidden && !care ? <button type="button" className="ml-auto text-[12px] text-mute font-semibold h-8 px-2" onClick={() => { setHidden(true); void dismissInsightAction(ins.id) }}>Kapat</button> : null}
       </div>
-      {ins === undefined ? <p className="text-[15px] leading-relaxed text-ink opacity-70" aria-busy="true">{fallback}</p>
+      {ins === undefined ? <p className={`text-[14px] leading-relaxed text-ink opacity-70${clamp}`} aria-busy="true">{fallback}</p>
         : ins && !hidden ? (
           <div className="flex flex-col gap-1" data-testid="insight" data-key={ins.key}>
             <span className="font-bold text-[15px]">{ins.title}</span>
-            <p className="text-[15px] leading-relaxed text-ink">{ins.body}</p>
+            <p className={`text-[14px] leading-relaxed text-ink${clamp}`}>{ins.body}</p>
           </div>
-        ) : <p className="text-[15px] leading-relaxed text-ink">{fallback}</p>}
+        ) : <p className={`text-[14px] leading-relaxed text-ink${clamp}`}>{fallback}</p>}
       <div className="flex flex-wrap gap-2">
         <Link href={ins?.ask && !hidden ? `/koc?soru=${encodeURIComponent(ins.ask)}` : '/koc'} className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center">{ins?.ask && !hidden ? 'Koça sor' : 'Koçla konuş'}</Link>
         {weeklyReady ? <Link href="/rapor" className="h-10 px-4 rounded-full border border-coach-line text-ink font-bold text-[14px] inline-flex items-center" data-testid="weekly-link">Haftalık rapor</Link> : null}

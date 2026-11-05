@@ -39,6 +39,12 @@ const trNum = (v) => v.toLocaleString('tr-TR')
 
   // 1) Otomatik program: 3 gün, yeni başlayan → Full Body A/B/A
   await p.goto(BASE + '/fitness'); await p.getByRole('link', { name: 'Program oluştur' }).click(); await p.waitForURL('**/fitness/programlar')
+  await p.getByRole('link', { name: /Benim için oluştur/ }).click(); await p.waitForURL('**/fitness/programlar/olustur')
+  // ortam seçilmeden ekipman ve oluştur pasif; ortama göre ekipman listesi gelir
+  if (!(await p.getByRole('button', { name: 'Programı oluştur' }).isDisabled())) fail('ortam seçilmeden program oluşturulabiliyor')
+  await p.selectOption('#gen-env', 'home'); await p.getByTestId('gen-equipment').locator('summary').click()
+  if (await p.getByTestId('gen-equipment').getByText('Makine', { exact: true }).count()) fail('evde ortamında makine listelenmemeli')
+  await p.selectOption('#gen-env', 'gym')
   await p.locator('fieldset', { hasText: 'Haftada kaç gün?' }).getByRole('button', { name: '3', exact: true }).click()
   await p.getByRole('button', { name: 'Programı oluştur' }).click(); await p.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/)
   if ((await p.getByTestId('program-day').count()) !== 3) fail('3 program günü bekleniyordu')
@@ -46,7 +52,7 @@ const trNum = (v) => v.toLocaleString('tr-TR')
   await day1.getByText('Squat (barbell)').waitFor().catch(() => fail('ilk hareket barbell squat değil'))
 
   // 2) Düzenle: squat 3 → 4 set
-  await day1.getByRole('button', { name: /Squat \(barbell\)/ }).click()
+  await day1.getByRole('button', { name: 'Squat (barbell) düzenle' }).click()
   await p.getByRole('button', { name: 'Set artır' }).click()
   if ((await p.getByTestId('edit-sets').innerText()) !== '4') fail('set sayısı 4 olmadı')
   await p.getByRole('button', { name: 'Kaydet' }).click()

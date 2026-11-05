@@ -1,4 +1,5 @@
 'use client'
+import AiOff from '@/components/AiOff'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
@@ -42,7 +43,7 @@ export default function PlanClient({ plan, aiOn, today }: { plan: Plan | null; a
             <input id="menu-note" maxLength={200} value={v.note} onChange={(e) => setV({ ...v, note: e.target.value })} placeholder="Ör: balık sevmem, öğle yemekleri pratik olsun" className="h-12 rounded-xl bg-surface-2 border border-line px-3 font-normal" /></label>
           {err ? <p role="alert" className="text-[13px] text-orange">{err}</p> : null}
           <button type="submit" className={btn.primary} disabled={!aiOn || busy}>{busy ? 'Menü hazırlanıyor…' : 'Menü oluştur'}</button>
-          {!aiOn ? <p className="text-[12px] text-orange">AI şu an kullanılamıyor.</p> : null}
+          {!aiOn ? <AiOff what="AI menü" alt={{ href: '/yemek/ekle', label: 'Elle öğün ekle' }} /> : null}
           {plan ? <button type="button" className={btn.ghost} onClick={() => setForm(false)}>Vazgeç</button> : null}
         </form>
       ) : null}

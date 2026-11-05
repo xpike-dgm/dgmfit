@@ -2,64 +2,44 @@ import { MUSCLES } from '@/lib/exercise-labels'
 
 type Heat = { muscle: string; sets: number; status: 'yeşil' | 'sarı' | 'kırmızı' }
 const RING = { 'yeşil': 'var(--color-good)', 'sarı': 'var(--color-orange)', 'kırmızı': 'var(--color-danger)' }
-
-// Basit gövde şeması (100 × 210 birim): ön ve arka. Her bölge bir kas grubudur.
-type Shape = { m: string; d: string }
-const ell = (cx: number, cy: number, rx: number, ry: number) => `M${cx - rx},${cy} a${rx},${ry} 0 1,0 ${rx * 2},0 a${rx},${ry} 0 1,0 ${-rx * 2},0`
-const rr = (x: number, y: number, w: number, h: number, r = 4) => `M${x + r},${y} h${w - 2 * r} a${r},${r} 0 0 1 ${r},${r} v${h - 2 * r} a${r},${r} 0 0 1 ${-r},${r} h${-(w - 2 * r)} a${r},${r} 0 0 1 ${-r},${-r} v${-(h - 2 * r)} a${r},${r} 0 0 1 ${r},${-r}z`
-const pair = (m: string, f: (x: number) => string, xl: number, xr: number) => [{ m, d: f(xl) }, { m, d: f(xr) }]
-
-const FRONT: Shape[] = [
-  { m: 'neck', d: rr(44, 24, 12, 8, 3) },
-  ...pair('shoulders', (x) => ell(x, 40, 9, 7), 27, 73),
-  ...pair('chest', (x) => rr(x, 36, 17, 17, 5), 33, 50),
-  ...pair('biceps', (x) => rr(x, 49, 9, 22, 4), 17, 74),
-  ...pair('forearms', (x) => rr(x, 74, 8, 24, 4), 13, 79),
-  { m: 'abdominals', d: rr(39, 56, 22, 34, 6) },
-  ...pair('abductors', (x) => rr(x, 90, 7, 14, 3), 27, 66),
-  ...pair('quadriceps', (x) => rr(x, 104, 14, 40, 6), 32, 54),
-  ...pair('adductors', (x) => rr(x, 104, 4, 24, 2), 46, 50),
-  ...pair('calves', (x) => rr(x, 150, 10, 34, 5), 34, 56),
-]
-const BACK: Shape[] = [
-  { m: 'traps', d: rr(38, 24, 24, 18, 6) },
-  ...pair('shoulders', (x) => ell(x, 40, 9, 7), 27, 73),
-  ...pair('lats', (x) => rr(x, 44, 12, 28, 5), 31, 57),
-  { m: 'middle back', d: rr(43, 44, 14, 22, 4) },
-  { m: 'lower back', d: rr(40, 70, 20, 16, 5) },
-  ...pair('triceps', (x) => rr(x, 49, 9, 22, 4), 17, 74),
-  ...pair('forearms', (x) => rr(x, 74, 8, 24, 4), 13, 79),
-  ...pair('glutes', (x) => rr(x, 88, 17, 16, 7), 33, 50),
-  ...pair('hamstrings', (x) => rr(x, 106, 14, 40, 6), 32, 54),
-  ...pair('calves', (x) => rr(x, 150, 10, 34, 5), 34, 56),
+const STATUS_T = { 'yeşil': 'Hazır', 'sarı': 'Toparlanıyor', 'kırmızı': 'Dinlendir' }
+const GROUPS: [string, string[]][] = [
+  ['Üst vücut', ['chest', 'shoulders', 'lats', 'middle back', 'traps', 'biceps', 'triceps', 'forearms', 'neck']],
+  ['Gövde', ['abdominals', 'lower back']],
+  ['Alt vücut', ['quadriceps', 'hamstrings', 'glutes', 'calves', 'adductors', 'abductors']],
 ]
 
-function Figure({ shapes, heat, label }: { shapes: Shape[]; heat: Map<string, Heat>; label: string }) {
-  return (
-    <figure className="flex flex-col items-center gap-1 flex-1">
-      <svg viewBox="0 0 100 200" className="w-full max-w-[150px] h-auto" role="img" aria-label={`${label}: ${shapes.filter((s, i, a) => a.findIndex((x) => x.m === s.m) === i && (heat.get(s.m)?.sets ?? 0) > 0).map((s) => `${MUSCLES[s.m]} ${heat.get(s.m)!.sets} set`).join(', ') || 'çalışan kas yok'}`}>
-        <circle cx={50} cy={13} r={9} fill="var(--color-surface-3)" />
-        {shapes.map((s, i) => {
-          const h = heat.get(s.m)
-          const k = h?.sets ? Math.min(1, 0.25 + h.sets / 16) : 0
-          return (
-            <path key={i} d={s.d} fill={k ? 'var(--color-orange)' : 'var(--color-surface-3)'} fillOpacity={k || 1} stroke={h?.sets ? RING[h.status] : 'var(--color-line)'} strokeWidth={h?.sets ? 1.6 : 0.8}>
-              <title>{`${MUSCLES[s.m]}: ${h?.sets ?? 0} set (son 7 gün)`}</title>
-            </path>
-          )
-        })}
-      </svg>
-      <figcaption className="text-[11px] text-mute">{label}</figcaption>
-    </figure>
-  )
-}
-
+/**
+ * Son 7 günde kas grubu başına set ve toparlanma durumu.
+ * Not (2026-11-05): eski basit vücut çizimi kullanıcı isteğiyle kaldırıldı; profesyonel ön/arka anatomi görseli gelince
+ * aynı veriyle bölge boyaması yapılacak (varlık tanımı LOG.md'de).
+ */
 export default function BodyMap({ heat }: { heat: Heat[] }) {
   const m = new Map(heat.map((h) => [h.muscle, h]))
+  const max = Math.max(8, ...heat.map((h) => h.sets))
   return (
-    <div className="flex gap-2 justify-center" data-testid="body-map">
-      <Figure shapes={FRONT} heat={m} label="Ön" />
-      <Figure shapes={BACK} heat={m} label="Arka" />
+    <div className="flex flex-col gap-3" data-testid="body-map">
+      {GROUPS.map(([title, keys]) => (
+        <div key={title} className="flex flex-col gap-1.5">
+          <span className="text-[12px] font-bold text-mute">{title}</span>
+          <ul className="grid grid-cols-2 gap-1.5">
+            {keys.map((k) => {
+              const h = m.get(k)
+              const sets = h?.sets ?? 0
+              return (
+                <li key={k} className="rounded-xl bg-surface-2 px-3 py-2 flex flex-col gap-1.5" title={`${MUSCLES[k]}: ${sets} set (son 7 gün)`}>
+                  <span className="flex items-center justify-between gap-2 text-[13px]">
+                    <span className="flex items-center gap-1.5 min-w-0"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: sets ? RING[h!.status] : 'var(--color-line-2)' }} aria-hidden /><span className="truncate font-semibold">{MUSCLES[k]}</span></span>
+                    <b className="num text-[12px] shrink-0">{sets ? `${sets} set` : '—'}</b>
+                  </span>
+                  <span className="h-1.5 rounded-full bg-surface-3 overflow-hidden"><span className="block h-full rounded-full bg-acc" style={{ width: `${(sets / max) * 100}%` }} /></span>
+                  {sets ? <span className="sr-only">{STATUS_T[h!.status]}</span> : null}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ))}
     </div>
   )
 }

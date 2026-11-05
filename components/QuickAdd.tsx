@@ -1,25 +1,21 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { logWeight } from '@/app/(app)/actions'
 import { btn } from './ui'
+import { dialogClass, SheetHead, useSheet } from './Sheet'
 import { Dumbbell, Drop, Fork, Pulse, Scale } from './icons'
 
 export default function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
+  const sh = useSheet(open, onClose)
   const [mode, setMode] = useState<'menu' | 'weight'>('menu')
   const [kg, setKg] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [pending, start] = useTransition()
   const router = useRouter()
 
-  useEffect(() => {
-    const d = ref.current
-    if (!d) return
-    if (open && !d.open) { d.showModal(); setMode('menu'); setErr(null) }
-    if (!open && d.open) d.close()
-  }, [open])
+  useEffect(() => { if (open) { setMode('menu'); setErr(null) } }, [open])
 
   const save = () => {
     const v = Number(kg.replace(',', '.'))
@@ -39,13 +35,11 @@ export default function QuickAdd({ open, onClose }: { open: boolean; onClose: ()
   ]
 
   return (
-    <dialog ref={ref} onClose={onClose} onClick={(e) => { if (e.target === ref.current) onClose() }}
-      className="m-0 mt-auto w-full max-w-none bg-transparent p-0 backdrop:bg-black/60 backdrop:backdrop-blur-sm open:animate-[fadeIn_.2s_ease]">
-      <div className="max-w-md mx-auto bg-surface rounded-t-[32px] px-5 pt-3 safe-bottom">
-        <div className="mx-auto w-10 h-1.5 rounded-full bg-line-2 mb-5" aria-hidden />
+    <dialog {...sh.dialogProps} aria-label="Hızlı ekle" className={dialogClass}>
+      <div ref={sh.panel} className="max-w-md mx-auto bg-surface rounded-t-[32px] px-5 safe-bottom">
+        <SheetHead title={mode === 'menu' ? 'Hızlı ekle' : 'Bugünkü kilon'} handlers={sh.handlers} onClose={sh.slideClose} />
         {mode === 'menu' ? (
-          <div className="flex flex-col gap-2 pb-4">
-            <h2 className="text-lg font-extrabold mb-2 px-1">Hızlı ekle</h2>
+          <div className="flex flex-col gap-2 pb-4 pt-2">
             {items.map((it) => (
               <Link key={it.href} href={it.href} onClick={onClose} data-mod={it.mod} className="flex items-center gap-4 min-h-[64px] px-4 rounded-[20px] bg-surface-2">
                 <span className="w-10 h-10 rounded-full bg-acc text-acc-ink flex items-center justify-center"><it.Icon size={20} /></span>
@@ -58,8 +52,7 @@ export default function QuickAdd({ open, onClose }: { open: boolean; onClose: ()
             </button>
           </div>
         ) : (
-          <form className="flex flex-col gap-4 pb-4" onSubmit={(e) => { e.preventDefault(); save() }}>
-            <h2 className="text-lg font-extrabold px-1">Bugünkü kilon</h2>
+          <form className="flex flex-col gap-4 pb-4 pt-2" onSubmit={(e) => { e.preventDefault(); save() }}>
             <label htmlFor="qa-kg" className="sr-only">Kilo (kg)</label>
             <div className="flex items-baseline gap-2 justify-center">
               <input id="qa-kg" autoFocus inputMode="decimal" placeholder="0,0" value={kg} onChange={(e) => setKg(e.target.value.replace(/[^0-9.,]/g, ''))}

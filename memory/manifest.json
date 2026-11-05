@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-05",
-  "phase": "5c",
+  "phase": "5d",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -197,7 +197,15 @@
     "tests/theme.test.ts",
     "app/(app)/su/ayarlar/data.ts",
     "app/(app)/sosyal/ayarlar/data.ts",
-    "app/(app)/profil/actions.ts"
+    "app/(app)/profil/actions.ts",
+    "components/BackButton.tsx",
+    "components/ExImg.tsx",
+    "components/AiOff.tsx",
+    "components/legal.tsx",
+    "app/(app)/fit/load.ts",
+    "app/(app)/profil/plan-actions.ts",
+    "app/(app)/profil/PlanForm.tsx",
+    "app/(app)/fitness/hareketler/FilterSheet.tsx"
   ],
   "tables": [
     "users",
@@ -353,7 +361,16 @@
     "/su/ayarlar/gorunum",
     "/su/ayarlar/hatirlatma",
     "/su/ayarlar/hedef",
-    "/su/ayarlar/kaplar"
+    "/su/ayarlar/kaplar",
+    "/fit/banka",
+    "/fit/checkin",
+    "/fit/gunler",
+    "/fit/karb",
+    "/fit/senaryo",
+    "/fitness/programlar/bos",
+    "/fitness/programlar/olustur",
+    "/fitness/programlar/sablonlar/[id]",
+    "/fitness/programlar/sablonlar"
   ],
   "events": [
     "profile.onboarded",

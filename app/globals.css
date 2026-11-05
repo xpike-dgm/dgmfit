@@ -85,7 +85,9 @@
   body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
   button, a, input, select, textarea { touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }
-  input, select, textarea { accent-color: var(--color-acc); }
+  /* Esnek satırlardaki giriş alanları içeriğin varsayılan genişliğinin altına küçülebilsin (dar ekranda düğmeyi dışarı itmesin). */
+  input, select, textarea { accent-color: var(--color-acc); min-width: 0; }
+  button { flex-shrink: 0; }
   :root:not([data-theme="light"]) input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) input[type="date"]::-webkit-calendar-picker-indicator { filter: none; } }
 }
@@ -103,3 +105,4 @@
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @keyframes wave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }

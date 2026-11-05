@@ -104,7 +104,7 @@ function fake(port, handler) {
   await shot('01-destek')
 
   // 3) Program (Full Body, 3 gün) — eylem testi için
-  await p.goto(BASE + '/fitness'); await p.getByRole('link', { name: 'Program oluştur' }).click(); await p.waitForURL('**/fitness/programlar')
+  await p.goto(BASE + '/fitness/programlar/olustur'); await p.selectOption('#gen-env', 'gym')
   await p.locator('fieldset', { hasText: 'Haftada kaç gün?' }).getByRole('button', { name: '3', exact: true }).click()
   await p.getByRole('button', { name: 'Programı oluştur' }).click(); await p.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/)
   const programUrl = p.url()

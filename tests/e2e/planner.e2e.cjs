@@ -145,7 +145,7 @@ function fake(port, handler) {
   await shot('03-restoran')
 
   // 6) AI program: fazla gün ve bilinmeyen hareket atılır, yeni başlayanda set ≤ 4
-  await p.goto(BASE + '/fitness/programlar')
+  await p.goto(BASE + '/fitness/programlar/olustur'); await p.selectOption('#gen-env', 'gym')
   const ai = p.getByTestId('ai-program')
   await ai.getByRole('button', { name: 'Arka bacak' }).click()
   await ai.getByRole('button', { name: 'AI ile oluştur' }).click()
@@ -159,7 +159,7 @@ function fake(port, handler) {
   if (sets.some((s) => num(s.split('×')[0]) > 4)) fail('yeni başlayanda set sınırı uygulanmadı: ' + sets.join(','))
 
   // 7) Senaryo simülatörü: haftada 3 gün koşu → daha erken varış
-  await p.goto(BASE + '/fit')
+  await p.goto(BASE + '/fit/senaryo')
   const sc0 = await p.getByTestId('scenario-date').innerText()
   await p.locator('#sc-week').focus(); for (let i = 0; i < 3; i++) await p.keyboard.press('ArrowRight')
   await p.getByTestId('scenario-out').getByText(/erken/).waitFor().catch(async () => fail('simülatör erken varış göstermedi: ' + (await p.getByTestId('scenario-out').innerText())))
@@ -169,7 +169,7 @@ function fake(port, handler) {
   await p.goto(BASE + '/')
   const carbGoal = async () => num((await p.locator('section[aria-label="Kalori"]').getByText(/Karbonhidrat/).locator('..').locator('..').innerText()).split('/')[1])
   const c0 = await carbGoal()
-  await p.goto(BASE + '/fit')
+  await p.goto(BASE + '/fit/karb')
   const cc = p.getByTestId('carb-cycle')
   await cc.getByLabel('Karb döngüsünü aç').check()
   for (const d of ['Pzt', 'Çar', 'Cum']) await cc.getByRole('button', { name: d, exact: true }).click()

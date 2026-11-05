@@ -1,19 +1,16 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
-import { getFitScreen, sexOf } from '@/lib/fit-data'
+import { getFitScreen } from '@/lib/fit-data'
 import { carbCycleFor } from '@/lib/planner-data'
-import { Scenario, CarbCycle } from './Planner'
 import { addDays, diffDays, longDate, shortDate } from '@/lib/time'
-import { calorieFloor, fmtNum, GOALS, type GoalType } from '@/lib/calc'
-import { dayCap } from '@/lib/fit'
+import { fmtNum, GOALS, type GoalType } from '@/lib/calc'
 import { Band, Eyebrow } from '@/components/ui'
 import { Calendar, Pulse, Scale, Spark, Trend } from '@/components/icons'
-import { BankForm, CancelBank, CheckinApply, DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
+import { DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
 
 export const metadata = { title: 'Plan · DgFit' }
 
-const REASON: Record<string, string> = { balance: 'Dengeleme', 'bank-save': 'Banka birikimi', 'bank-spend': 'Banka harcaması' }
 const KIND: Record<string, string> = {
   balanced: 'Hedefte', over: 'Fazla', under: 'Az', incomplete: 'Eksik kayıt', untracked: 'Kayıt yok', exception: 'İstisna',
 }
@@ -25,7 +22,7 @@ export default async function FitPage() {
   const s = await getFitScreen(user.id)
   if (!s) redirect('/kurulum')
   const { goal, today, checkin } = s
-  const [sex, cc] = await Promise.all([sexOf(user.id), carbCycleFor(user.id)])
+  const cc = await carbCycleFor(user.id)
   const type = goal.type as GoalType
   const totalDays = diffDays(goal.startDate, goal.endDate) + 1
   const dayIndex = Math.min(totalDays, diffDays(goal.startDate, today) + 1)
@@ -118,65 +115,25 @@ export default async function FitPage() {
         </section>
       ) : null}
 
-      <section aria-label="Önümüzdeki 7 gün" className="card p-5 flex flex-col gap-2" data-testid="next-days">
-        <div className="flex items-center gap-2 mb-1"><Calendar size={18} className="text-mute" /><Eyebrow>Önümüzdeki 7 gün</Eyebrow></div>
-        {s.targets.map((t) => (
-          <div key={t.day} className="flex items-center gap-3 min-h-[44px]">
-            <span className="w-14 text-sm font-semibold">{t.day === today ? 'Bugün' : wd(t.day)} <span className="text-mute font-normal num">{Number(t.day.slice(8))}</span></span>
-            <div className="flex-1 flex flex-wrap gap-1">
-              {t.reasons.length ? groupReasons(t.reasons).map((r) => (
-                <span key={r.reason + (r.sourceDay ?? '')} className="text-[11px] px-2 h-6 rounded-full bg-surface-2 flex items-center text-ink-2">
-                  {REASON[r.reason] ?? r.reason}{r.sourceDay ? ` · ${shortDate(r.sourceDay)}` : ''} <b className="num ml-1 text-ink">{signed(r.kcal)}</b>
-                </span>
-              )) : <span className="text-[12px] text-faint">Plan</span>}
-            </div>
-            <span className="num text-[17px] font-bold w-16 text-right">{fmtNum(t.kcal)}</span>
-          </div>
-        ))}
-        <p className="text-[12px] text-mute leading-relaxed mt-1">
-          Bir günün hedefi dengeleme yüzünden en fazla {fmtNum(dayCap(goal.dailyKcal))} kcal değişir ve {fmtNum(s.floor)} kcal güvenli tabanın altına inmez. Protein sabit kalır; fark karbonhidrat ve yağa dağıtılır.
-        </p>
-      </section>
 
-      <section aria-label="Kalori bankası" className="card p-5 flex flex-col gap-3">
-        <div className="flex items-center gap-2"><Spark size={18} className="text-orange" /><Eyebrow>Kalori bankası</Eyebrow></div>
-        <p className="text-[13px] text-ink-2 leading-relaxed">Düğün, davet, tatil… Özel bir gün için önceki günlerden biraz biriktir, o gün rahat ye. Toplam plan değişmez.</p>
-        {s.banks.map((b) => (
-          <div key={b.bankId} className="flex items-center justify-between gap-3 rounded-2xl bg-surface-2 px-4 py-3" data-testid="bank-item">
-            <span className="flex flex-col">
-              <span className="font-bold">{shortDate(b.day)}{b.note ? ` · ${b.note}` : ''}</span>
-              <span className="text-[13px] text-mute">+{fmtNum(b.extra)} kcal ekstra</span>
-            </span>
-            <CancelBank bankId={b.bankId} />
-          </div>
-        ))}
-        <BankForm days={Array.from({ length: 13 }, (_, i) => addDays(today, i + 2)).filter((d) => d <= goal.endDate).map((d) => ({ day: d, label: `${wd(d)} ${shortDate(d)}` }))} />
-      </section>
 
-      <section aria-label="Haftalık check-in" className="card p-5 flex flex-col gap-3" data-testid="checkin">
-        <div className="flex items-center gap-2"><Pulse size={18} className="text-violet" /><Eyebrow>Haftalık check-in</Eyebrow></div>
-        {checkin?.proposal ? (
-          <>
-            <p className="text-[15px] text-ink-2 leading-relaxed">{checkin.proposal.reason}</p>
-            {checkin.proposal.delta !== 0 ? (
-              <div className="flex items-center justify-between rounded-2xl bg-surface-2 px-4 py-3">
-                <span className="num text-lg font-bold">{fmtNum(goal.dailyKcal)} → {fmtNum(checkin.proposal.kcal)} kcal</span>
-                {checkin.due ? <CheckinApply /> : <span className="text-[12px] text-mute">Sonraki: {shortDate(addDays(checkin.lastCheckin, 7))}</span>}
-              </div>
-            ) : null}
-            <span className="text-[12px] text-mute">Ölçülen harcama {checkin.tdee.spanDays} günlük trend ve {checkin.tdee.loggedDays} tam kayıtlı günden hesaplandı (güven: {checkin.tdee.confidence}).</span>
-          </>
-        ) : (
-          <p className="text-[13px] text-ink-2 leading-relaxed">
-            Gerçek harcamanı ölçmek için en az 14 günlük tartı trendi ve 10 tam kayıtlı gün gerekiyor (şu an {checkin?.tdee.spanDays ?? 0} gün, {checkin?.tdee.loggedDays ?? 0} tam gün).
-            Sonra her hafta planın kanıta göre en fazla 150 kcal ayarlanır.
-          </p>
-        )}
-      </section>
 
       {Math.abs(change) >= 1 ? <Link href="/sosyal/yeni?tur=milestone" className="card px-5 py-4 flex items-center justify-between" data-testid="share-milestone"><span className="text-[14px]">Kilometre taşını paylaş <span className="text-mute">(yalnızca değişim, kilo görünmez)</span></span><span className="text-acc font-bold">Paylaş</span></Link> : null}
-      {type !== 'recomp' ? <Scenario goal={type} currentKg={trendNow} targetKg={goal.targetWeightKg} tdee={checkin?.tdee.tdee ?? goal.tdee} tdeeMeasured={!!checkin?.tdee.tdee} dailyKcal={goal.dailyKcal} floor={calorieFloor(sex)} today={today} endDate={goal.endDate} /> : null}
-      <CarbCycle enabled={cc.enabled} weekdays={cc.weekdays} shiftG={cc.shiftG} base={{ kcal: goal.dailyKcal, protein: goal.proteinG, carb: goal.carbG, fat: goal.fatG }} />
+
+      <nav aria-label="Plan araçları" className="grid grid-cols-2 gap-2">
+        {([
+          ['/fit/gunler', 'Önümüzdeki 7 gün', `Bugün ${fmtNum(s.targets[0].kcal)} kcal`, Calendar],
+          ['/fit/banka', 'Kalori bankası', s.banks.length ? `${s.banks.length} aktif` : 'Özel gün için biriktir', Spark],
+          ['/fit/checkin', 'Haftalık check-in', checkin?.proposal ? (checkin.due ? 'Hazır' : `Sonraki ${shortDate(addDays(checkin.lastCheckin, 7))}`) : 'Veri toplanıyor', Pulse],
+          ...(type !== 'recomp' ? [['/fit/senaryo', 'Senaryo simülatörü', 'Ne olursa ne zaman?', Trend] as const] : []),
+          ['/fit/karb', 'Karb döngüsü', cc.enabled ? 'Açık' : 'Kapalı', Scale],
+        ] as const).map(([href, label, sub, I]) => (
+          <Link key={href} href={href} className="card p-3.5 flex flex-col gap-2 min-h-[92px]">
+            <span className="w-9 h-9 rounded-xl bg-acc/15 text-acc flex items-center justify-center"><I size={18} /></span>
+            <span className="flex flex-col min-w-0"><b className="text-[14px] leading-tight">{label}</b><span className="text-[12px] text-mute truncate">{sub}</span></span>
+          </Link>
+        ))}
+      </nav>
 
       <section aria-label="Tartı" className="card p-5 flex flex-col gap-3">
         <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow></div>
@@ -191,15 +148,6 @@ type Screen = NonNullable<Awaited<ReturnType<typeof getFitScreen>>>
 
 function signed(n: number) { return `${n > 0 ? '+' : n < 0 ? '−' : ''}${fmtNum(Math.abs(n))}` }
 
-function groupReasons(list: { kcal: number; reason: string; sourceDay: string | null }[]) {
-  const m = new Map<string, { kcal: number; reason: string; sourceDay: string | null }>()
-  for (const r of list) {
-    const k = r.reason + (r.sourceDay ?? '')
-    const e = m.get(k)
-    if (e) e.kcal += r.kcal; else m.set(k, { ...r })
-  }
-  return [...m.values()]
-}
 
 function closureText(c: Screen['closures'][number]): string {
   const d = shortDate(c.day)

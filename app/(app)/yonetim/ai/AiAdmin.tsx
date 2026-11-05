@@ -35,10 +35,10 @@ export function ProviderForm({ p }: { p: P }) {
           <input id={`${p.id}-monthly`} inputMode="numeric" value={v.monthly} onChange={(e) => setV({ ...v, monthly: e.target.value.replace(/\D/g, '') })} placeholder="0 = sınırsız" className="h-11 rounded-xl bg-surface-2 border border-line px-3 num" />
         </label>
       </div>
-      <fieldset className="grid grid-cols-3 gap-2">
+      <fieldset className="flex flex-col gap-2">
         <legend className="text-[12px] font-semibold mb-1">Görev başına model (boş = varsayılan)</legend>
         {TASKS.map(([k, l]) => (
-          <label key={k} htmlFor={`${p.id}-tm-${k}`} className="flex flex-col gap-1 text-[11px] text-mute">{l}
+          <label key={k} htmlFor={`${p.id}-tm-${k}`} className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2 text-[12px] text-mute">{l}
             <input id={`${p.id}-tm-${k}`} value={tm[k] ?? ''} onChange={(e) => setTm({ ...tm, [k]: e.target.value.trim() })} placeholder={v.model} className="h-10 rounded-lg bg-surface-2 border border-line px-2 text-[12px] text-ink" />
           </label>
         ))}

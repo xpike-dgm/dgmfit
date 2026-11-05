@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { Back, Next } from './icons'
+import { Next } from './icons'
+import BackButton from './BackButton'
 
 export const btn = {
   primary:
@@ -21,7 +22,7 @@ export function TopBar({ title, sub, back, right }: { title?: ReactNode; sub?: R
     <header className="hdr -mx-4 px-3 pb-3 safe-top">
       <div className="flex items-center gap-2.5 min-h-11 pt-1">
         {back ? (
-          <Link href={back} aria-label="Geri" className={hdrIcon}><Back size={20} /></Link>
+          <BackButton fallback={back} className={hdrIcon} />
         ) : null}
         <div className="flex-1 min-w-0">
           {title ? <h1 className="text-[18px] font-extrabold leading-tight truncate">{title}</h1> : null}

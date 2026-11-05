@@ -40,6 +40,17 @@ export default async function FitnessPage() {
             ))}
             {h.next.exercises.length > 6 ? <li className="text-[13px] text-mute">+{h.next.exercises.length - 6} hareket</li> : null}
           </ul>
+          {h.program.days.length > 1 ? (
+            <nav aria-label="Başka bir gün seç" className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-mute">Başka bir gün yapmak istersen:</span>
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-5 px-5" data-testid="day-picker">
+                {h.program.days.map((d) => (
+                  <Link key={d.id} href={`/fitness/antrenman?gun=${d.id}`} aria-current={d.id === h.next!.id ? 'true' : undefined}
+                    className="shrink-0 h-9 px-3.5 rounded-full text-[13px] font-bold inline-flex items-center bg-surface-2 aria-[current=true]:bg-acc aria-[current=true]:text-acc-ink">{d.name}</Link>
+                ))}
+              </div>
+            </nav>
+          ) : null}
           {h.next.exercises.length
             ? <Link href={`/fitness/antrenman?gun=${h.next.id}`} className={btn.primary}><Dumbbell size={20} />Antrenmana başla</Link>
             : <Link href={`/fitness/programlar/${h.program.id}`} className={btn.secondary}>Bu güne hareket ekle</Link>}

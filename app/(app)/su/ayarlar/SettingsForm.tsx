@@ -84,10 +84,10 @@ export default function SettingsForm(props: {
           <h2 id="h-btn" className="font-extrabold">Hızlı ekleme butonları</h2>
           <div className="grid grid-cols-4 gap-2">
             {buttons.map((b, i) => (
-              <div key={i} className="relative">
+              <div key={i} className="flex flex-col gap-1">
                 <label htmlFor={`b-${i}`} className="sr-only">{i + 1}. buton (ml)</label>
                 <input id={`b-${i}`} inputMode="numeric" value={b} onChange={(e) => setButtons((x) => x.map((v, j) => (j === i ? e.target.value.replace(/\D/g, '').slice(0, 4) : v)))} className={input + ' w-full text-center'} />
-                {buttons.length > 1 ? <button type="button" aria-label={`${b} ml butonunu kaldır`} onClick={() => setButtons((x) => x.filter((_, j) => j !== i))} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-surface-3 text-mute text-xs font-bold">×</button> : null}
+                {buttons.length > 1 ? <button type="button" aria-label={`${b} ml butonunu kaldır`} onClick={() => setButtons((x) => x.filter((_, j) => j !== i))} className="h-8 rounded-lg text-[12px] font-bold text-danger bg-danger-bg">Kaldır</button> : null}
               </div>
             ))}
             {buttons.length < 8 ? <button type="button" onClick={() => setButtons((x) => [...x, ''])} className="h-12 rounded-xl border border-dashed border-line-2 text-mute font-bold">+</button> : null}
@@ -114,7 +114,7 @@ export default function SettingsForm(props: {
               </li>
             ))}
           </ul>
-          <div className="grid grid-cols-[1fr_auto] gap-2 pt-2 border-t border-surface-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 pt-2 border-t border-surface-2">
             <label htmlFor="nc-name" className="sr-only">Kap adı</label>
             <input id="nc-name" placeholder="Kap adı (ör. Spor şişem)" value={nc.name} onChange={(e) => setNc({ ...nc, name: e.target.value.slice(0, 30) })} className={input + ' font-sans'} />
             <div className="flex items-center gap-1.5">

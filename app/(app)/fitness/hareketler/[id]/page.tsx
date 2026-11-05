@@ -1,3 +1,4 @@
+import ExImg from '@/components/ExImg'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
@@ -29,7 +30,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
         {x.source === 'user' ? <ExercisePhoto exerciseId={x.id} has={!!x.photoId} /> : null}
         {x.images.length ? (
           <div className="grid grid-cols-2 gap-2">
-            {x.images.slice(0, 2).map((im, i) => <img key={im} src={imageUrl(im)} alt={`${x.nameTr} ${i === 0 ? 'başlangıç' : 'bitiş'} pozisyonu`} width={300} height={300} className="w-full aspect-square object-cover rounded-2xl bg-surface-2" />)}
+            {x.images.slice(0, 2).map((im, i) => <ExImg key={im} src={imageUrl(im)} alt={`${x.nameTr} ${i === 0 ? 'başlangıç' : 'bitiş'} pozisyonu`} size={300} className="w-full aspect-square rounded-2xl" />)}
           </div>
         ) : null}
         <div className="flex flex-wrap gap-1.5 text-[12px]">
@@ -46,7 +47,6 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
             <Eyebrow className="mt-2">Sık yapılan hatalar</Eyebrow>
             <ul className="list-disc pl-5 flex flex-col gap-1 text-[14px] text-ink-2">{x.mistakes.map((s) => <li key={s}>{s}</li>)}</ul>
           </> : null}
-          {!x.curated && x.source === 'fedb' ? <p className="text-[11px] text-mute mt-1">Kaynak talimatlardan (free-exercise-db) Türkçe özet.</p> : null}
         </section>
       ) : <p className="card p-5 text-[13px] text-mute">{x.source === 'user' ? 'Kendi hareketin: teknik notu yok.' : 'Bu hareketin kaynakta adım adım talimatı yok. Görseller başlangıç ve bitiş pozisyonunu gösteriyor.'}</p>}
       {pr.series.length >= 2 ? <E1rmChart series={pr.series} /> : null}

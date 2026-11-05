@@ -4,11 +4,11 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Sheet from '@/components/Sheet'
 import { btn, Eyebrow } from '@/components/ui'
-import { Dumbbell, Plus, Trash } from '@/components/icons'
+import { Dumbbell, Pencil, Plus, Trash } from '@/components/icons'
 import { SET_TYPES, type SetType } from '@/lib/training'
 import { PERIODIZATION, weekIndex, isDeloadWeek, type Periodization } from '@/lib/progress'
 import { gzSets, type GzState } from '@/lib/schemes'
-import { addDayAction, addExerciseToDayAction, removeProgramExerciseAction, setActiveProgramAction, setSchemeKgAction, updateProgramExerciseAction, updateProgramSettingsAction } from '../../actions'
+import { addDayAction, addExerciseToDayAction, removeDayAction, removeProgramExerciseAction, setActiveProgramAction, setSchemeKgAction, updateProgramExerciseAction, updateProgramSettingsAction } from '../../actions'
 import { ExercisePicker } from '../../antrenman/LiveWorkout'
 
 type Ex = { id: string; exerciseId: number; name: string; kind: string; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null }
@@ -31,7 +31,6 @@ export default function ProgramEditor({ program }: { program: { id: string; name
           : <button type="button" className={btn.secondary} disabled={pending} onClick={() => go(() => setActiveProgramAction(program.id))}>Aktif program yap</button>}
         {program.notes.map((n) => <p key={n} className="text-[12px] text-mute">{n}</p>)}
       </section>
-      {program.days.some((d) => d.exercises.some((e) => !e.scheme)) ? <PeriodSettings program={program} pending={pending} go={go} /> : null}
       {program.days.map((d, di) => (
         <section key={d.id} aria-label={d.name} className="card p-5 flex flex-col gap-2" data-testid="program-day">
           <div className="flex justify-between items-center gap-2">
@@ -39,21 +38,29 @@ export default function ProgramEditor({ program }: { program: { id: string; name
             {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[13px] font-bold flex items-center gap-1.5"><Dumbbell size={15} />{di === next && program.active ? 'Başla' : 'Bu günü yap'}</Link> : null}
           </div>
           {d.exercises.map((e) => (
-            <button key={e.id} type="button" onClick={() => setEdit(e)} className="flex justify-between items-center min-h-[48px] text-left border-b border-line last:border-0">
-              <span className="font-semibold text-[15px]">{e.name}</span>
-              {e.scheme ? <span className="num text-[13px] text-mute whitespace-nowrap" data-testid="gz-row">{schemeLine(e)}</span>
-                : <span className="num text-[13px] text-mute whitespace-nowrap">{e.sets} × {e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}{e.seconds ? '' : ` @${e.rir}`}</span>}
-            </button>
+            <div key={e.id} className="flex items-center gap-2 min-h-[52px] border-b border-line last:border-0">
+              <button type="button" onClick={() => setEdit(e)} className="flex-1 min-w-0 flex flex-col text-left py-1.5">
+                <span className="font-semibold text-[15px] truncate">{e.name}</span>
+                {e.scheme ? <span className="num text-[12.5px] text-mute" data-testid="gz-row">{schemeLine(e)}</span>
+                  : <span className="num text-[12.5px] text-mute">{e.sets} × {e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}{e.seconds ? '' : ` · ${e.rir} tekrar yedek`}</span>}
+              </button>
+              <button type="button" aria-label={`${e.name} düzenle`} onClick={() => setEdit(e)} className="w-10 h-10 rounded-full bg-surface-2 text-ink-2 flex items-center justify-center"><Pencil size={16} /></button>
+              <button type="button" aria-label={`${e.name} sil`} disabled={pending} onClick={() => { if (confirm(`${e.name} bu günden çıkarılsın mı?`)) go(() => removeProgramExerciseAction(e.id)) }} className="w-10 h-10 rounded-full bg-danger-bg text-danger flex items-center justify-center"><Trash size={16} /></button>
+            </div>
           ))}
-          <button type="button" className="h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5" onClick={() => setPick(d.id)}><Plus size={16} />Hareket ekle</button>
+          <div className="flex gap-2">
+            <button type="button" className="flex-1 h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5" onClick={() => setPick(d.id)}><Plus size={16} />Hareket ekle</button>
+            <button type="button" aria-label={`${d.name} gününü sil`} disabled={pending} onClick={() => { if (confirm(`${d.name} günü programdan silinsin mi? Geçmiş antrenmanların korunur.`)) go(() => removeDayAction(d.id)) }} className="h-10 px-3 rounded-full text-[13px] font-bold text-danger border border-danger-line flex items-center gap-1.5"><Trash size={15} />Günü sil</button>
+          </div>
         </section>
       ))}
-      <section className="card p-5 flex gap-2">
+      <section className="card p-4 flex gap-2">
         <label htmlFor="day-name" className="sr-only">Yeni gün adı</label>
         <input id="day-name" value={dayName} onChange={(e) => setDayName(e.target.value.slice(0, 40))} placeholder={`Gün ${program.days.length + 1}`} className="flex-1 h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink" />
         <button type="button" className={btn.secondary + ' h-12'} disabled={pending} onClick={() => go(() => addDayAction(program.id, dayName.trim() || `Gün ${program.days.length + 1}`), () => setDayName(''))}>Gün ekle</button>
       </section>
       {err ? <p role="alert" className="text-[13px] text-danger px-1">{err}</p> : null}
+      {program.days.some((d) => d.exercises.some((e) => !e.scheme)) ? <PeriodSettings program={program} pending={pending} go={go} /> : null}
 
       <Sheet open={!!pick} onClose={() => setPick(null)} title="Hareket ekle">
         <ExercisePicker onPick={async (id) => { const r = await addExerciseToDayAction(pick!, id); if (!r.ok) { setErr(r.error); return } setPick(null); router.refresh() }} />

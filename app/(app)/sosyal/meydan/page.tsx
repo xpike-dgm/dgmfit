@@ -1,3 +1,4 @@
+import { shortDate } from '@/lib/time'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
@@ -20,7 +21,7 @@ export default async function Page() {
         <span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Benimkiler</span>
         {list.length ? list.map((c) => (
           <Link key={c.id} href={`/sosyal/meydan/${c.id}`} className="flex items-center justify-between min-h-12 border-b border-line last:border-0" data-testid="challenge-row">
-            <span className="flex flex-col"><b>{c.title}</b><span className="text-[12px] text-mute">{SCOPE[c.scope]} · {c.ended ? 'bitti' : `${c.endDay} bitiyor`}</span></span>
+            <span className="flex flex-col"><b>{c.title}</b><span className="text-[12px] text-mute">{SCOPE[c.scope]} · {c.ended ? 'bitti' : `${shortDate(c.endDay)} bitiyor`}</span></span>
             {c.status === 'invited' ? <span className="text-[12px] font-bold text-orange">Davet</span> : <span className="text-acc">›</span>}
           </Link>
         )) : <p className="text-[14px] text-mute">Henüz meydan okuma yok.</p>}

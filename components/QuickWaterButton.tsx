@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { addWater } from '@/app/(app)/su/actions'
 
-export default function QuickWaterButton({ ml = 250 }: { ml?: number }) {
+export default function QuickWaterButton({ ml = 250, compact = false }: { ml?: number; compact?: boolean }) {
   const router = useRouter()
   const [pending, start] = useTransition()
   const [msg, setMsg] = useState<string | null>(null)
@@ -27,7 +27,7 @@ export default function QuickWaterButton({ ml = 250 }: { ml?: number }) {
   }
   return (
     <button type="button" disabled={pending} onClick={() => go()} aria-label={`${ml} ml su ekle`}
-      className="relative mt-auto h-11 rounded-full bg-water text-water-ink font-extrabold text-[15px] flex items-center justify-center active:scale-95 transition disabled:opacity-60">
+      className={`relative mt-auto ${compact ? 'h-9 text-[14px]' : 'h-11 text-[15px]'} rounded-full bg-water text-water-ink font-extrabold flex items-center justify-center active:scale-95 transition disabled:opacity-60`}>
       {pending ? 'Ekleniyor…' : `+ ${ml} ml`}
     </button>
   )
