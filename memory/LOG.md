@@ -2,6 +2,15 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 3b tamamlandı
+- Kaynak doğrulama (web okuma ajanı): 5/3/1 t-nation 404, jimwendler.com'da yüzde yok, gzclp.com 503, Reddit engelli. Yalnızca GZCLP kuralları ikincil kaynaktan (saynotobroscience.com/gzclp-infographic) doğrulandı → GZCLP yapıldı, 5/3/1 ve nSuns ezberden yazılmadı.
+- Çeviri: kullanıcı "kısa Türkçe özet" seçti (AskUserQuestion). Tek arka plan ajanı 783 hareketi `data/exercises-tr-auto/part1-4.json`'a yazdı (kendi doğrulaması PASS); benim builder doğrulamam geçti; 12 birim dönüşümü (inç/ft/lb → cm/m/kg) elle kontrol edildi, doğru; 3 ondalık nokta virgüle çevrildi; 4 rastgele örnek kaynağa sadık.
+- Kod: `lib/progress.ts` + `lib/schemes.ts` (8 test), şema 0006, `lib/media.ts` (AES-256-GCM, AAD = kullanıcı kimliği, imzadan tür), `lib/fitness-stats.ts`, `lib/rest-push.ts`, SW v3 (canlı antrenman sayfası önbelleği, görünürken dinlenme push'u gösterilmez, bildirime dokununca aynı sayfada yeniden yükleme yok). Sunucu: `DGFIT_MEDIA_KEY` `.env`'e üretildi (yazdırılmadı), compose'a eklendi (yedek `docker-compose.yml.pre-media-key-<zaman>`).
+- Kendi incelememde bulunan: bildirim tıklaması programsız `/fitness/antrenman`'a gidip taslağı kaybettirecekti → istemci gerçek adresi gönderir, SW aynı sayfadaysa yalnızca odaklar.
+- Ekran görüntüsü incelemesinde bulunan güvenlik hataları (`cd79683`): plato tekrar aralığı başka kullanıcının programından okunuyordu; `saveWorkout` istemcinin program günü kimliğini doğrulamadığı için başkasının GZCLP durumu ilerletilebilirdi → sahiplik kontrolleri. Bu ikisi için otomatik regresyon testi yok (iki kullanıcılı sunucu aksiyonu testi kurulmadı).
+- Test kaynaklı: yerel Postgres ortam yeniden başlayınca kapalıydı; canlı modda `dayOf` kapsam hatası; fotoğraf yüklemede eski durum mesajıyla yarış (canlıda göründü).
+- Doğrulama: birim 94/94; verify.sh VERIFY OK (7 e2e); release deploy `2026-11-05T01-04-41-798Z`, canlı e2e OK (progress düzeltmeden sonra ayrıca canlıda OK); canlı DB 872/876 Türkçe adımlı, `media_blobs` içinde düz imza 0/4; 9 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 3b başladı
 - Faz başı: memory-check geçti; son commit `dc60bb7` STATE ile uyumlu; çalışma ağacı temiz, `origin/main` ile eşit.
 

@@ -34,6 +34,8 @@ async function register(b, prefix) {
   await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'male', birthDate: '1995-05-05', heightCm: 177, weightKg: 78.4, activity: 'moderate', goal: 'recomp', targetWeightKg: 78.4, tempo: 'balanced', customDays: 90, experience: 'mid', trainingDays: 4, dietPref: null, allergies: [], wakeTime: '07:30', sleepTime: '23:30' })))
   await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
 
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date())
+  const dayOf = (n) => new Date(Date.parse(today + 'T12:00:00Z') - n * 86400000).toISOString().slice(0, 10)
   // 1) Bench geçmişi (plato) → detay: grafik, plato, kuvvet seviyesi, alternatifler
   const sessions = [{ daysAgo: 35, kg: 95, reps: 6 }, { daysAgo: 28, kg: 97.5, reps: 6 }, { daysAgo: 21, kg: 97.5, reps: 6 }, { daysAgo: 14, kg: 95, reps: 7 }, { daysAgo: 7, kg: 97.5, reps: 5 }, { daysAgo: 0, kg: 97.5, reps: 6 }].map((s) => ({ ...s, sets: 3 }))
   const seed = await p.request.post(BASE + '/api/test/fitness', { data: { key: 'Barbell_Bench_Press_-_Medium_Grip', sessions } })
@@ -41,8 +43,6 @@ async function register(b, prefix) {
   console.log(seeded ? 'tohumlu mod' : `canlı mod (kanca ${seed.status()}): geçmiş gerektiren 1–2. adımlar atlanır`)
   if (seeded) {
   const benchId = (await seed.json()).exerciseId
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date())
-  const dayOf = (n) => new Date(Date.parse(today + 'T12:00:00Z') - n * 86400000).toISOString().slice(0, 10)
   const series = sessions.map((s) => ({ day: dayOf(s.daysAgo), e1rm: T.e1rm(s.kg, s.reps, 0) }))
   const pl = P.detectPlateau(series, today, { repMin: 8, repMax: 12 })
   if (!pl.plateau) fail('test verisi plato üretmiyor')
@@ -75,12 +75,13 @@ async function register(b, prefix) {
   await p.getByTestId('measures').getByText(/Bel\s*−2/).waitFor({ timeout: 10000 }).catch(() => fail('bel farkı −2 görünmüyor'))
 
   // 4) Şifreli fotoğraf: yükle, göster, kıyasla; başka kullanıcı göremez
-  for (const pose of ['ön', 'yan']) {
+  const imgs = p.getByTestId('photos').locator('ul img')
+  for (const [i, pose] of ['ön', 'yan'].entries()) {
     await p.selectOption('#ph-pose', pose)
     await p.getByTestId('photo-input').setInputFiles({ name: 'a.png', mimeType: 'image/png', buffer: PNG })
-    await p.getByRole('status').filter({ hasText: 'Fotoğraf eklendi' }).waitFor({ timeout: 20000 }).catch(() => fail('fotoğraf yüklenmedi'))
+    // önceki "eklendi" mesajı ekranda kalabilir: galerideki sayının artmasını bekle
+    await p.waitForFunction((n) => document.querySelectorAll('[data-testid="photos"] ul img').length === n, i + 1, { timeout: 30000 }).catch(() => fail(`${i + 1}. fotoğraf yüklenmedi`))
   }
-  const imgs = p.getByTestId('photos').locator('ul img')
   if ((await imgs.count()) !== 2) fail('2 fotoğraf bekleniyordu')
   await p.waitForFunction(() => [...document.querySelectorAll('[data-testid="photos"] ul img')].every((i) => i.complete && i.naturalWidth > 0)).catch(() => fail('fotoğraf çözülüp gösterilmedi'))
   const photoUrl = await imgs.first().getAttribute('src')

@@ -65,3 +65,11 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-04 | Çevrimdışı: canlı taslak localStorage'da, bitirilen antrenman kuyruğa; `client_id` ile sunucuda tekrar kaydı engellenir | Spesifikasyon 4.3 "çevrimdışı çalışır"ın 3a kapsamı | Teknik |
 | 2026-11-04 | En ağır kiloyla aynı değerdeki 3/5/10RM rekorları ayrıca gösterilmez; hareketin ilk kaydı rekor sayılmaz | Rekor gürültüsü | Ürün |
 | 2026-11-04 | 5/3/1 ve nSuns (yüzdelik TM şemaları) 3b'ye; GZCLP 3a'da basitleştirilmiş (çift aşamalı ilerleme) | Periyodizasyonla birlikte doğru yapılsın | Kapsam |
+| 2026-11-05 | 5/3/1 ve nSuns yüzdeleri eklenmedi: birincil kaynak doğrulanamadı | Halüsinasyon kuralı: sayılar ezberden yazılmaz | Kapsam |
+| 2026-11-05 | GZCLP: T1 5×3→6×2→10×1, T2 3×10→3×8→3×6, T3 3×15 (son set 25 → artış), alt vücut +5 / üst +2,5 kg (kaynaklı); T1 sıfırlama %85 ve T2 dönüşü son başarılı 3×10 + 1 kademe (DgFit seçimi, ekranda açıklanır) | Kaynakta yazmayan kısımlar açıkça işaretli | Teknik |
+| 2026-11-05 | Kuvvet seviyesi eşikleri DgFit'in kaba e1RM/vücut ağırlığı rehberi; ekranda "yayımlanmış standart değil" yazar | Lisanslı tablo kopyalanmadı, kaynak iddiası yok | Ürün |
+| 2026-11-05 | Toparlanma: 24 sa içinde ya da 48 sa içinde 4+ set → kırmızı, 72 sa içinde → sarı (yaygın 48–72 sa rehberinin basit uygulaması) | Spesifikasyon 4.5 ısı haritası | Teknik |
+| 2026-11-05 | Periyodizasyon dağılımları (DUP ağır/orta/hafif, 4 haftalık blok, deload: set ½, RIR +2, yük %90) DgFit tasarımı | Spesifikasyon 4.2 | Teknik |
+| 2026-11-05 | Fotoğraflar DB'de AES-256-GCM (anahtar sunucu `.env` `DGFIT_MEDIA_KEY`, AAD kullanıcı kimliği); istemcide 1280 px JPEG'e küçültülür (EXIF/konum düşer); yalnızca sahibine `/api/media/[id]`, başkasına 404; silmede şifreli veri boşaltılır | Spesifikasyon 4.5 "özel ve şifreli"; yedekte de şifreli kalır | Güvenlik |
+| 2026-11-05 | Kilit ekranı dinlenme bildirimi: sunucu tek süreçte setTimeout ile Web Push (kullanıcı başına 1); uygulama görünürken SW göstermez | Sayfa uykudayken JS çalışmaz | Teknik |
+| 2026-11-05 | 783 hareket için tam çeviri yerine kaynaktan kısa Türkçe özet (3–5 adım) | Kullanıcı seçimi (maliyet) | Ürün |

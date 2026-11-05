@@ -18,7 +18,7 @@ Son doğrulama: 2026-11-04 (canlı health, deploy log, docker stats).
 | Yol | İçerik |
 | --- | --- |
 | `docker-compose.yml` | proje adı `dgfitpwa`; `db` (postgres:17-alpine, 512 MB), `app` (node:22-bookworm-slim, 768 MB, `node migrate.mjs && node server.js`) |
-| `.env` | `POSTGRES_PASSWORD`, `SESSION_SECRET` (600; içeriği hafızaya yazılmaz) |
+| `.env` | `POSTGRES_PASSWORD`, `SESSION_SECRET`, `DGFIT_MEDIA_KEY` (fotoğraf şifreleme, 32 bayt base64; kaybolursa fotoğraflar çözülemez — yedeklerle birlikte saklanmalı) (600; içeriği hafızaya yazılmaz) |
 | `current` → `releases/<id>` | çalışan sürüm (symlink, container'a salt okunur bağlanır) |
 | `releases/` | son 5 sürüm; her birinde `source.tgz`, `repo.bundle`, `REVISION` |
 | `data/pg` | Postgres verisi |
