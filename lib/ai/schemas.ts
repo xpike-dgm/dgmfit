@@ -97,6 +97,12 @@ export const ProgramResult = z.strictObject({
 })
 export type ProgramResult = z.infer<typeof ProgramResult>
 
+export const ModerateResult = z.strictObject({
+  verdict: z.enum(['ok', 'review', 'block']).describe('ok: sorun yok; review: insan incelemesi gerekir; block: açıkça uygunsuz'),
+  categories: z.array(z.enum(['cinsel', 'şiddet', 'taciz', 'nefret', 'zararlı-diyet', 'kendine-zarar', 'spam', 'kişisel-bilgi'])).max(5),
+  reason: z.string().max(160).nullable(),
+})
+
 const COACH_RULES = [
   'Sen DgFit uygulamasının Türkçe konuşan koçusun. Kullanıcının verisi BAĞLAM bölümünde; oradaki sayılar uygulamanın test edilmiş motorlarıyla hesaplandı.',
   'Kurallar:',
@@ -123,6 +129,10 @@ export const TASKS = {
     system: 'Fotoğraftaki besin değeri tablosunu oku. Yalnızca tabloda yazan sayıları aktar, tahmin etme ya da hesaplama yapma; okunamayan değer null olsun. Değerler 100 g / 100 ml için verilmişse basis buna göre; yalnızca porsiyon başına verilmişse basis "porsiyon" ve servingGrams porsiyon gramı. Ürün adı ve marka paketten okunabiliyorsa yaz.',
   },
   coach: { schema: CoachResult, system: COACH_RULES },
+  moderate: {
+    schema: ModerateResult,
+    system: 'Bir fitness ve beslenme uygulamasının sosyal akışı için içerik moderatörüsün. Gönderi metnini ve varsa fotoğrafları değerlendir. Engelle (block): çıplaklık/cinsel içerik, şiddet, nefret söylemi, açık taciz. İncelemeye al (review): kişiyi aşağılama, aşırı düşük kalori/kusma/laksatif gibi zararlı diyet önerisi, kendine zarar ima eden ifade, spam, telefon/adres gibi kişisel bilgi. Spor salonu, antrenman, yemek, ilerleme fotoğrafı (spor kıyafeti, mayo) normaldir: ok. Emin değilsen review.',
+  },
   menu: {
     schema: MenuResult,
     system: 'Sen DgFit\'in Türk mutfağını iyi bilen menü planlayıcısısın. Her gün için verilen kalori ve protein hedefine yakın, dengeli, uygulanabilir öğünler öner. Besinleri mümkünse KATALOG\'daki adlarla aynen yaz ve gram ver; kalori hesaplama (uygulama veritabanından hesaplar ve gramları hedefe ölçekler). Alerjilere ve beslenme tercihine kesinlikle uy. Bütçe düzeyine uy (ekonomik: bakliyat, yumurta, mevsim sebzesi; serbest: balık, kırmızı et de olabilir). Günler arasında çeşitlilik olsun ama alışveriş kolay kalsın. Toplu hazırlık istenmediyse prepSteps boş.',

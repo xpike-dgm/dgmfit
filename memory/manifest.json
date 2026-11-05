@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "4c",
+  "phase": "5a",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -160,7 +160,22 @@
     "app/(app)/fit/Planner.tsx",
     "app/api/ai/restaurant/route.ts",
     "tests/planner.test.ts",
-    "tests/e2e/planner.e2e.cjs"
+    "tests/e2e/planner.e2e.cjs",
+    "lib/social.ts",
+    "lib/moderation.ts",
+    "lib/social-data.ts",
+    "components/social/PostCard.tsx",
+    "app/(app)/sosyal/actions.ts",
+    "app/(app)/sosyal/SocialClient.tsx",
+    "app/(app)/sosyal/yeni/Composer.tsx",
+    "app/(app)/sosyal/ayarlar/SocialSettings.tsx",
+    "app/(app)/u/[username]/page.tsx",
+    "app/(app)/yonetim/moderasyon/page.tsx",
+    "app/api/social/media/[postId]/[idx]/route.ts",
+    "app/api/social/avatar/[userId]/route.ts",
+    "app/api/test/social/route.ts",
+    "tests/social.test.ts",
+    "tests/e2e/social.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -204,7 +219,17 @@
     "meal_plans",
     "meal_plan_items",
     "shopping_items",
-    "carb_cycle"
+    "carb_cycle",
+    "social_profiles",
+    "friend_links",
+    "follows",
+    "user_blocks",
+    "posts",
+    "post_reactions",
+    "post_comments",
+    "post_saves",
+    "reports",
+    "notifications"
   ],
   "routes": [
     "/",
@@ -261,7 +286,18 @@
     "/yemek/plan/alisveris",
     "/yemek/elimdeki",
     "/yemek/restoran",
-    "/api/ai/restaurant"
+    "/api/ai/restaurant",
+    "/sosyal/yeni",
+    "/sosyal/p/[id]",
+    "/sosyal/ara",
+    "/sosyal/arkadaslar",
+    "/sosyal/bildirimler",
+    "/sosyal/ayarlar",
+    "/u/[username]",
+    "/yonetim/moderasyon",
+    "/api/social/media/[postId]/[idx]",
+    "/api/social/avatar/[userId]",
+    "/api/test/social"
   ],
   "events": [
     "profile.onboarded",
@@ -590,6 +626,34 @@
       "restaurantOptions",
       "createAiProgram",
       "resolveFood"
+    ],
+    "lib/social.ts": [
+      "profileAccess",
+      "itemVisible",
+      "postVisible",
+      "feedScore",
+      "suggestionScore",
+      "milestoneText",
+      "longestWeekStreak"
+    ],
+    "lib/moderation.ts": [
+      "moderateText",
+      "combine"
+    ],
+    "lib/social-data.ts": [
+      "relationOf",
+      "profileView",
+      "requestFriend",
+      "acceptFriend",
+      "createPost",
+      "feed",
+      "postDetail",
+      "react",
+      "comment",
+      "copyWorkout",
+      "saveRecipeCopy",
+      "report",
+      "moderationQueue"
     ]
   },
   "dependencies": {
@@ -603,7 +667,8 @@
     "web-push": "3",
     "@zxing/browser": "0",
     "@anthropic-ai/sdk": "1",
-    "openai": "7"
+    "openai": "7",
+    "qrcode": "1.5.4"
   },
   "migrations": [
     "0000_init.sql",
@@ -616,6 +681,7 @@
     "0007_ai.sql",
     "0008_ai_task_models.sql",
     "0009_coach.sql",
-    "0010_planner.sql"
+    "0010_planner.sql",
+    "0011_social.sql"
   ]
 }

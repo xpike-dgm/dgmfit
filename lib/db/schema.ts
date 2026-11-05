@@ -620,3 +620,104 @@ export const carbCycle = pgTable('carb_cycle', {
   shiftG: integer('shift_g').notNull().default(40),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// ───────── Sosyal (Faz 5a) ─────────
+
+/** Sosyal profil: görünürlük, öğe bazında görünürlük (varsayılan kapalı), PR vitrini, bildirim tercihleri. */
+export const socialProfiles = pgTable('social_profiles', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  bio: text('bio'),
+  gym: text('gym'),
+  avatarId: uuid('avatar_id'),
+  visibility: text('visibility').notNull().default('friends'), // public | friends | private
+  items: jsonb('items').$type<Record<string, string>>().notNull().default({}),
+  showGoal: boolean('show_goal').notNull().default(true),
+  showcase: jsonb('showcase').$type<number[]>().notNull().default([]), // exercise id, en fazla 6
+  notify: jsonb('notify').$type<Record<string, boolean>>().notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+/** Arkadaşlık: çift başına iki satır (her yön). status: pending_out | pending_in | accepted. close = yakın arkadaş (bu yöne özel). */
+export const friendLinks = pgTable('friend_links', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  friendId: uuid('friend_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status').notNull(),
+  close: boolean('close').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+}, (t) => [primaryKey({ columns: [t.userId, t.friendId] }), index('friend_links_friend_idx').on(t.friendId)])
+
+export const follows = pgTable('follows', {
+  followerId: uuid('follower_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  followeeId: uuid('followee_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.followerId, t.followeeId] }), index('follows_followee_idx').on(t.followeeId)])
+
+/** Engelleme (kind=block, iki yönlü etkili) ve sessize alma (kind=mute, yalnızca akıştan gizler). */
+export const userBlocks = pgTable('user_blocks', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  targetId: uuid('target_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // block | mute
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.userId, t.targetId, t.kind] }), index('user_blocks_target_idx').on(t.targetId)])
+
+export const posts = pgTable('posts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // text | workout | pr | recipe | meal | streak | milestone | progress
+  body: text('body').notNull().default(''),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull().default({}), // paylaşım anındaki anlık görüntü
+  mediaIds: jsonb('media_ids').$type<string[]>().notNull().default([]),
+  audience: text('audience').notNull().default('friends'), // public | friends | selected
+  audienceIds: jsonb('audience_ids').$type<string[]>().notNull().default([]),
+  moderation: text('moderation').notNull().default('ok'), // ok | pending | hidden
+  moderationReason: text('moderation_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('posts_user_idx').on(t.userId, t.createdAt), index('posts_created_idx').on(t.createdAt)])
+
+export const postReactions = pgTable('post_reactions', {
+  postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // guc | ates | alkis | kupa
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.postId, t.userId] })])
+
+export const postComments = pgTable('post_comments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  body: text('body').notNull(),
+  moderation: text('moderation').notNull().default('ok'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('post_comments_post_idx').on(t.postId, t.createdAt)])
+
+export const postSaves = pgTable('post_saves', {
+  postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.postId, t.userId] })])
+
+export const reports = pgTable('reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  reporterId: uuid('reporter_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  targetType: text('target_type').notNull(), // post | comment | user
+  targetId: text('target_id').notNull(),
+  reason: text('reason').notNull(),
+  note: text('note'),
+  status: text('status').notNull().default('open'), // open | resolved | dismissed
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+}, (t) => [index('reports_status_idx').on(t.status, t.createdAt)])
+
+/** Uygulama içi bildirimler (spesifikasyon 12 "notifications"). */
+export const notifications = pgTable('notifications', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // friend_request | friend_accept | reaction | comment | follow
+  actorId: uuid('actor_id').references(() => users.id, { onDelete: 'cascade' }),
+  postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+  readAt: timestamp('read_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('notifications_user_idx').on(t.userId, t.createdAt)])

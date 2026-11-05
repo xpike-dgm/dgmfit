@@ -170,6 +170,7 @@ export default async function FitPage() {
         )}
       </section>
 
+      {Math.abs(change) >= 1 ? <Link href="/sosyal/yeni?tur=milestone" className="card px-5 py-4 flex items-center justify-between" data-testid="share-milestone"><span className="text-[14px]">Kilometre taşını paylaş <span className="text-mute">(yalnızca değişim, kilo görünmez)</span></span><span className="text-lime font-bold">Paylaş</span></Link> : null}
       {type !== 'recomp' ? <Scenario goal={type} currentKg={trendNow} targetKg={goal.targetWeightKg} tdee={checkin?.tdee.tdee ?? goal.tdee} tdeeMeasured={!!checkin?.tdee.tdee} dailyKcal={goal.dailyKcal} floor={calorieFloor(sex)} today={today} endDate={goal.endDate} /> : null}
       <CarbCycle enabled={cc.enabled} weekdays={cc.weekdays} shiftG={cc.shiftG} base={{ kcal: goal.dailyKcal, protein: goal.proteinG, carb: goal.carbG, fat: goal.fatG }} />
 

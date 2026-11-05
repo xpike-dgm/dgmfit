@@ -66,7 +66,9 @@ export default async function Page() {
 
       <Link href="/koc" className={btn.secondary + ' w-full h-12'}>AI koç ve ayarları</Link>
       <Link href="/rapor" className={btn.secondary + ' w-full h-12'}>Haftalık raporlar</Link>
+      <Link href="/sosyal/ayarlar" className={btn.secondary + ' w-full h-12'}>Sosyal profil ve gizlilik</Link>
       {isAdmin(u.username) ? <Link href="/yonetim/ai" className={btn.secondary + ' w-full h-12'}>AI ayarları (yönetici)</Link> : null}
+      {isAdmin(u.username) ? <Link href="/yonetim/moderasyon" className={btn.secondary + ' w-full h-12'}>Moderasyon (yönetici)</Link> : null}
       <form action={logoutAction}>
         <button type="submit" className={btn.secondary + ' w-full h-12'}><Logout size={18} /> Çıkış yap</button>
       </form>

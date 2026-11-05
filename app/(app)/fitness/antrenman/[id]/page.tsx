@@ -45,8 +45,8 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
         <section aria-label="Kırılan rekorlar" className="card p-5 flex flex-col gap-2 border border-coach-line" data-testid="prs">
           <div className="flex items-center gap-2"><Flame size={20} className="text-orange" /><Eyebrow className="text-lime">{s.prs.length} yeni rekor</Eyebrow></div>
           {s.prs.map((p) => (
-            <div key={p.id} className="flex justify-between text-[14px]">
-              <span className="text-ink-2">{p.name} · {PR_LABEL[p.type as PrType] ?? p.type}</span>
+            <div key={p.id} className="flex justify-between items-center gap-2 text-[14px]">
+              <span className="text-ink-2 flex-1">{p.name} · {PR_LABEL[p.type as PrType] ?? p.type} <Link href={`/sosyal/yeni?tur=pr&ref=${p.id}`} className="text-lime text-[12px] font-bold ml-1">Paylaş</Link></span>
               <span className="num font-bold">{p.type === 'reps' ? `${p.value} tekrar` : `${fmtNum(p.value, p.value % 1 ? 1 : 0)} kg`} <span className="text-mute font-normal">({p.type === 'reps' ? p.previous : fmtNum(p.previous ?? 0, (p.previous ?? 0) % 1 ? 1 : 0)})</span></span>
             </div>
           ))}
@@ -90,6 +90,7 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
 
       <p className="text-[12px] text-mute px-1">Sosyalde paylaşma Sosyal modülüyle (Faz 5) gelecek.</p>
       <Link href="/fitness" className={btn.primary}>Fitness'a dön</Link>
+      <Link href={`/sosyal/yeni?tur=workout&ref=${w.id}`} className={btn.secondary + ' w-full h-12'} data-testid="share-workout">Antrenmanı paylaş</Link>
       <DeleteWorkout id={w.id} />
     </div>
   )

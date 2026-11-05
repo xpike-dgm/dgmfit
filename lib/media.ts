@@ -1,6 +1,6 @@
 import 'server-only'
 import crypto from 'node:crypto'
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { db, schema } from './db'
 
 /** AES-256-GCM. Anahtar sunucuda DGFIT_MEDIA_KEY (32 bayt, base64); yoksa fotoğraf özelliği kapalıdır. */
@@ -22,7 +22,8 @@ export function sniff(b: Buffer): string | null {
   return null
 }
 
-export async function saveMedia(userId: string, i: { kind: 'progress' | 'exercise'; day: string; pose: string | null; data: Buffer }) {
+export type MediaKind = 'progress' | 'exercise' | 'social' | 'avatar'
+export async function saveMedia(userId: string, i: { kind: MediaKind; day: string; pose: string | null; data: Buffer }) {
   const k = key()
   if (!k) throw new Error('Fotoğraf saklama sunucuda yapılandırılmamış')
   if (i.data.length > MAX_BYTES) throw new Error('Fotoğraf 3 MB\'tan büyük')
@@ -57,4 +58,10 @@ export async function deleteMedia(userId: string, id: string) {
   // içerik de silinir (yumuşak silme yalnızca kayıt için; şifreli veri boşaltılır)
   const r = await db.update(schema.mediaBlobs).set({ deletedAt: new Date(), data: Buffer.alloc(0) }).where(and(eq(schema.mediaBlobs.id, id), eq(schema.mediaBlobs.userId, userId), isNull(schema.mediaBlobs.deletedAt))).returning({ id: schema.mediaBlobs.id })
   return r.length > 0
+}
+
+/** Medyanın türü ve sahibi (sosyal gönderiye eklemeden önce sahiplik/tür denetimi). */
+export async function mediaMeta(ids: string[]) {
+  if (!ids.length) return []
+  return db.select({ id: schema.mediaBlobs.id, userId: schema.mediaBlobs.userId, kind: schema.mediaBlobs.kind }).from(schema.mediaBlobs).where(and(inArray(schema.mediaBlobs.id, ids), isNull(schema.mediaBlobs.deletedAt)))
 }

@@ -109,6 +109,7 @@ export default function WaterScreen({ data }: { data: Data }) {
             <span className="text-lg font-extrabold">{data.isToday ? 'Su' : dayLabel(data.day)}</span>
             <span className="text-[13px] text-mute flex items-center gap-1">
               <Flame size={13} className="text-orange" /> Seri {data.streak.current} gün · {data.streak.freezesLeft} dondurma
+              {data.isToday && data.streak.current >= 2 ? <Link href="/sosyal/yeni?tur=streak" className="text-lime font-bold ml-1">Paylaş</Link> : null}
             </span>
           </div>
           {!data.isToday ? <Link href={next >= todayStr() ? '/su' : `/su?gun=${next}`} aria-label="Sonraki gün" className="w-11 h-11 flex items-center justify-center text-mute"><Next size={18} /></Link> : <span className="w-11" />}
