@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5g: günlük özet görseli
+- Kullanıcı isteği: Yemek sağ üstüne kaydetme düğmesi, günün kalorisi + mikro besinler güzel bir şablonda fotoğraf olarak insin; önce şablon onayı. İki taslak (HTML → PNG) gönderildi; kullanıcı: ikisi birden seçilebilsin, kullanıcı adı bana kalmış (gösterilmedi), takviye/su kalsın.
+- `app/api/yemek/gorsel/route.tsx` (next/og; belge: `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/image-response.md` — yalnızca flex, ttf/otf/woff), `lib/day-card.ts` + 2 birim test, `DayCardSheet.tsx`, `public/fonts/*.ttf` (Google Fonts, OFL; Türkçe karakterler fontTools ile doğrulandı).
+- Hatalar: test kontrolünden geçmek için ilk etiket "Kaydet" yemek e2e'sindeki "Kaydet" ile çakıştı → "Görseli indir" / "Günün özet görseli"; standalone çıktı `public/fonts`u kopyalayınca `cp -a public dist/public` iç içe kopyaladı ve sw.js 404 oldu (konsol hatasıyla yakalandı) → `public/.` + varlık denetimi; memory-check `route.tsx` tanımıyordu.
+- Doğrulama: commit `b2a020b`; verify.sh VERIFY OK (146 birim, 15 e2e); release `2026-11-05T17-15-35-938Z` RELEASE OK.
+
 ## 2026-11-05 — Faz 5f: takviyeler + AI menü düzeltmesi
 - Kullanıcı önerisi: takviyeyi kullanıcı tanımlasın (porsiyon değerleri), sonra yalnızca porsiyon işaretlesin. Hazır TR veritabanı yerine bu yol (DECISIONS). 0015 `foods.supplement`; `meal_items.meal='supplement'`; `lib/supplements.ts` + 5 birim test; Yemek'te Takviyeler kartı, `/yemek/takviyeler` (+ yeni, [id]).
 - Canlı ilk denemede `supplement.e2e` kafein uyarısının geri alınca kalkmasını sunucu yenilemesinden önce bekliyordu → uyarı ve ek içerik toplamı istemcide anlık sayaçtan.
