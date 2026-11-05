@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Faz 5h-2: kas haritası + video akışı + yeni hareket detayı
+- Kullanıcının gönderdiği uygulama ekranlarına göre (akış ve düzen aynı, renk/yazı DgFit): `/fitness/anatomi`, `/fitness/anatomi/[kas]`, `/fitness/kaydedilenler`, `LicensedHero`, `FeatureTiles`, `BodyFigure`, 0017 `exercise_favorites`. Kas vurgusu paketteki çokgenlerden (yumuşatılmış), MSS ve açıklama etiketleri paket metninden (kullanıcı: "elimizdekilerle yapalım").
+- Hata: yerel pakette yalnızca 2 video vardı → akışta dosyası olmayan harekete video adresi verilmiyor; testler için göğüs videoları geçici klasöre indirildi.
+- Sunucuda 349 küçük resim üretildi (`licensed/agirsaglam/thumbs`, ffmpeg, 7,8 MB) — 5h-3 için.
+- Doğrulama: commit `eeae866`; verify.sh VERIFY OK (151 birim, 17 e2e); release `2026-11-05T23-02-53-105Z` RELEASE OK (canlı anatomi + lisanslı e2e dahil); logda hata 0; 11 test kullanıcısı silindi.
+
 ## 2026-11-06 — Faz 5h-1: Ağırsağlam lisanslı içerik (hareket verisi + videolar)
 - İzin: team@lightweightapp.com (kullanıcı ekran görüntüleriyle paylaştı; şartlar DECISIONS). Depo herkese açık → içerik sunucuda, depoda yalnızca kod.
 - Kod: `scripts/licensed-map.mjs`, migrate `seedLicensed`, 0016 `exercises.licensed`, `lib/licensed.ts`, `/api/lisansli/[kind]/[file]` (oturum + Range), hareket sayfası video/kas etkisi/MSS/etiket/açıklama/kaynak satırı, listede VİDEO rozeti, kütüphane görünürlüğü `user_id is null`.
