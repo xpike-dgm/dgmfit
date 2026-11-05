@@ -70,5 +70,7 @@ Yerel test DB'si: `apt-get install -y postgresql && service postgresql start`, a
 
 ## Kullanıcı verisi temizliği
 
+Beyaz liste (Faz 5e): canlı e2e kayıtları davet koduyla açılır. Kod repo dışında `~/.config/dgfit/e2e-invite` (yeni oturumda MCP ile: `docker compose exec -T db psql -U dgfit -d dgfit -Atc "select code from invites where label='e2e (otomatik test)'"`); `release.sh` kod yoksa durur.
+
 Test kullanıcıları `test_` / `dbg_` önekiyle açılır ve testten sonra silinir (kullanıcının `deneme` hesabı korunur):
 `docker compose exec -T db psql -U dgfit -d dgfit -c "delete from users where username like 'test\_%' or username like 'dbg\_%'"`

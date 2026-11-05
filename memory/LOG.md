@@ -2,6 +2,14 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5e: geri bildirim, beyaz liste, yönetim paneli
+- Başlangıç: kullanıcı isteği (ayarlara geri bildirim düğmesi + sayfası; whitelist — kayıtlar yönetim paneline düşsün, onaylanınca girsin; panoda yarı ekran özet + tıklanabilir kartlar; kullanıcıları görme, veri sıfırlama, kişiye özel AI kotası).
+- Şema 0014: `users.status/status_at/status_by/ai_daily/admin_note/invite_code/last_seen_at`, `feedback`, `invites`; eski hesaplar approved. Erişim katmanı `getSessionUser` → `getUser` (onaylı/yönetici) → `requireUser` (→ `/beklemede`). Kayıt: davet kodu geçerliyse onaylı (koşullu kullanım artışı), değilse pending + yöneticilere push.
+- Sayfalar: `/profil/geri-bildirim`, `/beklemede`, `/yonetim` (+ `ActivityBars` tek seri, dokununca değer), `/yonetim/kullanicilar` (+ `[id]` yönetim), `/yonetim/geri-bildirim` (+ `[id]` yanıt), `/yonetim/davetler`; AI ve moderasyon sayfaları panoya döner; Profil'de "Yönetim paneli" (bekleyen rozeti) ve "Geri bildirim gönder" (yanıt rozeti).
+- AI: `userDailyLimit` (kişiye özel → genel); 0 = AI kapalı mesajı; koç kalan hakkı buradan.
+- Testler: `tests/access.test.ts` (3), `tests/e2e/admin.e2e.cjs`; tüm e2e kayıtları `DGFIT_E2E_INVITE` ile (verify.sh yerel kod üretir; release.sh `~/.config/dgfit/e2e-invite` okur). Hatalar: 320 px'te ızgara öğesi `min-w-0` yoktu (pano 450 px) → düzeltildi; askı durumu yenilemeden önce okunuyordu → öznitelik beklenir.
+- Doğrulama: commit `b318dfb`; verify.sh VERIFY OK (139 birim, 14 e2e); deploy `2026-11-05T15-55-03-946Z` → canlı DB'ye e2e davet kodu eklendi (label `e2e (otomatik test)`) → release `2026-11-05T15-56-01-796Z` RELEASE OK; canlı kancasız beyaz liste kontrolü (pending, `/beklemede`, API 401); logda hata 0; 9 test kullanıcısı silindi.
+
 ## 2026-11-05 — Kas ısı haritası, koç ekranı, program paylaşma, AI şema düzeltmesi
 - Kas haritası: kullanıcının ürettiği renk kodlu ön/arka görsel `data/body-map-source.webp` → `scripts/data/build_bodymap.py` (opencv; en yakın palet rengi + kontur) → `lib/body-map-paths.ts` (17 KB, ön 10 / arka 10 kas grubu); `BodyMap.tsx` son 7 gün setine göre 4 kademe boyar, dokununca kas + set + toparlanma.
 - Koç: tam ekran sohbet (alt bar gizli, `hidesNav('/koc')`), kendiliğinden büyüyen yazma alanı (kullanıcının ekran görüntüsündeki kesilen metin), içte mikrofon + gönder, avatar balonları, yazıyor animasyonu, başlıkta sohbetler / yeni / ayarlar, kalan hak alt başlıkta.
