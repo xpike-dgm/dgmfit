@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5a tamamlandı
+- Saf kurallar `lib/social.ts` (profil/öğe/gönderi görünürlüğü, akış puanı, öneri puanı, kilometre taşı, haftalık seri), `lib/moderation.ts`; `tests/social.test.ts` (6). Veri katmanı `lib/social-data.ts`, migration 0011 (10 tablo), `qrcode` 1.5.4 (MIT; npm'den doğrulandı), ekranlar `/sosyal` (+ yeni, p/[id], ara, arkadaslar, bildirimler, ayarlar), `/u/[username]`, `/yonetim/moderasyon`; antrenman özeti, rekor, su serisi ve Fit'e "Paylaş" bağlantıları.
+- Bulunan kusurlar: JS `\b` Türkçe harfleri kelime harfi saymıyor → "şişko" gibi hakaretler kaçıyordu (birim test yakaladı) → Unicode harf sınırı. PR vitrini 120 kg'ı "120,0 kg" gösteriyordu → tam sayıda ondalıksız. Engellenen kişiye "Bu profili göremezsin" ekranı engeli sızdırıyordu → yalnızca engelleyene gösterilir, diğerine 404. Test kaynaklı: kilo alma hedefli test kullanıcısı güvenli tempoyu aştığı için sihirbazda doğru şekilde engellendi (test verisi düzeltildi); "Gönder"/"Kaydet" seçicileri alt dize eşleşmesiyle çakıştı; önceki çalıştırmanın aynı metinli gönderisi moderasyon kuyruğunda çakıştı (metin benzersiz yapıldı).
+- Doğrulama: commit `7072263`; verify.sh VERIFY OK (birim 124/124, 12 e2e); release `2026-11-05T05-42-38-190Z` RELEASE OK; canlı kancasız sosyal kontrolü OK; canlıda 10 tablo + `0011_social.sql`; 10 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 5a başladı
 - Faz başı: memory-check geçti; son commit `07b70cf` STATE ile uyumlu; çalışma ağacı temiz. Spesifikasyon 8, 9, 10, 13 Claude Docs'tan okundu. Faz 5 ikiye bölündü (DECISIONS).
 
