@@ -572,3 +572,51 @@ export const aiInsights = pgTable('ai_insights', {
   dismissedAt: timestamp('dismissed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [uniqueIndex('ai_insights_period_idx').on(t.userId, t.kind, t.period)])
+
+// ───────── Planlama (Faz 4c) ─────────
+
+/** AI menüsü: başlangıç günü + gün sayısı; kalemler motorla ölçeklenmiş gramlar. */
+export const mealPlans = pgTable('meal_plans', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  startDay: date('start_day').notNull(),
+  days: integer('days').notNull(),
+  prefs: jsonb('prefs').$type<Record<string, unknown>>().notNull().default({}),
+  prepSteps: jsonb('prep_steps').$type<string[]>().notNull().default([]),
+  provider: text('provider'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('meal_plans_user_idx').on(t.userId, t.startDay)])
+
+export const mealPlanItems = pgTable('meal_plan_items', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  planId: uuid('plan_id').notNull().references(() => mealPlans.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  meal: text('meal').notNull(),
+  foodId: bigint('food_id', { mode: 'number' }).references(() => foods.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  grams: real('grams').notNull(),
+  kcal: real('kcal'), // null = veritabanında eşleşme yok
+  protein: real('protein'), carb: real('carb'), fat: real('fat'),
+  loggedAt: timestamp('logged_at', { withTimezone: true }), // günlüğe eklendiyse
+}, (t) => [index('meal_plan_items_plan_idx').on(t.planId, t.day)])
+
+export const shoppingItems = pgTable('shopping_items', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  planId: uuid('plan_id').notNull().references(() => mealPlans.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  grams: real('grams').notNull(),
+  aisle: text('aisle').notNull(),
+  checked: boolean('checked').notNull().default(false),
+}, (t) => [index('shopping_items_plan_idx').on(t.planId)])
+
+/** Karb döngüsü: antrenman günleri (0=Pazar) ve kaydırma (g). */
+export const carbCycle = pgTable('carb_cycle', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  enabled: boolean('enabled').notNull().default(false),
+  weekdays: jsonb('weekdays').$type<number[]>().notNull().default([]),
+  shiftG: integer('shift_g').notNull().default(40),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

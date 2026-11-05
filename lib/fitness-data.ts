@@ -135,7 +135,7 @@ async function equipmentMap() {
   return (k: string) => m.get(k) ?? 'missing'
 }
 
-async function insertProgram(userId: string, name: string, templateId: string | null, days: ProgramDay[], notes: string[], activate: boolean) {
+export async function insertProgram(userId: string, name: string, templateId: string | null, days: ProgramDay[], notes: string[], activate: boolean) {
   const ids = await keyToId([...new Set(days.flatMap((d) => d.exercises.map((e) => e.key)))])
   return db.transaction(async (tx) => {
     if (activate) await tx.update(schema.programs).set({ active: false }).where(eq(schema.programs.userId, userId))

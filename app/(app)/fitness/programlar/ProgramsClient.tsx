@@ -2,9 +2,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { btn, Eyebrow } from '@/components/ui'
-import { EQUIPMENT } from '@/lib/exercise-labels'
+import { EQUIPMENT, MUSCLES } from '@/lib/exercise-labels'
 import { ALL_EQUIPMENT } from '@/lib/programs'
-import { copyProgramAction, createEmptyProgramAction, createFromTemplateAction, createGeneratedAction, deleteProgramAction, setActiveProgramAction } from '../actions'
+import { copyProgramAction, createAiProgramAction, createEmptyProgramAction, createFromTemplateAction, createGeneratedAction, deleteProgramAction, setActiveProgramAction } from '../actions'
 
 type R = { ok: true; id?: string } | { ok: false; error: string }
 
@@ -21,7 +21,12 @@ export function ProgramActions({ id, active }: { id: string; active: boolean }) 
   )
 }
 
-export function CreateProgram({ templates, defaults }: { templates: { id: string; name: string; description: string; days: number; level: string; dayNames: string[] }[]; defaults: { days: number; minutes: number; equipment: string[] } }) {
+const WEAK = ['chest', 'shoulders', 'lats', 'middle back', 'biceps', 'triceps', 'quadriceps', 'hamstrings', 'glutes', 'calves', 'abdominals']
+
+export function CreateProgram({ templates, defaults, aiOn }: { templates: { id: string; name: string; description: string; days: number; level: string; dayNames: string[] }[]; defaults: { days: number; minutes: number; equipment: string[] }; aiOn: boolean }) {
+  const [weak, setWeak] = useState<string[]>([])
+  const [note, setNote] = useState('')
+  const [aiBusy, setAiBusy] = useState(false)
   const [days, setDays] = useState(Math.min(6, Math.max(2, defaults.days)))
   const [minutes, setMinutes] = useState(defaults.minutes)
   const [eq, setEq] = useState<string[]>(defaults.equipment)
@@ -58,6 +63,25 @@ export function CreateProgram({ templates, defaults }: { templates: { id: string
           </div>
         </fieldset>
         <button type="button" className={btn.primary} disabled={pending || !eq.length} onClick={() => go(() => createGeneratedAction({ days, minutes, equipment: eq as never }))}>{pending ? 'Oluşturuluyor…' : 'Programı oluştur'}</button>
+        {aiOn ? (
+          <div className="flex flex-col gap-2 pt-2 border-t border-line" data-testid="ai-program">
+            <span className="text-sm font-semibold">AI ile kişisel program</span>
+            <span className="text-[12px] text-mute">Zayıf bölgelerini seç; dil modeli kütüphaneden hareket seçer, kurallar set/tekrar ve haftalık hacmi denetler. Günlük AI hakkından 1 düşer.</span>
+            <div className="flex flex-wrap gap-1.5">{WEAK.map((k) => (
+              <button key={k} type="button" aria-pressed={weak.includes(k)} onClick={() => setWeak(weak.includes(k) ? weak.filter((x) => x !== k) : weak.length < 4 ? [...weak, k] : weak)}
+                className={`h-9 px-3 rounded-full text-[13px] font-semibold ${weak.includes(k) ? 'bg-lime text-lime-ink' : 'bg-surface-2 text-ink-2'}`}>{MUSCLES[k]}</button>
+            ))}</div>
+            <label htmlFor="ai-prog-note" className="sr-only">Not</label>
+            <input id="ai-prog-note" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Not (ör: dizimde hassasiyet var, squat yerine leg press)" className="h-11 rounded-xl bg-surface-2 border border-line px-3 text-[14px]" />
+            <button type="button" className={btn.secondary + ' h-12'} disabled={pending || aiBusy || !eq.length} onClick={() => start(async () => {
+              setErr(null); setAiBusy(true)
+              const r = await createAiProgramAction({ days, minutes, equipment: eq as never, weak, note })
+              setAiBusy(false)
+              if (!r.ok) { setErr(r.error); return }
+              router.push(`/fitness/programlar/${r.id}`)
+            })}>{aiBusy ? 'AI program yazıyor…' : 'AI ile oluştur'}</button>
+          </div>
+        ) : null}
         {err ? <p role="alert" className="text-[13px] text-danger">{err}</p> : null}
       </section>
 

@@ -20,6 +20,7 @@ import { matchProgramDay, shiftGoal, whatIfImpact, type WhatIf } from './coach-c
 import { aiAvailable, AiError, runTask } from './ai/engine'
 import { PERSONAS, type CoachAction, type Persona } from './ai/schemas'
 import { publish } from './events'
+import { createMenu } from './planner-data'
 
 const HISTORY = 10 // modele giden önceki mesaj sayısı (spesifikasyon 10: uzun geçmiş yerine özet bağlam)
 
@@ -167,6 +168,10 @@ async function resolveAction(userId: string, a: CoachAction, ctx: CoachContext):
     const sets = a.sets ?? 3, repMin = time ? 1 : a.repMin ?? 8, repMax = time ? 1 : Math.max(repMin, a.repMax ?? 12)
     return { type: a.type, status: 'pending', label: `"${day.name}" gününe ${ex.nameTr} ekle (${sets} × ${time ? '45 sn' : repMin + (repMax !== repMin ? '–' + repMax : '')})`, data: { dayId: day.id, exerciseId: ex.id, exerciseName: ex.nameTr, sets, repMin, repMax } }
   }
+  if (a.type === 'plan_menu') {
+    const day = addDays(ctx.today, 1)
+    return { type: a.type, status: 'pending', label: `Yarın (${longTr(day)}) için menü hazırla`, data: { newEnd: day } }
+  }
   const ml = a.ml ?? 0
   if (ml < 50) return bad('Su ekle', 'Miktar yok')
   const drink = a.drink ?? 'water'
@@ -275,6 +280,9 @@ export async function applyCoachAction(userId: string, messageId: string, index:
       const [pe] = await db.select().from(schema.programExercises).where(eq(schema.programExercises.dayId, a.data.dayId!)).orderBy(desc(schema.programExercises.idx)).limit(1)
       if (pe) await updateProgramExercise(userId, pe.id, { sets: a.data.sets!, repMin: a.data.repMin!, repMax: a.data.repMax!, rir: pe.rir, rest: pe.rest, seconds: pe.seconds, setType: pe.setType })
     } catch (e) { return save({ ...a, status: 'invalid', error: (e as Error).message }) }
+  } else if (a.type === 'plan_menu') {
+    try { await createMenu(userId, { startDay: addDays(dayString(), 1), days: 1, budget: 'orta', prep: false, note: '' }) }
+    catch (e) { return save({ ...a, status: 'invalid', error: (e as Error).message }) }
   } else {
     const r = await water(a.data.ml!, a.data.drink ?? 'water')
     if (!r.ok) return save({ ...a, status: 'invalid', error: r.error ?? 'Su eklenemedi' })

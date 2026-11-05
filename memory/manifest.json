@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-04",
-  "phase": "4b",
+  "phase": "4c",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -143,7 +143,24 @@
     "app/api/test/coach/route.ts",
     "components/InsightCard.tsx",
     "tests/coach.test.ts",
-    "tests/e2e/coach.e2e.cjs"
+    "tests/e2e/coach.e2e.cjs",
+    "lib/menu.ts",
+    "lib/scenario.ts",
+    "lib/ai-program.ts",
+    "lib/planner-data.ts",
+    "app/(app)/yemek/plan/page.tsx",
+    "app/(app)/yemek/plan/PlanClient.tsx",
+    "app/(app)/yemek/plan/actions.ts",
+    "app/(app)/yemek/plan/alisveris/page.tsx",
+    "app/(app)/yemek/plan/alisveris/ShopList.tsx",
+    "app/(app)/yemek/elimdeki/page.tsx",
+    "app/(app)/yemek/elimdeki/PantryClient.tsx",
+    "app/(app)/yemek/restoran/page.tsx",
+    "app/(app)/yemek/restoran/RestaurantClient.tsx",
+    "app/(app)/fit/Planner.tsx",
+    "app/api/ai/restaurant/route.ts",
+    "tests/planner.test.ts",
+    "tests/e2e/planner.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -183,7 +200,11 @@
     "coach_prefs",
     "ai_conversations",
     "ai_messages",
-    "ai_insights"
+    "ai_insights",
+    "meal_plans",
+    "meal_plan_items",
+    "shopping_items",
+    "carb_cycle"
   ],
   "routes": [
     "/",
@@ -235,7 +256,12 @@
     "/koc",
     "/rapor",
     "/api/coach/insight",
-    "/api/test/coach"
+    "/api/test/coach",
+    "/yemek/plan",
+    "/yemek/plan/alisveris",
+    "/yemek/elimdeki",
+    "/yemek/restoran",
+    "/api/ai/restaurant"
   ],
   "events": [
     "profile.onboarded",
@@ -541,6 +567,29 @@
       "dailyInsight",
       "weeklyReport",
       "latestReportWeek"
+    ],
+    "lib/menu.ts": [
+      "scaleToKcal",
+      "shoppingList",
+      "rankDishes",
+      "itemsMacros"
+    ],
+    "lib/scenario.ts": [
+      "simulate",
+      "carbCycleDay"
+    ],
+    "lib/ai-program.ts": [
+      "checkProgram",
+      "clampTargets",
+      "maxExercises"
+    ],
+    "lib/planner-data.ts": [
+      "createMenu",
+      "currentPlan",
+      "pantryRecipes",
+      "restaurantOptions",
+      "createAiProgram",
+      "resolveFood"
     ]
   },
   "dependencies": {
@@ -566,6 +615,7 @@
     "0006_fitness_progress.sql",
     "0007_ai.sql",
     "0008_ai_task_models.sql",
-    "0009_coach.sql"
+    "0009_coach.sql",
+    "0010_planner.sql"
   ]
 }

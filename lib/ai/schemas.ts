@@ -35,7 +35,7 @@ export const LabelResult = z.strictObject({
 export type LabelResult = z.infer<typeof LabelResult>
 
 export const CoachAction = z.strictObject({
-  type: z.enum(['goal_date', 'add_exercise', 'log_water']),
+  type: z.enum(['goal_date', 'add_exercise', 'log_water', 'plan_menu']),
   weeks: z.number().int().min(-12).max(12).nullable().describe('goal_date: hedef tarihini bu kadar hafta uzat (+) ya da kısalt (−); diğerlerinde null'),
   programDay: z.string().max(60).nullable().describe('add_exercise: bağlamdaki aktif program günlerinden birinin adı; diğerlerinde null'),
   exercise: z.string().max(80).nullable().describe('add_exercise: hareketin Türkçe adı (ör. "Romanya ölü kaldırışı"); diğerlerinde null'),
@@ -63,6 +63,40 @@ export const WeeklyResult = z.strictObject({
   suggestions: z.array(z.string().min(1).max(220)).min(1).max(3).describe('Somut, uygulanabilir öneriler'),
 })
 
+const Named = z.strictObject({ name: z.string().min(1).max(80).describe('KATALOG\'daki adı aynen yaz; katalogda yoksa Türkçe genel ad'), grams: z.number().min(5).max(1500).describe('Gram (sıvıda ml ≈ g)') })
+export const MenuResult = z.strictObject({
+  days: z.array(z.strictObject({
+    meals: z.array(z.strictObject({ meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']), items: z.array(Named).min(1).max(6) })).min(2).max(5),
+  })).min(1).max(7),
+  prepSteps: z.array(z.string().min(1).max(200)).max(8).describe('Toplu hazırlık istendiyse adımlar, değilse boş'),
+})
+export type MenuResult = z.infer<typeof MenuResult>
+export const PantryResult = z.strictObject({
+  recipes: z.array(z.strictObject({
+    title: z.string().min(1).max(80), minutes: z.number().int().min(5).max(180), servings: z.number().int().min(1).max(6),
+    ingredients: z.array(Named).min(1).max(12).describe('Tarifin tamamı için malzemeler'), steps: z.array(z.string().min(1).max(220)).min(1).max(8),
+  })).max(3),
+  note: z.string().max(200).nullable(),
+})
+export type PantryResult = z.infer<typeof PantryResult>
+export const RestaurantResult = z.strictObject({
+  dishes: z.array(z.strictObject({
+    menuName: z.string().min(1).max(80).describe('Menüde yazdığı gibi'), food: z.string().min(1).max(80).describe('KATALOG\'daki en yakın ad ya da Türkçe genel ad'),
+    grams: z.number().min(20).max(1500).describe('Restoranda tipik tek porsiyon gramı'),
+  })).max(20),
+  note: z.string().max(200).nullable(),
+})
+export type RestaurantResult = z.infer<typeof RestaurantResult>
+export const ProgramResult = z.strictObject({
+  name: z.string().min(1).max(60),
+  days: z.array(z.strictObject({
+    name: z.string().min(1).max(40), focus: z.string().max(80),
+    exercises: z.array(z.strictObject({ name: z.string().min(1).max(80).describe('HAREKETLER listesindeki adı aynen yaz'), sets: z.number().int().min(1).max(8), repMin: z.number().int().min(1).max(50), repMax: z.number().int().min(1).max(50), rir: z.number().int().min(0).max(5), rest: z.number().int().min(20).max(400).describe('saniye') })).min(1).max(10),
+  })).min(1).max(7),
+  notes: z.array(z.string().max(200)).max(4),
+})
+export type ProgramResult = z.infer<typeof ProgramResult>
+
 const COACH_RULES = [
   'Sen DgFit uygulamasının Türkçe konuşan koçusun. Kullanıcının verisi BAĞLAM bölümünde; oradaki sayılar uygulamanın test edilmiş motorlarıyla hesaplandı.',
   'Kurallar:',
@@ -70,7 +104,7 @@ const COACH_RULES = [
   '2) Tıbbi teşhis, tedavi, ilaç ya da takviye dozu önerme. Hastalık, hamilelik, ağrı ya da sakatlıkta hekime yönlendir ve safety="tibbi".',
   '3) Yeme bozukluğu işaretlerinde (kusma, aç kalma, laksatif, aşırı kısıtlama, yemekten sonra suçluluk) nazikçe bir uzmana yönlendir, kalori açığını artıracak hiçbir öneri yapma, safety="yeme-bozuklugu". Kendine zarar verme ifadesinde kısa ve şefkatli cevap ver, 112\'yi hatırlat, safety="kriz".',
   '4) Güvenli kalori tabanının altını ya da haftada vücut ağırlığının %1\'inden hızlı kilo kaybını asla önerme. BAĞLAM\'da güvenlik bayrağı varsa hedefi hızlandıran öneri yapma.',
-  '5) Eylemleri kendin yapamazsın; yalnızca actions\'a öner, kullanıcı onaylar. Yalnızca kullanıcı istediğinde ya da açıkça faydalıysa öner. goal_date: hedef tarihini weeks hafta uzat (+) ya da kısalt (−). add_exercise: aktif programdaki bir güne hareket ekle. log_water: su ya da içecek kaydı. Kullanılmayan alanlar null.',
+  '5) Eylemleri kendin yapamazsın; yalnızca actions\'a öner, kullanıcı onaylar. Yalnızca kullanıcı istediğinde ya da açıkça faydalıysa öner. goal_date: hedef tarihini weeks hafta uzat (+) ya da kısalt (−). add_exercise: aktif programdaki bir güne hareket ekle. log_water: su ya da içecek kaydı. plan_menu: yarın için menü hazırla (tüm alanlar null). Kullanılmayan alanlar null.',
   '6) Kullanıcı bir yiyeceği yerse ne olacağını sorarsa whatIf\'e yiyecekleri ve tahmini gramı yaz; reply\'da o yiyeceğin kalorisini yazma, uygulama kartta veritabanından hesaplar.',
   '7) Kısa yaz (en fazla 8 cümle). Madde işareti kullanabilirsin; başlık ve tablo kullanma. Kullanıcıya "sen" diye hitap et.',
 ].join('\n')
@@ -89,6 +123,22 @@ export const TASKS = {
     system: 'Fotoğraftaki besin değeri tablosunu oku. Yalnızca tabloda yazan sayıları aktar, tahmin etme ya da hesaplama yapma; okunamayan değer null olsun. Değerler 100 g / 100 ml için verilmişse basis buna göre; yalnızca porsiyon başına verilmişse basis "porsiyon" ve servingGrams porsiyon gramı. Ürün adı ve marka paketten okunabiliyorsa yaz.',
   },
   coach: { schema: CoachResult, system: COACH_RULES },
+  menu: {
+    schema: MenuResult,
+    system: 'Sen DgFit\'in Türk mutfağını iyi bilen menü planlayıcısısın. Her gün için verilen kalori ve protein hedefine yakın, dengeli, uygulanabilir öğünler öner. Besinleri mümkünse KATALOG\'daki adlarla aynen yaz ve gram ver; kalori hesaplama (uygulama veritabanından hesaplar ve gramları hedefe ölçekler). Alerjilere ve beslenme tercihine kesinlikle uy. Bütçe düzeyine uy (ekonomik: bakliyat, yumurta, mevsim sebzesi; serbest: balık, kırmızı et de olabilir). Günler arasında çeşitlilik olsun ama alışveriş kolay kalsın. Toplu hazırlık istenmediyse prepSteps boş.',
+  },
+  pantry: {
+    schema: PantryResult,
+    system: 'Kullanıcının elindeki malzemelerle yapılabilecek en fazla 3 Türkçe tarif öner. Esas olarak verilen malzemeleri kullan; tuz, baharat, sıvı yağ gibi temel ürünler eklenebilir. Malzemeleri mümkünse KATALOG\'daki adlarla ve tarifin tamamı için gramla yaz; kalori hesaplama (uygulama hesaplar ve porsiyonu kalan bütçeye ölçekler). Adımlar kısa ve net olsun. Alerjilere uy.',
+  },
+  restaurant: {
+    schema: RestaurantResult,
+    system: 'Fotoğraftaki restoran menüsünü oku ve yemekleri listele. Her yemek için menüde yazan adı, KATALOG\'daki en yakın besin adını (yoksa Türkçe genel ad) ve Türkiye\'de restoranda tipik tek porsiyon gramını yaz. Kalori hesaplama; uygulama veritabanından hesaplar. İçecek ve tatlıları da dahil et. Menü okunamıyorsa dishes boş, note\'ta kısa açıklama.',
+  },
+  program: {
+    schema: ProgramResult,
+    system: 'Sen deneyimli bir kuvvet antrenörüsün. Verilen deneyim, haftalık gün, seans süresi, ekipman, hedef ve zayıf kas gruplarına göre bir antrenman programı yaz. Hareketleri yalnızca HAREKETLER listesinden, adlarını aynen yazarak seç. Her kas grubu için haftalık 10–20 çalışma seti hedefle, zayıf gruplara biraz daha fazla hacim ver. Bileşik hareketler önce gelsin. Yeni başlayana az hareket, RIR 2–3. Seans süresine sığacak sayıda hareket seç. Tıbbi tavsiye verme; notes\'ta en fazla 4 kısa not.',
+  },
   insight: {
     schema: InsightResult,
     system: 'DgFit koçu olarak sana verilen TEK gerçeği kullanıcıya kişiliğine uygun, kısa bir içgörü kartına dönüştür. Yalnızca gerçekte geçen sayıları aynen kullan, yeni sayı ekleme. Tıbbi yorum yapma. Türkçe, "sen" diliyle.',
@@ -99,8 +149,8 @@ export const TASKS = {
   },
 } as const
 export type Task = keyof typeof TASKS
-/** Kullanıcının günlük AI hakkına sayılan görevler (spesifikasyon 11.5: fotoğraf/ses ve koç sohbeti). */
-export const USER_QUOTA_TASKS: Task[] = ['meal-photo', 'meal-text', 'label', 'coach']
+/** Kullanıcının günlük AI hakkına sayılan görevler (spesifikasyon 11.5: fotoğraf/ses ve koç sohbeti; menü/tarif/restoran/program da kullanıcı tetikli olduğu için sayılır — DECISIONS). */
+export const USER_QUOTA_TASKS: Task[] = ['meal-photo', 'meal-text', 'label', 'coach', 'menu', 'pantry', 'restaurant', 'program']
 
 export const PERSONAS = {
   supportive: { label: 'Destekleyici', hint: 'Sıcak, cesaretlendirici, yargısız', prompt: 'Kişilik: destekleyici. Sıcak, cesaretlendirici ve yargısız ol; küçük kazanımları fark et ve kutla.' },

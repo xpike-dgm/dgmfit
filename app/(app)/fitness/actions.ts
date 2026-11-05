@@ -15,6 +15,9 @@ import {
 } from '@/lib/fitness-data'
 import { addMeasurement, alternativesFor, deleteMeasurement, MEASURES } from '@/lib/fitness-stats'
 import { deleteMedia } from '@/lib/media'
+import { createAiProgram } from '@/lib/planner-data'
+import { AiError } from '@/lib/ai/engine'
+import { MUSCLES } from '@/lib/exercise-labels'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 const Uuid = z.string().uuid()
@@ -41,6 +44,23 @@ export async function createGeneratedAction(input: z.input<typeof GenInput>): Pr
   const p = GenInput.safeParse(input)
   if (!p.success) return { ok: false, error: 'Gün 2–6, süre 20–150 dk ve en az bir ekipman seç' }
   return run(async () => ({ id: await createGenerated(userId, p.data) }))
+}
+
+const AiProgIn = z.object({ days: z.number().int().min(2).max(6), minutes: z.number().int().min(20).max(150), equipment: z.array(z.enum(ALL_EQUIPMENT)).min(1), weak: z.array(z.string().max(30)).max(6), note: z.string().trim().max(200) })
+/** AI program oluşturucu: dil modeli + kural denetimi (lib/ai-program.ts). Kullanıcının günlük AI hakkına sayılır. */
+export async function createAiProgramAction(input: z.input<typeof AiProgIn>): Promise<R<{ id: string; warnings: string[] }>> {
+  const userId = await uid()
+  const p = AiProgIn.safeParse(input)
+  if (!p.success) return { ok: false, error: 'Gün 2–6, süre 20–150 dk ve en az bir ekipman seç' }
+  try {
+    const r = await createAiProgram(userId, { ...p.data, weak: p.data.weak.filter((m) => m in MUSCLES) })
+    refresh()
+    return { ok: true, id: r.id, warnings: r.warnings }
+  } catch (e) {
+    if (e instanceof AiError) return { ok: false, error: e.message }
+    console.error('[dgfit] AI program', e)
+    return { ok: false, error: 'AI programı oluşturulamadı. Biraz sonra tekrar dene.' }
+  }
 }
 
 export async function createEmptyProgramAction(name: string): Promise<R<{ id: string }>> {

@@ -5,7 +5,7 @@ import { fmtNum } from '@/lib/calc'
 import { ProviderForm, UserDailyForm } from './AiAdmin'
 
 export const metadata = { title: 'AI ayarları · DgFit' }
-const TASK_LABEL: Record<string, string> = { 'meal-photo': 'öğün fotoğrafı', label: 'etiket', 'meal-text': 'yazı / ses', coach: 'koç sohbeti', insight: 'günlük içgörü', weekly: 'haftalık rapor' }
+const TASK_LABEL: Record<string, string> = { 'meal-photo': 'öğün fotoğrafı', label: 'etiket', 'meal-text': 'yazı / ses', coach: 'koç sohbeti', insight: 'günlük içgörü', weekly: 'haftalık rapor', menu: 'menü', pantry: 'elimdekiler', restaurant: 'restoran menüsü', program: 'program' }
 const t = (d: Date | null) => (d ? new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d) : '—')
 
 export default async function AiAdminPage() {

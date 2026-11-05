@@ -12,7 +12,7 @@ import { jsonSchemaFor, parseResult, TASKS, USER_QUOTA_TASKS, type Task } from '
 /** Varsayılanlar: kullanıcı kararı (Haiku her yerde); OpenAI modeli resmi belgedeki en verimli model (2026-11-05). */
 export const DEFAULT_MODELS: Record<ProviderId, string> = { claude: 'claude-haiku-5-5', openai: 'gpt-6-luna' }
 /** Karma model (kullanıcı kararı 2026-11-05): fotoğraf ve etiket Claude Opus 5.5, yazılı kayıt Haiku 5.5. */
-export const DEFAULT_TASK_MODELS: Record<ProviderId, Partial<Record<Task, string>>> = { claude: { 'meal-photo': 'claude-opus-5-5', label: 'claude-opus-5-5' }, openai: {} }
+export const DEFAULT_TASK_MODELS: Record<ProviderId, Partial<Record<Task, string>>> = { claude: { 'meal-photo': 'claude-opus-5-5', label: 'claude-opus-5-5', restaurant: 'claude-opus-5-5' }, openai: {} }
 /** Milyon token başına $ (giriş, çıkış). Kaynak: claude-api rehberi model tablosu (2026-10-06) ve OpenAI fiyat sayfası (2026-11-05). Yalnızca tahmin ekranı için. */
 export const PRICES: Record<string, [number, number]> = {
   'claude-opus-5-5': [4, 20], 'claude-haiku-5-5': [0.1, 0.5], 'claude-sonnet-5-5': [2, 10], 'gpt-6-luna': [0.1, 0.5],

@@ -15,7 +15,7 @@ const ProvIn = z.object({
   id: Id, enabled: z.boolean(), priority: z.number().int().min(0).max(9), model: z.string().trim().min(3).max(80).regex(/^[a-z0-9.\-_:]+$/i, 'Model adı yalnızca harf, rakam, nokta, tire'),
   dailyTokenLimit: z.number().int().min(0).max(1e9), monthlyTokenLimit: z.number().int().min(0).max(1e10),
   key: z.string().trim().max(300).optional(), removeKey: z.boolean().optional(),
-  taskModels: z.partialRecord(z.enum(['meal-photo', 'meal-text', 'label']), z.string().trim().max(80).regex(/^[a-z0-9.\-_:]*$/i)).optional(),
+  taskModels: z.partialRecord(z.enum(['meal-photo', 'meal-text', 'label', 'restaurant', 'coach', 'menu', 'pantry', 'program', 'insight', 'weekly']), z.string().trim().max(80).regex(/^[a-z0-9.\-_:]*$/i)).optional(),
 })
 export async function saveProviderAction(input: z.input<typeof ProvIn>): Promise<R> {
   try { await admin() } catch { return { ok: false, error: 'Yetki yok' } }

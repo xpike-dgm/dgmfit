@@ -86,6 +86,14 @@ export default function FoodDiary(p: {
         </button>
       </div>
 
+      {p.isToday ? (
+        <nav aria-label="AI planlama" className="grid grid-cols-3 gap-2" data-testid="ai-plan-links">
+          <Link href="/yemek/plan" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">AI menü</Link>
+          <Link href="/yemek/elimdeki" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">Elimde bunlar var</Link>
+          <Link href="/yemek/restoran" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">Restoran modu</Link>
+        </nav>
+      ) : null}
+
       {msg ? <p role="status" className="text-sm text-ink-2 px-1">{msg}</p> : null}
 
       {p.meals.map((m) => (

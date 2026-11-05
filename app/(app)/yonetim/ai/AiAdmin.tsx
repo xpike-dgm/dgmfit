@@ -5,7 +5,7 @@ import { btn, Eyebrow } from '@/components/ui'
 import { resetCooldownAction, saveAiSettingsAction, saveProviderAction } from './actions'
 
 type P = { id: 'claude' | 'openai'; enabled: boolean; priority: number; model: string; taskModels: Record<string, string>; dailyTokenLimit: number; monthlyTokenLimit: number; hasKey: boolean; cooling: boolean }
-const TASKS = [['meal-photo', 'Fotoğraf'], ['label', 'Etiket'], ['meal-text', 'Yazı / ses']] as const
+const TASKS = [['meal-photo', 'Fotoğraf'], ['label', 'Etiket'], ['restaurant', 'Restoran menüsü'], ['meal-text', 'Yazı / ses'], ['coach', 'Koç'], ['menu', 'Menü'], ['pantry', 'Elimdekiler'], ['program', 'Program']] as const
 
 export function ProviderForm({ p }: { p: P }) {
   const [v, setV] = useState({ enabled: p.enabled, priority: p.priority, model: p.model, daily: String(p.dailyTokenLimit), monthly: String(p.monthlyTokenLimit), key: '' })

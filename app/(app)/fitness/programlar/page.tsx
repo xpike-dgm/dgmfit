@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
+import { aiAvailable } from '@/lib/ai/engine'
 import { ensureGym, listPrograms } from '@/lib/fitness-data'
 import { TEMPLATES } from '@/lib/programs'
 import { Eyebrow, TopBar } from '@/components/ui'
@@ -13,9 +14,10 @@ const LEVEL = { new: 'Başlangıç', mid: 'Orta', adv: 'İleri' }
 
 export default async function ProgramsPage() {
   const u = await requireUser()
-  const [programs, gym, [profile]] = await Promise.all([
+  const [programs, gym, [profile], aiOn] = await Promise.all([
     listPrograms(u.id), ensureGym(u.id),
     db.select({ trainingDays: schema.profiles.trainingDays, experience: schema.profiles.experience }).from(schema.profiles).where(eq(schema.profiles.userId, u.id)).limit(1),
+    aiAvailable(),
   ])
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">
@@ -37,7 +39,7 @@ export default async function ProgramsPage() {
       ) : null}
       <CreateProgram
         templates={TEMPLATES.map((t) => ({ id: t.id, name: t.name, description: t.description, days: t.daysPerWeek, level: LEVEL[t.level], dayNames: t.days.map((d) => d.name) }))}
-        defaults={{ days: profile?.trainingDays ?? 3, minutes: gym.sessionMinutes, equipment: gym.equipment }}
+        defaults={{ days: profile?.trainingDays ?? 3, minutes: gym.sessionMinutes, equipment: gym.equipment }} aiOn={aiOn}
       />
     </div>
   )

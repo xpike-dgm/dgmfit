@@ -197,6 +197,7 @@ function ActionCard({ a, onDecide }: { a: StoredAction; onDecide: (d: 'confirm' 
           <button type="button" className="h-10 px-4 rounded-full border border-line-2 font-bold text-[14px]" onClick={() => onDecide('cancel')}>Vazgeç</button>
         </div>
       ) : <span className={`text-[13px] ${a.status === 'done' ? 'text-lime' : a.status === 'invalid' ? 'text-orange' : 'text-mute'}`}>{a.status === 'done' ? 'Uygulandı' : a.status === 'cancelled' ? 'Vazgeçildi' : a.error ?? 'Uygulanamadı'}</span>}
+      {a.type === 'plan_menu' && a.status === 'done' ? <Link href="/yemek/plan" className="self-start text-[13px] font-bold text-lime">Menüyü aç</Link> : null}
       {a.type === 'goal_date' && a.status === 'pending' ? <span className="text-[12px] text-mute">Günlük kalorin bir sonraki haftalık check-in'de yeni tarihe göre ayarlanır.</span> : null}
     </div>
   )

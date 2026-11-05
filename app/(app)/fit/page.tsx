@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
-import { getFitScreen } from '@/lib/fit-data'
+import { getFitScreen, sexOf } from '@/lib/fit-data'
+import { carbCycleFor } from '@/lib/planner-data'
+import { Scenario, CarbCycle } from './Planner'
 import { addDays, diffDays, longDate, shortDate } from '@/lib/time'
-import { fmtNum, GOALS, type GoalType } from '@/lib/calc'
+import { calorieFloor, fmtNum, GOALS, type GoalType } from '@/lib/calc'
 import { dayCap } from '@/lib/fit'
 import { Eyebrow, TopBar } from '@/components/ui'
 import { Calendar, Pulse, Scale, Spark, Trend } from '@/components/icons'
@@ -23,6 +25,7 @@ export default async function FitPage() {
   const s = await getFitScreen(user.id)
   if (!s) redirect('/kurulum')
   const { goal, today, checkin } = s
+  const [sex, cc] = await Promise.all([sexOf(user.id), carbCycleFor(user.id)])
   const type = goal.type as GoalType
   const totalDays = diffDays(goal.startDate, goal.endDate) + 1
   const dayIndex = Math.min(totalDays, diffDays(goal.startDate, today) + 1)
@@ -166,6 +169,9 @@ export default async function FitPage() {
           </p>
         )}
       </section>
+
+      {type !== 'recomp' ? <Scenario goal={type} currentKg={trendNow} targetKg={goal.targetWeightKg} tdee={checkin?.tdee.tdee ?? goal.tdee} tdeeMeasured={!!checkin?.tdee.tdee} dailyKcal={goal.dailyKcal} floor={calorieFloor(sex)} today={today} endDate={goal.endDate} /> : null}
+      <CarbCycle enabled={cc.enabled} weekdays={cc.weekdays} shiftG={cc.shiftG} base={{ kcal: goal.dailyKcal, protein: goal.proteinG, carb: goal.carbG, fat: goal.fatG }} />
 
       <section aria-label="Tartı" className="card p-5 flex flex-col gap-3">
         <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow></div>

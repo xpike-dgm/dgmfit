@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { getUser } from '@/lib/auth'
 import { addDays, dayString } from '@/lib/time'
 import { applyCheckin, cancelBank, closeDay, createBank, makeException, reopenDay } from '@/lib/fit-data'
+import { saveCarbCycle } from '@/lib/planner-data'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 const Day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -73,4 +74,15 @@ export async function applyCheckinAction(): Promise<R<{ kcal: number; delta: num
   if ('error' in r) return { ok: false, error: r.error ?? 'Uygulanamadı' }
   refresh()
   return { ok: true, kcal: r.kcal, delta: r.delta }
+}
+
+const CarbIn = z.object({ enabled: z.boolean(), weekdays: z.array(z.number().int().min(0).max(6)).max(7), shiftG: z.number().int().min(10).max(100) })
+export async function saveCarbCycleAction(input: z.input<typeof CarbIn>): Promise<R> {
+  const p = CarbIn.safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz ayar' }
+  const weekdays = [...new Set(p.data.weekdays)].sort()
+  if (p.data.enabled && (weekdays.length === 0 || weekdays.length === 7)) return { ok: false, error: '1–6 antrenman günü seç' }
+  await saveCarbCycle(await uid(), { ...p.data, weekdays })
+  revalidatePath('/fit'); revalidatePath('/'); revalidatePath('/yemek')
+  return { ok: true }
 }

@@ -1,4 +1,5 @@
 import 'server-only'
+import { carbCycleDay } from './scenario'
 import crypto from 'node:crypto'
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm'
 import { db, schema } from './db'
@@ -49,6 +50,14 @@ export async function dayTargets(userId: string, from: string, to: string, goal?
     db.select().from(schema.dailyTargets).where(and(eq(schema.dailyTargets.userId, userId), gte(schema.dailyTargets.day, from), lte(schema.dailyTargets.day, to))),
   ])
   const closedBy = new Map(closed.map((c) => [c.day, c]))
+  // Karb döngüsü (Faz 4c): açık günlerde antrenman/dinlenme gününe göre karbonhidrat kaydırılır (haftalık toplam korunur)
+  const [cc] = await db.select().from(schema.carbCycle).where(eq(schema.carbCycle.userId, userId)).limit(1)
+  const cyc = cc?.enabled && cc.weekdays.length ? cc : null
+  const baseFor = (d: string) => {
+    if (!cyc) return baseMacros
+    const { carbDelta: _, ...m } = carbCycleDay(baseMacros, cyc.weekdays.includes(new Date(d + 'T12:00:00Z').getUTCDay()), cyc.weekdays.length, cyc.shiftG)
+    return m
+  }
   const out: DayTarget[] = []
   for (let d = from; d <= to; d = addDays(d, 1)) {
     const list = adj.filter((a) => a.day === d)
@@ -59,8 +68,9 @@ export async function dayTargets(userId: string, from: string, to: string, goal?
       continue
     }
     const adjustment = list.reduce((a, x) => a + x.kcal, 0)
-    const m = scaleMacros(baseMacros, baseMacros.kcal + adjustment)
-    out.push({ day: d, base: baseMacros.kcal, adjustment, ...m, closed: false, reasons: list.map((a) => ({ kcal: a.kcal, reason: a.reason, sourceDay: a.sourceDay })) })
+    const bm = baseFor(d)
+    const m = scaleMacros(bm, bm.kcal + adjustment)
+    out.push({ day: d, base: bm.kcal, adjustment, ...m, closed: false, reasons: list.map((a) => ({ kcal: a.kcal, reason: a.reason, sourceDay: a.sourceDay })) })
   }
   return out
 }
