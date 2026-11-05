@@ -248,7 +248,7 @@ export const waterReminders = pgTable('water_reminders', {
 /** Besinler: USDA (CC0), DgFit tarifleri (hesaplanmış), Open Food Facts (ODbL), kullanıcı besinleri/tarifleri. Değerler 100 g başına. */
 export const foods = pgTable('foods', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  source: text('source').notNull(), // usda | dgfit | off | user | user-recipe
+  source: text('source').notNull(), // usda | dgfit | off | user | user-recipe | user-supplement
   sourceId: text('source_id').notNull(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }), // yalnızca kullanıcı besinleri
   key: text('key'),
@@ -269,6 +269,8 @@ export const foods = pgTable('foods', {
   search: text('search').notNull(),
   attribution: text('attribution'),
   imageUrl: text('image_url'),
+  /** source=user-supplement: porsiyon birimi, porsiyon gramı, ek içerikler (porsiyon başına), günlük hedef porsiyon */
+  supplement: jsonb('supplement').$type<{ unit: string; servingG: number | null; extras: { name: string; amount: number; unit: string }[]; daily: number | null }>(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -284,7 +286,7 @@ export const mealItems = pgTable('meal_items', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   day: date('day').notNull(),
-  meal: text('meal').notNull(), // breakfast | lunch | dinner | snack
+  meal: text('meal').notNull(), // breakfast | lunch | dinner | snack | supplement (takviye: öğün listelerinde görünmez, günlük toplama girer)
   loggedAt: timestamp('logged_at', { withTimezone: true }).notNull().defaultNow(),
   foodId: bigint('food_id', { mode: 'number' }).references(() => foods.id, { onDelete: 'set null' }),
   name: text('name').notNull(),

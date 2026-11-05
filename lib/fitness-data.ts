@@ -327,7 +327,7 @@ export async function liveSession(userId: string, programDayId: string | null, e
   })
   // antrenman öncesi yakıt: bugün hedefin %30'undan az yendiyse ve son 4 saatte öğün yoksa uyarı
   const eaten = await dayMacros(userId, today)
-  const [lastMeal] = await db.select({ at: schema.mealItems.loggedAt }).from(schema.mealItems).where(and(eq(schema.mealItems.userId, userId), eq(schema.mealItems.day, today), isNull(schema.mealItems.deletedAt))).orderBy(desc(schema.mealItems.loggedAt)).limit(1)
+  const [lastMeal] = await db.select({ at: schema.mealItems.loggedAt }).from(schema.mealItems).where(and(eq(schema.mealItems.userId, userId), eq(schema.mealItems.day, today), isNull(schema.mealItems.deletedAt), sql`not (${schema.mealItems.meal} = 'supplement' and ${schema.mealItems.kcal} < 50)`)).orderBy(desc(schema.mealItems.loggedAt)).limit(1)
   const target = goal?.dailyKcal ?? 2000
   const nowMin = minuteOfDay(new Date())
   const fuel = eaten.kcal < target * 0.3 && (!lastMeal || Date.now() - lastMeal.at.getTime() > 4 * 3600_000) && nowMin >= 6 * 60

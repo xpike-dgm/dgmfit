@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-05",
-  "phase": "5e",
+  "phase": "5f",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -217,7 +217,12 @@
     "app/beklemede/page.tsx",
     "app/(app)/yonetim/page.tsx",
     "app/(app)/yonetim/actions.ts",
-    "app/(app)/profil/geri-bildirim/page.tsx"
+    "app/(app)/profil/geri-bildirim/page.tsx",
+    "lib/supplements.ts",
+    "lib/supplement-data.ts",
+    "tests/supplements.test.ts",
+    "tests/e2e/supplement.e2e.cjs",
+    "app/(app)/yemek/takviyeler/SupplementCard.tsx"
   ],
   "tables": [
     "users",
@@ -393,7 +398,10 @@
     "/yonetim/geri-bildirim",
     "/yonetim/geri-bildirim/[id]",
     "/yonetim/davetler",
-    "/api/feedback/[id]/image"
+    "/api/feedback/[id]/image",
+    "/yemek/takviyeler",
+    "/yemek/takviyeler/yeni",
+    "/yemek/takviyeler/[id]"
   ],
   "events": [
     "profile.onboarded",
@@ -811,6 +819,14 @@
       "deleteUser",
       "notifyAdmins",
       "createInvite"
+    ],
+    "lib/supplements.ts": [
+      "suppToFood",
+      "perServing",
+      "sumExtras",
+      "limitWarnings",
+      "suppError",
+      "servingLabel"
     ]
   },
   "dependencies": {
@@ -842,6 +858,7 @@
     "0011_social.sql",
     "0012_social2.sql",
     "0013_design.sql",
-    "0014_whitelist.sql"
+    "0014_whitelist.sql",
+    "0015_supplements.sql"
   ]
 }

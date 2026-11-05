@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, type ReactNode } from 'react'
 import Sheet from '@/components/Sheet'
 import { Band, Bar, btn, hdrBtn } from '@/components/ui'
 import { Back, Dots, Next, Plus, Spark, Trash } from '@/components/icons'
@@ -20,6 +20,7 @@ export default function FoodDiary(p: {
   adjust: { base: number; kcal: number; closed: boolean } | null
   trained?: boolean
   micro: Record<string, number>; suggested: MealId; yesterdayHas: Record<MealId, number>
+  supplements?: ReactNode
 }) {
   const router = useRouter()
   const [pending, start] = useTransition()
@@ -108,6 +109,8 @@ export default function FoodDiary(p: {
           ))}
         </section>
       ))}
+
+      {p.supplements}
 
       {Object.keys(p.micro).length ? (
         <details className="card px-4 py-3">

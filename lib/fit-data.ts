@@ -89,7 +89,7 @@ export async function closeDay(userId: string, day: string): Promise<{ kind: str
   const t = await dayTarget(userId, day, goal)
   if (t.closed) return null
   const eaten = await dayMacros(userId, day)
-  const [{ n }] = await db.execute<{ n: number }>(sql`select count(*)::int as n from meal_items where user_id = ${userId} and day = ${day} and deleted_at is null`)
+  const [{ n }] = await db.execute<{ n: number }>(sql`select count(*)::int as n from meal_items where user_id = ${userId} and day = ${day} and deleted_at is null and meal <> 'supplement'`)
   const burned = await dayBurned(userId, day) // antrenman + kardiyo net kalorisi (Faz 3a)
   const c = closureDiff({ eaten: eaten.kcal, target: t.kcal, burned, items: Number(n) })
   const row = {
@@ -257,7 +257,7 @@ export async function getFitScreen(userId: string) {
     checkinData(userId),
   ])
   const eatenToday = await dayMacros(userId, today)
-  const [{ n }] = await db.execute<{ n: number }>(sql`select count(*)::int as n from meal_items where user_id = ${userId} and day = ${today} and deleted_at is null`)
+  const [{ n }] = await db.execute<{ n: number }>(sql`select count(*)::int as n from meal_items where user_id = ${userId} and day = ${today} and deleted_at is null and meal <> 'supplement'`)
   // istisna sayılabilecek son fazla gün: kaynağı o gün olan, bugün ve sonrasında duran negatif düzeltme varsa
   const pendingFrom = await db.execute<{ day: string; kcal: number }>(sql`
     select source_day::text as day, sum(kcal)::int as kcal from kcal_adjustments

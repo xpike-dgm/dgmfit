@@ -42,7 +42,7 @@ export async function searchFoods(userId: string, q: string, limit = 30): Promis
       + word_similarity(${nq}, f.search)
     ) as score
     from foods f
-    where f.deleted_at is null and (f.user_id is null or f.user_id = ${userId})
+    where f.deleted_at is null and (f.user_id is null or f.user_id = ${userId}) and f.source <> 'user-supplement'
       and (f.search like ${like} or word_similarity(${nq}, f.search) > (case when f.name_tr is null then 0.7 else 0.45 end))
     order by score desc, length(f.search) asc
     limit ${limit}`)
@@ -56,7 +56,7 @@ function camel(r: Record<string, unknown>): FoodRow {
     nameTr: (r.name_tr as string) ?? null, nameEn: (r.name_en as string) ?? null, brand: (r.brand as string) ?? null, barcode: (r.barcode as string) ?? null,
     category: (r.category as string) ?? null, per100: r.per100 as Record<string, number>, kcal: Number(r.kcal), protein: Number(r.protein), carb: Number(r.carb),
     fat: Number(r.fat), portions: r.portions as { label: string; g: number }[], approx: !!r.approx, aliases: (r.aliases as string[]) ?? [], recipe: r.recipe ?? null,
-    search: r.search as string, attribution: (r.attribution as string) ?? null, imageUrl: (r.image_url as string) ?? null,
+    search: r.search as string, attribution: (r.attribution as string) ?? null, imageUrl: (r.image_url as string) ?? null, supplement: (r.supplement as FoodRow['supplement']) ?? null,
     createdAt: r.created_at as Date, updatedAt: r.updated_at as Date, deletedAt: (r.deleted_at as Date) ?? null,
   }
 }
@@ -65,7 +65,7 @@ function camel(r: Record<string, unknown>): FoodRow {
 export async function recentFoods(userId: string, limit = 15): Promise<(FoodHit & { lastGrams: number; lastLabel: string | null; count: number })[]> {
   const rows = await db.execute<{ food_id: number; n: number; last: Date }>(sql`
     select food_id, count(*)::int as n, max(logged_at) as last from meal_items
-    where user_id = ${userId} and deleted_at is null and food_id is not null and logged_at > now() - interval '30 days'
+    where user_id = ${userId} and deleted_at is null and food_id is not null and meal <> 'supplement' and logged_at > now() - interval '30 days'
     group by food_id order by max(logged_at) desc limit ${limit}`)
   if (!rows.length) return []
   const ids = rows.map((r) => Number(r.food_id))
@@ -125,7 +125,7 @@ export async function savedMealsFor(userId: string) {
 }
 
 export async function userFoods(userId: string) {
-  const rows = await db.select().from(schema.foods).where(and(eq(schema.foods.userId, userId), isNull(schema.foods.deletedAt))).orderBy(desc(schema.foods.createdAt)).limit(50)
+  const rows = await db.select().from(schema.foods).where(and(eq(schema.foods.userId, userId), isNull(schema.foods.deletedAt), sql`${schema.foods.source} <> 'user-supplement'`)).orderBy(desc(schema.foods.createdAt)).limit(50)
   return rows.map(toHit)
 }
 
