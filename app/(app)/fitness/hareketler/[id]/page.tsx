@@ -6,14 +6,21 @@ import { getExercise, imageUrl } from '@/lib/fitness-data'
 import { exerciseProgress } from '@/lib/fitness-stats'
 import { LEVELS } from '@/lib/progress'
 import ExercisePhoto from './ExercisePhoto'
-import ExerciseVideos from './ExerciseVideos'
-import { AG_MUSCLE_TR, AG_SOURCE, FEATURE_LABEL, featureDescription, hasLicensedFile, licensedUrl } from '@/lib/licensed'
+import { AG_SOURCE, FEATURE_LABEL, featureDescription, hasLicensedFile, licensedUrl } from '@/lib/licensed'
+import { anatomyTexts, anatomyViews, isFavorite } from '@/lib/anatomy-data'
+import { LEVEL_COLOR, activationLevel, cnsBucket, viewKey } from '@/lib/anatomy'
+import { getToday } from '@/lib/today'
+import BodyFigure from '@/components/BodyFigure'
+import LicensedHero from './LicensedHero'
+import FeatureTiles from './FeatureTiles'
 import { CATEGORY, EQUIPMENT, KIND, LEVEL, MUSCLES } from '@/lib/exercise-labels'
 import { e1rm, PR_LABEL, type PrType } from '@/lib/training'
 import { shortDate } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { btn, Eyebrow, TopBar } from '@/components/ui'
-import { Dumbbell } from '@/components/icons'
+import { Anchor, Balance, Bolt, Dumbbell, Levels, Single, Spark, Stretch, Target } from '@/components/icons'
+
+const FEATURE_ICON: Record<string, React.ReactNode> = { unilateral: <Single size={28} />, overload: <Target size={28} />, longMuscle: <Stretch size={28} />, balance: <Balance size={28} />, techniquel: <Spark size={28} />, power: <Bolt size={28} />, stability: <Anchor size={28} /> }
 
 export default async function ExercisePage(props: { params: Promise<{ id: string }> }) {
   const u = await requireUser()
@@ -23,19 +30,59 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
   if (!x || !pr) notFound()
   const L = x.licensed
   const vids = L ? { right: hasLicensedFile('videos', L.video.right) ? licensedUrl('videos', L.video.right) : null, wrong: hasLicensedFile('videos', L.video.wrong) ? licensedUrl('videos', L.video.wrong) : null } : null
-  const scores = L ? Object.entries(L.muscles).sort((a, b) => b[1] - a[1]) : []
   const desc = L ? (L.desc.tr || L.desc.en) : ''
   const recs = x.records ? (Object.entries(x.records) as [PrType, number][]).filter(([, v]) => v > 0) : []
-  return (
-    <div className="flex flex-col gap-3 px-4">
+  const views = L ? anatomyViews() : null
+  const gender = L ? ((await getToday(u.id))?.profile.sex === 'female' ? 'female' : 'male') : 'male'
+  const fills = L ? Object.fromEntries(Object.entries(L.muscles).filter(([, r]) => r >= 2).map(([k, r]) => [k, LEVEL_COLOR[activationLevel(r)]])) : {}
+  const levels = L ? [...new Set(Object.values(L.muscles).filter((r) => r >= 2).map(activationLevel))].sort((a, b) => b - a) : []
+  const texts = L ? anatomyTexts() : null
+  const fav = L ? await isFavorite(u.id, x.id) : false
+  const lvlN = x.level === 'expert' ? 3 : x.level === 'intermediate' ? 2 : 1
+  const tiles = L ? [
+    ...(x.level ? [{ key: 'level', label: LEVEL[x.level] ?? x.level, icon: <Levels size={30} level={lvlN} />, desc: null }] : []),
+    { key: 'eq', label: EQUIPMENT[x.equipment] ?? x.equipment, icon: <Dumbbell size={30} />, desc: null },
+    ...L.features.map((f) => ({ key: f, label: FEATURE_LABEL[f] ?? f, icon: FEATURE_ICON[f] ?? <Spark size={28} />, desc: featureDescription(f) })),
+  ] : []
+  const top = L ? (
+    <>
+      <LicensedHero id={x.id} name={x.nameTr} trName={x.aliases?.[0] && x.aliases[0] !== x.nameTr ? x.aliases[0] : null} right={vids?.right ?? null} wrong={vids?.wrong ?? null}
+        fav={fav} defaults={L.defaults ?? null} rating={L.rating ?? null} />
+      <section className="card p-4 flex flex-col gap-3">
+        <FeatureTiles tiles={tiles} />
+        <Link href={`/fitness/antrenman?hareket=${x.id}`} className={btn.primary}><Dumbbell size={20} />Bu hareketle antrenman başlat</Link>
+      </section>
+      <section className="card p-5 flex flex-col gap-4" aria-label="Kas etkisi" data-testid="ex-licensed">
+        {L.cns !== null ? (
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between gap-2"><h2 className="text-[17px] font-extrabold">{texts?.cnsTitle}</h2><span className="text-[12.5px] font-bold num text-mute" data-testid="ex-cns">MSS yükü {fmtNum(L.cns)}/10</span></div>
+            <div className="h-4 rounded-md border border-line-2 overflow-hidden"><div className="h-full bg-[#E53935]" style={{ width: `${L.cns * 10}%` }} /></div>
+            <p className="text-[14px] text-ink-2 leading-relaxed">{texts?.cns[cnsBucket(L.cns) - 1]}</p>
+          </div>
+        ) : null}
+        {views ? (
+          <div className="rounded-2xl bg-black p-3 flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-2">
+              {(['front', 'back'] as const).map((sd) => { const v = views[viewKey(gender, sd)]; return v ? <BodyFigure key={sd} view={v} fills={fills} className="w-full h-auto" label={`${x.nameTr} ${sd === 'front' ? 'ön' : 'arka'} çalışan kaslar`} /> : null })}
+            </div>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[12.5px] text-white/85" data-testid="ex-legend">
+              {levels.map((l) => <span key={l} className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full" style={{ background: LEVEL_COLOR[l] }} />{texts?.legend[l - 1]}</span>)}
+            </div>
+          </div>
+        ) : null}
+        {desc ? <p className="text-[14px] text-ink-2 leading-relaxed">{desc}</p> : null}
+        <a href={AG_SOURCE.url} target="_blank" rel="noopener noreferrer" className="text-[11.5px] text-faint self-start" data-testid="ag-source">Kaynak: {AG_SOURCE.label}</a>
+      </section>
+    </>
+  ) : (
+    <>
       <TopBar back="/fitness/hareketler" title="Hareket" />
       <section className="card p-5 flex flex-col gap-3">
         <h1 className="text-[22px] font-extrabold leading-tight">{x.nameTr}</h1>
         {x.source !== 'user' && x.aliases?.[0] && x.aliases[0] !== x.nameTr ? <span className="text-[13px] text-mute -mt-2" data-testid="ex-tr-name">Türkçe: {x.aliases[0]}</span> : null}
         {x.photoId ? <img src={`/api/media/${x.photoId}`} alt={x.nameTr} className="w-full aspect-[4/3] object-cover rounded-2xl bg-surface-2" /> : null}
         {x.source === 'user' ? <ExercisePhoto exerciseId={x.id} has={!!x.photoId} /> : null}
-        {vids && (vids.right || vids.wrong) ? <ExerciseVideos right={vids.right} wrong={vids.wrong} name={x.nameTr} /> : null}
-        {x.images.length && !(vids && (vids.right || vids.wrong)) ? (
+        {x.images.length ? (
           <div className="grid grid-cols-2 gap-2">
             {x.images.slice(0, 2).map((im, i) => <ExImg key={im} src={imageUrl(im)} alt={`${x.nameTr} ${i === 0 ? 'başlangıç' : 'bitiş'} pozisyonu`} size={300} className="w-full aspect-square rounded-2xl" />)}
           </div>
@@ -46,38 +93,11 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
         <p className="text-[14px]"><span className="text-mute">Birincil:</span> <b>{x.primary.map((m) => MUSCLES[m] ?? m).join(', ') || '—'}</b>{x.secondary.length ? <><br /><span className="text-mute">İkincil:</span> {x.secondary.map((m) => MUSCLES[m] ?? m).join(', ')}</> : null}</p>
         <Link href={`/fitness/antrenman?hareket=${x.id}`} className={btn.primary}><Dumbbell size={20} />Bu hareketle antrenman başlat</Link>
       </section>
-      {L ? (
-        <section className="card p-5 flex flex-col gap-3" aria-label="Kas etkisi" data-testid="ex-licensed">
-          <div className="flex items-center justify-between gap-2">
-            <Eyebrow>Kas etkisi</Eyebrow>
-            {L.cns !== null ? <span className="text-[12.5px] font-bold px-2.5 py-1 rounded-full bg-surface-2 num" data-testid="ex-cns" title="Merkezi sinir sistemi (MSS) yorgunluk puanı">MSS yükü {fmtNum(L.cns)}/10</span> : null}
-          </div>
-          <div className="flex flex-col gap-2">
-            {scores.map(([k, r]) => (
-              <div key={k} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_28px] items-center gap-2 text-[13px]">
-                <span className="truncate font-semibold">{AG_MUSCLE_TR[k] ?? k}</span>
-                <span className="h-2.5 rounded-full bg-surface-3 overflow-hidden"><span className="block h-full rounded-full bg-acc" style={{ width: `${r * 10}%`, opacity: 0.45 + r / 20 }} /></span>
-                <b className="num text-right">{fmtNum(r)}</b>
-              </div>
-            ))}
-          </div>
-          {L.features.length ? (
-            <div className="flex flex-col gap-2 border-t border-line pt-3">
-              {L.features.map((f) => {
-                const d = featureDescription(f)
-                return (
-                  <details key={f} className="group">
-                    <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-acc/15 text-acc text-[12.5px] font-bold">{FEATURE_LABEL[f] ?? f}{d ? <span className="opacity-70 group-open:rotate-90 transition">›</span> : null}</summary>
-                    {d ? <p className="text-[13px] text-ink-2 leading-relaxed mt-1.5">{d}</p> : null}
-                  </details>
-                )
-              })}
-            </div>
-          ) : null}
-          {desc ? <p className="text-[14px] text-ink-2 leading-relaxed border-t border-line pt-3">{desc}</p> : null}
-          <a href={AG_SOURCE.url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-mute self-start" data-testid="ag-source">Kaynak: <b className="text-ink-2">{AG_SOURCE.label}</b> ↗</a>
-        </section>
-      ) : null}
+    </>
+  )
+  return (
+    <div className="flex flex-col gap-3 px-4">
+      {top}
       {x.steps.length ? (
         <section className="card p-5 flex flex-col gap-2" aria-label="Teknik">
           <Eyebrow>Teknik</Eyebrow>

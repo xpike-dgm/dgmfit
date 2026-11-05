@@ -62,3 +62,12 @@ export const Image = (p: P) => <svg {...base(p)}><rect x="3" y="4" width="18" he
 export const Search = (p: P) => <svg {...base(p)}><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
 export const Download = (p: P) => <svg {...base(p)}><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
 export const Share = (p: P) => <svg {...base(p)}><path d="M12 15V4M8 8l4-4 4 4M6 12v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7" /></svg>
+export const Heart = (p: P & { filled?: boolean }) => { const { filled, ...r } = p; return <svg {...base(r)} fill={filled ? 'currentColor' : 'none'}><path d="M12 20s-7.5-4.6-9.2-9.4C1.6 7.2 3.8 4 7.2 4c2 0 3.5 1.1 4.8 2.8C13.3 5.1 14.8 4 16.8 4c3.4 0 5.6 3.2 4.4 6.6C19.5 15.4 12 20 12 20z" /></svg> }
+export const Rotate = (p: P) => <svg {...base(p)}><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9M20 4v5h-5M20 12a8 8 0 0 1-13.7 5.6L4 15M4 20v-5h5" /></svg>
+export const MaleSign = (p: P) => <svg {...base(p)}><circle cx="10" cy="14" r="6" /><path d="M14.5 9.5L21 3M15 3h6v6" /></svg>
+export const FemaleSign = (p: P) => <svg {...base(p)}><circle cx="12" cy="9" r="6" /><path d="M12 15v7M9 19h6" /></svg>
+export const Levels = (p: P & { level?: number }) => { const { level = 2, ...r } = p; return <svg {...base(r)}><rect x="4" y="13" width="4" height="7" rx="1" fill="currentColor" /><rect x="10" y="9" width="4" height="11" rx="1" fill={level >= 2 ? 'currentColor' : 'none'} opacity={level >= 2 ? 1 : 0.35} /><rect x="16" y="5" width="4" height="15" rx="1" fill={level >= 3 ? 'currentColor' : 'none'} opacity={level >= 3 ? 1 : 0.35} /></svg> }
+export const Anchor = (p: P) => <svg {...base(p)}><circle cx="12" cy="5" r="2" /><path d="M12 7v14M8 11h8M4 14a8 8 0 0 0 16 0" /></svg>
+export const Stretch = (p: P) => <svg {...base(p)}><path d="M5 19L19 5M14 5h5v5M10 19H5v-5" /></svg>
+export const Balance = (p: P) => <svg {...base(p)}><circle cx="7" cy="8" r="2.2" /><circle cx="17" cy="8" r="2.2" /><path d="M3 13h18M12 13l-3.5 7h7z" /></svg>
+export const Single = (p: P) => <svg {...base(p)}><path d="M12 3v18M8 7h8M8 17h8" /><circle cx="12" cy="12" r="2" /></svg>

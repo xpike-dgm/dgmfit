@@ -1,0 +1,74 @@
+// Faz 5h-2: kas haritası (erkek/kadın, ön/arka) → kasa dokun → tam ekran video akışı → kaydet + "Antrenman Seç" → detay sayfası
+// (video, set/tekrar/RiR, kutular, MSS, renkli harita + açıklama) → kaydedilenler. Lisanslı paket yoksa atlanır.
+const { chromium, devices } = require('playwright')
+const BASE = process.env.BASE || 'http://localhost:3100'
+const INVITE = process.env.DGFIT_E2E_INVITE ? '?davet=' + encodeURIComponent(process.env.DGFIT_E2E_INVITE) : ''
+const OUT = process.env.OUT || require('os').tmpdir()
+const fail = (m) => { throw new Error(m) }
+;(async () => {
+  const b = await chromium.launch()
+  const ctx = await b.newContext({ ...devices['Pixel 7'], locale: 'tr-TR', timezoneId: 'Europe/Istanbul' })
+  const p = await ctx.newPage(); p.setDefaultNavigationTimeout(60000)
+  const errors = []
+  p.on('pageerror', (e) => errors.push('pageerror: ' + e.message))
+  p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|play\(\)/.test(m.text())) errors.push('console: ' + m.text()) })
+  const u = 'test_an' + Date.now().toString(36)
+  await p.goto(BASE + '/kayit' + INVITE)
+  await p.fill('#username', u); await p.fill('#email', u + '@gmail.com'); await p.fill('#password', 'Deneme1234'); await p.fill('#confirm', 'Deneme1234'); await p.check('input[name=terms]')
+  await p.waitForTimeout(500); await p.getByRole('button', { name: 'Hesabı oluştur' }).click(); await p.waitForURL('**/kurulum')
+  await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
+  await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'male', birthDate: '1990-03-03', heightCm: 180, weightKg: 80, activity: 'moderate', goal: 'lose', targetWeightKg: 76, tempo: 'balanced', customDays: 120, experience: 'mid', trainingDays: 4, dietPref: null, allergies: [], wakeTime: '07:00', sleepTime: '23:00' })))
+  await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
+  const shot = (n) => p.screenshot({ path: `${OUT}/anatomy-${n}.png` })
+
+  await p.goto(BASE + '/fitness/anatomi')
+  if (!(await p.getByTestId('anatomy').count())) { console.log('ANATOMİ E2E ATLANDI (paket yok)'); await b.close(); return }
+  // boş program (Antrenman Seç için)
+  await p.goto(BASE + '/fitness/programlar/bos'); await p.fill('#empty-name', 'Göğüs günü'); await p.getByRole('button', { name: 'Oluştur', exact: true }).click(); await p.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/)
+  const programUrl = p.url()
+
+  // 1) Fitness → kas haritası; cinsiyet ve yüz değişir
+  await p.goto(BASE + '/fitness'); await p.getByTestId('anatomy-link').click(); await p.waitForURL('**/fitness/anatomi')
+  const view = () => p.getByTestId('body-figure').getAttribute('data-view')
+  if ((await view()) !== 'male_front') fail('erkek ön görünüm bekleniyordu: ' + (await view()))
+  await p.locator('[data-testid=body-figure] image').evaluate((i) => new Promise((r) => { const im = new Image(); im.onload = () => r(true); im.onerror = () => r(false); im.src = i.getAttribute('href') })).then((ok) => ok || fail('anatomi görseli yüklenmedi'))
+  await shot('01-harita')
+  await p.getByTestId('gender-toggle').click(); if ((await view()) !== 'female_front') fail('kadın görünüme geçmedi')
+  await p.getByTestId('side-toggle').click(); if ((await view()) !== 'female_back') fail('arka görünüme geçmedi')
+  await p.getByTestId('gender-toggle').click(); await p.getByTestId('side-toggle').click()
+  // 2) Göğse dokun → akış
+  await p.locator('[data-muscle=pectoralisSternal]').first().click({ force: true })
+  await p.waitForURL('**/fitness/anatomi/pectoralisSternal**')
+  await p.getByTestId('feed-item').first().waitFor()
+  const n = await p.getByTestId('feed-item').count(); if (n < 3) fail('göğüs akışında az hareket: ' + n)
+  const playing = (i) => p.getByTestId('feed-item').nth(i).locator('video').evaluate((v) => new Promise((r) => { const ok = () => r(!v.paused && v.readyState >= 2); if (!v.paused && v.readyState >= 2) return ok(); v.addEventListener('playing', ok, { once: true }); setTimeout(() => r(!v.paused), 8000) }))
+  if (!(await playing(0))) fail('ilk video oynamıyor')
+  await shot('02-akis')
+  const first = await p.getByTestId('feed-item').first().getAttribute('data-name')
+  await p.evaluate(() => { const s = document.querySelector('[data-testid=exercise-feed] .snap-y'); s.scrollBy(0, s.clientHeight) }); await p.waitForTimeout(1200)
+  if (!(await playing(1))) fail('aşağı kaydırınca sıradaki video oynamadı')
+  if (!(await p.getByTestId('feed-item').first().locator('video').evaluate((v) => v.paused))) fail('önceki video durmadı')
+  // 3) Kaydet → Antrenman Seç → güne ekle
+  const second = await p.getByTestId('feed-item').nth(1).getAttribute('data-name')
+  await p.getByTestId('feed-item').nth(1).getByTestId('fav').click()
+  await p.getByRole('status').filter({ hasText: 'kaydedilenlere eklendi' }).waitFor()
+  await p.getByRole('button', { name: 'Antrenman Seç' }).click(); await p.getByTestId('day-picker-sheet').waitFor()
+  await p.getByTestId('day-picker-sheet').getByRole('button', { name: 'Gün 1' }).click()
+  await p.getByTestId('day-picker-sheet').getByRole('status').filter({ hasText: 'eklendi' }).waitFor()
+  await p.goto(programUrl); if (!(await p.locator('body').innerText()).includes(second)) fail('hareket program gününe eklenmedi: ' + second)
+  // 4) Detay sayfası
+  await p.goto(BASE + '/fitness/anatomi/pectoralisSternal'); await p.getByTestId('feed-item').first().getByTestId('feed-detail').click()
+  await p.waitForURL(/\/fitness\/hareketler\/\d+$/)
+  for (const t of ['ex-videos', 'hero-defaults', 'ex-tiles', 'ex-legend', 'ex-cns', 'ag-source']) await p.getByTestId(t).first().waitFor({ timeout: 10000 }).catch(() => fail('detayda yok: ' + t))
+  if ((await p.getByTestId('body-figure').count()) !== 2) fail('detayda ön ve arka figür olmalı')
+  await shot('03-detay')
+  await p.screenshot({ path: `${OUT}/anatomy-03-detay-tam.png`, fullPage: true })
+  // 5) Kaydedilenler; kalpten çıkarınca boşalır
+  await p.goto(BASE + '/fitness/kaydedilenler'); await p.getByTestId('feed-item').filter({ has: p.locator(`h2:text-is("${second}")`) }).waitFor()
+  await p.getByTestId('feed-item').first().getByTestId('fav').click(); await p.waitForTimeout(800)
+  await p.reload(); await p.getByText('Henüz kaydettiğin hareket yok').waitFor()
+  console.log('ANATOMİ E2E OK user=', u, 'ilk:', first)
+  console.log(errors.length ? 'KONSOL HATALARI:\n' + errors.join('\n') : 'no console errors')
+  await b.close()
+  if (errors.length) process.exit(1)
+})().catch((e) => { console.error('ANATOMİ E2E FAIL', e.message); process.exit(1) })

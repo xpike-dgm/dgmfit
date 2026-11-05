@@ -48,6 +48,14 @@ export const videoFile = (url) => {
   return m ? m[1] : null
 }
 
+/** Kaynaktaki öneri değerleri: set sayısı kaynakta yok (3), tekrar 5–20 dışında 10, RiR 0–4. Süreli harekette tekrar yerine 30 sn. */
+export function defaultsOf(x, kind) {
+  const p = x.parameters ?? {}
+  const reps = Number.isInteger(p.reps) && p.reps >= 5 && p.reps <= 20 ? p.reps : 10
+  const rir = typeof p.repsReservt === 'number' && p.repsReservt >= 0 && p.repsReservt <= 4 ? p.repsReservt : 1
+  return kind === 'time' ? { sets: 3, reps: null, seconds: 30, rir } : { sets: 3, reps, seconds: null, rir }
+}
+
 /** Ağırsağlam hareketi → DgFit satırı + lisanslı ek veri. */
 export function agToExercise(x) {
   const name = String(x.parameters?.name ?? x.document_id ?? '').trim()
@@ -74,6 +82,8 @@ export function agToExercise(x) {
       features: Array.isArray(x.specialFeature) ? x.specialFeature : [],
       video: { right: videoFile(x.rightVideo), wrong: videoFile(x.wrongVideo) },
       desc: { tr: cleanDesc(x.descriptions?.tr), en: cleanDesc(x.descriptions?.en) },
+      rating: x.userRatingSummary && x.userRatingSummary.count > 0 ? { avg: Math.round(Number(x.userRatingSummary.average) * 10) / 10, count: Number(x.userRatingSummary.count) } : null,
+      defaults: defaultsOf(x, kind),
     },
   }
 }

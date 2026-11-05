@@ -5,7 +5,7 @@ import { addDays, shortDate } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { PR_LABEL, CARDIO, type PrType } from '@/lib/training'
 import { Band, btn, Eyebrow, hdrIcon } from '@/components/ui'
-import { Chart, Clock, Dumbbell, Flame, Gear, Next, Pulse, Scale, Spark } from '@/components/icons'
+import { Chart, Clock, Dumbbell, Flame, Gear, Heart, Next, Pulse, Scale, Spark } from '@/components/icons'
 import PendingSync from './PendingSync'
 
 export const metadata = { title: 'Fitness · DgFit' }
@@ -62,6 +62,17 @@ export default async function FitnessPage() {
           <Link href="/fitness/programlar" className={btn.primary}>Program oluştur</Link>
         </section>
       )}
+
+      <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-3">
+        <Link href="/fitness/anatomi" className="rounded-[24px] p-4 flex flex-col gap-1.5 bg-black text-white min-h-[96px] relative overflow-hidden" data-testid="anatomy-link">
+          <span className="text-[16px] font-extrabold">Kas haritası</span>
+          <span className="text-[12.5px] text-white/70 leading-snug">Kasa dokun, onu çalıştıran hareketleri videolu gör</span>
+        </Link>
+        <Link href="/fitness/kaydedilenler" className="card p-4 flex flex-col gap-1.5 min-h-[96px]" data-testid="favorites-link">
+          <Heart size={20} filled className="text-[#E53935]" />
+          <span className="font-bold text-[14px]">Kaydedilenler</span>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Link href="/fitness/antrenman" className="card p-4 flex flex-col gap-2 min-h-[104px]">

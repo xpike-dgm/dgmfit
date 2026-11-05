@@ -72,6 +72,8 @@ Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 
 ## Veri modeli
 
+Faz 5h-2 (kas haritası): `/fitness/anatomi` (erkek/kadın × ön/arka, lisanslı görsel + bölgeler tek SVG; Catmull-Rom ile yumuşatılmış yollar, `lib/anatomy.ts`), `/fitness/anatomi/[kas]` ve `/fitness/kaydedilenler` tam ekran dikey video akışı (`ExerciseFeed`, IntersectionObserver ile yalnızca görünen video oynar), `exercise_favorites` (0017), hareket detayı lisanslı hareketlerde `LicensedHero` + `FeatureTiles` + MSS + renkli ön/arka harita (6 kademe: puan → `LEVEL_COLOR`, etiketler paket metninden). Kas puanı ≥ 4 olan hareketler kasın akışına girer.
+
 Faz 5h (lisanslı içerik): `exercises.licensed` jsonb (Ağırsağlam kas puanları 23 anahtar → 1–10, MSS puanı, etiketler, doğru/yanlış video dosyası, açıklama; 0016). Ad eşleşen kütüphane hareketine yazılır; eşleşmeyenler `source='agirsaglam'`, `key='ag-<id>'`, `curated=true`. Kütüphane görünürlüğü: `user_id is null or user_id = ben`. Eşleme `scripts/licensed-map.mjs` (migrate ve test ortak), okuma `lib/licensed.ts`, dosya ucu `app/api/lisansli/[kind]/[file]` (oturum, Range).
 
 Hareket adları (2026-11-05): `exercises.name_tr` = görünen ad (kütüphanede İngilizce kaynak adı), Türkçe ad `aliases[0]`; arama `search` iki dili de içerir.

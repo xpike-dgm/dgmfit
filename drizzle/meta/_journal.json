@@ -120,6 +120,13 @@
       "when": 1793916725867,
       "tag": "0016_licensed",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793918983009,
+      "tag": "0017_favorites",
+      "breakpoints": true
     }
   ]
 }

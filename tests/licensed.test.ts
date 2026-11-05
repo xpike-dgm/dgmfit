@@ -7,6 +7,7 @@ const squat = {
   id: 12, parameters: { name: 'Barbell Squat' }, equipment: 'barbell', level: 'experienced', cnsFatingScore: 8, specialFeature: ['overload'],
   musclesTrains: [{ muscleGroup: 'quads', rating: 9 }, { muscleGroup: 'glutes', rating: 8 }, { muscleGroup: 'adductors', rating: 6 }, { muscleGroup: 'spinalErectors', rating: 5 }, { muscleGroup: 'hipFlexors', rating: 3 }],
   rightVideo: 'https://x.example/AppVideos/BarbellSquatRight.mp4', wrongVideo: 'https://x.example/AppVideos/BarbellSquatWrong.mp4',
+  userRatingSummary: { count: 78, average: 4.5256 },
   descriptions: { tr: 'test test test', en: 'A key lower body strength exercise performed with a barbell on the back.' },
 }
 
@@ -18,6 +19,9 @@ test('hareket eşlemesi: kas puanı → birincil/ikincil, ekipman, seviye, tür,
   assert.equal(e.licensed.muscles.hipFlexors, 3) // karşılığı yok ama puan korunur
   assert.deepEqual(e.licensed.video, { right: 'BarbellSquatRight.mp4', wrong: 'BarbellSquatWrong.mp4' })
   assert.equal(e.licensed.desc.tr, ''); assert.match(e.licensed.desc.en, /lower body/)
+  assert.deepEqual(e.licensed.rating, { avg: 4.5, count: 78 })
+  assert.deepEqual(e.licensed.defaults, { sets: 3, reps: 10, seconds: null, rir: 1 })
+  assert.deepEqual(agToExercise({ ...squat, parameters: { name: 'Squat', reps: 8, repsReservt: 2 } }).licensed.defaults, { sets: 3, reps: 8, seconds: null, rir: 2 })
   assert.equal(agToExercise({ ...squat, parameters: { name: 'Plank Hold' }, equipment: 'bodyWeight' }).kind, 'time')
   assert.equal(agToExercise({ ...squat, parameters: { name: 'Pull Up' }, equipment: 'pullUpBar' }).kind, 'bodyweight')
 })

@@ -353,7 +353,7 @@ export const exercises = pgTable('exercises', {
   curated: boolean('curated').notNull().default(false),
   photoId: uuid('photo_id'), // özel hareket fotoğrafı (media_blobs)
   /** Lisanslı içerik (Ağırsağlam, DgFit'e özel izin): kas puanları (Ağırsağlam kas anahtarı → 1–10), MSS yorgunluk puanı, etiketler, doğru/yanlış video dosyası, açıklama */
-  licensed: jsonb('licensed').$type<{ src: 'agirsaglam'; id: number; muscles: Record<string, number>; cns: number | null; features: string[]; video: { right: string | null; wrong: string | null }; desc: { tr: string; en: string } }>(),
+  licensed: jsonb('licensed').$type<{ src: 'agirsaglam'; id: number; muscles: Record<string, number>; cns: number | null; features: string[]; video: { right: string | null; wrong: string | null }; desc: { tr: string; en: string }; rating?: { avg: number; count: number } | null; defaults?: { sets: number; reps: number | null; seconds: number | null; rir: number } }>(),
   search: text('search').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -851,3 +851,11 @@ export const stories = pgTable('stories', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [index('stories_user_idx').on(t.userId, t.createdAt)])
+
+/** Kaydedilen hareketler (kalp). */
+export const exerciseFavorites = pgTable('exercise_favorites', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  exerciseId: bigint('exercise_id', { mode: 'number' }).notNull().references(() => exercises.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.userId, t.exerciseId] })])
+
