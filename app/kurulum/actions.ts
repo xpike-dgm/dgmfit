@@ -41,7 +41,7 @@ export async function completeOnboarding(raw: OnboardingInput): Promise<{ error?
   if (d.goal === 'lose' && target < minHealthy - 0.05) return { error: 'Hedef kilo sağlıklı aralığın altında. Lütfen daha yüksek bir hedef seç.' }
 
   const plan = computePlan({ sex: d.sex, age, heightCm: d.heightCm, weightKg: d.weightKg, activity: d.activity, goal: d.goal, targetWeightKg: target, days: d.days })
-  if (!plan.safe && d.goal !== 'recomp') return { error: plan.warnings[0] ?? 'Plan güvenli değil.' }
+  if (!plan.allowed && d.goal !== 'recomp') return { error: plan.warnings[0] ?? 'Bu tempo planlanamaz.' }
 
   const today = dayString()
   const now = new Date()

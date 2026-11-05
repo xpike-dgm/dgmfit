@@ -103,7 +103,7 @@ export default function Wizard({ username }: { username: string }) {
       case 5: return !!s.activity
       case 6: return !!s.goal
       case 7: return !targetErr
-      case 8: return !!plan && plan.safe
+      case 8: return !!plan && plan.allowed
       default: return true
     }
   })()
@@ -266,20 +266,25 @@ export default function Wizard({ username }: { username: string }) {
               </span>
             </Choice>
             {plan ? (
-              <div className={`mt-5 rounded-[22px] p-4 flex flex-col gap-2 ${plan.safe ? 'bg-surface' : 'bg-[#2A1714] border border-[#5A2A22]'}`}>
+              <div className={`mt-5 rounded-[22px] p-4 flex flex-col gap-2 ${!plan.allowed ? 'bg-danger-bg border border-danger-line' : plan.safe ? 'bg-surface' : 'bg-warn-bg border border-warn-line'}`}>
                 <div className="flex justify-between text-sm"><span className="text-mute">Süre</span><b className="num">{fmtNum(days)} gün · {endDateLabel(days)}</b></div>
                 <div className="flex justify-between text-sm"><span className="text-mute">Haftalık değişim</span><b className="num">{fmtNum(plan.weeklyKg, 2)} kg</b></div>
                 <div className="flex justify-between text-sm"><span className="text-mute">Günlük kalori</span><b className="num">{fmtNum(plan.dailyKcal)} kcal</b></div>
-                {!plan.safe ? (
-                  <>
-                    <p className="text-sm text-[#FFC9BF] leading-relaxed mt-1">{plan.warnings[0]}</p>
-                    {plan.safeDays > 0 ? (
-                      <button type="button" className={btn.secondary + ' self-start mt-1'} onClick={() => set({ tempo: 'custom', customDays: plan.safeDays })}>
-                        {fmtNum(plan.safeDays)} günü kullan
-                      </button>
-                    ) : null}
-                  </>
-                ) : null}
+                {plan.warnings.map((w) => (
+                  <p key={w} role={plan.allowed ? 'note' : 'alert'} className={`text-sm leading-relaxed mt-1 ${plan.allowed ? 'text-warn' : 'text-danger'}`}>{w}</p>
+                ))}
+                <div className="flex flex-wrap gap-2">
+                  {!plan.allowed && plan.minDays > 0 ? (
+                    <button type="button" className={btn.secondary + ' mt-1'} onClick={() => set({ tempo: 'custom', customDays: Math.max(7, plan.minDays) })}>
+                      {fmtNum(Math.max(7, plan.minDays))} günü kullan
+                    </button>
+                  ) : null}
+                  {!plan.safe && plan.safeDays > 0 && plan.safeDays !== days ? (
+                    <button type="button" className={btn.secondary + ' mt-1'} onClick={() => set({ tempo: 'custom', customDays: Math.min(1100, plan.safeDays) })}>
+                      Önerilen {fmtNum(plan.safeDays)} gün
+                    </button>
+                  ) : null}
+                </div>
               </div>
             ) : null}
           </Q>

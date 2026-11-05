@@ -25,6 +25,8 @@ test('90 günde 78,4 → 72 kg güvenli plan', () => {
 test('çok hızlı hedef güvensiz ve alternatif süre önerir', () => {
   const p = computePlan({ sex: 'female', age: 30, heightCm: 165, weightKg: 70, activity: 'light', goal: 'lose', targetWeightKg: 60, days: 30 })
   assert.equal(p.safe, false)
+  assert.equal(p.allowed, false) // 10 kg / 30 gün = 2,3 kg/hf > 1,5
+  assert.equal(p.minDays, 47)
   assert.ok(p.safeDays > 30)
   assert.ok(p.dailyKcal >= 1200)
   // önerilen süreyle plan güvenli olmalı
@@ -47,4 +49,33 @@ test('su ve tempo', () => {
   assert.equal(waterTarget(78.4), 2600)
   assert.equal(daysForTempo(78.4, 72, 0.5), 90)
   assert.deepEqual(healthyWeightRange(177), [58, 78])
+})
+
+test('kullanıcının seçtiği güvensiz tempo kabul edilir, uyarılır; 1,5 kg/hf üstü kabul edilmez', () => {
+  // ekran görüntüsündeki durum: kilo alma, haftada 1,2 kg
+  const g = computePlan({ sex: 'male', age: 25, heightCm: 178, weightKg: 70, activity: 'moderate', goal: 'gain', targetWeightKg: 82, days: 70 })
+  assert.equal(g.safe, false)
+  assert.equal(g.allowed, true)
+  assert.equal(g.weeklyKg, 1.2)
+  assert.ok(g.warnings[0].includes('güvenli değil'))
+  assert.ok(g.safeDays > 70)
+  const h = computePlan({ sex: 'male', age: 25, heightCm: 178, weightKg: 70, activity: 'moderate', goal: 'gain', targetWeightKg: 82, days: 50 })
+  assert.equal(h.allowed, false) // 12 kg / 50 gün = 1,68 kg/hf
+  assert.equal(h.minDays, 56)
+  assert.equal(computePlan({ sex: 'male', age: 25, heightCm: 178, weightKg: 70, activity: 'moderate', goal: 'gain', targetWeightKg: 82, days: h.minDays }).allowed, true)
+})
+
+test('kalori tabanı korunur, gerçek tempo ve tahmini süre buna göre', () => {
+  // 1,45 kg/hf açık istenir ama taban 1.200 kcal → gerçek açık daha küçük
+  const p = computePlan({ sex: 'female', age: 30, heightCm: 160, weightKg: 62, activity: 'sedentary', goal: 'lose', targetWeightKg: 56, days: 29 })
+  assert.equal(p.allowed, true)
+  assert.equal(p.dailyKcal, 1200)
+  assert.ok(p.weeklyKg < 1.45)
+  assert.ok(p.expectedDays !== null && p.expectedDays > 29)
+  assert.ok(p.warnings.some((w) => w.includes('tabanının altına inmez')))
+})
+
+test('18 yaş altında önerilen sınır mutlak sınırdır', () => {
+  const p = computePlan({ sex: 'male', age: 17, heightCm: 175, weightKg: 80, activity: 'moderate', goal: 'lose', targetWeightKg: 74, days: 49 })
+  assert.equal(p.allowed, false) // 6 kg / 7 hf = 0,86 kg/hf > 0,8 (ağırlığın %1'i)
 })

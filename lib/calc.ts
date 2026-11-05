@@ -90,8 +90,17 @@ export interface Plan {
   safe: boolean
   /** Güvenli değilse önerilen en kısa süre (gün) */
   safeDays: number
+  /** Kullanıcının seçtiği tempo kabul edilir mi (güvenli olmasa da). Yalnızca mutlak üst sınır aşılırsa false. */
+  allowed: boolean
+  /** Mutlak üst sınırla (haftada HARD_MAX_WEEKLY_KG) mümkün en kısa süre (gün) */
+  minDays: number
+  /** Kalori tabanı yüzünden gerçek tempo yavaşladıysa tahmini süre (gün), yoksa null */
+  expectedDays: number | null
   warnings: string[]
 }
+
+/** Kullanıcı hedefine karışmayız; ancak haftada 1,5 kg'dan hızlı değişim hiçbir koşulda plan yapılmaz. */
+export const HARD_MAX_WEEKLY_KG = 1.5
 
 /** Haftalık en hızlı güvenli değişim (kg). */
 export function maxWeeklyKg(goal: GoalType, weightKg: number): number {
@@ -110,6 +119,9 @@ export function computePlan(p: PlanInput): Plan {
   let delta = 0
   let safe = true
   let safeDays = days
+  let allowed = true
+  let minDays = 1
+  let expectedDays: number | null = null
 
   if (p.goal === 'recomp') {
     delta = -Math.round(t * 0.05)
@@ -117,24 +129,31 @@ export function computePlan(p: PlanInput): Plan {
     const diffKg = p.targetWeightKg - p.weightKg
     const totalKcal = Math.abs(diffKg) * KCAL_PER_KG
     const wanted = totalKcal / days
-    const maxByRate = (maxWeeklyKg(p.goal, p.weightKg) * KCAL_PER_KG) / 7
-    let allowed = maxByRate
+    let recommended = (maxWeeklyKg(p.goal, p.weightKg) * KCAL_PER_KG) / 7
     if (p.goal === 'lose') {
-      allowed = Math.min(allowed, Math.max(0, t - floor))
-      if (p.age < 18) allowed = Math.min(allowed, t * 0.2)
+      recommended = Math.min(recommended, Math.max(0, t - floor))
+      if (p.age < 18) recommended = Math.min(recommended, t * 0.2)
     }
-    if (allowed <= 0) {
+    // 18 yaş altında önerilen sınır aynı zamanda mutlak sınırdır.
+    const hardKg = p.age < 18 ? (recommended * 7) / KCAL_PER_KG : HARD_MAX_WEEKLY_KG
+    const hard = (hardKg * KCAL_PER_KG) / 7
+    minDays = hard > 0 ? Math.max(1, Math.ceil(totalKcal / hard)) : 0
+    delta = (p.goal === 'lose' ? -1 : 1) * wanted
+    if (hard <= 0 || wanted > hard + 0.5) {
+      allowed = false
+      safe = false
+      safeDays = recommended > 0 ? Math.ceil(totalKcal / recommended) : 0
+      warnings.push(p.age < 18
+        ? `18 yaş altında haftada en fazla ${fmtNum(round2(hardKg), 2)} kg değişim planlanabilir. En az ${fmtNum(minDays)} gün seçmelisin.`
+        : `Haftada ${fmtNum(HARD_MAX_WEEKLY_KG, 1)} kg'dan hızlı değişim planlanamaz. En az ${fmtNum(minDays)} gün seçmelisin.`)
+    } else if (recommended <= 0) {
       safe = false
       safeDays = 0
-      warnings.push('Mevcut harcaman güvenli kalori tabanına çok yakın; kalori açığı yerine aktiviteyi artırmayı düşün.')
-      delta = 0
-    } else if (wanted > allowed + 0.5) {
+      warnings.push('Mevcut harcaman güvenli kalori tabanına çok yakın; bu tempo güvenli değil. Kalori açığı yerine aktiviteyi artırmayı düşün.')
+    } else if (wanted > recommended + 0.5) {
       safe = false
-      safeDays = Math.ceil(totalKcal / allowed)
-      delta = (p.goal === 'lose' ? -1 : 1) * wanted
-      warnings.push(`Bu hedef ${days} günde güvenli değil. En az ${safeDays} gün öneriyoruz.`)
-    } else {
-      delta = (p.goal === 'lose' ? -1 : 1) * wanted
+      safeDays = Math.ceil(totalKcal / recommended)
+      warnings.push(`Haftada ${fmtNum(round2((wanted * 7) / KCAL_PER_KG), 2)} kg önerilen sınırın üstünde, güvenli değil. Önerimiz en az ${fmtNum(safeDays)} gün; yine de seçimin buysa planını bu tempoya göre kurarız.`)
     }
     if (p.goal === 'lose' && diffKg >= 0) warnings.push('Hedef kilo mevcut kilondan düşük olmalı.')
     if (p.goal === 'gain' && diffKg <= 0) warnings.push('Hedef kilo mevcut kilondan yüksek olmalı.')
@@ -144,7 +163,14 @@ export function computePlan(p: PlanInput): Plan {
   if (kcal < floor) {
     kcal = floor
     safe = false
+    if (p.goal !== 'recomp' && allowed) {
+      const realDeficit = t - floor
+      const total = Math.abs(p.targetWeightKg - p.weightKg) * KCAL_PER_KG
+      expectedDays = realDeficit > 0 ? Math.ceil(total / realDeficit) : null
+      warnings.push(`Günlük kalori ${fmtNum(floor)} kcal tabanının altına inmez; bu yüzden ${expectedDays ? `hedefe tahminen ${fmtNum(expectedDays)} günde ulaşırsın` : 'kilo kaybı için aktiviteyi artırman gerekir'}.`)
+    }
   }
+  const realDelta = kcal - t
   kcal = Math.round(kcal / 5) * 5
 
   // Protein referans ağırlığı: obezite durumunda VKİ 25'teki ağırlık.
@@ -159,15 +185,18 @@ export function computePlan(p: PlanInput): Plan {
     bmr: Math.round(b),
     tdee: Math.round(t),
     dailyKcal: kcal,
-    dailyDelta: Math.round(delta),
+    dailyDelta: Math.round(realDelta),
     proteinG,
     fatG,
     carbG,
     waterMl: waterTarget(p.weightKg),
     days,
-    weeklyKg: round2((Math.abs(delta) * 7) / KCAL_PER_KG),
+    weeklyKg: round2((Math.abs(realDelta) * 7) / KCAL_PER_KG),
     safe,
     safeDays,
+    allowed,
+    minDays,
+    expectedDays,
     warnings,
   }
 }

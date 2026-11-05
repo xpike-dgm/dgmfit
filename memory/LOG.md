@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5c başladı (yeni tasarım + tempo)
+- Faz başı: memory-check geçti; son commit `2c1198f` STATE ile uyumlu; çalışma ağacı temiz. Kullanıcı 41 ekranlık tasarımı onayladı ve kurulumda temponun engellenmemesini istedi.
+
 ## 2026-11-05 — Faz 5b tamamlandı
 - DOTS: web okuma ajanı OpenPowerlifting `crates/coefficients/src/dots.rs` ve `lib.rs`'i (poly4 = A·x⁴+B·x³+C·x²+D·x+E) okudu; Wikipedia sayfası 404. Katsayılar ve 40–210 / 40–150 kg sınırları koda bu kaynaktan girildi.
 - Saf `lib/social-rank.ts` + `tests/social2.test.ts` (6); veri katmanı `lib/social2-data.ts`; migration 0012; `saveWorkout` rekorları şüphe nedeniyle yazar; zamanlayıcıda `workout.finished` → partner bildirimi; ekranlar `/sosyal/meydan`, `/sosyal/gruplar`, `/sosyal/mesaj`, profilde arkadaş araçları ve doğrulama bekleyen rekorlar, akışta 24 saatlik kart şeridi, yönetici kanıt kuyruğu.
