@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 4c tamamlandı (2026-11-05, sahte sağlayıcıyla). Sıradaki: Faz 5 (Sosyal). 4a/4b/4c'nin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
+**Şu anki faz: Faz 5a devam ediyor (2026-11-05 başladı) — Sosyal çekirdek: profil + gizlilik, PR vitrini, arkadaşlık/takip, akış ve gönderiler, etkileşim, moderasyon, bildirimler. 4a–4c'nin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -18,7 +18,8 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 4a | AI altyapısı (sağlayıcı katmanı, Claude → OpenAI yedeği, kota, önbellek, yönetici AI ayarları, şifreli anahtarlar) + yemek fotoğrafı tanıma + sesli/yazılı öğün ve su kaydı + etiket okuma | tamamlandı (sahte sağlayıcıyla) | commit `8ff0175` + `d3777b6`; birim test 99/99; verify.sh VERIFY OK (8 e2e, AI e2e sahte Claude/OpenAI ile); release deploy `2026-11-05T02-16-18-490Z` canlı e2e OK; canlıda DGFIT_ADMINS=deneme, test kancası ve sahte adresler yok, oturumsuz 401. **Gerçek Claude/OpenAI çağrısı henüz yapılmadı** (anahtar yok) |
 | 4b | AI koç (sohbet, onaylı eylemler, kişilik, "ne olur" kartı), günlük proaktif içgörü, haftalık rapor + push, yeme bozukluğu / aşırı antrenman sınırları | tamamlandı (sahte sağlayıcıyla) | commit `ec9ae94`; birim test 112/112; verify.sh VERIFY OK (10 e2e, koç e2e sahte Claude ile); release deploy `2026-11-05T03-05-14-235Z` RELEASE OK; canlıda 0009 uygulandı (4 tablo), `/api/test/coach` POST 404, `/api/coach/insight` oturumsuz 401, `/koc` `/rapor` girişe yönlendirir; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
 | 4c | AI haftalık menü + alışveriş listesi + toplu hazırlık, "elimde bunlar var" tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü, karb döngüsü, koçtan "yarının menüsü" | tamamlandı (sahte sağlayıcıyla) | commit `3410884`; birim test 118/118; verify.sh VERIFY OK (11 e2e, planlama e2e sahte Claude ile); release deploy `2026-11-05T03-34-15-650Z` RELEASE OK; canlıda 0010 uygulandı (4 tablo), yeni sayfalar girişe yönlendirir, `/api/ai/restaurant` oturumsuz 401, app logunda hata yok; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
-| 5 | Sosyal | planlandı | — |
+| 5a | Sosyal çekirdek: profil (foto, biyografi, salon, hedef rozeti), PR vitrini, istatistik kartları, gizlilik (profil + öğe bazında), arkadaşlık + takip, arama, davet linki + QR, arkadaş önerileri, akış (önerilen/kronolojik), gönderi türleri, tepki/yorum/kaydetme, antrenman kopyalama, tarif kaydetme, engelle/sessize al/şikayet, AI + kural moderasyonu, bildirimler | devam ediyor | — |
+| 5b | Sosyal genişleme: meydan okumalar, gruplar + grup sohbeti, adil sıralama (DOTS, tutarlılık), düello, birebir mesaj, dürtme, antrenman partneri, 24 saatlik kartlar, PR doğrulama, video | planlandı | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı | — |
 
 ## Faz 1a kapsamı ve kabul kriterleri (tamamlandı)
@@ -161,6 +162,20 @@ Kaynak: spesifikasyon 6.4 (AI haftalık menü, alışveriş listesi, meal prep, 
 
 Kanıt `tests/e2e/planner.e2e.cjs` (sahte Claude :3190): yönetici restoran görevi varsayılan Opus; menü isteği günlük hedefler + KATALOG + alerji (fıstık) + bütçe içerir; 7 gün sekmesi; menemen kalorisi = veritabanı 100 g × ölçeklenmiş gram (250 g değil); eşleşmeyen kalem işaretli; hedeften sapma uyarısı; toplu hazırlık adımları; kahvaltı günlüğe eklendi; alışveriş listesinde menemen yerine yumurta (tarif malzemesi) Süt ürünleri reyonunda, Manav reyonu var, işaret yeniden yüklemede kalıcı; elimdekiler porsiyonu günlüğe eklendi; restoran isteği Opus + görsel, 3 öneri + 4 yemek, ekleme; AI program 4 gün döndü → 3 gün, "Uçan halı" çıkarıldı ve notta, yeni başlayanda set ≤ 4; simülatörde haftada 3 koşu → daha erken tarih; karb döngüsü Bugün karbonhidrat hedefini değiştirdi; koç "yarının menüsü" onayla → 1 günlük menü, önceki 7 günlük arşivlendi.
 **Açık:** gerçek modellerle denenmedi; katalog dışı adlar ("pizza" gibi) USDA aramasına düşer ve zayıf eşleşebilir.
+
+## Faz 5a kapsamı ve kabul kriterleri (devam ediyor)
+
+Kaynak: spesifikasyon 8.1–8.3, 8.5 (bildirim tercihleri), 8.6, 9 (Sosyal sütunu), 10 (içerik moderasyonu), 13. İlke: varsayılan olarak her şey özel; kilo/vücut verisi asla otomatik gösterilmez; konum paylaşılmaz.
+
+- [ ] Profil: avatar (şifreli medya), biyografi, salon, hedef rozeti (Fit hedefinden), görünürlük herkese açık / yalnızca arkadaşlar / gizli; öğe bazında görünürlük (PR, istatistik, antrenman, öğün, su, fotoğraf) varsayılan kapalı
+- [ ] PR vitrini (seçilen en fazla 6 hareket: en iyi kg/e1RM, tarihçe, mini grafik) ve istatistik kartları (toplam antrenman, toplam kg, en uzun antrenman serisi, su serisi, rozetler) — yalnızca izin verilen izleyiciye
+- [ ] Arkadaşlık (istek/onay/ret/çıkar) ve tek yönlü takip (yalnızca açık profiller); kullanıcı adıyla arama; davet linki + QR; arkadaş önerileri (ortak arkadaş, aynı salon, benzer hedef); yakın arkadaş işareti
+- [ ] Gönderiler: serbest (yazı + en fazla 4 fotoğraf), antrenman özeti (hareketler, setler, hacim; "Bu antrenmanı kopyala"), PR, tarif ("Tariflerime kaydet", "Öğün olarak ekle"), öğün, su serisi, kilometre taşı (yalnızca değişim, "−6 kg"), ilerleme fotoğrafı (yalnızca seçilen arkadaşlar); kitle herkese açık / arkadaşlar / seçilenler
+- [ ] Akış: önerilen (yakın arkadaş + yeni başarılar öne, saf sıralama fonksiyonu) ve kronolojik; tepkiler (💪 🔥 👏 🏆), yorumlar, kaydetme; engellenen/sessize alınan yazar görünmez
+- [ ] Güvenlik: engelle, sessize al, şikayet; moderasyon = kural (taciz, zararlı diyet içeriği, yeme bozukluğu işaretinde gönderi gizli + yazara destek) + AI (metin + görsel; AI yoksa fotoğraflı gönderi onaya düşer); yönetici moderasyon sayfası
+- [ ] Bildirimler: uygulama içi liste + push (arkadaşlık isteği/kabul, tepki, yorum), tür bazında açma/kapama
+- [ ] Modül entegrasyonu: antrenman özeti ve PR ekranında "Paylaş", tarif ve su serisi paylaşımı, Fit'te kilometre taşı paylaşımı
+- [ ] Testler: birim (görünürlük kuralları, akış sıralaması, öneriler, moderasyon kuralları) + e2e (iki-üç kullanıcı: arkadaşlık, gizlilik, gönderi türleri, etkileşim, engelleme, şikayet, moderasyon) + verify.sh + canlı e2e + hafıza
 
 ## Sıradaki işler
 

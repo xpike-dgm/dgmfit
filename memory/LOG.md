@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5a başladı
+- Faz başı: memory-check geçti; son commit `07b70cf` STATE ile uyumlu; çalışma ağacı temiz. Spesifikasyon 8, 9, 10, 13 Claude Docs'tan okundu. Faz 5 ikiye bölündü (DECISIONS).
+
 ## 2026-11-05 — Faz 4c tamamlandı (sahte sağlayıcıyla)
 - Saf motorlar: `lib/menu.ts` (ölçekleme, alışveriş, restoran sıralaması), `lib/scenario.ts` (simülatör, karb döngüsü), `lib/ai-program.ts` (program denetimi); `tests/planner.test.ts` (6).
 - Veri katmanı `lib/planner-data.ts` (Türkçe besin kataloğu modele verilir, ad eşleşmesi katalog → arama), migration 0010, ekranlar `/yemek/plan`, `/yemek/plan/alisveris`, `/yemek/elimdeki`, `/yemek/restoran`, programlarda "AI ile oluştur", Plan'da simülatör + karb döngüsü; `dayTargets` karb döngüsünü açık günlere uygular; koç eylemi `plan_menu`.
