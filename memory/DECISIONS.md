@@ -109,3 +109,4 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-05 | Akış: kendi + arkadaş + takip, son 30 gün; önerilen puan = 12 saatlik yarı ömür × (1 + yakın arkadaş 2 + tür (PR/kilometre taşı 3, antrenman 2, seri 1,5…) + etkileşim); kronolojik ve kaydedilenler seçeneği | Spesifikasyon 8.3 | Ürün |
 | 2026-11-05 | Tepki bildirimi gönderi başına saatte 1; bildirim tercihleri tür bazında (varsayılan açık) | Spesifikasyon 8.5, 11.2 "boğmamak" | Ürün |
 | 2026-11-05 | Video gönderisi 5b'ye (depolama/kodlama maliyeti); 5a yalnızca fotoğraf (en fazla 4, 1280 px JPEG) | Kapsam | Kapsam |
+| 2026-11-05 | Video (gönderi ve PR kanıtı) Faz 6'ya ertelendi: telefon videoları onlarca MB, mevcut şifreli DB medyası 3 MB sınırlı; PR kanıtı 5b'de fotoğraf + yönetici onayı ya da 2 arkadaş tanıklığı | Depolama/maliyet; spesifikasyonda "isteğe bağlı" | Kapsam |

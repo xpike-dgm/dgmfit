@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5b başladı
+- Faz başı: memory-check geçti; son commit `d6eabdb` STATE ile uyumlu; çalışma ağacı temiz. DOTS katsayıları web okuma ajanıyla kaynaktan doğrulanıyor.
+
 ## 2026-11-05 — Faz 5a tamamlandı
 - Saf kurallar `lib/social.ts` (profil/öğe/gönderi görünürlüğü, akış puanı, öneri puanı, kilometre taşı, haftalık seri), `lib/moderation.ts`; `tests/social.test.ts` (6). Veri katmanı `lib/social-data.ts`, migration 0011 (10 tablo), `qrcode` 1.5.4 (MIT; npm'den doğrulandı), ekranlar `/sosyal` (+ yeni, p/[id], ara, arkadaslar, bildirimler, ayarlar), `/u/[username]`, `/yonetim/moderasyon`; antrenman özeti, rekor, su serisi ve Fit'e "Paylaş" bağlantıları.
 - Bulunan kusurlar: JS `\b` Türkçe harfleri kelime harfi saymıyor → "şişko" gibi hakaretler kaçıyordu (birim test yakaladı) → Unicode harf sınırı. PR vitrini 120 kg'ı "120,0 kg" gösteriyordu → tam sayıda ondalıksız. Engellenen kişiye "Bu profili göremezsin" ekranı engeli sızdırıyordu → yalnızca engelleyene gösterilir, diğerine 404. Test kaynaklı: kilo alma hedefli test kullanıcısı güvenli tempoyu aştığı için sihirbazda doğru şekilde engellendi (test verisi düzeltildi); "Gönder"/"Kaydet" seçicileri alt dize eşleşmesiyle çakıştı; önceki çalıştırmanın aynı metinli gönderisi moderasyon kuyruğunda çakıştı (metin benzersiz yapıldı).

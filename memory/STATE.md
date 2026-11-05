@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 5a tamamlandı (2026-11-05). Sıradaki: Faz 5b (meydan okumalar, gruplar, sıralama, düello, mesaj, dürtme, partner, 24 saatlik kartlar, PR doğrulama). 4a–4c'nin ve sosyal AI moderasyonunun gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
+**Şu anki faz: Faz 5b devam ediyor (2026-11-05 başladı) — meydan okumalar, düello, gruplar + sohbet, adil sıralama, birebir mesaj, dürtme, antrenman partneri, 24 saatlik kartlar, PR doğrulama. 4a–4c ve sosyal AI moderasyonunun gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -19,7 +19,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 4b | AI koç (sohbet, onaylı eylemler, kişilik, "ne olur" kartı), günlük proaktif içgörü, haftalık rapor + push, yeme bozukluğu / aşırı antrenman sınırları | tamamlandı (sahte sağlayıcıyla) | commit `ec9ae94`; birim test 112/112; verify.sh VERIFY OK (10 e2e, koç e2e sahte Claude ile); release deploy `2026-11-05T03-05-14-235Z` RELEASE OK; canlıda 0009 uygulandı (4 tablo), `/api/test/coach` POST 404, `/api/coach/insight` oturumsuz 401, `/koc` `/rapor` girişe yönlendirir; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
 | 4c | AI haftalık menü + alışveriş listesi + toplu hazırlık, "elimde bunlar var" tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü, karb döngüsü, koçtan "yarının menüsü" | tamamlandı (sahte sağlayıcıyla) | commit `3410884`; birim test 118/118; verify.sh VERIFY OK (11 e2e, planlama e2e sahte Claude ile); release deploy `2026-11-05T03-34-15-650Z` RELEASE OK; canlıda 0010 uygulandı (4 tablo), yeni sayfalar girişe yönlendirir, `/api/ai/restaurant` oturumsuz 401, app logunda hata yok; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
 | 5a | Sosyal çekirdek: profil (foto, biyografi, salon, hedef rozeti), PR vitrini, istatistik kartları, gizlilik (profil + öğe bazında), arkadaşlık + takip, arama, davet linki + QR, arkadaş önerileri, akış (önerilen/kronolojik), gönderi türleri, tepki/yorum/kaydetme, antrenman kopyalama, tarif kaydetme, engelle/sessize al/şikayet, AI + kural moderasyonu, bildirimler | tamamlandı | commit `7072263`; birim test 124/124; verify.sh VERIFY OK (12 e2e, sosyal e2e 3 kullanıcı + sahte Claude moderasyonu); release deploy `2026-11-05T05-42-38-190Z` RELEASE OK; canlı kancasız sosyal kontrolü OK (arama → istek → kabul → gönderi → arkadaş akışı → tepki bildirimi → yabancıya 404 → QR); canlıda 0011 (10 tablo), logda hata yok; 10 test kullanıcısı silindi. AI moderasyonu gerçek sağlayıcıyla denenmedi (canlıda anahtar yok → yalnızca kural; fotoğraflı gönderi onaya düşer) |
-| 5b | Sosyal genişleme: meydan okumalar, gruplar + grup sohbeti, adil sıralama (DOTS, tutarlılık), düello, birebir mesaj, dürtme, antrenman partneri, 24 saatlik kartlar, PR doğrulama, video | planlandı | — |
+| 5b | Sosyal genişleme: meydan okumalar, gruplar + grup sohbeti, adil sıralama (DOTS, tutarlılık), düello, birebir mesaj, dürtme, antrenman partneri, 24 saatlik kartlar, PR doğrulama | devam ediyor | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı | — |
 
 ## Faz 1a kapsamı ve kabul kriterleri (tamamlandı)
@@ -179,6 +179,21 @@ Kaynak: spesifikasyon 8.1–8.3, 8.5 (bildirim tercihleri), 8.6, 9 (Sosyal sütu
 
 Kanıt `tests/e2e/social.e2e.cjs` (A yönetici, B, C): davet linki + QR; gizli C aramada yok; B istek → A bildirim (1) → kabul → B kabul bildirimi; yabancı C yalnızca temel profil, vitrin yok; B vitrinde Squat 120 kg, istatistik, "Kilo veriyor" rozeti, biyografi; antrenman gönderisi (sunucu anlık görüntüsü) → B tepki + yorum + "Bu antrenmanı kopyala" (programda squat) → A'ya tepki/yorum bildirimi; tarif gönderisi → B kaydet + öğün olarak ekle (250 g × 1,2 = 300 kcal); fotoğraflı gönderi AI moderasyonuna gitti, fotoğraf arkadaşa 200, yabancıya 404, gönderi yabancıya 404; seçilen kitle; A herkese açık → C takip → yalnızca herkese açık gönderi, arkadaş/seçilen gönderi ve vitrin görünmez; hakaret → beklemede (arkadaşa 404); AI engeli → gizli; "kusuyorum" → destek kartı; C şikayeti yönetici kuyruğunda, yönetici bekleyeni gizledi; gizli profil yabancıya 404; C, A'yı engelledi → takip düştü, gönderi 404, engelleyene "Bu kişiyi engelledin", engellenene 404.
 **Açık:** push bildirimlerinin cihazda teslimi denenmedi; avatar arkadaş önerilerinde gösterilmiyor (baş harf).
+
+## Faz 5b kapsamı ve kabul kriterleri (devam ediyor)
+
+Kaynak: spesifikasyon 8.2 (antrenman partneri), 8.3 (24 saatlik kartlar, paylaşma), 8.4 (meydan okumalar, gruplar, adil sıralama, düello), 8.5 (mesaj, dürtme, bildirim tercihi), 8.6 (PR doğrulama), 9 (su kaydı → meydan okuma puanı).
+
+- [ ] Meydan okumalar: hazır şablonlar ("30 gün 2,5 litre su", "Ayda 16 antrenman", "Haftalık en çok hacim", "7 gün protein hedefi") + özel (ölçüt, hedef, süre); arkadaş davet/katılım/ayrılma; ilerleme ve sıralama motorla gerçek kayıtlardan (saf fonksiyon)
+- [ ] Düello: bire bir haftalık meydan okuma (antrenman sayısı / hacim / su günü), davet + kabul, sonuç
+- [ ] Gruplar: oluşturma, arkadaş davet/kabul, ayrılma, sahibin çıkarması; grup sohbeti (kural moderasyonu); grup sıralaması (DOTS kuvvet puanı, tutarlılık puanı) — yalnızca "sıralamada görün" diyen üyeler; vücut ağırlığı gösterilmez
+- [ ] Adil sıralama: DOTS (katsayılar kaynaktan doğrulanır), tutarlılık puanı (haftalık antrenman hedefinin son 4 haftada karşılanma oranı)
+- [ ] PR doğrulama: şüpheli rekor (7 günde %30'dan fazla artış ya da vücut ağırlığına göre olağandışı) işaretlenir ve sıralamaya girmez; 2 arkadaş tanıklığı ya da kanıt fotoğrafı + yönetici onayıyla doğrulanır
+- [ ] Birebir mesaj (yalnızca arkadaşlar), gönderi paylaşımı mesajla, okunmamış sayısı, push; uygunsuz mesaj işaretli gösterilir
+- [ ] Dürtme: "Bugün su içtin mi?" / "Antrenman zamanı" (çift başına tür başına günde 1, kişi başına günde 10), bildirim tercihi
+- [ ] Antrenman partneri: karşılıklı işaret → partnerin antrenmanı bitince bildirim (antrenman öğesi kapalıysa yok), partnerin aktif programını kopyalama
+- [ ] 24 saatlik "Bugün salondaydım" kartları (bugünkü antrenman özeti ve/veya fotoğraf), akışın üstünde şerit, 24 saat sonra görünmez
+- [ ] Testler: birim (DOTS, tutarlılık, meydan okuma ilerleme/sıralama, şüpheli PR, dürtme sınırı) + e2e (3 kullanıcı) + verify.sh + canlı kontrol + hafıza
 
 ## Sıradaki işler
 
