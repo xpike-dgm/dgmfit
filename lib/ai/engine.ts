@@ -133,6 +133,12 @@ async function usageByProvider(): Promise<Map<string, { today: number; month: nu
   return new Map(rows.map((r) => [r.provider, { today: Number(r.today), month: Number(r.month) }]))
 }
 
+/** Kullanıcının günlük AI hakkı: yöneticinin kişiye özel ayarı, yoksa genel ayar. */
+export async function userDailyLimit(userId: string): Promise<number> {
+  const [[u], { userDaily }] = await Promise.all([db.select({ n: schema.users.aiDaily }).from(schema.users).where(eq(schema.users.id, userId)).limit(1), aiSettings()])
+  return u?.n ?? userDaily
+}
+
 export async function userCallsToday(userId: string): Promise<number> {
   const [start] = dayBounds(dayString())
   const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.aiCalls)
@@ -153,8 +159,11 @@ export async function runTask<T extends Task>(userId: string, task: T, input: Ca
     await db.insert(schema.aiCalls).values({ userId, task, provider: null, ok: true, cached: true })
     return { result: parseResult(task, JSON.stringify(hit.result)), provider: 'cache' }
   }
-  const { userDaily } = await aiSettings()
-  if (USER_QUOTA_TASKS.includes(task) && (await userCallsToday(userId)) >= userDaily) throw new AiError(`Bugünkü AI hakkın doldu (${userDaily}). Yarın yenilenir; şimdilik elle ekleyebilirsin.`, 'kota')
+  if (USER_QUOTA_TASKS.includes(task)) {
+    const userDaily = await userDailyLimit(userId)
+    if (userDaily === 0) throw new AiError('AI özellikleri hesabında kapalı. Elle eklemeye devam edebilirsin.', 'kota')
+    if ((await userCallsToday(userId)) >= userDaily) throw new AiError(`Bugünkü AI hakkın doldu (${userDaily}). Yarın yenilenir; şimdilik elle ekleyebilirsin.`, 'kota')
+  }
 
   const rows = await ensureProviders()
   const used = await usageByProvider()

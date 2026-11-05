@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
-import { getUser } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth'
+import { canEnter } from '@/lib/access'
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
-  const u = await getUser()
-  if (u) redirect(u.onboarded ? '/' : '/kurulum')
+  const u = await getSessionUser()
+  if (u) redirect(!canEnter(u.status, u.admin) ? '/beklemede' : u.onboarded ? '/' : '/kurulum')
   return (
     <main className="min-h-dvh max-w-md mx-auto px-5 safe-top pb-10 flex flex-col">
       <div className="pt-6 pb-8 flex items-center gap-2.5">

@@ -72,6 +72,8 @@ Son doğrulama: 2026-11-04, Faz 1a sonu (memory-check ile).
 
 ## Veri modeli
 
+Faz 5e (beyaz liste + yönetim): `users.status` (pending/approved/rejected/suspended; 0014 öncesi hesaplar approved), `status_at/by`, `ai_daily` (kişiye özel günlük AI hakkı, null = genel), `admin_note`, `invite_code`, `last_seen_at` (süreç başına 10 dk'da bir yazılır) · `feedback` (tür, bölüm, metin, şifreli ekran görüntüsü `media_blobs.kind=feedback`, cihaz bilgisi, durum new/seen/done, yönetici yanıtı + okunma) · `invites` (kod, etiket, kullanım hakkı, süre, kapalı). Erişim: `getSessionUser` (her durum; yalnızca giriş/onay ekranları) → `getUser` (onaylı ya da yönetici; API'ler) → `requireUser` (onaysız → `/beklemede`). Kurallar `lib/access.ts` (saf, testli), veri `lib/admin-data.ts`.
+
 Faz 0: `users` · `sessions` · `profiles` (1:1 kullanıcı) · `profile_history` · `goals` (aktif tek hedef, `active`) · `weight_logs` · `events` · `daily_targets` (henüz yazılmıyor, Faz 2'de dolacak).
 
 Faz 1a (Su): `water_logs` (ham `ml` + `effective_ml` = ml × hidrasyon; `source`; `history` jsonb: create/edit/merge/delete/undo; yumuşak silme) · `water_containers` (kapasite, son doluluk, varsayılan, arşiv) · `water_settings` (butonlar, yudum ml, görünüm, geri bildirim) · `water_goal_history` (`effective_from` ile; günün hedefi = o güne kadarki son kayıt, haftanın günü özel hedefleri `weekday[0=Pazar]`).

@@ -2,6 +2,7 @@
 // profilden hedef değiştirme planı bugünden yeniden kurar, boş programda gün silinir, şablon incelenir.
 const { chromium, devices } = require('playwright')
 const BASE = process.env.BASE || 'http://localhost:3100'
+const INVITE = process.env.DGFIT_E2E_INVITE ? '?davet=' + encodeURIComponent(process.env.DGFIT_E2E_INVITE) : ''
 const OUT = process.env.OUT || require('os').tmpdir()
 const fail = (m) => { throw new Error(m) }
 ;(async () => {
@@ -13,7 +14,7 @@ const fail = (m) => { throw new Error(m) }
   p.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()) })
   p.on('dialog', (d) => d.accept())
   const u = 'test_ux' + Date.now().toString(36)
-  await p.goto(BASE + '/kayit')
+  await p.goto(BASE + '/kayit' + INVITE)
   await p.fill('#username', u); await p.fill('#email', u + '@gmail.com'); await p.fill('#password', 'Deneme1234'); await p.fill('#confirm', 'Deneme1234'); await p.check('input[name=terms]')
   await p.waitForTimeout(500); await p.getByRole('button', { name: 'Hesabı oluştur' }).click(); await p.waitForURL('**/kurulum')
   await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)

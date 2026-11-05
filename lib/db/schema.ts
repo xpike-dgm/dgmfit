@@ -12,10 +12,49 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  /** Beyaz liste: pending (onay bekliyor) | approved | rejected | suspended. Yöneticiler (DGFIT_ADMINS) her zaman girer. */
+  status: text('status').notNull().default('pending'),
+  statusAt: timestamp('status_at', { withTimezone: true }),
+  statusBy: text('status_by'),
+  /** Kişiye özel günlük AI hakkı; null = genel ayar */
+  aiDaily: integer('ai_daily'),
+  adminNote: text('admin_note'),
+  inviteCode: text('invite_code'),
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
 }, (t) => [
   uniqueIndex('users_username_lower_idx').on(sql`lower(${t.username})`),
   uniqueIndex('users_email_lower_idx').on(sql`lower(${t.email})`),
+  index('users_status_idx').on(t.status, t.createdAt),
 ])
+
+/** Kullanıcı geri bildirimi (öneri, şikayet, hata); yönetici yanıtlar. */
+export const feedback = pgTable('feedback', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // oneri | sikayet | hata | diger
+  area: text('area'), // hangi bölüm
+  body: text('body').notNull(),
+  mediaId: uuid('media_id'),
+  device: jsonb('device').$type<{ ua?: string; screen?: string; theme?: string }>().notNull().default({}),
+  status: text('status').notNull().default('new'), // new | seen | done
+  reply: text('reply'),
+  repliedAt: timestamp('replied_at', { withTimezone: true }),
+  replySeenAt: timestamp('reply_seen_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('feedback_status_idx').on(t.status, t.createdAt), index('feedback_user_idx').on(t.userId, t.createdAt)])
+
+/** Davet kodu: bu kodla kayıt olan hesap onay beklemeden açılır. */
+export const invites = pgTable('invites', {
+  code: text('code').primaryKey(),
+  label: text('label').notNull().default(''),
+  maxUses: integer('max_uses'), // null = sınırsız
+  uses: integer('uses').notNull().default(0),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  disabled: boolean('disabled').notNull().default(false),
+  createdBy: text('created_by'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
 
 export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(), // sha256(token)

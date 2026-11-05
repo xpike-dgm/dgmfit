@@ -99,6 +99,13 @@
       "when": 1793866216919,
       "tag": "0013_design",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793893056806,
+      "tag": "0014_whitelist",
+      "breakpoints": true
     }
   ]
 }

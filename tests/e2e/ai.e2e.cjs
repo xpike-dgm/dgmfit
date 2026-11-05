@@ -6,6 +6,7 @@ const { chromium, devices } = require('playwright')
 const http = require('http')
 const path = require('path')
 const BASE = process.env.BASE || 'http://localhost:3100'
+const INVITE = process.env.DGFIT_E2E_INVITE ? '?davet=' + encodeURIComponent(process.env.DGFIT_E2E_INVITE) : ''
 const OUT = process.env.OUT || require('os').tmpdir()
 const fail = (m) => { throw new Error(m) }
 const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''))
@@ -62,7 +63,7 @@ const pick = (system, hasImage, text) => (/besin değeri tablosu/i.test(system) 
     return p
   }
   const signup = async (p, u) => {
-    await p.goto(BASE + '/kayit')
+    await p.goto(BASE + '/kayit' + INVITE)
     await p.fill('#username', u); await p.fill('#email', u + '@gmail.com'); await p.fill('#password', 'Deneme1234'); await p.fill('#confirm', 'Deneme1234'); await p.check('input[name=terms]')
     await p.waitForTimeout(500); await p.getByRole('button', { name: 'Hesabı oluştur' }).click(); await p.waitForURL('**/kurulum')
     await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
@@ -87,9 +88,11 @@ const pick = (system, hasImage, text) => (/besin değeri tablosu/i.test(system) 
   if (await p.getByTestId('ai-meal').count()) fail('anahtar yokken AI bölümü görünmemeli')
   const q = await mk(); await signup(q, 'test_nx' + Date.now().toString(36))
   const r404 = await q.goto(BASE + '/yonetim/ai'); if (r404.status() !== 404) fail('yönetici olmayana AI ayarları ' + r404.status())
+  for (const u of ['/yonetim', '/yonetim/kullanicilar', '/yonetim/geri-bildirim', '/yonetim/davetler']) { const r = await q.goto(BASE + u); if (r.status() !== 404) fail('yönetici olmayana ' + u + ' ' + r.status()) }
 
   // 2) Yönetici anahtarları girer (yalnızca son 4 karakter görünür)
-  await p.goto(BASE + '/profil'); await p.getByRole('link', { name: /AI ayarları/ }).click(); await p.waitForURL('**/yonetim/ai')
+  await p.goto(BASE + '/profil'); await p.getByTestId('admin-link').click(); await p.waitForURL('**/yonetim')
+  await p.getByTestId('card-ai').click(); await p.waitForURL('**/yonetim/ai')
   for (const [id, key] of [['claude', CLAUDE_KEY], ['openai', OPENAI_KEY]]) {
     const sec = p.getByTestId(`provider-${id}`)
     await sec.locator(`#${id}-key`).fill(key); await sec.getByRole('button', { name: 'Kaydet' }).click()

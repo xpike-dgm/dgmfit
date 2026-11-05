@@ -2,12 +2,16 @@
 import { redirect } from 'next/navigation'
 import { sql } from 'drizzle-orm'
 import { db, schema } from '@/lib/db'
+import { eq } from 'drizzle-orm'
 import { createSession, destroySession, hashPassword, verifyPassword, rateLimit, clientIp } from '@/lib/auth'
+import { isAdmin } from '@/lib/admin-list'
+import { canEnter, inviteUsable, normalizeInvite } from '@/lib/access'
+import { notifyAdmins } from '@/lib/admin-data'
 import { checkPassword, emailError, usernameError } from '@/lib/validation'
 
 export interface FormState {
-  errors?: Partial<Record<'username' | 'email' | 'password' | 'confirm' | 'terms' | 'form', string>>
-  values?: { username?: string; email?: string; login?: string }
+  errors?: Partial<Record<'username' | 'email' | 'password' | 'confirm' | 'terms' | 'invite' | 'form', string>>
+  values?: { username?: string; email?: string; login?: string; invite?: string }
 }
 
 export async function registerAction(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -16,7 +20,8 @@ export async function registerAction(_prev: FormState, fd: FormData): Promise<Fo
   const password = String(fd.get('password') ?? '')
   const confirm = String(fd.get('confirm') ?? '')
   const terms = fd.get('terms') === 'on'
-  const values = { username, email }
+  const inviteIn = normalizeInvite(String(fd.get('invite') ?? ''))
+  const values = { username, email, invite: inviteIn }
   const errors: FormState['errors'] = {}
 
   const ue = usernameError(username); if (ue) errors.username = ue
@@ -39,15 +44,37 @@ export async function registerAction(_prev: FormState, fd: FormData): Promise<Fo
   if (t?.e) errors.email = 'Bu e-posta ile zaten bir hesap var'
   if (Object.keys(errors).length) return { errors, values }
 
+  // Davet kodu: geçerliyse hesap onaylı açılır; kod yazılmış ama geçersizse kullanıcıya söylenir
+  let invite: string | null = null
+  if (inviteIn) {
+    const [inv] = await db.select().from(schema.invites).where(eq(schema.invites.code, inviteIn)).limit(1)
+    if (!inviteUsable(inv, new Date())) return { errors: { invite: 'Bu davet kodu geçersiz ya da süresi dolmuş. Kodu silip davetsiz de kayıt olabilirsin.' }, values }
+    invite = inviteIn
+  }
+
   const passwordHash = await hashPassword(password)
   let userId: string
+  const status = invite || isAdmin(username) ? 'approved' : 'pending'
   try {
-    const [u] = await db.insert(schema.users).values({ username, email, passwordHash }).returning({ id: schema.users.id })
-    userId = u.id
-  } catch {
+    userId = await db.transaction(async (tx) => {
+      if (invite) {
+        // Kullanım sayısı yarışa karşı koşullu artırılır
+        const ok = await tx.execute(sql`update invites set uses = uses + 1 where code = ${invite} and not disabled
+          and (max_uses is null or uses < max_uses) and (expires_at is null or expires_at > now()) returning code`)
+        if (!ok.length) throw new Error('davet')
+      }
+      const [u] = await tx.insert(schema.users).values({ username, email, passwordHash, status, statusAt: new Date(), statusBy: invite ? 'davet' : null, inviteCode: invite }).returning({ id: schema.users.id })
+      return u.id
+    })
+  } catch (e) {
+    if ((e as Error).message === 'davet') return { errors: { invite: 'Bu davet kodunun kullanım hakkı az önce doldu.' }, values }
     return { errors: { form: 'Hesap oluşturulamadı, bu kullanıcı adı veya e-posta kullanımda olabilir.' }, values }
   }
   await createSession(userId)
+  if (status === 'pending') {
+    await notifyAdmins({ title: 'Yeni kayıt onay bekliyor', body: `@${username} uygulamaya girmek için onayını bekliyor.`, url: '/yonetim/kullanicilar?durum=pending', tag: 'admin-pending' })
+    redirect('/beklemede')
+  }
   redirect('/kurulum')
 }
 
@@ -62,13 +89,13 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
     return { errors: { form: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar dene.' }, values }
   }
 
-  const rows = await db.execute<{ id: string; password_hash: string }>(sql`
-    select id, password_hash from users where lower(username) = lower(${login}) or lower(email) = lower(${login}) limit 1`)
+  const rows = await db.execute<{ id: string; username: string; status: string; password_hash: string }>(sql`
+    select id, username, status, password_hash from users where lower(username) = lower(${login}) or lower(email) = lower(${login}) limit 1`)
   const u = rows[0]
   const ok = u ? await verifyPassword(password, u.password_hash) : false
   if (!u || !ok) return { errors: { form: 'Kullanıcı adı/e-posta veya şifre hatalı' }, values }
   await createSession(u.id)
-  redirect('/')
+  redirect(canEnter(u.status, isAdmin(u.username)) ? '/' : '/beklemede')
 }
 
 export async function logoutAction() {

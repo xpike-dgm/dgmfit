@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-05",
-  "phase": "5d",
+  "phase": "5e",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -208,7 +208,16 @@
     "app/(app)/fitness/hareketler/FilterSheet.tsx",
     "lib/body-map-paths.ts",
     "scripts/data/build_bodymap.py",
-    "data/body-map-source.webp"
+    "data/body-map-source.webp",
+    "lib/access.ts",
+    "lib/admin-data.ts",
+    "lib/admin-list.ts",
+    "tests/access.test.ts",
+    "tests/e2e/admin.e2e.cjs",
+    "app/beklemede/page.tsx",
+    "app/(app)/yonetim/page.tsx",
+    "app/(app)/yonetim/actions.ts",
+    "app/(app)/profil/geri-bildirim/page.tsx"
   ],
   "tables": [
     "users",
@@ -270,7 +279,9 @@
     "challenge_members",
     "direct_messages",
     "nudges",
-    "stories"
+    "stories",
+    "feedback",
+    "invites"
   ],
   "routes": [
     "/",
@@ -373,7 +384,16 @@
     "/fitness/programlar/bos",
     "/fitness/programlar/olustur",
     "/fitness/programlar/sablonlar/[id]",
-    "/fitness/programlar/sablonlar"
+    "/fitness/programlar/sablonlar",
+    "/beklemede",
+    "/profil/geri-bildirim",
+    "/yonetim",
+    "/yonetim/kullanicilar",
+    "/yonetim/kullanicilar/[id]",
+    "/yonetim/geri-bildirim",
+    "/yonetim/geri-bildirim/[id]",
+    "/yonetim/davetler",
+    "/api/feedback/[id]/image"
   ],
   "events": [
     "profile.onboarded",
@@ -402,13 +422,14 @@
       "HARD_MAX_WEEKLY_KG"
     ],
     "lib/auth.ts": [
-      "hashPassword",
-      "verifyPassword",
       "createSession",
       "destroySession",
+      "getSessionUser",
       "getUser",
+      "hashPassword",
+      "rateLimit",
       "requireUser",
-      "rateLimit"
+      "verifyPassword"
     ],
     "lib/events.ts": [
       "publish",
@@ -775,6 +796,21 @@
       "TopBar",
       "hdrBtn",
       "hdrIcon"
+    ],
+    "lib/access.ts": [
+      "canEnter",
+      "inviteUsable",
+      "normalizeInvite",
+      "FEEDBACK_KINDS"
+    ],
+    "lib/admin-data.ts": [
+      "dashboard",
+      "listUsers",
+      "userDetail",
+      "resetUserData",
+      "deleteUser",
+      "notifyAdmins",
+      "createInvite"
     ]
   },
   "dependencies": {
@@ -805,6 +841,7 @@
     "0010_planner.sql",
     "0011_social.sql",
     "0012_social2.sql",
-    "0013_design.sql"
+    "0013_design.sql",
+    "0014_whitelist.sql"
   ]
 }

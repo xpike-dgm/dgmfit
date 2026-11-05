@@ -17,6 +17,9 @@ export TEST_CA_DIR=/tmp/dgfit-test-ca
 if [ ! -f $TEST_CA_DIR/cert.pem ]; then mkdir -p $TEST_CA_DIR && openssl req -x509 -newkey rsa:2048 -nodes -keyout $TEST_CA_DIR/key.pem -out $TEST_CA_DIR/cert.pem -days 30 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" >/dev/null 2>&1; fi
 ( cd dist && node migrate.mjs && NODE_EXTRA_CA_CERTS=$TEST_CA_DIR/cert.pem DGFIT_TEST_HOOKS=1 DGFIT_MEDIA_KEY=$(openssl rand -base64 32) DGFIT_ADMINS='test_ai*' DGFIT_AI_TEST_CLAUDE_URL=http://127.0.0.1:3190 DGFIT_AI_TEST_OPENAI_URL=http://127.0.0.1:3191/v1 PORT=3100 HOSTNAME=127.0.0.1 NODE_ENV=production nohup node server.js > /tmp/dgfit-local.log 2>&1 & )
 for i in $(seq 1 30); do curl -fsS localhost:3100/api/health >/dev/null 2>&1 && break; sleep 1; done
+# Beyaz liste: testler kayıtta e2e davet kodunu kullanır (yerel veritabanında her çalıştırmada yeni kod)
+export DGFIT_E2E_INVITE="E2E-$(openssl rand -hex 8 | tr a-f A-F)"
+psql "$DATABASE_URL" -qc "insert into invites (code, label, created_by) values ('$DGFIT_E2E_INVITE', 'e2e (yerel test)', 'verify')" >/dev/null
 fail=0
 for t in tests/e2e/*.e2e.cjs; do BASE=http://localhost:3100 node "$t" || fail=1; done
 pkill -f next-server >/dev/null 2>&1 || true

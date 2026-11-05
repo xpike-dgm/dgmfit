@@ -6,6 +6,8 @@ import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { and, eq, gt, sql } from 'drizzle-orm'
 import { db, schema } from './db'
+import { isAdmin } from './admin-list'
+import { canEnter } from './access'
 
 const scrypt = promisify(crypto.scrypt) as (pw: string, salt: Buffer, len: number, opts: crypto.ScryptOptions) => Promise<Buffer>
 const SCRYPT = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
@@ -56,9 +58,21 @@ export interface CurrentUser {
   username: string
   email: string
   onboarded: boolean
+  status: string
+  admin: boolean
 }
 
-export const getUser = cache(async (): Promise<CurrentUser | null> => {
+// Son görülme: süreç başına 10 dakikada en fazla bir yazma
+const seen = new Map<string, number>()
+function touch(id: string) {
+  const now = Date.now()
+  if ((seen.get(id) ?? 0) > now - 600_000) return
+  seen.set(id, now)
+  void db.update(schema.users).set({ lastSeenAt: new Date() }).where(eq(schema.users.id, id)).catch(() => seen.delete(id))
+}
+
+/** Oturumdaki kullanıcı (onay durumundan bağımsız). Yalnızca giriş/onay ekranları kullanır. */
+export const getSessionUser = cache(async (): Promise<CurrentUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value
   if (!token) return null
   const rows = await db
@@ -66,6 +80,7 @@ export const getUser = cache(async (): Promise<CurrentUser | null> => {
       id: schema.users.id,
       username: schema.users.username,
       email: schema.users.email,
+      status: schema.users.status,
       onboardedAt: schema.profiles.onboardedAt,
     })
     .from(schema.sessions)
@@ -75,13 +90,21 @@ export const getUser = cache(async (): Promise<CurrentUser | null> => {
     .limit(1)
   const r = rows[0]
   if (!r) return null
-  return { id: r.id, username: r.username, email: r.email, onboarded: !!r.onboardedAt }
+  touch(r.id)
+  return { id: r.id, username: r.username, email: r.email, onboarded: !!r.onboardedAt, status: r.status, admin: isAdmin(r.username) }
 })
 
-/** Giriş yapmış ve kurulumu tamamlamış kullanıcı ister. */
+/** Uygulamaya girebilen (onaylı ya da yönetici) kullanıcı; değilse null. API uçları bunu kullanır. */
+export const getUser = cache(async (): Promise<CurrentUser | null> => {
+  const u = await getSessionUser()
+  return u && canEnter(u.status, u.admin) ? u : null
+})
+
+/** Giriş yapmış, onaylı ve kurulumu tamamlamış kullanıcı ister. */
 export async function requireUser(): Promise<CurrentUser> {
-  const u = await getUser()
+  const u = await getSessionUser()
   if (!u) redirect('/giris')
+  if (!canEnter(u.status, u.admin)) redirect('/beklemede')
   if (!u.onboarded) redirect('/kurulum')
   return u
 }

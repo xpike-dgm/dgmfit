@@ -5,6 +5,7 @@
 const { chromium, devices } = require('playwright')
 const http = require('http')
 const BASE = process.env.BASE || 'http://localhost:3100'
+const INVITE = process.env.DGFIT_E2E_INVITE ? '?davet=' + encodeURIComponent(process.env.DGFIT_E2E_INVITE) : ''
 const OUT = process.env.OUT || require('os').tmpdir()
 const fail = (m) => { throw new Error(m) }
 const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''))
@@ -64,7 +65,7 @@ function fake(port, handler) {
     return p
   }
   const signup = async (p, u) => {
-    await p.goto(BASE + '/kayit')
+    await p.goto(BASE + '/kayit' + INVITE)
     await p.fill('#username', u); await p.fill('#email', u + '@gmail.com'); await p.fill('#password', 'Deneme1234'); await p.fill('#confirm', 'Deneme1234'); await p.check('input[name=terms]')
     await p.waitForTimeout(500); await p.getByRole('button', { name: 'Hesabı oluştur' }).click(); await p.waitForURL('**/kurulum')
     await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)

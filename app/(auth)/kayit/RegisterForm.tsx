@@ -13,7 +13,7 @@ const input =
 
 const DRAFT = 'dgfit:kayit:v1'
 
-export default function RegisterForm() {
+export default function RegisterForm({ invite = '' }: { invite?: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(registerAction, {})
   const [username, setUsername] = useState(state.values?.username ?? '')
   const [email, setEmail] = useState(state.values?.email ?? '')
@@ -22,6 +22,8 @@ export default function RegisterForm() {
   const [show, setShow] = useState(false)
   const [terms, setTerms] = useState(false)
   const [doc, setDoc] = useState<null | 'terms' | 'kvkk'>(null)
+  const [code, setCode] = useState(state.values?.invite ?? invite)
+  const [showCode, setShowCode] = useState(!!(state.values?.invite ?? invite))
   // Taslak: kullanıcı adı, e-posta ve onay oturum boyunca saklanır (şifreler asla saklanmaz)
   useEffect(() => {
     try {
@@ -128,6 +130,17 @@ export default function RegisterForm() {
         </span>
       </label>
       <FieldError>{state.errors?.terms}</FieldError>
+      {showCode ? (
+        <div>
+          <label htmlFor="invite" className="block text-[14px] font-bold mb-2">Davet kodu</label>
+          <input id="invite" name="invite" className={input + ' uppercase tracking-[0.12em] num'} autoCapitalize="characters" autoComplete="off" spellCheck={false}
+            value={code} onChange={(e) => setCode(e.target.value)} placeholder="ÖRN. K7M2-PQ9X" />
+          <p className="text-[12.5px] text-mute mt-1.5">Geçerli bir davet koduyla hesabın onay beklemeden açılır.</p>
+          <FieldError>{state.errors?.invite}</FieldError>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setShowCode(true)} className="self-start text-[14px] font-bold text-acc -mt-1">Davet kodum var</button>
+      )}
       <Sheet open={doc !== null} onClose={() => setDoc(null)} title={doc === 'kvkk' ? 'KVKK aydınlatma metni' : 'Kullanım koşulları'}>
         <article className={`${legalProse} pb-4 [&_h1]:hidden`}>{doc === 'kvkk' ? <KvkkText /> : <TermsText />}</article>
         <button type="button" className={btn.primary + ' w-full mb-4'} onClick={() => setDoc(null)}>Kayda dön</button>

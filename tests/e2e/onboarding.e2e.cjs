@@ -1,5 +1,6 @@
 const { chromium, devices } = require('playwright')
 const BASE = process.env.BASE || 'http://localhost:3100'
+const INVITE = process.env.DGFIT_E2E_INVITE ? '?davet=' + encodeURIComponent(process.env.DGFIT_E2E_INVITE) : ''
 const OUT = process.env.OUT || require('os').tmpdir()
 ;(async () => {
   const b = await chromium.launch()
@@ -13,7 +14,7 @@ const OUT = process.env.OUT || require('os').tmpdir()
   const u = 'test_' + Date.now().toString(36)
   const fail = (m) => { throw new Error(m) }
 
-  await p.goto(BASE + '/kayit')
+  await p.goto(BASE + '/kayit' + INVITE)
   await p.fill('#username', u)
   await p.fill('#email', u + '@gmial.com')
   await p.waitForTimeout(600)

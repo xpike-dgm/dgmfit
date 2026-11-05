@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getUser, rateLimit } from '@/lib/auth'
-import { MAX_BYTES, mediaEnabled, saveMedia } from '@/lib/media'
+import { MAX_BYTES, mediaEnabled, saveMedia, type MediaKind } from '@/lib/media'
 import { setExercisePhoto } from '@/lib/fitness-stats'
 import { addDays, dayString } from '@/lib/time'
 
-/** Şifreli fotoğraf yükleme (multipart: file, kind=progress|exercise|social|avatar, day?, pose?, exerciseId?). */
+/** Şifreli fotoğraf yükleme (multipart: file, kind=progress|exercise|social|avatar|feedback, day?, pose?, exerciseId?). */
 export async function POST(req: Request) {
   const u = await getUser()
   if (!u) return NextResponse.json({ error: 'oturum yok' }, { status: 401 })
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const file = form?.get('file')
   if (!form || !(file instanceof Blob)) return NextResponse.json({ error: 'Dosya yok' }, { status: 400 })
   const k = String(form.get('kind') ?? '')
-  const kind = (['exercise', 'social', 'avatar'].includes(k) ? k : 'progress') as 'progress' | 'exercise' | 'social' | 'avatar'
+  const kind = (['exercise', 'social', 'avatar', 'feedback'].includes(k) ? k : 'progress') as MediaKind
   const today = dayString()
   const dayIn = String(form.get('day') ?? today)
   const day = /^\d{4}-\d{2}-\d{2}$/.test(dayIn) && dayIn <= today && dayIn >= addDays(today, -3650) ? dayIn : today

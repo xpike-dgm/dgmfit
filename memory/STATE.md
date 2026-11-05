@@ -22,6 +22,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 5b | Sosyal genişleme: meydan okumalar, gruplar + grup sohbeti, adil sıralama (DOTS, tutarlılık), düello, birebir mesaj, dürtme, antrenman partneri, 24 saatlik kartlar, PR doğrulama | tamamlandı | commit `8e9b256`; birim test 130/130; verify.sh VERIFY OK (13 e2e, sosyal-2 e2e 3 kullanıcı); release deploy `2026-11-05T06-10-32-259Z` RELEASE OK; canlı kancasız kontrol OK (5a + grup daveti/katılım/sohbet, DM, dürtme, meydan okuma katılım + sıralama, 24 saatlik kart, üye olmayana grup 404); canlıda 0012 (8 tablo), logda hata yok; 10 test kullanıcısı silindi |
 | 5c | Kullanıcı incelemesi (6/10): yeni tasarım (modül renk paletleri, açık/koyu/otomatik tema, 7 yuvalı alt bar, sekme bantları + geri düğmeli alt sayfa başlıkları, ayarların ayrı sayfalara bölünmesi) + kurulumda kullanıcının temposuna saygı | tamamlandı | commit `b5b012a` + `238bea8`; birim test 135/135; verify.sh VERIFY OK (13 e2e; tema/alt bar/odak modu onboarding e2e'de, bölünmüş ayarlar su/push/sosyal e2e'de); release `2026-11-05T08-26-24-019Z` RELEASE OK; canlıda 0013 uygulandı (su ayarları `ring`), yeni rotalar oturumsuz girişe yönlendirir, iki temada canlı ekran kontrolü, logda hata yok; 8 test kullanıcısı silindi |
 | 5d | Kullanıcı düzeltmeleri (Bugün sıkılaştırma, Fit araçları ayrı sayfalar, geri düğmesi geldiği yere, kaydırarak kapanan alt pencereler, program oluşturma akışı, kardiyo, canlı antrenman, gün seçimi, hareket filtreleri + kendi hareket fotoğrafı) + dış inceleme (8 taşma, 23 UX gözlemi) | tamamlandı | commit `e474925`; birim test 135/135; verify.sh VERIFY OK (13 e2e; yeni `ux.e2e.cjs`: aşağı çekince kapanma, geri = geldiği sayfa, hedef/aktivite düzenleme, gün silme, şablon inceleme, 9 sayfada 320 px taşma yok); release `2026-11-05T14-37-46-231Z` RELEASE OK (canlı ux/fit/fitness/food/onboarding/progress/water e2e), logda hata yok, 8 test kullanıcısı silindi |
+| 5e | Geri bildirim sayfası, beyaz liste (kayıt onayı + davet kodu), yönetim panosu (yarı ekran özet + tıklanabilir kartlar), kullanıcı yönetimi (liste/arama/filtre, onay/red/askı, kişiye özel AI kotası, veri sıfırlama, hesap silme, oturum kapatma, not), geri bildirim yönetimi (yanıt + durum) | devam ediyor | yerel `admin.e2e.cjs` OK (aşağıda); release bekleniyor |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı (beklemede) | — |
 
 ## Faz 1a kapsamı ve kabul kriterleri (tamamlandı)
@@ -237,6 +238,18 @@ Kaynak: kullanıcı mesajı 2026-11-05 (A–F maddeleri; G boş geldi) + `DGMFIT
 
 Doğrulama notları: SP-01…08'in ortak nedeni esnek satırdaki `input`un varsayılan en küçük genişliği → genel `min-width: 0` kuralı; 320 px kontrolü ux e2e'de 9 sayfada (grup/yorum/mesaj sayfaları veri gerektirdiği için otomatik değil, aynı kurala dayanır). ASSET-01 canlıda gerçek değil (görsel 200), yer tutucu eklendi.
 **Açık / kısmi:** F5 kas haritası şimdilik liste (profesyonel ön/arka anatomi görseli kullanıcıdan istenecek); F3 canlı antrenman standart set tablosuna çevrildi, kullanıcı örnek uygulama görselleri gönderirse ince ayar; UX-22 bildirim merkezi hâlâ modül sayfalarına yönlendiriyor; UX-05 şifremi unuttum (e-posta altyapısı yok) ve UX-06 hukuk metni/iletişim adresi kapsam dışı; C maddesi ("kapların kısmında yalnız bardak görünüyor") canlı veride 3 kap var, yatay şerit 3 sütunlu ızgaraya çevrildi, kullanıcı onayı bekleniyor; G maddesi boş.
+
+## Faz 5e kapsamı ve kabul kriterleri (devam ediyor)
+
+Kaynak: kullanıcı mesajı 2026-11-05 ("ayarlara feedback butonu…", "whitelist mantığına geçiyoruz…", "yönetici paneline ui ux…", "kayıtlı kullanıcıları görme, veri sıfırlama, AI kotası…").
+
+- [x] Profil → Destek → "Geri bildirim gönder" → `/profil/geri-bildirim`: tür (öneri/hata/şikayet/diğer), bölüm, metin, isteğe bağlı ekran görüntüsü (şifreli), cihaz bilgisi; gönderdiklerin + yönetici yanıtı, okunmamış yanıt rozeti; günde en fazla 10
+- [x] Beyaz liste: davetsiz kayıt `pending` → `/beklemede`; onaysız kullanıcı sayfa ve API'lere giremez (401); askı/red oturumları kapatır; yöneticilere push (yeni kayıt, yeni geri bildirim)
+- [x] Yönetim panosu `/yonetim`: üst yarı özet (6 sayaç + 14 günlük grafik), altta tıklanabilir kartlar (onaylar, kullanıcılar, geri bildirim, moderasyon, AI, davetler) → ilgili sayfa
+- [x] Kullanıcılar: arama, durum filtresi + sayılar, sıralama, hızlı onay/red, hepsini onayla; detay: kullanım sayaçları, bilgiler, erişim, AI kotası, oturumlar, not, veri sıfırla, hesap sil
+- [x] Geri bildirim yönetimi: filtre (durum/tür), detay (görsel, cihaz), hazır yanıtlar, yanıtla + çözüldü
+- [x] Davet kodları: oluştur (hak + süre), paylaş, kapat/sil
+- [ ] verify.sh + canlı e2e + hafıza (release sonrası)
 
 ## Sıradaki işler
 

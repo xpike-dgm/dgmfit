@@ -14,7 +14,7 @@ export default async function AiAdminPage() {
   const sum = (f: (x: (typeof o.today)[number]) => boolean) => o.today.filter(f).reduce((a, x) => a + x.n, 0)
   return (
     <div className="flex flex-col gap-3 px-4">
-      <TopBar back="/profil" title="AI ayarları" />
+      <TopBar back="/yonetim" title="AI ayarları" />
       <section className="card p-5 flex flex-col gap-2" data-testid="ai-today">
         <Eyebrow>Bugün</Eyebrow>
         <p className="text-[14px] text-ink-2"><b className="num">{sum((x) => x.ok && !x.cached)}</b> başarılı çağrı · <b className="num">{sum((x) => x.cached)}</b> önbellekten · <b className="num">{sum((x) => !x.ok)}</b> hata</p>

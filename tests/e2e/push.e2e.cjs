@@ -6,6 +6,7 @@ const fs = require('fs')
 const crypto = require('crypto')
 const { chromium, devices } = require('playwright')
 const BASE = process.env.BASE || 'http://localhost:3100'
+const INVITE = process.env.DGFIT_E2E_INVITE ? '?davet=' + encodeURIComponent(process.env.DGFIT_E2E_INVITE) : ''
 const CA = process.env.TEST_CA_DIR
 const fail = (m) => { throw new Error(m) }
 
@@ -26,7 +27,7 @@ if (!CA) { console.log('PUSH E2E atlandı (TEST_CA_DIR yok)'); process.exit(0) }
   const p = await ctx.newPage()
   p.setDefaultNavigationTimeout(60000)
   const u = 'test_p' + Date.now().toString(36)
-  await p.goto(BASE + '/kayit')
+  await p.goto(BASE + '/kayit' + INVITE)
   await p.fill('#username', u); await p.fill('#email', u + '@gmail.com')
   await p.fill('#password', 'Deneme1234'); await p.fill('#confirm', 'Deneme1234'); await p.check('input[name=terms]')
   await p.waitForTimeout(500)

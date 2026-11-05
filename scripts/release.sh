@@ -10,6 +10,9 @@ for i in $(seq 1 30); do curl -sf https://dgfit.dgmcraft.online/api/health >/dev
 echo "sağlık: $(curl -s https://dgfit.dgmcraft.online/api/health)"
 echo "test kancası (404 olmalı): $(curl -s -o /dev/null -w '%{http_code}' -X POST https://dgfit.dgmcraft.online/api/test/fit)"
 export BASE=https://dgfit.dgmcraft.online OUT="${OUT:-/tmp/dgfit-e2e}"; mkdir -p "$OUT"
+# Beyaz liste: canlı test hesapları e2e davet koduyla açılır (kod repo dışında: ~/.config/dgfit/e2e-invite; INFRA.md)
+[ -z "${DGFIT_E2E_INVITE:-}" ] && [ -f ~/.config/dgfit/e2e-invite ] && export DGFIT_E2E_INVITE="$(cat ~/.config/dgfit/e2e-invite)"
+[ -z "${DGFIT_E2E_INVITE:-}" ] && { echo "RELEASE: e2e davet kodu yok (~/.config/dgfit/e2e-invite)"; exit 1; }
 if [ $# -gt 0 ]; then tests=(); for t in "$@"; do tests+=("tests/e2e/$t.e2e.cjs"); done; else tests=(tests/e2e/*.e2e.cjs); fi
 fail=0
 for t in "${tests[@]}"; do
