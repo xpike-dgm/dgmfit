@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Faz 5h-3: program günü + canlı antrenman yeni düzeni
+- Kullanıcının gönderdiği ekranlara göre: program günü satırları küçük resim + "N set · X tekrar · R RiR", gün başına "Antrenmana Başla"; canlı ekranda hareket şeridi, ilerleme çubuğu, tek hareket görünümü, Tarih/Video pencereleri, SET/KG/TEKRAR/RIR/✓ tablosu, RiR kaydırıcısı (yarım adım, paket metinleri), son sette otomatik sonraki hareket. 0018: `workout_sets.rir` real.
+- e2e'ler şeride uyarlandı (fitness, progress, planner); anatomi e2e'ye program → canlı → RiR 2,5 → Tarih adımı eklendi.
+- Hata: manifest'te 0018 yoktu → memory-check yakaladı, eklendi.
+- Doğrulama: commit `9d749db`; verify.sh VERIFY OK (151 birim, 17 e2e); release `2026-11-05T23-22-22-474Z` RELEASE OK; canlı rir sütunu real; logda hata 0; 11 test kullanıcısı silindi.
+
 ## 2026-11-06 — Faz 5h-2: kas haritası + video akışı + yeni hareket detayı
 - Kullanıcının gönderdiği uygulama ekranlarına göre (akış ve düzen aynı, renk/yazı DgFit): `/fitness/anatomi`, `/fitness/anatomi/[kas]`, `/fitness/kaydedilenler`, `LicensedHero`, `FeatureTiles`, `BodyFigure`, 0017 `exercise_favorites`. Kas vurgusu paketteki çokgenlerden (yumuşatılmış), MSS ve açıklama etiketleri paket metninden (kullanıcı: "elimizdekilerle yapalım").
 - Hata: yerel pakette yalnızca 2 video vardı → akışta dosyası olmayan harekete video adresi verilmiyor; testler için göğüs videoları geçici klasöre indirildi.
