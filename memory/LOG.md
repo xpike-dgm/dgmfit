@@ -3,7 +3,7 @@
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
 ## 2026-11-05 — Hareket adları İngilizce
-- Kullanıcı isteği: Fitness'ta hareket adları İngilizce kalsın. `scripts/data/build_exercises.mjs`: görünen ad = kaynak adı, Türkçe ad takma adların başına; seed sürümü `6b1d9d0883fb`. Hareket sayfası alt başlığı "Türkçe: …". e2e'lerde Türkçe hareket adları İngilizceye çevrildi (fitness, progress, social).
+- Kullanıcı isteği: Fitness'ta hareket adları İngilizce kalsın. `scripts/data/build_exercises.mjs`: görünen ad = kaynak adı, Türkçe ad takma adların başına; hareket verisi sürümü 6b1d9d0883fb (veri özeti, commit değil). Hareket sayfası alt başlığı "Türkçe: …". e2e'lerde Türkçe hareket adları İngilizceye çevrildi (fitness, progress, social).
 - Doğrulama: commit `3805ab9`; verify.sh VERIFY OK (146 birim, 15 e2e); release `2026-11-05T17-57-24-577Z` RELEASE OK; canlı DB: `Barbell Squat [Squat (barbell)]`, `Pullups [Barfiks]`, 876 hareket; test kullanıcıları silindi.
 
 ## 2026-11-05 — Faz 5g: günlük özet görseli
