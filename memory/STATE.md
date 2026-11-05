@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 5c tamamlandı (2026-11-05): yeni tasarım + kurulum temposu. Faz 0–5c tamamlandı; kullanıcının diğer hata bildirimleri bekleniyor; Faz 6 isteğe bağlı ve beklemede. AI özelliklerinin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
+**Şu anki faz: Faz 5d devam ediyor (2026-11-05): kullanıcı düzeltme listesi (A–F) + dış AI görsel inceleme paketi. Faz 0–5c tamamlandı; Faz 6 isteğe bağlı ve beklemede. AI özelliklerinin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -21,6 +21,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 5a | Sosyal çekirdek: profil (foto, biyografi, salon, hedef rozeti), PR vitrini, istatistik kartları, gizlilik (profil + öğe bazında), arkadaşlık + takip, arama, davet linki + QR, arkadaş önerileri, akış (önerilen/kronolojik), gönderi türleri, tepki/yorum/kaydetme, antrenman kopyalama, tarif kaydetme, engelle/sessize al/şikayet, AI + kural moderasyonu, bildirimler | tamamlandı | commit `7072263`; birim test 124/124; verify.sh VERIFY OK (12 e2e, sosyal e2e 3 kullanıcı + sahte Claude moderasyonu); release deploy `2026-11-05T05-42-38-190Z` RELEASE OK; canlı kancasız sosyal kontrolü OK (arama → istek → kabul → gönderi → arkadaş akışı → tepki bildirimi → yabancıya 404 → QR); canlıda 0011 (10 tablo), logda hata yok; 10 test kullanıcısı silindi. AI moderasyonu gerçek sağlayıcıyla denenmedi (canlıda anahtar yok → yalnızca kural; fotoğraflı gönderi onaya düşer) |
 | 5b | Sosyal genişleme: meydan okumalar, gruplar + grup sohbeti, adil sıralama (DOTS, tutarlılık), düello, birebir mesaj, dürtme, antrenman partneri, 24 saatlik kartlar, PR doğrulama | tamamlandı | commit `8e9b256`; birim test 130/130; verify.sh VERIFY OK (13 e2e, sosyal-2 e2e 3 kullanıcı); release deploy `2026-11-05T06-10-32-259Z` RELEASE OK; canlı kancasız kontrol OK (5a + grup daveti/katılım/sohbet, DM, dürtme, meydan okuma katılım + sıralama, 24 saatlik kart, üye olmayana grup 404); canlıda 0012 (8 tablo), logda hata yok; 10 test kullanıcısı silindi |
 | 5c | Kullanıcı incelemesi (6/10): yeni tasarım (modül renk paletleri, açık/koyu/otomatik tema, 7 yuvalı alt bar, sekme bantları + geri düğmeli alt sayfa başlıkları, ayarların ayrı sayfalara bölünmesi) + kurulumda kullanıcının temposuna saygı | tamamlandı | commit `b5b012a` + `238bea8`; birim test 135/135; verify.sh VERIFY OK (13 e2e; tema/alt bar/odak modu onboarding e2e'de, bölünmüş ayarlar su/push/sosyal e2e'de); release `2026-11-05T08-26-24-019Z` RELEASE OK; canlıda 0013 uygulandı (su ayarları `ring`), yeni rotalar oturumsuz girişe yönlendirir, iki temada canlı ekran kontrolü, logda hata yok; 8 test kullanıcısı silindi |
+| 5d | Kullanıcı düzeltmeleri (Bugün sıkılaştırma, Fit araçları ayrı sayfalar, geri düğmesi geldiği yere, kaydırarak kapanan alt pencereler, program oluşturma akışı, kardiyo, canlı antrenman, gün seçimi, hareket filtreleri + kendi hareket fotoğrafı) + dış inceleme (8 taşma, 23 UX gözlemi) | devam ediyor | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı (beklemede) | — |
 
 ## Faz 1a kapsamı ve kabul kriterleri (tamamlandı)
@@ -213,6 +214,26 @@ Kaynak: kullanıcı incelemesi 2026-11-05 ("her şey karmakarışık; her düzen
 
 Kanıt: `tests/calc.test.ts` (ekran görüntüsündeki 70 gün / 1,2 kg/hf kilo alma kabul + uyarı; 50 gün / 1,68 kg/hf red, en kısa 56 gün; kalori tabanı + tahmini süre; 18 yaş altı), `tests/theme.test.ts`, onboarding e2e (30 gün güvensiz ama devam açık; 20 gün kapalı → "günü kullan"; 7 sekme sırası; su sayfasında `data-mod=water`; Açık/Koyu/Otomatik çerezle kalıcı, zemin rgb(243,244,246)/rgb(20,22,27); canlı antrenmanda alt bar yok), su e2e ("Düzenle" → `/su/ayarlar/kaplar`), sosyal e2e (menü → profil bilgileri; ayrı sayfada kaydetmek diğerini bozmaz).
 **Açık:** Hesap ve kişisel bilgiler sayfası salt okunur (boy/aktivite düzenleme yok); hedef değiştirme akışı yok (Fit planı); alt sayfaların bir kısmında tasarımdaki alt başlık metni yok.
+
+## Faz 5d kapsamı ve kabul kriterleri (devam ediyor)
+
+Kaynak: kullanıcı mesajı 2026-11-05 (A–F maddeleri; G boş geldi) + `DGMFIT_AI_DEVIR` paketi (başka bir AI'ın 66 rota × 12 boyut görsel incelemesi; commit `45b274f`). Paketteki her bulgu koda/canlıya karşı doğrulanır; gerçek olmayanlar burada gerekçesiyle not edilir.
+
+- [ ] SP-01…08: 320 px'te taşan satırlar (tartı, AI günlük hak, kap hacmi, boş program, gün ekle, grup/yorum/mesaj gönder) taşmaz
+- [ ] ASSET-01: canlıda görseller 200 (doğrulandı: `Side_Bridge/0.jpg` 200 image/jpeg); yerel testte görsel yok → kırık simge yerine yer tutucu
+- [ ] A: Bugün tek ekrana yakın (kaydırmadan ana bilgiler)
+- [ ] B: Fit'te kalori bankası, haftalık check-in, senaryo simülatörü, karb döngüsü, önümüzdeki 7 gün düğme; her biri kendi sayfası ve açıklaması
+- [ ] C: Su kapları bölümü; geri düğmesi geldiği sayfaya döner (tüm alt sayfalar)
+- [ ] D: Alt pencereler tutamaçtan aşağı kaydırınca animasyonla kapanır, görünür kapat düğmesi (UX-07)
+- [ ] E: Yemek ekranlarında aynı sorunlar (geri, pencereler, boş durum eylemi UX-23, AI yok mesajı tutarlı UX-18)
+- [ ] F1: Program oluştur = 3 seçenek (Benim için oluştur · Hazır şablonlar · Boş program) ayrı sayfalar; ortam → ekipman açılır menüleri; şablon incelenebilir; programda hareket düzenle/sil ve gün sil görünür
+- [ ] F2: Kardiyo türü açılır menü, sayfa düzeni
+- [ ] F3: Canlı antrenman düzeni (set tablosu, önceki değer, set ekle, dinlenme çubuğu, hareket menüsü)
+- [ ] F4: Programdan istenen gün seçilerek başlanır
+- [ ] F5: Kas ısı haritası: amatör çizim kaldırılır; profesyonel görsel kullanıcıdan istenir (varlık tanımı verilir)
+- [ ] F6: Hareket filtreleri tek "Filtrele" penceresi; kaynak yazısı kaldırılır; kendi hareketine fotoğraf
+- [ ] UX gözlemleri: profil bilgisi ve hedef düzenleme (UX-03/04), alt bar 320 px (UX-08), bildirim satırları (UX-09), buton silme (UX-10), kurulumda sayı yazma (UX-11), Atla üstte (UX-12), aktivite açıklaması (UX-13), program detayında Başla üstte (UX-14), terim açıklamaları (UX-15), ölçü birimleri (UX-16), faz metni (UX-17), su ilk durum (UX-19), boş istatistik (UX-20), sosyal sıkılaştırma (UX-21), merkezi bildirimler (UX-22), tarih biçimi (UX-24), yönetici model alanları (UX-25). Kapsam dışı: şifremi unuttum (UX-05, e-posta altyapısı ertelendi), hukuk metni ve iletişim adresi (UX-06, kullanıcı kararı)
+- [ ] Testler + verify.sh + canlı e2e + hafıza
 
 ## Sıradaki işler
 

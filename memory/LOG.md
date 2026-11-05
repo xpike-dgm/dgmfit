@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 5d başladı (kullanıcı düzeltmeleri + dış inceleme paketi)
+- Faz başı: memory-check geçti; son commit `45b274f` (paketteki incelenen commit ile aynı). ASSET-01 canlıda doğrulandı: görsel 200; yalnızca yerel ortamda görsel yok.
+
 ## 2026-11-05 — Kullanıcı geri bildirimi: kayıt formu + yakınlaştırma/yenileme
 - Kayıt ekranında koşullar/KVKK bağlantısı sayfadan çıkıyordu → form siliniyordu. Artık metin alt sayfada açılır (`components/legal.tsx` ortak içerik, `/yasal/*` de onu kullanır); kullanıcı adı, e-posta ve onay `sessionStorage` taslağında (şifre asla saklanmaz, gönderince silinir).
 - Yakınlaştırma kapalı (`maximumScale: 1`, `userScalable: false`, `html { touch-action: pan-x pan-y }`, iOS `gesturestart` engeli); aşağı çekip yenileme kapalı (`html { overscroll-behavior: none }`).
