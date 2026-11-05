@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-05 — Faz 4c tamamlandı (sahte sağlayıcıyla)
+- Saf motorlar: `lib/menu.ts` (ölçekleme, alışveriş, restoran sıralaması), `lib/scenario.ts` (simülatör, karb döngüsü), `lib/ai-program.ts` (program denetimi); `tests/planner.test.ts` (6).
+- Veri katmanı `lib/planner-data.ts` (Türkçe besin kataloğu modele verilir, ad eşleşmesi katalog → arama), migration 0010, ekranlar `/yemek/plan`, `/yemek/plan/alisveris`, `/yemek/elimdeki`, `/yemek/restoran`, programlarda "AI ile oluştur", Plan'da simülatör + karb döngüsü; `dayTargets` karb döngüsünü açık günlere uygular; koç eylemi `plan_menu`.
+- Bulunan sorunlar: Plan ekranındaki ikinci düğme adı ("…kaydet") fit e2e'deki "Kaydet" seçicisiyle çakıştı (Playwright alt dize eşleşmesi) → "Döngüyü uygula". Ekran görüntüsünde: ölçek sınırına takılan menü hedefin çok altında kalıyordu ve kullanıcıya söylenmiyordu → %10'dan fazla sapmada uyarı + e2e adımı.
+- Doğrulama: commit `3410884`; verify.sh VERIFY OK (birim 118/118, 11 e2e); release `2026-11-05T03-34-15-650Z` RELEASE OK; canlıda 4 tablo + `0010_planner.sql`; 7 test kullanıcısı silindi.
+
 ## 2026-11-05 — Faz 4c başladı
 - Faz başı: memory-check geçti; son commit `6b72158` STATE ile uyumlu; çalışma ağacı temiz. Kapsam spesifikasyon 6.4, 4.2, 5.6, 10'dan.
 

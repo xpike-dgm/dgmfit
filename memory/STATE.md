@@ -1,6 +1,6 @@
 # Proje durumu
 
-**Şu anki faz: Faz 4c devam ediyor (2026-11-05 başladı) — AI menü + alışveriş, elimdekiler tarifi, restoran modu, AI program, senaryo simülatörü, karb döngüsü. 4a/4b'nin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
+**Şu anki faz: Faz 4c tamamlandı (2026-11-05, sahte sağlayıcıyla). Sıradaki: Faz 5 (Sosyal). 4a/4b/4c'nin gerçek sağlayıcı denemesi kullanıcının anahtarı girmesini bekliyor.**
 
 Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" ya da "devam ediyor" olarak kalır.
 
@@ -17,7 +17,7 @@ Kural: "tamamlandı" yalnızca kanıtla yazılır. Kanıtsız iş "planlandı" y
 | 3b | Fitness gelişim: grafikler, ısı haritası, plato, ölçüler + şifreli fotoğraf, kuvvet seviyesi, alternatif, periyodizasyon + deload, GZCLP tam, 783 hareketin Türkçesi, çevrimdışı canlı mod, kilit ekranı dinlenme push'u | tamamlandı | commit `eda136d` + `ff6ec3b` + `cd79683` + `8bee39b` + `b8c341c` (+ test düzeltmeleri); birim test 94/94; verify.sh VERIFY OK (7 e2e, progress tohumlu mod dahil); canlı fit/fitness/food/onboarding/su + progress e2e OK (deploy `2026-11-05T01-04-41-798Z`); canlıda 872/876 hareket Türkçe adımlı, medya şifreli (düz JPEG/PNG imzası 0/4); 9 test kullanıcısı silindi |
 | 4a | AI altyapısı (sağlayıcı katmanı, Claude → OpenAI yedeği, kota, önbellek, yönetici AI ayarları, şifreli anahtarlar) + yemek fotoğrafı tanıma + sesli/yazılı öğün ve su kaydı + etiket okuma | tamamlandı (sahte sağlayıcıyla) | commit `8ff0175` + `d3777b6`; birim test 99/99; verify.sh VERIFY OK (8 e2e, AI e2e sahte Claude/OpenAI ile); release deploy `2026-11-05T02-16-18-490Z` canlı e2e OK; canlıda DGFIT_ADMINS=deneme, test kancası ve sahte adresler yok, oturumsuz 401. **Gerçek Claude/OpenAI çağrısı henüz yapılmadı** (anahtar yok) |
 | 4b | AI koç (sohbet, onaylı eylemler, kişilik, "ne olur" kartı), günlük proaktif içgörü, haftalık rapor + push, yeme bozukluğu / aşırı antrenman sınırları | tamamlandı (sahte sağlayıcıyla) | commit `ec9ae94`; birim test 112/112; verify.sh VERIFY OK (10 e2e, koç e2e sahte Claude ile); release deploy `2026-11-05T03-05-14-235Z` RELEASE OK; canlıda 0009 uygulandı (4 tablo), `/api/test/coach` POST 404, `/api/coach/insight` oturumsuz 401, `/koc` `/rapor` girişe yönlendirir; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
-| 4c | AI haftalık menü + alışveriş listesi + toplu hazırlık, "elimde bunlar var" tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü, karb döngüsü, koçtan "yarının menüsü" | devam ediyor | — |
+| 4c | AI haftalık menü + alışveriş listesi + toplu hazırlık, "elimde bunlar var" tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü, karb döngüsü, koçtan "yarının menüsü" | tamamlandı (sahte sağlayıcıyla) | commit `3410884`; birim test 118/118; verify.sh VERIFY OK (11 e2e, planlama e2e sahte Claude ile); release deploy `2026-11-05T03-34-15-650Z` RELEASE OK; canlıda 0010 uygulandı (4 tablo), yeni sayfalar girişe yönlendirir, `/api/ai/restaurant` oturumsuz 401, app logunda hata yok; 7 test kullanıcısı silindi. **Gerçek API çağrısı yok** |
 | 5 | Sosyal | planlandı | — |
 | 6 | Mağaza sürümü ve cihazlar (isteğe bağlı) | planlandı | — |
 
@@ -145,24 +145,27 @@ Kaynak: spesifikasyon 10 (AI Koç, Sınırlar), 5.6 (haftalık rapor, davranış
 Kanıt `tests/e2e/coach.e2e.cjs` (sahte Claude :3190, OpenAI 503): veri yokken "start" içgörüsü AI'sız ve kapatılabilir; 3 gün 600 kcal → Bugün'de "Kendine nazik ol" destek kartı; koç isteği Haiku 5.5, bağlamda BAĞLAM + taban 1200 + düşük kalori bayrağı + aktif program + kişilik + kurallar; ikinci mesajda geçmiş 3 mesaj; pizza 300 g kalorisi = veritabanı 100 g × 3, kalan bütçe önce − kcal = sonra; hedef +2 hafta onayla → Bugün'de tarih değişti; −2 hafta güvenlik bayrağıyla reddedildi; Plank programın ilk gününe eklendi; 300 ml su eklendi; "kusuyorum" → destek kartı, model eylem/ne olur önerse de kaldırıldı, modele uyarı gitti; kişilik disiplinli sonraki isteğe yansıdı; kalan hak = başlangıç − koç çağrısı; 9 gün önceki haftanın raporu AI özetiyle, yeniden açılışta yeniden üretilmedi; sohbet silindi; ikinci kullanıcıda "kayıt boşluğu" içgörüsü AI ifadesiyle (sayı denetiminden geçti).
 **Açık:** gerçek modellerle denenmedi; gerçek push teslimi (Pazar 19.00) cihazda denenmeli; besin araması "pizza" için USDA'daki "Pizza rolls" kaydını buluyor (arama kalitesi, ne olur kartını etkiler).
 
-## Faz 4c kapsamı ve kabul kriterleri (devam ediyor)
+## Faz 4c kapsamı ve kabul kriterleri (tamamlandı, gerçek sağlayıcı denemesi bekliyor)
 
 Kaynak: spesifikasyon 6.4 (AI haftalık menü, alışveriş listesi, meal prep, elimdekiler, restoran modu), 4.2 (AI program oluşturucu), 5.6 (senaryo simülatörü, karb döngüsü), 10 (koç "yarının menüsünü hazırla", menü/program = dil modeli + veritabanı/kurallar).
 
-- [ ] AI menü (1 ya da 7 gün): Fit'in günlük kalori/protein hedefleri, beslenme tercihi, alerjiler, bütçe düzeyi → dil modeli DgFit Türkçe besin kataloğundan ad + gram önerir → veritabanı eşleşmesi → motor (`lib/menu.ts`) günü hedef kaloriye ölçekler; kalori/makro motordan; öğünü tek dokunuşla günlüğe ekleme
-- [ ] Alışveriş listesi: menüden, yemekler tarif malzemelerine açılır, reyonlara göre gruplanır, işaretlenebilir; isteğe bağlı toplu hazırlık (meal prep) adımları
-- [ ] "Elimde bunlar var": malzemeler (yazı/ses) → en fazla 3 tarif → malzemeler veritabanından, porsiyon bugünkü kalan bütçeye ölçeklenir → günlüğe ekleme
-- [ ] Restoran modu: menü fotoğrafı (görü modeli) → yemekler + tahmini porsiyon → veritabanı kalorisi → motor kalan bütçeye en uygun 3 seçeneği sıralar → günlüğe ekleme
-- [ ] AI program oluşturucu: deneyim, gün, seans süresi, ekipman, hedef, zayıf kas grupları → dil modeli kütüphaneden hareket seçer → kural motoru (`lib/ai-program.ts`) set/tekrar/RIR/dinlenme sınırlarını, seans başına hareket sayısını, haftalık kas başına seti denetler → program olarak kaydedilir
-- [ ] Senaryo simülatörü (`lib/scenario.ts`, saf): ek kardiyo (tür × dk × gün/hafta, MET) ve günlük kalori değişikliği → yeni haftalık tempo ve tahmini hedef tarihi, güvenlik uyarısı
-- [ ] Karb döngüsü: antrenman günlerinde karbonhidrat +X g, dinlenme günlerinde haftalık toplam korunacak şekilde azalır (saf fonksiyon, açık günlerin hedeflerine uygulanır)
-- [ ] Koç eylemi "yarının menüsünü hazırla" (onayla → 1 günlük menü)
-- [ ] Testler: birim (ölçekleme, alışveriş birleştirme, sıralama, program denetimi, simülatör, karb döngüsü) + e2e (sahte sağlayıcıyla menü, alışveriş, elimdekiler, restoran, AI program, simülatör, karb döngüsü, koç menü eylemi) + verify.sh + canlı e2e + hafıza
+- [x] AI menü (1 ya da 7 gün): Fit'in günlük kalori/protein hedefleri, beslenme tercihi, alerjiler, bütçe düzeyi → dil modeli DgFit Türkçe besin kataloğundan ad + gram önerir → veritabanı eşleşmesi → motor (`lib/menu.ts`) günü hedef kaloriye ölçekler; kalori/makro motordan; öğünü tek dokunuşla günlüğe ekleme
+- [x] Alışveriş listesi: menüden, yemekler tarif malzemelerine açılır, reyonlara göre gruplanır, işaretlenebilir; isteğe bağlı toplu hazırlık (meal prep) adımları
+- [x] "Elimde bunlar var": malzemeler (yazı/ses) → en fazla 3 tarif → malzemeler veritabanından, porsiyon bugünkü kalan bütçeye ölçeklenir → günlüğe ekleme
+- [x] Restoran modu: menü fotoğrafı (görü modeli) → yemekler + tahmini porsiyon → veritabanı kalorisi → motor kalan bütçeye en uygun 3 seçeneği sıralar → günlüğe ekleme
+- [x] AI program oluşturucu: deneyim, gün, seans süresi, ekipman, hedef, zayıf kas grupları → dil modeli kütüphaneden hareket seçer → kural motoru (`lib/ai-program.ts`) set/tekrar/RIR/dinlenme sınırlarını, seans başına hareket sayısını, haftalık kas başına seti denetler → program olarak kaydedilir
+- [x] Senaryo simülatörü (`lib/scenario.ts`, saf): ek kardiyo (tür × dk × gün/hafta, MET) ve günlük kalori değişikliği → yeni haftalık tempo ve tahmini hedef tarihi, güvenlik uyarısı
+- [x] Karb döngüsü: antrenman günlerinde karbonhidrat +X g, dinlenme günlerinde haftalık toplam korunacak şekilde azalır (saf fonksiyon, açık günlerin hedeflerine uygulanır)
+- [x] Koç eylemi "yarının menüsünü hazırla" (onayla → 1 günlük menü)
+- [x] Testler: birim (ölçekleme, alışveriş birleştirme, sıralama, program denetimi, simülatör, karb döngüsü) + e2e (sahte sağlayıcıyla menü, alışveriş, elimdekiler, restoran, AI program, simülatör, karb döngüsü, koç menü eylemi) + verify.sh + canlı e2e + hafıza
+
+Kanıt `tests/e2e/planner.e2e.cjs` (sahte Claude :3190): yönetici restoran görevi varsayılan Opus; menü isteği günlük hedefler + KATALOG + alerji (fıstık) + bütçe içerir; 7 gün sekmesi; menemen kalorisi = veritabanı 100 g × ölçeklenmiş gram (250 g değil); eşleşmeyen kalem işaretli; hedeften sapma uyarısı; toplu hazırlık adımları; kahvaltı günlüğe eklendi; alışveriş listesinde menemen yerine yumurta (tarif malzemesi) Süt ürünleri reyonunda, Manav reyonu var, işaret yeniden yüklemede kalıcı; elimdekiler porsiyonu günlüğe eklendi; restoran isteği Opus + görsel, 3 öneri + 4 yemek, ekleme; AI program 4 gün döndü → 3 gün, "Uçan halı" çıkarıldı ve notta, yeni başlayanda set ≤ 4; simülatörde haftada 3 koşu → daha erken tarih; karb döngüsü Bugün karbonhidrat hedefini değiştirdi; koç "yarının menüsü" onayla → 1 günlük menü, önceki 7 günlük arşivlendi.
+**Açık:** gerçek modellerle denenmedi; katalog dışı adlar ("pizza" gibi) USDA aramasına düşer ve zayıf eşleşebilir.
 
 ## Sıradaki işler
 
 1. Kullanıcı `deneme` ile giriş yapıp Profil → AI ayarları'ndan Claude ve OpenAI anahtarlarını girsin; ardından gerçek fotoğraf/yazı ve koç denemesi (yönetici sayfasında hata/kullanım/maliyet görünür).
-2. Faz 4c (AI menü + alışveriş listesi, elimdekiler tarifi, restoran modu, AI program oluşturucu, senaryo simülatörü), sonra Faz 5 (Sosyal).
+2. Faz 5 (Sosyal: profil, arkadaşlar, akış, PR vitrini, meydan okumalar, moderasyon).
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
 3. E-posta doğrulama kodu (Mailu SMTP) — ertelendi.
 
