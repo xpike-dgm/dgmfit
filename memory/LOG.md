@@ -2,6 +2,13 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Otonom A3+A4: hedef zekâsı + tam senaryo seti
+- A3 (Faz 8): yağ oranı (kullanıcı girer ya da Donanma formülüyle boyun/bel/kalça ölçülerinden; yoksa VKİ tahmini), yağsız kütleye göre protein/yağ/karbonhidrat, kas kazanım temposu uyarısı, haftalık check-in'de yön koruması (kas hedefinde harcamanın altına, kilo vermede üstüne inmez) + 60 kcal ölü bant + ölçülen harcamanın öncekiyle yumuşatılması, recomp'ta antrenman günü fazla/dinlenme günü az kalori, hedefe ulaşınca Bugün'de seçim kartı ("kilomu koruyup kas kazanayım" → aynı bitiş tarihli koruma aşaması), hedef tarih geçince "süreyi uzat", /profil/vucut, Yemek'te detaylı besin hedefleri (lif, şeker, doymuş yağ, sodyum, potasyum, kalsiyum, demir, D, B12, su), Fit'te kazanım kalitesi kartı.
+- A4 (Faz 9): 4012 senaryoda değişmez ihlali 0; sonuç uyarıları kas hedefinde açığa sokma 679→1, hedef sonrası zikzak 558→~33, hedefi kaçırma 82→6, uzatmada da ulaşılamayan 30→17. Kalanlar: kullanıcının seçtiği gerçekçi olmayan plan, tartı gürültüsü, eksik kayıt.
+- Hata (test): goal e2e "tarih geçti" kartı çıkmıyordu → test kancası bitiş tarihini kaydırmıyordu (`shiftEnd`).
+- Doğrulama: commit `e1ee78e`, `aec697f`, `bb273c5`; verify.sh VERIFY OK (185 birim, 24 e2e); release `2026-11-06T23-42-58-726Z` RELEASE OK; logda hata 0; 12 test kullanıcısı silindi.
+- Yedekten geri yükleme denemesi (A7 parçası): `dgfit-pwa-2026-11-06.dump` ağsız geçici postgres:17 container'ına 2 sn'de geri yüklendi (users 4, foods 7830, goals 8, migration 20 = yedek anındaki şema), canlıya dokunulmadı, container silindi. Bulgu: yedek dosyaları 644 izinliydi (klasör 700 olduğu için dışarı açık değildi) → `deploy/backup.sh`'e `umask 077`, mevcut yedekler 600 (önceki betik: `deploy/backup.sh.pre-umask`).
+
 ## 2026-11-07 — Otonom A1+A2: senaryo simülatörü + Bugünün durumu
 - Kullanıcı aralıksız çalışma istedi (soru yok; test geçen her adım canlıya). Sıra STATE "OTONOM ÇALIŞMA" tablosunda.
 - A1: Fit orkestrasyonu saf fonksiyonlara ayrıldı (`balanceWindow`, `trendSeries`, `checkinCompute`); `lib/sim` (sanal vücut: Katch-McArdle, Forbes, uyumsal termogenez, glikojen/su, tartı gürültüsü; davranış: uyum, eksik kayıt, tatil/hastalık, yanlış tartı; gün gün gerçek motor), değişmezler + sonuç kuralları, altın dosyalar (`tests/sim/golden-*.json`), hızlı set `npm test`'te (~9 sn), tam set (4012 senaryo, ~105 sn) `release.sh`'te kapı.

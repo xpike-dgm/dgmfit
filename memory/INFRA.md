@@ -27,7 +27,7 @@ Son doğrulama: 2026-11-04 (canlı health, deploy log, docker stats).
 | `deploy/token` | deploy token'ı (600) |
 | `deploy/receiver.js` | systemd `dgfit-pwa-deploy.service`, `127.0.0.1:3931` |
 | `deploy/activate.sh` | symlink değiştir → app'i yeniden oluştur → `/api/health` bekle → başarısızsa önceki sürüme dön |
-| `deploy/backup.sh` | yedek betiği |
+| `deploy/backup.sh` | yedek betiği (`umask 077`, yedekler 600; geri yükleme denemesi 2026-11-07: ağsız geçici `postgres:17-alpine` container + `pg_restore --no-owner`, 2 sn) |
 
 Portlar: app `127.0.0.1:3930`, deploy alıcısı `127.0.0.1:3931`.
 
