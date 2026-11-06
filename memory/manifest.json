@@ -243,7 +243,10 @@
     "app/(app)/fitness/programlar/sablonlar/[id]/AgTemplate.tsx",
     "tests/ag-programs.test.ts",
     "tests/supersets.test.ts",
-    "tests/e2e/agprogram.e2e.cjs"
+    "tests/e2e/agprogram.e2e.cjs",
+    "lib/cns.ts",
+    "tests/cns.test.ts",
+    "app/(app)/fitness/CnsCard.tsx"
   ],
   "tables": [
     "users",

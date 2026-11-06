@@ -6,13 +6,15 @@ import { addDays, shortDate } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { Eyebrow, TopBar } from '@/components/ui'
 import BodyMap from './BodyMap'
+import { weekCns } from '@/lib/fitness-data'
+import { WeekCnsCard } from '../CnsCard'
 
 export const metadata = { title: 'Fitness istatistikleri · DgFit' }
 const STATUS = { 'yeşil': { c: 'var(--color-good)', t: 'Hazır' }, 'sarı': { c: 'var(--color-orange)', t: 'Toparlanıyor' }, 'kırmızı': { c: 'var(--color-danger)', t: 'Dinlendir' } } as const
 
 export default async function StatsPage() {
   const u = await requireUser()
-  const s = await statsOverview(u.id)
+  const [s, cns] = await Promise.all([statsOverview(u.id), weekCns(u.id)])
   const maxV = Math.max(1, ...s.weeks.map((w) => w.volume))
   const W = 320, H = 140, L = 8, B = 20, bw = (W - L * 2) / s.weeks.length
   const trained = new Set(s.calendar)
@@ -44,6 +46,7 @@ export default async function StatsPage() {
         </svg>
       </section>
 
+      {cns.sessions.length ? <WeekCnsCard d={cns} /> : null}
       <section className="card p-5 flex flex-col gap-2" aria-label="Antrenman takvimi">
         <div className="flex justify-between items-center"><Eyebrow>Antrenman takvimi</Eyebrow><span className="text-[12px] text-mute num">{s.calendar.length} gün / 12 hafta</span></div>
         <div className="grid grid-flow-col gap-1" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }} data-testid="calendar">

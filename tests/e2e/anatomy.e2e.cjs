@@ -81,6 +81,13 @@ const fail = (m) => { throw new Error(m) }
   const skip = p.getByTestId('rest-timer').getByRole('button', { name: 'Atla' }); if (await skip.isVisible().catch(() => false)) await skip.click()
   await p.getByRole('button', { name: 'Bitir' }).click(); await p.getByRole('button', { name: 'Kaydet ve özete geç' }).click()
   await p.waitForURL(/\/fitness\/antrenman\/[0-9a-f-]{36}\?yeni=1/)
+  // MSS yükü kartı (lisanslı MSS puanı → tahmin yıldızı yok) + istatistikte haftalık satır
+  const cc = p.getByTestId('cns-card'); await cc.waitFor().catch(() => fail('özette MSS kartı yok'))
+  const lv = Number(await cc.getByTestId('cns-meter').getAttribute('data-level')); if (!(lv >= 1 && lv <= 5)) fail('MSS kademesi: ' + lv)
+  if (!(await cc.innerText()).includes(second)) fail('MSS katkısında hareket yok')
+  if ((await cc.innerText()).includes('tahmin')) fail('lisanslı harekette MSS tahmini gösterildi')
+  await shot('05-mss')
+  await p.goto(BASE + '/fitness/istatistik'); await p.getByTestId('week-cns').getByTestId('week-cns-row').first().waitFor().catch(() => fail('istatistikte haftalık MSS yok'))
   await p.goto(programUrl); await p.getByRole('link', { name: 'Antrenmana Başla' }).first().click(); await p.waitForURL('**/fitness/antrenman?gun=*')
   await p.locator('section[data-testid="live-exercise"]', { hasText: second }).first().getByTestId('live-history').click()
   await p.getByTestId('history-sheet').getByText(/20×10 @2,5/).waitFor().catch(() => fail('Tarih penceresinde 20×10 @2,5 yok (yarım RiR kaydedilmedi)'))

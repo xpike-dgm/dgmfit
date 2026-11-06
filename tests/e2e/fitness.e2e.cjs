@@ -96,6 +96,8 @@ const trNum = (v) => v.toLocaleString('tr-TR')
   await p.getByRole('heading', { name: 'Antrenman tamamlandı' }).waitFor()
   if (num(await p.getByTestId('summary').getByText(/ kg$/).first().innerText()) !== 3360) fail('özet hacmi 3360 değil')
   if (await p.getByTestId('prs').count()) fail('ilk antrenmanda rekor olmamalı')
+  // Faz 5h-5: MSS yükü kartı (kütüphane hareketlerinde puan yoksa tahmin)
+  await p.getByTestId('cns-card').getByTestId('cns-meter').waitFor().catch(() => fail('özette MSS kartı yok'))
 
   // 4) İkinci antrenman: aynı gün → öneriler
   await p.goto(BASE + '/fitness/programlar'); await p.getByTestId('program-item').first().getByRole('link').first().click()

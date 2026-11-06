@@ -9,6 +9,7 @@ import { MUSCLES } from '@/lib/exercise-labels'
 import { Bar, btn, Eyebrow, TopBar } from '@/components/ui'
 import { Flame } from '@/components/icons'
 import DeleteWorkout from './DeleteWorkout'
+import { SessionCnsCard } from '../../CnsCard'
 
 export const metadata = { title: 'Antrenman özeti · DgFit' }
 
@@ -52,6 +53,8 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
           ))}
         </section>
       ) : null}
+
+      {s.cns.exercises.length ? <SessionCnsCard c={s.cns} /> : null}
 
       {pv ? (
         <section aria-label="Önceki aynı gün" className="card p-5 flex flex-col gap-2">

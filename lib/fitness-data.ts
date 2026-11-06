@@ -4,6 +4,7 @@ import { db, schema } from './db'
 import { exerciseMedia } from './licensed'
 import { agProgramPlan } from './ag-program-data'
 import { relinkSuperset } from './supersets'
+import { sessionCns, weeklyCns, type CnsSetIn } from './cns'
 import { addDays, dayString } from './time'
 import { publish } from './events'
 import { normalizeSearch } from './nutrition'
@@ -463,7 +464,7 @@ async function advanceSchemes(userId: string, dayId: string, exs: { exerciseId: 
 export async function workoutSummary(userId: string, id: string) {
   const [w] = await db.select().from(schema.workouts).where(and(eq(schema.workouts.id, id), eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt))).limit(1)
   if (!w) return null
-  const sets = await db.select({ s: schema.workoutSets, name: schema.exercises.nameTr, kind: schema.exercises.kind, primary: schema.exercises.primary })
+  const sets = await db.select({ s: schema.workoutSets, name: schema.exercises.nameTr, kind: schema.exercises.kind, primary: schema.exercises.primary, ...CNS_COLS })
     .from(schema.workoutSets).innerJoin(schema.exercises, eq(schema.exercises.id, schema.workoutSets.exerciseId))
     .where(eq(schema.workoutSets.workoutId, id)).orderBy(asc(schema.workoutSets.exIdx), asc(schema.workoutSets.setIdx))
   const prs = await db.select({ pr: schema.personalRecords, name: schema.exercises.nameTr }).from(schema.personalRecords)
@@ -481,7 +482,25 @@ export async function workoutSummary(userId: string, id: string) {
     workout: w, exercises, prs: prs.map((p) => ({ ...p.pr, name: p.name })),
     muscles: [...muscles.entries()].sort((a, b) => b[1] - a[1]),
     previous: prev ? { day: prev.day, volumeKg: prev.volumeKg, durationSec: prev.durationSec, workSets: prev.workSets } : null,
+    cns: sessionCns(sets.map(cnsIn)),
   }
+}
+
+// Faz 5h-5: MSS yükü girdileri (lisanslı MSS puanı; yoksa hareket türünden tahmin, lib/cns.ts)
+const CNS_COLS = { cns: sql<number | null>`(${schema.exercises.licensed}->>'cns')::float`, mechanic: schema.exercises.mechanic, equipment: schema.exercises.equipment }
+type CnsRow = { s: { exerciseId: number; type: string; rir: number | null }; name: string; kind: string; cns: number | null; mechanic: string | null; equipment: string }
+const cnsIn = (x: CnsRow): CnsSetIn => ({ exerciseId: x.s.exerciseId, name: x.name, kind: x.kind, cns: x.cns == null ? null : Number(x.cns), mechanic: x.mechanic, equipment: x.equipment, type: x.s.type, rir: x.s.rir })
+
+/** Son 7 günün (bugün dahil) seansları ve MSS yükleri, yeniden eskiye. */
+export async function weekCns(userId: string) {
+  const from = addDays(dayString(), -6)
+  const ws = await db.select({ id: schema.workouts.id, day: schema.workouts.day, name: schema.workouts.name }).from(schema.workouts)
+    .where(and(eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt), sql`${schema.workouts.day} >= ${from}`)).orderBy(desc(schema.workouts.startedAt))
+  if (!ws.length) return { sessions: [], week: weeklyCns([]) }
+  const rows = await db.select({ w: schema.workoutSets.workoutId, s: schema.workoutSets, name: schema.exercises.nameTr, kind: schema.exercises.kind, ...CNS_COLS })
+    .from(schema.workoutSets).innerJoin(schema.exercises, eq(schema.exercises.id, schema.workoutSets.exerciseId)).where(inArray(schema.workoutSets.workoutId, ws.map((w) => w.id)))
+  const sessions = ws.map((w) => { const c = sessionCns(rows.filter((r) => r.w === w.id).map(cnsIn)); return { ...w, load: c.load, level: c.level, label: c.label } })
+  return { sessions, week: weeklyCns(sessions) }
 }
 
 export async function recentWorkouts(userId: string, limit = 10) {
