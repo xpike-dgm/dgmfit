@@ -287,3 +287,9 @@ export function dayBaseKcal(goalType: string, dailyKcal: number, weekday: number
   // dinlenme günü güvenli tabanın altına inmez (simülasyon bulgusu: tabandaki kullanıcıda 1165 < 1200)
   return Math.max(Math.min(dailyKcal, floor), recompDayKcal(dailyKcal, weekdays.includes(weekday), weekdays.length))
 }
+
+/** Uzatma temposu: son haftalarda hedef yönünde gerçekten ilerliyorsa o hız (gerçekçi), yoksa planın temposu. */
+export function extensionRate(observedKgPerWeek: number | null, plannedKgPerWeek: number, needKg: number): number {
+  if (observedKgPerWeek !== null && Math.sign(observedKgPerWeek) === Math.sign(needKg) && Math.abs(observedKgPerWeek) >= 0.1) return Math.min(Math.abs(observedKgPerWeek), Math.max(0.1, plannedKgPerWeek) * 1.5)
+  return Math.max(0.1, plannedKgPerWeek)
+}

@@ -5,7 +5,7 @@ import { calorieFloor, computePlan, HARD_MAX_WEEKLY_KG, maxWeeklyKg } from '../c
 import { balanceWindow, CHECKIN_MAX_STEP, checkinCompute, closureDiff, distributeDiff, scaleMacros, targetKcal, trendSeries, type PlanDay } from '../fit.ts'
 import { bodyFatOf, makeBody, scaleReading, stepBody, trueTdee, weightOf } from './body.ts'
 import { goalReached, macroPlan } from '../body-comp.ts'
-import { dayBaseKcal, extendEndDate, goalAfterReach, trainingWeekdays } from '../fit.ts'
+import { dayBaseKcal, extendEndDate, extensionRate, goalAfterReach, trainingWeekdays } from '../fit.ts'
 import { rng, seedOf } from './rng.ts'
 import type { Scenario } from './scenarios.ts'
 
@@ -147,7 +147,7 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
     }
     // Faz 8: hedef tarih geçti, hedefe ulaşılmadı → Bugün kartı → "süreyi uzat"
     if (extendedDay === null && reachedDay === null && goal.type !== 'recomp' && today > goal.endDate && trend !== null && s.afterEnd === 'extend') {
-      const end = extendEndDate({ trendKg: trend, targetKg: goal.targetWeightKg, weeklyKg: plan.weeklyKg, today })
+      const end = extendEndDate({ trendKg: trend, targetKg: goal.targetWeightKg, weeklyKg: extensionRate(cc.forecast.kgPerWeek, plan.weeklyKg, goal.targetWeightKg - trend), today })
       goal.endDate = end; extendedDay = i; extendedFrom = Math.abs(trend - goal.targetWeightKg)
       totalDays = Math.min(i + 1 + Math.round((Date.parse(end) - Date.parse(today)) / 86400000) + 14, plan.days + s.tailDays + 380)
     }

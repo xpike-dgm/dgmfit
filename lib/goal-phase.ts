@@ -5,7 +5,7 @@ import { db, schema } from './db'
 import { addDays, dayString } from './time'
 import { calorieFloor, KCAL_PER_KG, type Sex } from './calc'
 import { goalReached, macroPlan } from './body-comp'
-import { extendEndDate, goalAfterReach } from './fit'
+import { extendEndDate, extensionRate, goalAfterReach } from './fit'
 import { activeGoal, checkinData, weightSeries } from './fit-data'
 import { publish } from './events'
 
@@ -55,7 +55,9 @@ export async function chooseAfterGoal(userId: string, choice: 'recomp' | 'extend
     return { ok: true, redirect: choice === 'new' ? '/profil/hedef' : undefined }
   }
   if (choice === 'extend') {
-    const weeklyKg = Math.max(0.15, (Math.abs(goal.tdee - goal.dailyKcal) * 7) / KCAL_PER_KG)
+    const planned = Math.max(0.15, (Math.abs(goal.tdee - goal.dailyKcal) * 7) / KCAL_PER_KG)
+    const ck = await checkinData(userId).catch(() => null)
+    const weeklyKg = extensionRate(ck?.forecast.kgPerWeek ?? null, planned, goal.targetWeightKg - trend)
     const endDate = extendEndDate({ trendKg: trend, targetKg: goal.targetWeightKg, weeklyKg, today })
     await db.update(schema.goals).set({ endDate }).where(eq(schema.goals.id, goal.id))
     await publish(userId, 'goal.choice', { choice, goalId: goal.id, endDate })
