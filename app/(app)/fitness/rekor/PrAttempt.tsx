@@ -35,11 +35,20 @@ export default function PrAttempt({ ex, gym, images }: { ex: Ex | null; gym: Gym
   const [quit, setQuit] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  useEffect(() => { const r = read(); if (r && (!ex || r.exId === ex.id)) setRun(r); setLoaded(true) }, [ex])
+  const [other, setOther] = useState<Run | null>(null) // başka hareket için yarım kalan deneme
+  useEffect(() => { const r = read(); if (r && (!ex || r.exId === ex.id)) setRun(r); else if (r && r.i < r.steps.length) setOther(r); setLoaded(true) }, [ex])
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t) }, [])
   const save = (r: Run | null) => { setRun(r); write(r) }
 
   if (!loaded) return <p className="p-6 text-mute">Hazırlanıyor…</p>
+  if (!run && other) return (
+    <div className="flex flex-col gap-4 px-4 pt-6 safe-top" data-testid="pr-conflict">
+      <h1 className="text-[22px] font-extrabold leading-tight">Yarım kalan rekor denemen var</h1>
+      <p className="text-[15px] text-ink-2 leading-relaxed"><b>{other.name}</b> · hedef {fmt(other.target)} kg · {other.i}/{other.steps.length} set. Yeni deneme başlatırsan o silinir.</p>
+      <button type="button" className="h-14 rounded-2xl bg-[#E53935] text-white font-extrabold text-[17px]" onClick={() => router.replace(`/fitness/rekor?ex=${other.exId}`)}>Ona devam et</button>
+      <button type="button" className={btn.secondary} onClick={() => { write(null); setOther(null) }}>Sil ve yenisini başlat</button>
+    </div>
+  )
   if (!run && !ex) return <PickExercise />
   if (!run) return <Form ex={ex!} gym={gym} images={images} onStart={(target, bar) => save({ v: 1, exId: ex!.id, name: ex!.name, target, bar, steps: prPlan(target, bar, gym.increment), log: [], i: 0, restEndsAt: null, startedAt: new Date().toISOString(), clientId: crypto.randomUUID() })} />
 
@@ -63,7 +72,9 @@ export default function PrAttempt({ ex, gym, images }: { ex: Ex | null; gym: Gym
     const at = (i: number) => run.log[i]?.at ?? new Date().toISOString()
     let k = 0
     const sets = run.steps.flatMap((_, i) => (run.log[i] ? [{ ...res.sets[k++], completedAt: at(i), seconds: null, suggestedKg: null, suggestedReps: null, feedback: null }] : []))
-    const r = await saveWorkoutAction({ clientId: run.clientId, programDayId: null, name: 'Rekor denemesi', startedAt: run.startedAt, endedAt: new Date().toISOString(), notes: `Hedef ${fmt(run.target)} kg`, pain: false, exercises: [{ exerciseId: run.exId, sets }] })
+    let r: Awaited<ReturnType<typeof saveWorkoutAction>>
+    try { r = await saveWorkoutAction({ clientId: run.clientId, programDayId: null, name: 'Rekor denemesi', startedAt: run.startedAt, endedAt: new Date().toISOString(), notes: `Hedef ${fmt(run.target)} kg`, pain: false, exercises: [{ exerciseId: run.exId, sets }] }) }
+    catch { setSaving(false); setErr('Bağlantı yok. Denemen bu cihazda saklı; internet gelince yeniden "Günlüğe ekle"ye bas.'); return }
     setSaving(false)
     if (!r.ok) { setErr(r.error); return }
     write(null); router.push(`/fitness/antrenman/${r.id}?yeni=1`)

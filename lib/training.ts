@@ -30,9 +30,20 @@ export function weightFor(oneRm: number, reps: number, rir = 0): number {
   return r <= 1 ? oneRm : oneRm / (1 + r / 30)
 }
 
+/** Sayı girişi: yalnızca rakam ve (ondalıklı alanda) tek bir ayırıcı; "60.5.2" gibi girişler 0 kg'a dönüşmesin. */
+export function cleanNumInput(v: string, decimal: boolean) {
+  const t = v.replace(/[^\d.,]/g, '')
+  if (!decimal) return t.replace(/[.,]/g, '').slice(0, 6)
+  const i = t.search(/[.,]/)
+  return (i < 0 ? t : t.slice(0, i + 1) + t.slice(i + 1).replace(/[.,]/g, '')).slice(0, 6)
+}
+
+/** RiR metni: Türkçe ondalık (2,5); 5 ve üstü "4+". */
+export const rirText = (r: number) => (r >= 5 ? '4+' : String(Math.round(r * 10) / 10).replace('.', ','))
+
 export function roundTo(kg: number, inc = 2.5, mode: 'nearest' | 'down' | 'up' = 'nearest'): number {
   const f = mode === 'down' ? Math.floor : mode === 'up' ? Math.ceil : Math.round
-  return round2(f(kg / inc + 1e-9) * inc)
+  return round2(f(kg / inc + (mode === 'up' ? -1e-9 : 1e-9)) * inc)
 }
 
 const workSets = (s: Session) => s.sets.filter((x) => x.type !== 'warmup' && x.reps > 0)
@@ -175,7 +186,8 @@ export const PR_LABEL: Record<PrType, string> = { kg: 'En ağır', e1rm: 'Tahmin
 /** Bir seansın rekor adayları (yalnızca çalışma setleri). */
 export function sessionRecords(sets: LoggedSet[], kind: ExKind, bodyKg = 0): Records {
   const w = sets.filter((x) => x.type !== 'warmup' && x.reps > 0)
-  const load = (x: LoggedSet) => (kind === 'bodyweight' ? x.kg : kind === 'assisted' ? -x.kg : x.kg)
+  // destekli harekette rekor = etkin yük (vücut ağırlığı − destek); destek azaldıkça artar. Vücut ağırlığı yoksa −destek.
+  const load = (x: LoggedSet) => (kind === 'assisted' ? (bodyKg > 0 ? round2(bodyKg - x.kg) : -x.kg) : x.kg)
   const xrm = (n: number) => Math.max(0, ...w.filter((x) => x.reps >= n).map((x) => x.kg))
   return {
     kg: w.length ? Math.max(...w.map(load)) : 0,
@@ -188,10 +200,12 @@ export function sessionRecords(sets: LoggedSet[], kind: ExKind, bodyKg = 0): Rec
 
 /** Kırılan rekorlar. Hareketin ilk kaydı rekor sayılmaz (kıyaslanacak geçmiş yok). */
 export function detectPRs(prev: Records | null, cur: Records, kind: ExKind): { type: PrType; value: number; previous: number }[] {
-  if (!prev) return []
   const keys: PrType[] = kind === 'weight_reps' ? ['kg', 'e1rm', 'rm3', 'rm5', 'rm10', 'reps', 'volume'] : kind === 'time' || kind === 'distance_time' ? [] : ['kg', 'reps', 'volume']
+  // önceki kayıt yoksa ya da hiç gerçek değer içermiyorsa (yalnızca ısınma / başarısız setler) ilk kayıt sayılır
+  if (!prev || keys.every((k) => !(prev[k] > 0))) return []
   const out: { type: PrType; value: number; previous: number }[] = []
-  for (const k of keys) if (cur[k] > 0 && cur[k] > prev[k] + 1e-9) out.push({ type: k, value: cur[k], previous: prev[k] })
+  // önceki değer negatifse (eski destekli kayıt biçimi) o tür için kıyas yapılmaz
+  for (const k of keys) if (cur[k] > 0 && prev[k] >= 0 && cur[k] > prev[k] + 1e-9) out.push({ type: k, value: cur[k], previous: prev[k] })
   // en ağır kilo rekoruyla aynı değerdeki 3/5/10RM rekorları aynı seti tekrar eder: gösterilmez
   const kg = out.find((r) => r.type === 'kg')
   return kg ? out.filter((r) => !(['rm3', 'rm5', 'rm10'].includes(r.type) && Math.abs(r.value - kg.value) < 1e-9)) : out
@@ -216,6 +230,8 @@ export const CARDIO: Record<string, { label: string; met: { hafif: number; orta:
   stairs: { label: 'Merdiven', met: { hafif: 4.0, orta: 9.0, yoğun: 9.0 }, distance: false },
 }
 export type CardioType = keyof typeof CARDIO
+/** Mesafe girilen kardiyoda insanın ulaşabileceği en yüksek ortalama hız (km/sa); üstü kayıt hatası sayılır. */
+export const CARDIO_MAX_KMH: Record<string, number> = { run: 25, walk: 10, bike: 70, swim: 8, row: 25 }
 export type Intensity = 'hafif' | 'orta' | 'yoğun'
 
 /**
@@ -227,7 +243,8 @@ export function cardioKcal(i: { type: CardioType; minutes: number; weightKg: num
   let met = CARDIO[i.type].met[i.intensity ?? 'orta']
   let method: 'met' | 'acsm' | 'nabız' = 'met'
   if (i.distanceKm && i.minutes > 0 && (i.type === 'run' || i.type === 'walk')) {
-    const mPerMin = (i.distanceKm * 1000) / i.minutes
+    // ACSM denklemleri makul hızlarda geçerli: koşu ≤ 25 km/sa, yürüyüş ≤ 10 km/sa (fazlası sınıra çekilir)
+    const mPerMin = Math.min((i.distanceKm * 1000) / i.minutes, i.type === 'run' ? 25000 / 60 : 10000 / 60)
     const vo2 = i.type === 'run' ? 0.2 * mPerMin + 3.5 : 0.1 * mPerMin + 3.5
     met = vo2 / 3.5; method = 'acsm'
   }

@@ -2,13 +2,14 @@
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
 import { programDays, setFavorite } from '@/lib/anatomy-data'
-import { addExerciseToDay } from '@/lib/fitness-data'
+import { addExerciseToDay, getExercise } from '@/lib/fitness-data'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 
 export async function favoriteAction(exerciseId: number, on: boolean): Promise<R> {
   const u = await requireUser()
-  if (!Number.isInteger(exerciseId)) return { ok: false, error: 'Geçersiz hareket' }
+  if (!Number.isInteger(exerciseId) || typeof on !== 'boolean') return { ok: false, error: 'Geçersiz hareket' }
+  if (on && !(await getExercise(u.id, exerciseId))) return { ok: false, error: 'Hareket bulunamadı' }
   await setFavorite(u.id, exerciseId, on)
   revalidatePath('/fitness/kaydedilenler')
   return { ok: true }

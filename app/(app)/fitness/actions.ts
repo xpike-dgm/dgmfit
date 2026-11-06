@@ -6,7 +6,7 @@ import { getUser } from '@/lib/auth'
 import { db, schema } from '@/lib/db'
 import { addDays, dayString } from '@/lib/time'
 import { TEMPLATES, ALL_EQUIPMENT } from '@/lib/programs'
-import { CARDIO, SET_TYPES } from '@/lib/training'
+import { CARDIO, CARDIO_MAX_KMH, SET_TYPES } from '@/lib/training'
 import {
   addDay, addExerciseToDay, copyProgram, createFromAgProgram, linkSuperset, createCustomExercise, createEmptyProgram, createFromTemplate, createGenerated, deleteCardio,
   deleteProgram, deleteWorkout, ensureGym, liveSession, logCardio, removeProgramExercise, saveWorkout, setActiveProgram, updateProgramExercise,
@@ -168,6 +168,8 @@ export async function logCardioAction(input: z.input<typeof CardioIn>): Promise<
   if (!p.success) return { ok: false, error: 'Süre 1–600 dk; mesafe ve nabız isteğe bağlı' }
   const today = dayString(), day = p.data.day ?? today
   if (day > today || day < addDays(today, -14)) return { ok: false, error: 'Yalnızca son 14 gün için kayıt eklenebilir' }
+  const maxKmh = CARDIO_MAX_KMH[p.data.type]
+  if (p.data.distanceKm && maxKmh && p.data.distanceKm / (p.data.minutes / 60) > maxKmh) return { ok: false, error: `Bu mesafe bu sürede olmaz (en fazla ${maxKmh} km/sa). Süreyi ya da mesafeyi kontrol et.` }
   return run(async () => {
     const r = await logCardio(userId, { ...p.data, type: p.data.type as never, day, note: p.data.note || null })
     return { gross: r.gross, net: r.net, method: r.method }

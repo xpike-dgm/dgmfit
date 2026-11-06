@@ -18,7 +18,7 @@ export default function AnatomyExplorer({ views, counts, initialGender }: { view
   const [sel, setSel] = useState<string | null>(null)
   const view = views[viewKey(gender, side)] ?? Object.values(views)[0]
   function pick(k: string) {
-    if (!counts[k]) return
+    if (!counts[k] || sel) return // çift dokunuşta iki kez yönlendirme olmasın
     setSel(k)
     setTimeout(() => router.push(`/fitness/anatomi/${k}?g=${gender}`), 260)
   }

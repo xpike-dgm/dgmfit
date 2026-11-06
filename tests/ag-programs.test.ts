@@ -31,6 +31,9 @@ test('program dönüşümü: aralık, dinlenme, RiR, AMRAP, süperset grubu, sü
   assert.deepEqual([lunge.superset, lunge.type, lunge.note], [null, 'normal', 'iki taraf'])
   assert.equal(days[0].exercises.length, 5)
   assert.equal(days[1].exercises[0].seconds, 60) // dakika cinsinden süre saniyeye çevrilir
+  // dinlenme düzenleyicinin aralığında (15–600 sn)
+  const odd = agProgramDays({ ...prog, workouts: [{ name: 'X', weekday: null, exerciseEntries: [{ name: 'Goblet Squat', sets: 3, reps: 5, restTimeInSeconds: 5 }, { name: 'Push Up', sets: 3, reps: 5, restTimeInMinutes: 15 }] }] }, (n) => keys[n] ?? null)
+  assert.deepEqual(odd.days[0].exercises.map((e) => e.rest), [15, 600])
 })
 
 test('özet ve etiketler', () => {

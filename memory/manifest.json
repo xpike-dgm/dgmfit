@@ -251,7 +251,8 @@
     "tests/pr-attempt.test.ts",
     "components/BarLoad.tsx",
     "app/(app)/fitness/rekor/PrAttempt.tsx",
-    "tests/e2e/pr.e2e.cjs"
+    "tests/e2e/pr.e2e.cjs",
+    "tests/e2e/fixes.e2e.cjs"
   ],
   "tables": [
     "users",

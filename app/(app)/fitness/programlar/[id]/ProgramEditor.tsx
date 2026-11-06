@@ -23,7 +23,13 @@ export default function ProgramEditor({ program }: { program: { id: string; name
   const [err, setErr] = useState<string | null>(null)
   const [pending, start] = useTransition()
   const router = useRouter()
-  const go = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) => start(async () => { setErr(null); const r = await fn(); if (!r.ok) { setErr(r.error ?? 'Hata'); return } after?.(); router.refresh() })
+  const go = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) => start(async () => {
+    setErr(null)
+    let r: { ok: boolean; error?: string }
+    try { r = await fn() } catch { setErr('Bağlantı yok; tekrar dene.'); return }
+    if (!r.ok) { setErr(r.error ?? 'Hata'); return }
+    after?.(); router.refresh()
+  })
   const next = program.days.length ? program.nextDayIdx % program.days.length : 0
   const exRow = (e: Ex) => (
             <div key={e.id} className="flex items-center gap-3 py-3 border-b border-line last:border-0" data-testid="program-ex">
@@ -67,7 +73,7 @@ export default function ProgramEditor({ program }: { program: { id: string; name
           ))}
           {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-14 mt-1 rounded-2xl bg-[#E53935] text-white font-extrabold text-[17px] flex items-center justify-center gap-2"><Play size={22} />Antrenmana Başla</Link> : null}
           <div className="flex gap-2">
-            <button type="button" className="flex-1 h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5" onClick={() => setPick(d.id)}><Plus size={16} />Hareket ekle</button>
+            <button type="button" className="flex-1 h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5" onClick={() => { setErr(null); setPick(d.id) }}><Plus size={16} />Hareket ekle</button>
             <button type="button" aria-label={`${d.name} gününü sil`} disabled={pending} onClick={() => { if (confirm(`${d.name} günü programdan silinsin mi? Geçmiş antrenmanların korunur.`)) go(() => removeDayAction(d.id)) }} className="h-10 px-3 rounded-full text-[13px] font-bold text-danger border border-danger-line flex items-center gap-1.5"><Trash size={15} />Günü sil</button>
           </div>
         </section>
@@ -81,9 +87,11 @@ export default function ProgramEditor({ program }: { program: { id: string; name
       {program.days.some((d) => d.exercises.some((e) => !e.scheme)) ? <PeriodSettings program={program} pending={pending} go={go} /> : null}
 
       <Sheet open={!!pick} onClose={() => setPick(null)} title="Hareket ekle">
-        <ExercisePicker onPick={async (id) => { const r = await addExerciseToDayAction(pick!, id); if (!r.ok) { setErr(r.error); return } setPick(null); router.refresh() }} />
+        {err ? <p role="alert" className="text-[13px] text-danger pb-2">{err}</p> : null}
+        <ExercisePicker onPick={async (id) => { setErr(null); const r = await addExerciseToDayAction(pick!, id).catch(() => ({ ok: false as const, error: 'Bağlantı yok; tekrar dene.' })); if (!r.ok) { setErr(r.error); return } setPick(null); router.refresh() }} />
       </Sheet>
       <Sheet open={!!edit} onClose={() => setEdit(null)} title={edit?.name ?? ''}>
+        {err ? <p role="alert" className="text-[13px] text-danger pb-2">{err}</p> : null}
         {edit?.scheme ? <SchemeEdit ex={edit} pending={pending} onSave={(kg) => go(() => setSchemeKgAction(edit.id, kg), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} />
           : edit ? <EditTarget ex={edit} pending={pending} link={linkState(program.days, edit.id)} onLink={(on) => go(() => linkSupersetAction(edit.id, on), () => setEdit(null))} onSave={(v) => go(() => updateProgramExerciseAction(edit.id, v), () => setEdit(null))} onRemove={() => go(() => removeProgramExerciseAction(edit.id), () => setEdit(null))} /> : null}
       </Sheet>
@@ -110,7 +118,7 @@ function EditTarget({ ex, pending, link, onLink, onSave, onRemove }: { ex: Ex; p
       <span className="text-sm font-semibold">{label}</span>
       <span className="flex items-center gap-2">
         <button type="button" aria-label={`${label} azalt`} className={btn.icon} onClick={() => setV({ ...v, [k]: Math.max(min, (v[k] ?? min) - step) })}>−</button>
-        <span className="num w-12 text-center text-lg font-bold" data-testid={`edit-${k}`}>{v[k] ?? '–'}</span>
+        <span className="num w-12 text-center text-lg font-bold" data-testid={`edit-${k}`}>{v[k] == null ? '–' : String(v[k]).replace('.', ',')}</span>
         <button type="button" aria-label={`${label} artır`} className={btn.icon} onClick={() => setV({ ...v, [k]: Math.min(max, (v[k] ?? min) + step) })}>+</button>
       </span>
     </div>

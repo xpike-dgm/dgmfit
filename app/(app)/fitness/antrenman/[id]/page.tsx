@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth'
 import { workoutSummary } from '@/lib/fitness-data'
 import { longDate } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
-import { PR_LABEL, SET_TYPES, type PrType, type SetType } from '@/lib/training'
+import { PR_LABEL, SET_TYPES, rirText, type PrType, type SetType } from '@/lib/training'
 import { MUSCLES } from '@/lib/exercise-labels'
 import { Bar, btn, Eyebrow, TopBar } from '@/components/ui'
 import { Flame } from '@/components/icons'
@@ -83,7 +83,7 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
             <Link href={`/fitness/hareketler/${e.exerciseId}`} className="font-bold">{e.name}</Link>
             <span className="text-[13px] text-mute num leading-relaxed">
               {e.sets.map((x, i) => (
-                <span key={i}>{i ? ' · ' : ''}{x.type !== 'normal' ? `${SET_TYPES[x.type as SetType]?.short ?? ''} ` : ''}{e.kind === 'time' ? `${x.seconds ?? 0} sn` : `${fmtNum(x.kg, x.kg % 1 ? 1 : 0)}×${x.reps}${x.rir !== null ? ` @${x.rir}` : ''}`}</span>
+                <span key={i}>{i ? ' · ' : ''}{x.type !== 'normal' ? `${SET_TYPES[x.type as SetType]?.short ?? ''} ` : ''}{e.kind === 'time' ? `${x.seconds ?? 0} sn` : `${fmtNum(x.kg, x.kg % 1 ? 1 : 0)}×${x.reps}${x.rir !== null ? ` @${rirText(x.rir)}` : ''}`}</span>
               ))}
             </span>
           </div>

@@ -30,7 +30,8 @@ export function gzAdvance(s: GzState, logged: { kg: number; reps: number }[], lo
   const want = gzSets(s)
   const ok = logged.length >= want.length && want.every((w, i) => logged[i].reps >= w.reps && logged[i].kg >= w.kg - 1e-9)
   if (s.tier === 't3') {
-    const last = logged.at(-1)?.reps ?? 0
+    // AMRAP, kademenin son seti (fazladan geri çekilme/drop setleri sayılmaz)
+    const last = logged[want.length - 1]?.reps ?? 0
     if (ok && last >= T3_AMRAP_TARGET) return { next: { ...s, kg: s.kg + smallest }, result: 'artış', reason: `Son sette ${last} tekrar (≥ ${T3_AMRAP_TARGET}): +${smallest} kg.` }
     return { next: s, result: 'aynı', reason: `Son sette ${T3_AMRAP_TARGET} tekrara ulaşınca ağırlık artar.` }
   }

@@ -22,7 +22,7 @@ export default function FilterSheet({ q, groups }: { q?: string; groups: Group[]
   return (
     <>
       <div className="flex items-center gap-2 flex-wrap">
-        <button type="button" onClick={() => setOpen(true)} className="h-10 px-4 rounded-full bg-surface border border-line text-[14px] font-bold inline-flex items-center gap-2">
+        <button type="button" onClick={() => { setV(Object.fromEntries(groups.map((g) => [g.key, g.value ?? '']))); setOpen(true) }} className="h-10 px-4 rounded-full bg-surface border border-line text-[14px] font-bold inline-flex items-center gap-2">
           Filtrele{active ? <span className="min-w-5 h-5 px-1 rounded-full bg-acc text-acc-ink text-[11px] num inline-flex items-center justify-center">{active}</span> : null}
         </button>
         {groups.filter((g) => g.value).map((g) => (

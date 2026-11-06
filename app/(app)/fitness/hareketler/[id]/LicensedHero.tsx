@@ -1,6 +1,7 @@
 'use client'
+import { rirText } from '@/lib/training'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import BackButton from '@/components/BackButton'
 import Sheet from '@/components/Sheet'
 import { Heart, Pencil, Send } from '@/components/icons'
@@ -21,16 +22,21 @@ export default function LicensedHero(p: P) {
   const [msg, setMsg] = useState<string | null>(null)
   const src = tab === 'right' ? p.right : p.wrong
   const d = p.defaults
-  async function toggle() { const on = !fav; setFav(on); const r = await favoriteAction(p.id, on); if (!r.ok) setFav(!on) }
-  async function openPicker() { setMsg(null); setPicker('loading'); const r = await programDaysAction(); setPicker(r.ok ? r.programs : []) }
-  async function add(dayId: string, name: string) { const r = await addToDayAction(dayId, p.id); setMsg(r.ok ? `“${name}” gününe eklendi` : r.error) }
+  const busy = useRef(false)
+  const [vidErr, setVidErr] = useState(false)
+  // kalp: iyimser güncelleme; hata/bağlantı yoksa geri alınır
+  async function toggle() { if (busy.current) return; busy.current = true; const on = !fav; setFav(on); const r = await favoriteAction(p.id, on).catch(() => ({ ok: false as const, error: 'Bağlantı yok; tekrar dene.' })); busy.current = false; if (!r.ok) { setFav(!on); flash(r.error) } }
+  async function openPicker() { setMsg(null); setPicker('loading'); const r = await programDaysAction().catch(() => ({ ok: false as const, error: 'Bağlantı yok; tekrar dene.' })); setPicker(r.ok ? r.programs : []) }
+  async function add(dayId: string, name: string) { if (busy.current) return; busy.current = true; const r = await addToDayAction(dayId, p.id).catch(() => ({ ok: false as const, error: 'Bağlantı yok; tekrar dene.' })); busy.current = false; setMsg(r.ok ? `“${name}” gününe eklendi` : r.error) }
+  const flash = (t: string) => { setMsg(t); setTimeout(() => setMsg((m) => (m === t ? null : m)), 2500) }
   async function share() {
     const url = location.href
-    try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); setMsg('Bağlantı kopyalandı') } } catch { /* iptal */ }
+    try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); flash('Bağlantı kopyalandı') } } catch { /* iptal */ }
   }
   return (
     <section className="relative -mx-4 -mt-[env(safe-area-inset-top)] h-[78dvh] min-h-[460px] bg-black text-white overflow-hidden" data-testid="ex-videos">
-      {src ? <video key={src} src={src} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline preload="auto" aria-label={`${p.name} · ${tab === 'right' ? 'doğru' : 'yanlış'} yapılış`} data-testid="ex-video" /> : null}
+      {src && !vidErr ? <video key={src} src={src} onError={() => setVidErr(true)} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline preload="auto" aria-label={`${p.name} · ${tab === 'right' ? 'doğru' : 'yanlış'} yapılış`} data-testid="ex-video" />
+        : <p className="absolute inset-x-6 top-1/2 -translate-y-1/2 text-center text-[14px] text-white/70" data-testid="ex-video-missing">Bu hareketin videosu şu an gösterilemiyor.</p>}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85 pointer-events-none" />
       <header className="absolute top-0 left-0 right-0 safe-top px-3 flex items-center gap-2">
         <BackButton fallback="/fitness/hareketler" className="w-11 h-11 rounded-full flex items-center justify-center text-white" />
@@ -42,7 +48,7 @@ export default function LicensedHero(p: P) {
       {p.right && p.wrong ? (
         <div className="absolute top-[calc(env(safe-area-inset-top)+64px)] left-1/2 -translate-x-1/2 grid grid-cols-2 gap-1 p-1 rounded-full bg-black/45 backdrop-blur" role="tablist" aria-label="Video">
           {([['right', 'Doğru yapılış'], ['wrong', 'Yanlış yapılış']] as const).map(([k, l]) => (
-            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => { setTab(k); setVidErr(false) }}
               className={`h-8 px-3.5 rounded-full text-[12.5px] font-bold whitespace-nowrap transition ${tab === k ? (k === 'right' ? 'bg-[#2F8A3A]' : 'bg-[#E53935]') : 'text-white/80'}`}>{l}</button>
           ))}
         </div>
@@ -57,7 +63,7 @@ export default function LicensedHero(p: P) {
           <dl className="flex gap-6" data-testid="hero-defaults">
             <div><dd className="num text-[26px] font-bold leading-none">{d.sets}</dd><dt className="text-[17px] mt-1">Set</dt></div>
             <div><dd className="num text-[26px] font-bold leading-none">{d.reps ?? `${d.seconds}`}</dd><dt className="text-[17px] mt-1">{d.reps ? 'Tekrar' : 'Saniye'}</dt></div>
-            <div><dd className="num text-[26px] font-bold leading-none">{d.rir.toFixed(1)}</dd><dt className="text-[17px] mt-1">RiR</dt></div>
+            <div><dd className="num text-[26px] font-bold leading-none">{rirText(d.rir)}</dd><dt className="text-[17px] mt-1">RiR</dt></div>
           </dl>
         ) : <span />}
         {p.rating ? <span className="h-12 px-4 rounded-full bg-black/55 flex items-center gap-1.5 num text-[17px] font-bold" aria-label={`Puan ${p.rating.avg}`}>{String(p.rating.avg).replace('.', ',')} <span className="text-[#F5B83D]">★</span></span> : null}

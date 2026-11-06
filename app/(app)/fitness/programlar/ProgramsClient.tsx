@@ -11,9 +11,14 @@ type R = { ok: true; id?: string } | { ok: false; error: string }
 export function ProgramActions({ id, active }: { id: string; active: boolean }) {
   const [pending, start] = useTransition()
   const router = useRouter()
-  const go = (fn: () => Promise<R>) => start(async () => { const r = await fn(); if (r.ok) router.refresh() })
+  const [err, setErr] = useState<string | null>(null)
+  const go = (fn: () => Promise<R>) => start(async () => {
+    setErr(null)
+    try { const r = await fn(); if (r.ok) router.refresh(); else setErr(r.error) } catch { setErr('Bağlantı yok; tekrar dene.') }
+  })
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1 flex-wrap items-center">
+      {err ? <p role="alert" className="basis-full text-[12px] text-danger order-last">{err}</p> : null}
       {!active ? <button type="button" disabled={pending} className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={() => go(() => setActiveProgramAction(id))}>Aktif yap</button> : null}
       <button type="button" disabled={pending} className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={() => go(() => copyProgramAction(id))}>Kopyala</button>
       <button type="button" disabled={pending} className="h-9 px-3 rounded-full text-[12px] font-bold text-danger" onClick={() => { if (confirm('Program silinsin mi? Geçmiş antrenmanların korunur.')) go(() => deleteProgramAction(id)) }}>Sil</button>

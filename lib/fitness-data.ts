@@ -3,7 +3,7 @@ import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { exerciseMedia } from './licensed'
 import { agProgramPlan } from './ag-program-data'
-import { relinkSuperset } from './supersets'
+import { relinkSuperset, supersetBlocks } from './supersets'
 import { sessionCns, weeklyCns, type CnsSetIn } from './cns'
 import { addDays, dayString } from './time'
 import { publish } from './events'
@@ -152,6 +152,9 @@ export async function insertProgram(userId: string, name: string, templateId: st
       const rows = d.exercises.filter((e) => ids.has(e.key)).map((e, j) => ({
         dayId: day.id, idx: j, exerciseId: ids.get(e.key)!, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds ?? null, setType: e.type ?? 'normal', scheme: e.scheme ?? null, superset: e.superset ?? null, note: e.note ?? null,
       }))
+      // bulunamayan hareket düştüyse süperset grubunda tek kalan üye normal harekete döner
+      const blocks = supersetBlocks(rows)
+      rows.forEach((x, j) => { if (blocks.find((b) => b.idx.includes(j))!.group == null) x.superset = null })
       if (rows.length) await tx.insert(schema.programExercises).values(rows)
     }
     return p.id
@@ -178,6 +181,7 @@ export async function createFromAgProgram(userId: string, id: string) {
 export async function createGenerated(userId: string, i: { days: number; minutes: number; equipment: string[] }) {
   const [profile] = await db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
   const goal = await activeGoal(userId)
+  await ensureGym(userId)
   await db.update(schema.gymSettings).set({ equipment: i.equipment, sessionMinutes: i.minutes, updatedAt: new Date() }).where(eq(schema.gymSettings.userId, userId))
   const g = generateProgram({
     days: i.days, minutes: i.minutes, available: new Set(i.equipment), equipmentOf: await equipmentMap(),
@@ -195,7 +199,7 @@ export async function copyProgram(userId: string, id: string) {
   const p = await getProgram(userId, id)
   if (!p) throw new Error('Program yok')
   return db.transaction(async (tx) => {
-    const [n] = await tx.insert(schema.programs).values({ userId, name: p.name + ' (kopya)', templateId: p.templateId, notes: p.notes, active: false }).returning({ id: schema.programs.id })
+    const [n] = await tx.insert(schema.programs).values({ userId, name: p.name + ' (kopya)', templateId: p.templateId, notes: p.notes, active: false, periodization: p.periodization, deloadEvery: p.deloadEvery }).returning({ id: schema.programs.id })
     for (const d of p.days) {
       const [day] = await tx.insert(schema.programDays).values({ programId: n.id, idx: d.idx, name: d.name, focus: d.focus }).returning({ id: schema.programDays.id })
       if (d.exercises.length) await tx.insert(schema.programExercises).values(d.exercises.map((e) => ({ dayId: day.id, idx: e.idx, exerciseId: e.exerciseId, role: e.role, sets: e.sets, repMin: e.repMin, repMax: e.repMax, rir: e.rir, rest: e.rest, seconds: e.seconds, setType: e.setType, scheme: e.scheme, schemeState: e.schemeState, superset: e.superset, note: e.note })))
@@ -247,7 +251,7 @@ export async function addExerciseToDay(userId: string, dayId: string, exerciseId
   if (!d) throw new Error('Gün yok')
   const [x] = await db.select({ kind: schema.exercises.kind }).from(schema.exercises).where(and(eq(schema.exercises.id, exerciseId), visible(userId))).limit(1)
   if (!x) throw new Error('Hareket yok')
-  const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.programExercises).where(eq(schema.programExercises.dayId, dayId))
+  const [{ n }] = await db.select({ n: sql<number>`coalesce(max(${schema.programExercises.idx}) + 1, 0)::int` }).from(schema.programExercises).where(eq(schema.programExercises.dayId, dayId))
   const time = x.kind === 'time'
   await db.insert(schema.programExercises).values({ dayId, idx: Number(n), exerciseId, sets: 3, repMin: time ? 1 : 8, repMax: time ? 1 : 12, rir: 2, rest: 90, seconds: time ? 45 : null })
   await touch(d.programId)
@@ -272,9 +276,21 @@ export async function linkSuperset(userId: string, peId: string, withNext: boole
 export async function removeProgramExercise(userId: string, peId: string) {
   const r = await ownsProgramExercise(userId, peId)
   if (!r) throw new Error('Kayıt yok')
-  await db.delete(schema.programExercises).where(eq(schema.programExercises.id, peId))
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.programExercises).where(eq(schema.programExercises.id, peId))
+    // sıra numaraları 0..n−1 olur (sonraki eklemede çakışma olmaz); süpersette tek kalan hareket normal harekete döner
+    const rest = await tx.select({ id: schema.programExercises.id, idx: schema.programExercises.idx, superset: schema.programExercises.superset }).from(schema.programExercises)
+      .where(eq(schema.programExercises.dayId, r.dayId)).orderBy(asc(schema.programExercises.idx), asc(schema.programExercises.id))
+    const blocks = supersetBlocks(rest)
+    for (const [j, x] of rest.entries()) {
+      const g = blocks.find((b) => b.idx.includes(j))!.group != null ? x.superset : null
+      if (x.idx !== j || x.superset !== g) await tx.update(schema.programExercises).set({ idx: j, superset: g }).where(eq(schema.programExercises.id, x.id))
+    }
+  })
 }
 export async function setActiveProgram(userId: string, id: string) {
+  const [ok] = await db.select({ id: schema.programs.id }).from(schema.programs).where(and(eq(schema.programs.id, id), eq(schema.programs.userId, userId), isNull(schema.programs.deletedAt))).limit(1)
+  if (!ok) throw new Error('Program bulunamadı')
   await db.transaction(async (tx) => {
     await tx.update(schema.programs).set({ active: false }).where(eq(schema.programs.userId, userId))
     await tx.update(schema.programs).set({ active: true, updatedAt: new Date() }).where(and(eq(schema.programs.id, id), eq(schema.programs.userId, userId)))
@@ -326,11 +342,16 @@ export async function liveSession(userId: string, programDayId: string | null, e
     for (const x of xs) if (!rows.some((r) => r.exerciseId === x.id)) rows.push({ exerciseId: x.id, name: x.nameTr, kind: x.kind as ExKind, equipment: x.equipment, images: x.images, primary: x.primary, ...exerciseMedia(x.licensed), sets: 3, repMin: x.kind === 'time' ? 1 : 8, repMax: x.kind === 'time' ? 1 : 12, rir: 2, rest: 90, seconds: x.kind === 'time' ? 45 : null, setType: 'normal' })
   }
   const ids = rows.map((r) => r.exerciseId)
-  const [hist, recs, fb] = await Promise.all([
+  const [hist, recs, fb, counts] = await Promise.all([
     exerciseHistory(userId, ids),
     ids.length ? db.select().from(schema.exerciseRecords).where(and(eq(schema.exerciseRecords.userId, userId), inArray(schema.exerciseRecords.exerciseId, ids))) : Promise.resolve([]),
     feedbackCounts(userId, ids),
+    // periyodizasyon dönüşü için gerçek seans sayısı (geçmiş listesi 6 seansla sınırlı)
+    ids.length ? db.select({ id: schema.workoutSets.exerciseId, n: sql<number>`count(distinct ${schema.workoutSets.workoutId})::int` }).from(schema.workoutSets)
+      .innerJoin(schema.workouts, eq(schema.workouts.id, schema.workoutSets.workoutId))
+      .where(and(eq(schema.workoutSets.userId, userId), inArray(schema.workoutSets.exerciseId, ids), isNull(schema.workouts.deletedAt))).groupBy(schema.workoutSets.exerciseId) : Promise.resolve([]),
   ])
+  const sessionsOf = new Map(counts.map((c) => [c.id, Number(c.n)]))
   const recBy = new Map(recs.map((r) => [r.exerciseId, r.records as unknown as Records]))
   const today = dayString()
   const week = meta ? weekIndex(meta.startDay, today) : 0
@@ -346,7 +367,7 @@ export async function liveSession(userId: string, programDayId: string | null, e
         out.sets = sets.length; out.repMin = out.repMax = sets[0].reps
       } else out.scheme = { label: `GZCLP ${TIER_LABEL[tier]} · ilk seans: çalışma ağırlığını belirle`, sets: [] }
     } else if (meta) {
-      const t = periodTarget({ scheme: meta.periodization, week, session: history.length, base: { sets: r.sets, repMin: r.repMin, repMax: r.repMax, rir: r.rir }, deloadEvery: meta.deloadEvery })
+      const t = periodTarget({ scheme: meta.periodization, week, session: sessionsOf.get(r.exerciseId) ?? history.length, base: { sets: r.sets, repMin: r.repMin, repMax: r.repMax, rir: r.rir }, deloadEvery: meta.deloadEvery })
       out.sets = t.sets; out.repMin = t.repMin; out.repMax = t.repMax; out.rir = t.rir
       if (meta.periodization !== 'linear' || t.deload) out.period = { label: t.label, loadPct: t.loadPct, deload: t.deload }
     }
@@ -386,6 +407,7 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
   const xs = ids.length ? await db.select({ id: schema.exercises.id, kind: schema.exercises.kind }).from(schema.exercises).where(and(inArray(schema.exercises.id, ids), visible(userId))) : []
   const kind = new Map(xs.map((x) => [x.id, x.kind as ExKind]))
   const exs = p.exercises.filter((e) => kind.has(e.exerciseId) && e.sets.length)
+  if (!exs.length) throw new Error('Kaydedilecek geçerli set yok')
   const started = new Date(p.startedAt), ended = new Date(p.endedAt)
   const durationSec = Math.max(60, Math.min(6 * 3600, Math.round((ended.getTime() - started.getTime()) / 1000)))
   const workSets = exs.reduce((a, e) => a + e.sets.filter((s) => s.type !== 'warmup').length, 0)
@@ -398,7 +420,8 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
   // PR doğrulama (Faz 5b): 7 gün önceki en iyi set (kg ve e1RM) ve vücut ağırlığı oranı
   const weekAgo = new Date(Date.now() - 7 * 86400000)
   const old7 = ids.length ? await db.select({ exerciseId: schema.workoutSets.exerciseId, kg: schema.workoutSets.kg, reps: schema.workoutSets.reps, rir: schema.workoutSets.rir }).from(schema.workoutSets)
-    .where(and(eq(schema.workoutSets.userId, userId), inArray(schema.workoutSets.exerciseId, ids), sql`${schema.workoutSets.completedAt} <= ${weekAgo.toISOString()}`, sql`${schema.workoutSets.type} <> 'warmup'`)) : []
+    .where(and(eq(schema.workoutSets.userId, userId), inArray(schema.workoutSets.exerciseId, ids), sql`${schema.workoutSets.completedAt} <= ${weekAgo.toISOString()}`, sql`${schema.workoutSets.type} <> 'warmup'`,
+      sql`${schema.workoutSets.workoutId} in (select id from workouts where user_id = ${userId} and deleted_at is null)`)) : []
   const keyOf = new Map((ids.length ? await db.select({ id: schema.exercises.id, key: schema.exercises.key }).from(schema.exercises).where(inArray(schema.exercises.id, ids)) : []).map((r) => [r.id, r.key]))
   const best7 = (exId: number, type: string) => {
     const xs = old7.filter((x) => x.exerciseId === exId)
@@ -422,6 +445,8 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
       const prev = prevBy.get(e.exerciseId) ?? null
       for (const pr of detectPRs(prev, cur, k)) prs.push({ exerciseId: e.exerciseId, ...pr })
       const merged = mergeRecords(prev, cur)
+      prevBy.set(e.exerciseId, merged) // aynı hareket listede iki kez geçerse ikincisi güncel kayda göre kıyaslanır
+      if (!prev && Object.values(merged).every((v) => !v)) continue // yalnızca ısınma/başarısız setler: sıfır rekor satırı yazılmaz
       await tx.insert(schema.exerciseRecords).values({ userId, exerciseId: e.exerciseId, records: merged as unknown as Record<string, number> })
         .onConflictDoUpdate({ target: [schema.exerciseRecords.userId, schema.exerciseRecords.exerciseId], set: { records: merged as unknown as Record<string, number>, updatedAt: new Date() } })
     }
@@ -437,7 +462,7 @@ export async function saveWorkout(userId: string, p: WorkoutPayload) {
     return w.id
   })
   if (!id) { const [d2] = await db.select({ id: schema.workouts.id }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), eq(schema.workouts.clientId, p.clientId))).limit(1); return { id: d2.id, duplicate: true, prs: [] } }
-  if (p.programDayId) await advanceSchemes(userId, p.programDayId, exs)
+  if (p.programDayId) await advanceSchemes(userId, p.programDayId, exs).catch((e) => console.error('[dgfit] gzclp ilerletme hatası', (e as Error).message))
   await publish(userId, 'workout.finished', { id, kind: 'strength', day, minutes: Math.round(durationSec / 60), kcalNet: kcal.net, volume, workSets })
   for (const pr of prs) await publish(userId, 'pr.achieved', { workoutId: id, ...pr })
   await refreshClosedDay(userId, day)
@@ -453,10 +478,11 @@ async function advanceSchemes(userId: string, dayId: string, exs: { exerciseId: 
   const gym = await ensureGym(userId)
   for (const { pe, pattern } of pes) {
     const e = exs.find((x) => x.exerciseId === pe.exerciseId)
-    const work = e?.sets.filter((x) => x.type !== 'warmup' && x.reps > 0) ?? []
-    if (!work.length) continue
+    // ısınma hariç tüm setler sırasıyla (0 tekrarlı başarısız set de sayılır; yoksa sonraki setler kayar)
+    const work = e?.sets.filter((x) => x.type !== 'warmup') ?? []
+    if (!work.some((x) => x.reps > 0)) continue
     const tier = pe.scheme!.slice(6) as Tier
-    const state: GzState = pe.schemeState ?? { tier, stage: 0, kg: Math.max(...work.map((x) => x.kg)), lastBaseKg: null }
+    const state: GzState = pe.schemeState ?? { tier, stage: 0, kg: Math.max(...work.filter((x) => x.reps > 0).map((x) => x.kg)), lastBaseKg: null }
     const r = gzAdvance(state, work.map((x) => ({ kg: x.kg, reps: x.reps })), pattern === 'legs', gym.increment)
     await db.update(schema.programExercises).set({ schemeState: r.next }).where(eq(schema.programExercises.id, pe.id))
   }
@@ -510,8 +536,33 @@ export async function recentWorkouts(userId: string, limit = 10) {
 
 export async function deleteWorkout(userId: string, id: string) {
   const [w] = await db.update(schema.workouts).set({ deletedAt: new Date() }).where(and(eq(schema.workouts.id, id), eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt))).returning({ day: schema.workouts.day })
-  if (w) await refreshClosedDay(userId, w.day)
-  return !!w
+  if (!w) return false
+  // silinen antrenmanın rekorları kalkar; hareket rekorları kalan antrenmanlardan yeniden hesaplanır (yanlış girilen 500 kg kalıcı olmasın)
+  const exIds = [...new Set((await db.select({ id: schema.workoutSets.exerciseId }).from(schema.workoutSets).where(eq(schema.workoutSets.workoutId, id))).map((r) => r.id))]
+  await db.delete(schema.personalRecords).where(and(eq(schema.personalRecords.userId, userId), eq(schema.personalRecords.workoutId, id)))
+  await recomputeRecords(userId, exIds)
+  await refreshClosedDay(userId, w.day)
+  return true
+}
+
+/** Hareket rekorlarını silinmemiş antrenmanlardan baştan hesaplar; hiç kayıt kalmazsa rekor satırı silinir. */
+export async function recomputeRecords(userId: string, exerciseIds: number[]) {
+  if (!exerciseIds.length) return
+  const rows = await db.select({ s: schema.workoutSets, bodyKg: schema.workouts.bodyKg, kind: schema.exercises.kind }).from(schema.workoutSets)
+    .innerJoin(schema.workouts, eq(schema.workouts.id, schema.workoutSets.workoutId))
+    .innerJoin(schema.exercises, eq(schema.exercises.id, schema.workoutSets.exerciseId))
+    .where(and(eq(schema.workoutSets.userId, userId), inArray(schema.workoutSets.exerciseId, exerciseIds), isNull(schema.workouts.deletedAt)))
+  for (const exId of exerciseIds) {
+    const mine = rows.filter((r) => r.s.exerciseId === exId)
+    let rec: Records | null = null
+    for (const wid of new Set(mine.map((r) => r.s.workoutId))) {
+      const ss = mine.filter((r) => r.s.workoutId === wid)
+      rec = mergeRecords(rec, sessionRecords(ss.map((r) => ({ kg: r.s.kg, reps: r.s.reps, rir: r.s.rir, type: r.s.type as SetType, seconds: r.s.seconds })), ss[0].kind as ExKind, ss[0].bodyKg ?? 0))
+    }
+    if (!rec || Object.values(rec).every((v) => !v)) await db.delete(schema.exerciseRecords).where(and(eq(schema.exerciseRecords.userId, userId), eq(schema.exerciseRecords.exerciseId, exId)))
+    else await db.insert(schema.exerciseRecords).values({ userId, exerciseId: exId, records: rec as unknown as Record<string, number> })
+      .onConflictDoUpdate({ target: [schema.exerciseRecords.userId, schema.exerciseRecords.exerciseId], set: { records: rec as unknown as Record<string, number>, updatedAt: new Date() } })
+  }
 }
 
 // ───────── Kardiyo ─────────
@@ -544,11 +595,11 @@ export async function fitnessHome(userId: string) {
   const dow = new Date(today + 'T12:00:00Z').getUTCDay()
   const monday = addDays(today, -((dow + 6) % 7))
   const [week, recent, prs, cardio, [cardioWeek], [profile]] = await Promise.all([
-    db.select({ day: schema.workouts.day, n: sql<number>`count(*)::int`, min: sql<number>`sum(duration_sec)/60`, vol: sql<number>`coalesce(sum(volume_kg),0)` }).from(schema.workouts)
+    db.select({ day: schema.workouts.day, n: sql<number>`count(*)::int`, min: sql<number>`round(sum(duration_sec)/60.0)::int`, vol: sql<number>`coalesce(sum(volume_kg),0)` }).from(schema.workouts)
       .where(and(eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt), sql`${schema.workouts.day} >= ${monday}`)).groupBy(schema.workouts.day),
     recentWorkouts(userId, 5),
     db.select({ pr: schema.personalRecords, name: schema.exercises.nameTr }).from(schema.personalRecords).innerJoin(schema.exercises, eq(schema.exercises.id, schema.personalRecords.exerciseId))
-      .where(eq(schema.personalRecords.userId, userId)).orderBy(desc(schema.personalRecords.createdAt)).limit(5),
+      .where(and(eq(schema.personalRecords.userId, userId), sql`${schema.personalRecords.workoutId} in (select id from workouts where user_id = ${userId} and deleted_at is null)`)).orderBy(desc(schema.personalRecords.createdAt)).limit(5),
     recentCardio(userId, 3),
     db.select({ min: sql<number>`coalesce(sum(minutes),0)` }).from(schema.cardioSessions).where(and(eq(schema.cardioSessions.userId, userId), isNull(schema.cardioSessions.deletedAt), sql`${schema.cardioSessions.day} >= ${monday}`)),
     db.select({ trainingDays: schema.profiles.trainingDays }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1),
@@ -558,7 +609,7 @@ export async function fitnessHome(userId: string) {
 
 /** Bugün ekranı antrenman kartı. */
 export async function todayTraining(userId: string, day: string) {
-  const [w] = await db.select({ n: sql<number>`count(*)::int`, min: sql<number>`coalesce(sum(duration_sec),0)/60`, kcal: sql<number>`coalesce(sum(kcal_net),0)` }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), eq(schema.workouts.day, day), isNull(schema.workouts.deletedAt)))
+  const [w] = await db.select({ n: sql<number>`count(*)::int`, min: sql<number>`round(coalesce(sum(duration_sec),0)/60.0)::int`, kcal: sql<number>`coalesce(sum(kcal_net),0)` }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), eq(schema.workouts.day, day), isNull(schema.workouts.deletedAt)))
   const [c] = await db.select({ n: sql<number>`count(*)::int`, min: sql<number>`coalesce(sum(minutes),0)` }).from(schema.cardioSessions).where(and(eq(schema.cardioSessions.userId, userId), eq(schema.cardioSessions.day, day), isNull(schema.cardioSessions.deletedAt)))
   const [p] = await db.select({ id: schema.programs.id, nextDayIdx: schema.programs.nextDayIdx }).from(schema.programs).where(and(eq(schema.programs.userId, userId), eq(schema.programs.active, true), isNull(schema.programs.deletedAt))).limit(1)
   let next: { id: string; name: string } | null = null

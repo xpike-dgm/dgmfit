@@ -30,21 +30,27 @@ export default function ExerciseFeed({ title, items, views, gender, back, empty 
     return () => io.disconnect()
   }, [items])
 
+  const busy = useRef(false)
   async function toggleFav(id: number) {
+    if (busy.current) return
+    busy.current = true
     const on = !favs.has(id)
     setFavs((s) => { const n = new Set(s); if (on) n.add(id); else n.delete(id); return n })
-    const r = await favoriteAction(id, on)
-    if (!r.ok) { setFavs((s) => { const n = new Set(s); if (on) n.delete(id); else n.add(id); return n }); return }
+    const r = await favoriteAction(id, on).catch(() => ({ ok: false as const, error: 'Bağlantı yok; tekrar dene.' }))
+    busy.current = false
+    if (!r.ok) { setFavs((s) => { const n = new Set(s); if (on) n.delete(id); else n.add(id); return n }); setToast({ id, text: r.error }); return }
     setToast(on ? { id, text: 'Hareket kaydedilenlere eklendi!' } : null)
   }
   async function openPicker(id: number) {
     setToast(null); setMsg(null); setPicker({ id, programs: null })
-    const r = await programDaysAction()
+    const r = await programDaysAction().catch(() => ({ ok: false as const, error: 'Bağlantı yok; tekrar dene.' }))
     setPicker({ id, programs: r.ok ? r.programs : [] })
   }
   async function add(dayId: string, dayName: string) {
-    if (!picker) return
-    const r = await addToDayAction(dayId, picker.id)
+    if (!picker || busy.current) return
+    busy.current = true
+    const r = await addToDayAction(dayId, picker.id).catch(() => ({ ok: false as const, error: 'Bağlantı yok; tekrar dene.' }))
+    busy.current = false
     setMsg(r.ok ? `“${dayName}” gününe eklendi` : r.error)
   }
 

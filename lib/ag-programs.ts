@@ -63,7 +63,8 @@ function target(s: AgSub, e: AgEntry, inSuperset: boolean) {
   else if (s.reps) { repMin = repMax = Math.round(s.reps) }
   else if (isMax(s.note ?? e.note)) { repMin = 5; repMax = 30; type = 'amrap' }
   const restRaw = (e.restTimeInMinutes ?? 0) * 60 + (e.restTimeInSeconds ?? 0)
-  const rest = restRaw > 0 ? Math.round(restRaw) : inSuperset ? 60 : repMax <= 6 ? 180 : 90
+  // düzenleyicinin kabul ettiği aralık 15–600 sn (dışında kalırsa sonraki düzenleme reddedilirdi)
+  const rest = Math.min(600, Math.max(15, restRaw > 0 ? Math.round(restRaw) : inSuperset ? 60 : repMax <= 6 ? 180 : 90))
   // program_exercises.rir tam sayı: yarım değerler aşağı yuvarlanır (0,5 → 0)
   const rir = e.rir != null ? Math.max(0, Math.floor(e.rir)) : type === 'amrap' ? 0 : 2
   return { sets: Math.max(1, Math.min(10, Math.round(e.sets))), repMin, repMax, rir, rest, seconds: seconds ?? undefined, type }

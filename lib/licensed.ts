@@ -14,7 +14,8 @@ export const LICENSED_KINDS = ['videos', 'anatomy', 'plates', 'thumbs'] as const
 export function licensedPath(kind: string, file: string): string | null {
   if (!LICENSED_DIR || !(LICENSED_KINDS as readonly string[]).includes(kind) || !/^[A-Za-z0-9_.-]{1,120}$/.test(file) || file.startsWith('.')) return null
   const p = path.join(LICENSED_DIR, kind, file)
-  return p.startsWith(path.join(LICENSED_DIR, kind) + path.sep) && fs.existsSync(p) ? p : null
+  if (!p.startsWith(path.join(LICENSED_DIR, kind) + path.sep)) return null
+  try { return fs.statSync(p).isFile() ? p : null } catch { return null } // klasör ya da yok → null
 }
 export const licensedUrl = (kind: (typeof LICENSED_KINDS)[number], file: string | null | undefined) => (file ? `/api/lisansli/${kind}/${encodeURIComponent(file)}` : null)
 export const hasLicensedFile = (kind: (typeof LICENSED_KINDS)[number], file: string | null | undefined) => !!(file && licensedPath(kind, file))

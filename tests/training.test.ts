@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cardioKcal, detectPRs, e1rm, platesFor, roundTo, sessionRecords, strengthKcal, suggestNext, warmupSets, weightFor, workoutWaterBonus, type LoggedSet, type Session } from '../lib/training.ts'
+import { cardioKcal, cleanNumInput, rirText, detectPRs, e1rm, platesFor, roundTo, sessionRecords, strengthKcal, suggestNext, warmupSets, weightFor, workoutWaterBonus, type LoggedSet, type Session } from '../lib/training.ts'
 
 const S = (kg: number, reps: number, rir: number | null = 2, type: LoggedSet['type'] = 'normal'): LoggedSet => ({ kg, reps, rir, type })
 const sess = (day: string, ...sets: LoggedSet[]): Session => ({ day, sets })
@@ -90,6 +90,20 @@ test('rekorlar: ilk kayıt rekor değil; kırılanlar', () => {
   const cur = sessionRecords([S(102.5, 3, 1), S(90, 10, 0), S(20, 10, 0, 'warmup')], 'weight_reps')
   assert.deepEqual(detectPRs(prev, cur, 'weight_reps').map((p) => p.type), ['kg', 'rm10', 'reps', 'volume']) // 3RM = en ağır (102,5) olduğu için tekrar edilmez
   assert.deepEqual(detectPRs(null, cur, 'weight_reps'), [])
+  // ilk kayıt yalnızca ısınma/başarısız setlerden oluştuysa (tüm değerler 0) sonraki seans rekor yağmuru üretmez
+  const zero = sessionRecords([S(20, 8, 0, 'warmup'), S(100, 0, null)], 'weight_reps')
+  assert.ok(Object.values(zero).every((v) => v === 0)); assert.deepEqual(detectPRs(zero, cur, 'weight_reps'), [])
+})
+
+test('destekli hareket: etkin yük (vücut − destek), destek azalınca rekor; eski negatif kayıtla kıyas yok', () => {
+  const a = sessionRecords([S(30, 8, 2)], 'assisted', 80), b = sessionRecords([S(10, 8, 2)], 'assisted', 80)
+  assert.equal(a.kg, 50); assert.equal(b.kg, 70)
+  assert.deepEqual(detectPRs(a, b, 'assisted').map((p) => p.type), ['kg', 'volume']) // daha az destek = daha çok etkin yük ve hacim
+  assert.deepEqual(detectPRs({ ...a, kg: -30 }, b, 'assisted').map((p) => p.type), ['volume']) // eski negatif kg ile kıyas yok
+})
+
+test('yuvarlama: yukarı yuvarlamada tam kat bir adım atlamaz', () => {
+  assert.equal(roundTo(100, 2.5, 'up'), 100); assert.equal(roundTo(100.1, 2.5, 'up'), 102.5); assert.equal(roundTo(101.2, 2.5, 'down'), 100)
 })
 
 test('kalori: ACSM koşu, Keytel nabız, MET tablosu, ağırlık antrenmanı', () => {
@@ -107,4 +121,16 @@ test('antrenman günü su eki: saat başına 500 ml', () => {
   assert.equal(workoutWaterBonus(60), 500)
   assert.equal(workoutWaterBonus(45), 400) // 375 → 400
   assert.equal(workoutWaterBonus(90), 750)
+})
+
+test('sayı girişi temizleme ve RiR metni', () => {
+  assert.equal(cleanNumInput('60.5.2', true), '60.52'); assert.equal(cleanNumInput('62,5', true), '62,5'); assert.equal(cleanNumInput('1a0.', false), '10')
+  assert.equal(cleanNumInput('1234567', true), '123456')
+  assert.equal(rirText(2.5), '2,5'); assert.equal(rirText(1), '1'); assert.equal(rirText(5), '4+')
+})
+
+test('kardiyo: aşırı hız ACSM sınırına çekilir', () => {
+  const absurd = cardioKcal({ type: 'run', minutes: 1, weightKg: 70, distanceKm: 300 })
+  const fast = cardioKcal({ type: 'run', minutes: 60, weightKg: 70, distanceKm: 25 })
+  assert.ok(absurd.met <= fast.met + 0.01)
 })

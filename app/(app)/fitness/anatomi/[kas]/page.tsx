@@ -13,7 +13,7 @@ export default async function Page(props: { params: Promise<{ kas: string }>; se
   const { kas } = await props.params
   const { g } = await props.searchParams
   const views = anatomyViews()
-  if (!views || !(kas in AG_MUSCLE_TR)) notFound()
+  if (!views || !Object.hasOwn(AG_MUSCLE_TR, kas)) notFound()
   const gender = g === 'female' || g === 'male' ? g : (await getToday(u.id))?.profile.sex === 'female' ? 'female' : 'male'
   const items = await muscleFeed(u.id, kas)
   return <ExerciseFeed title={AG_MUSCLE_TR[kas]} items={items} views={views} gender={gender} back="/fitness/anatomi" />

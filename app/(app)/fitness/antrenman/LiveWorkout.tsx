@@ -7,7 +7,7 @@ import Sheet from '@/components/Sheet'
 import { btn } from '@/components/ui'
 import { Check, Clock, Close, Dots, History, Info, Play, Plus, Trash } from '@/components/icons'
 import BackButton from '@/components/BackButton'
-import { platesFor, roundTo, SET_TYPES, setVolume, strengthKcal, suggestNext, warmupSets, type ExKind, type LoggedSet, type SetType, type Suggestion } from '@/lib/training'
+import { cleanNumInput, platesFor, roundTo, SET_TYPES, setVolume, strengthKcal, suggestNext, warmupSets, type ExKind, type LoggedSet, type SetType, type Suggestion } from '@/lib/training'
 import type { LiveExercise } from '@/lib/fitness-data'
 import { alternativesAction, liveExerciseAction, saveWorkoutAction } from '../actions'
 import { LIVE_KEY, queuePending, readJson, writeJson } from '../live-store'
@@ -19,7 +19,7 @@ import type { PlateImages } from '@/lib/licensed'
 type LSet = { kg: string; reps: string; rir: number | null; type: SetType; seconds: string; done: boolean; completedAt: string | null; feedback: string | null; ph: { kg: number; reps: number; seconds: number } }
 type LEx = Omit<LiveExercise, 'sets'> & { targetSets: number; sets: LSet[]; suggestion: Suggestion | null }
 type Draft = { v: 1; clientId: string; programDayId: string | null; name: string; startedAt: string; exercises: LEx[]; notes: string; pain: boolean; restEndsAt: number | null; restTotal: number; restFor: string; restPush?: boolean }
-interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[]; week?: number | null; fuel?: string | null; rir?: { steps: string[]; info: string }; plateImages?: PlateImages | null }
+interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[]; week?: number | null; fuel?: string | null; rir?: { steps: string[]; info: string }; plateImages?: PlateImages | null; addIds?: number[] }
 /** RiR: 0–4 yarım adım, 5 = "4+"; kaydırıcı kademesi 0–9 */
 const rirIdx = (r: number) => (r >= 5 ? 9 : Math.max(0, Math.min(8, Math.round(r * 2))))
 const idxRir = (i: number) => (i >= 9 ? 5 : i / 2)
@@ -62,23 +62,36 @@ export default function LiveWorkout(p: Props) {
   const [rirAt, setRirAt] = useState<{ ei: number; si: number } | null>(null)
   const [rirInfo, setRirInfo] = useState(false)
   const selInit = useRef(false)
+  const focusAt = useRef<number | null>(null)
+  const closed = useRef(false) // kaydedildi/kuyruğa alındı: taslak yeniden yazılmaz
+  const [conflict, setConflict] = useState<Draft | null>(null)
+  const [altBusy, setAltBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const audio = useRef<AudioContext | null>(null)
   const restFired = useRef<number | null>(null)
 
-  // taslak: aynı program günü için 8 saatten yeni taslak varsa kaldığı yerden devam
+  // taslak: aynı program günü için 8 saatten yeni taslak varsa kaldığı yerden devam. Başka günün/serbest antrenmanın
+  // tamamlanmış seti olan taslağı varsa sessizce silinmez: kullanıcıya sorulur.
+  const fresh = useCallback((): Draft => ({
+    v: 1, clientId: crypto.randomUUID(), programDayId: p.programDayId, name: p.name, startedAt: new Date().toISOString(),
+    exercises: p.exercises.map((e) => buildExercise(e, p.gym.increment, p.deficitKcal)), notes: '', pain: false, restEndsAt: null, restTotal: 0, restFor: '',
+  }), [p])
   useEffect(() => {
     const saved = readJson<Draft>(LIVE_KEY)
-    if (saved?.v === 1 && saved.programDayId === p.programDayId && Date.now() - Date.parse(saved.startedAt) < 8 * 3600_000) { setD(saved); setResumed(true); return }
-    setD({
-      v: 1, clientId: crypto.randomUUID(), programDayId: p.programDayId, name: p.name, startedAt: new Date().toISOString(),
-      exercises: p.exercises.map((e) => buildExercise(e, p.gym.increment, p.deficitKcal)), notes: '', pain: false, restEndsAt: null, restTotal: 0, restFor: '',
-    })
-  }, [p])
-  useEffect(() => { if (d) writeJson(LIVE_KEY, d) }, [d])
-  // açılışta (ya da kaldığı yerden devamda) ilk bitmemiş harekete odaklan
-  useEffect(() => { if (d && !selInit.current) { selInit.current = true; setSel(Math.max(0, d.exercises.findIndex((e) => e.sets.some((t) => !t.done)))) } }, [d])
+    const recent = saved?.v === 1 && Date.now() - Date.parse(saved.startedAt) < 8 * 3600_000
+    if (saved && recent && saved.programDayId === p.programDayId) {
+      // "Bu hareketle antrenman başlat": hareket taslakta yoksa eklenir ve seçilir
+      const add = p.exercises.filter((e) => p.addIds?.includes(e.exerciseId) && !saved.exercises.some((x) => x.exerciseId === e.exerciseId))
+      if (add.length) { focusAt.current = saved.exercises.length; saved.exercises.push(...add.map((e) => buildExercise(e, p.gym.increment, p.deficitKcal))) }
+      setD(saved); setResumed(true); return
+    }
+    if (saved && recent && saved.exercises.some((e) => e.sets.some((t) => t.done))) { setConflict(saved); return }
+    setD(fresh())
+  }, [p, fresh])
+  useEffect(() => { if (d && !closed.current) writeJson(LIVE_KEY, d) }, [d])
+  // açılışta (ya da kaldığı yerden devamda) eklenen harekete ya da ilk bitmemiş harekete odaklan
+  useEffect(() => { if (d && !selInit.current) { selInit.current = true; setSel(focusAt.current ?? Math.max(0, d.exercises.findIndex((e) => e.sets.some((t) => !t.done)))) } }, [d])
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [])
 
   // ekran kilitlenmesin (Wake Lock); sekme geri gelince yeniden iste
@@ -121,6 +134,18 @@ export default function LiveWorkout(p: Props) {
     return { volume: Math.round(volume), sets, kcal: strengthKcal(min, p.bodyKg, sets).net, min }
   }, [d, now, p.bodyKg])
 
+  if (!d && conflict) {
+    const done = conflict.exercises.reduce((t, e) => t + e.sets.filter((x) => x.done).length, 0)
+    return (
+      <div className="flex flex-col gap-4 px-4 pt-6 safe-top" data-testid="draft-conflict">
+        <h1 className="text-[22px] font-extrabold leading-tight">Yarım kalan antrenmanın var</h1>
+        <p className="text-[15px] text-ink-2 leading-relaxed"><b>{conflict.name}</b> · {done} set tamamlandı. Yeni antrenmana başlarsan o setler silinir.</p>
+        <button type="button" className="h-14 rounded-2xl bg-[#E53935] text-white font-extrabold text-[17px]" onClick={() => router.replace(conflict.programDayId ? `/fitness/antrenman?gun=${conflict.programDayId}` : '/fitness/antrenman')}>Ona devam et</button>
+        <button type="button" className={btn.secondary} onClick={() => { if (confirm(`${conflict.name} antrenmanındaki ${done} set silinsin mi?`)) { setConflict(null); setD(fresh()) } }}>Sil ve yenisini başlat</button>
+        <Link href="/fitness" className={btn.ghost}>Vazgeç</Link>
+      </div>
+    )
+  }
   if (!d) return <p className="p-6 text-mute">Hazırlanıyor…</p>
 
   const complete = (ei: number, si: number) => {
@@ -171,10 +196,10 @@ export default function LiveWorkout(p: Props) {
     try {
       const r = await saveWorkoutAction(payload)
       if (!r.ok) { setSaving(false); setMsg(r.error); return }
-      writeJson(LIVE_KEY, null)
+      closed.current = true; writeJson(LIVE_KEY, null)
       router.push(`/fitness/antrenman/${r.id}?yeni=1`)
     } catch {
-      queuePending(payload); writeJson(LIVE_KEY, null); setSaving(false)
+      queuePending(payload); closed.current = true; writeJson(LIVE_KEY, null); setSaving(false)
       setMsg('Bağlantı yok: antrenman telefona kaydedildi, bağlantı gelince otomatik gönderilecek.')
       setTimeout(() => router.push('/fitness'), 2500)
     }
@@ -363,7 +388,12 @@ export default function LiveWorkout(p: Props) {
             {cur.kind === 'weight_reps' ? <button type="button" className={btn.secondary} onClick={() => { update((x) => { const ex = x.exercises[sheet.ex]; const work = n(ex.sets.find((s) => s.type !== 'warmup')?.kg ?? '') || ex.sets.find((s) => s.type !== 'warmup')?.ph.kg || 0; const ws = warmupSets(work, p.gym.barKg, p.gym.increment); ex.sets = [...ws.map((w) => ({ kg: String(w.kg), reps: String(w.reps), seconds: '', rir: null, type: 'warmup' as SetType, done: false, completedAt: null, feedback: null, ph: { kg: w.kg, reps: w.reps, seconds: 0 } })), ...ex.sets.filter((s) => s.type !== 'warmup' || s.done)]; return x }); setSheet(null) }}>Isınma setleri ekle (%40 / %60 / %80)</button> : null}
             <button type="button" className={btn.secondary} onClick={async () => { setAlts(null); const ex = sheet.ex; setSheet({ kind: 'alts', ex }); const r = await alternativesAction(cur.exerciseId); setAlts(r.ok ? r.list : []) }}>İstasyon dolu: alternatifle değiştir</button>
             <Link href={`/fitness/hareketler/${cur.exerciseId}`} className={btn.secondary}><Info size={18} />Teknik ve geçmiş</Link>
-            <button type="button" className={`${btn.ghost} text-danger`} onClick={() => { update((x) => { x.exercises.splice(sheet.ex, 1); return x }); setSheet(null) }}><Trash size={18} />Hareketi çıkar</button>
+            <button type="button" className={`${btn.ghost} text-danger`} onClick={() => {
+              const k = sheet.ex, nDone = cur.sets.filter((t) => t.done).length
+              if (nDone && !confirm(`${cur.name}: tamamlanan ${nDone} set de silinecek. Hareket çıkarılsın mı?`)) return
+              update((x) => { x.exercises.splice(k, 1); return x }); setRirAt(null)
+              setSel((v) => Math.max(0, v > k ? v - 1 : Math.min(v, d.exercises.length - 2))); setSheet(null)
+            }}><Trash size={18} />Hareketi çıkar</button>
           </div>
         ) : null}
       </Sheet>
@@ -372,14 +402,17 @@ export default function LiveWorkout(p: Props) {
         {cur && sheet && 'ex' in sheet ? (
           <div className="flex flex-col pb-4" data-testid="alt-list">
             {alts === null ? <p className="text-mute text-sm">Yükleniyor…</p> : alts.length ? alts.map((a) => (
-              <button key={a.id} type="button" className="flex justify-between items-center min-h-[52px] text-left border-b border-line last:border-0" onClick={async () => {
-                const r = await liveExerciseAction(a.id)
+              <button key={a.id} type="button" disabled={altBusy} className="flex justify-between items-center min-h-[52px] text-left border-b border-line last:border-0 disabled:opacity-50" onClick={async () => {
+                if (altBusy) return
+                setAltBusy(true)
+                const r = await liveExerciseAction(a.id).finally(() => setAltBusy(false))
                 if (!r.ok) { setMsg(r.error); return }
                 const old = d.exercises[sheet.ex]
                 // hedefler korunur, yeni hareketin geçmişi ve önerisi gelir; tamamlanmış setler eski harekette kalır
                 const nx = buildExercise({ ...r.exercise, sets: old.targetSets, repMin: old.repMin, repMax: old.repMax, rir: old.rir, rest: old.rest, superset: old.superset, note: old.note }, p.gym.increment, p.deficitKcal)
-                update((x) => { const o = x.exercises[sheet.ex]; if (o.sets.some((t) => t.done)) { o.sets = o.sets.filter((t) => t.done); x.exercises.splice(sheet.ex + 1, 0, nx) } else x.exercises[sheet.ex] = nx; return x })
-                setSheet(null)
+                const k = sheet.ex, split = old.sets.some((t) => t.done)
+                update((x) => { const o = x.exercises[k]; if (o.sets.some((t) => t.done)) { o.sets = o.sets.filter((t) => t.done); x.exercises.splice(k + 1, 0, nx) } else x.exercises[k] = nx; return x })
+                setSel(split ? k + 1 : k); setRirAt(null); setSheet(null)
               }}><span className="font-semibold">{a.nameTr}</span><span className="text-[12px] text-mute">{EQUIPMENT[a.equipment] ?? a.equipment}</span></button>
             )) : <p className="text-mute text-sm">Uygun alternatif bulunamadı.</p>}
           </div>
@@ -477,7 +510,7 @@ const COLS = '40px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 48px'
 function NumField({ label, value, ph, decimal, onChange }: { label: string; value: string; ph: number; decimal?: boolean; onChange: (v: string) => void }) {
   return (
     <input aria-label={label} inputMode={decimal ? 'decimal' : 'numeric'} value={value} placeholder={fmt(ph)} onFocus={(ev) => ev.target.select()}
-      onChange={(ev) => onChange(ev.target.value.replace(/[^\d.,]/g, '').slice(0, 6))}
+      onChange={(ev) => onChange(cleanNumInput(ev.target.value, !!decimal))}
       className="w-full h-12 rounded-xl border-2 border-line-2 bg-transparent text-center num text-[17px] font-bold placeholder:text-faint placeholder:font-semibold outline-none focus:border-[#E53935]" />
   )
 }

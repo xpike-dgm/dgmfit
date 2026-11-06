@@ -10,7 +10,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ kind: string; f
   const u = await getUser()
   if (!u) return new Response(null, { status: 401 })
   const { kind, file } = await ctx.params
-  const p = licensedPath(kind, decodeURIComponent(file))
+  let name: string
+  try { name = decodeURIComponent(file) } catch { return new Response(null, { status: 404 }) } // bozuk % kodu → 404 (500 değil)
+  const p = licensedPath(kind, name)
   if (!p) return new Response(null, { status: 404 })
   const size = fs.statSync(p).size
   const type = TYPES[p.split('.').pop()!.toLowerCase()] ?? 'application/octet-stream'
