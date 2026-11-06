@@ -1,6 +1,6 @@
 import 'server-only'
 import crypto from 'node:crypto'
-import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 
 /** AES-256-GCM. Anahtar sunucuda DGFIT_MEDIA_KEY (32 bayt, base64); yoksa fotoğraf özelliği kapalıdır. */
@@ -12,6 +12,13 @@ function key(): Buffer | null {
 }
 export const mediaEnabled = () => key() !== null
 export const MAX_BYTES = 3 * 1024 * 1024
+/** Kullanıcı başına son 24 saatte yüklenebilecek toplam bayt. */
+export const DAILY_QUOTA_BYTES = 60 * 1024 * 1024
+/** Son 24 saatte yüklenen bayt (silinenler de sayılır; yükle-sil ile kotayı aşmak engellenir). */
+export async function bytesUploadedToday(userId: string): Promise<number> {
+  const [r] = await db.select({ n: sql<number>`coalesce(sum(${schema.mediaBlobs.bytes}), 0)::float` }).from(schema.mediaBlobs).where(and(eq(schema.mediaBlobs.userId, userId), gte(schema.mediaBlobs.createdAt, new Date(Date.now() - 86_400_000))))
+  return Number(r?.n ?? 0)
+}
 const MIME = new Set(['image/jpeg', 'image/webp', 'image/png'])
 
 /** Dosya imzasından tür: istemcinin bildirdiği türe güvenilmez. */

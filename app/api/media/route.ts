@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getUser, rateLimit } from '@/lib/auth'
-import { MAX_BYTES, mediaEnabled, saveMedia, type MediaKind } from '@/lib/media'
+import { DAILY_QUOTA_BYTES, MAX_BYTES, bytesUploadedToday, deleteMedia, mediaEnabled, saveMedia, type MediaKind } from '@/lib/media'
 import { setExercisePhoto } from '@/lib/fitness-stats'
+import { and, eq } from 'drizzle-orm'
+import { db, schema } from '@/lib/db'
 import { addDays, dayString } from '@/lib/time'
 
 /** Şifreli fotoğraf yükleme (multipart: file, kind=progress|exercise|social|avatar|feedback, day?, pose?, exerciseId?). */
@@ -22,11 +24,19 @@ export async function POST(req: Request) {
   const day = /^\d{4}-\d{2}-\d{2}$/.test(dayIn) && dayIn <= today && dayIn >= addDays(today, -3650) ? dayIn : today
   const poseIn = String(form.get('pose') ?? '')
   const pose = ['ön', 'yan', 'arka'].includes(poseIn) ? poseIn : null
+  // sahiplik, blob kaydedilmeden ÖNCE denetlenir (reddedilen istek depolama harcamasın)
+  let exId = 0
+  if (kind === 'exercise') {
+    exId = Number(form.get('exerciseId'))
+    const own = Number.isInteger(exId) ? await db.select({ id: schema.exercises.id }).from(schema.exercises).where(and(eq(schema.exercises.id, exId), eq(schema.exercises.userId, u.id), eq(schema.exercises.source, 'user'))).limit(1) : []
+    if (!own.length) return NextResponse.json({ error: 'Yalnızca kendi hareketine fotoğraf eklenebilir' }, { status: 403 })
+  }
+  if ((await bytesUploadedToday(u.id)) + file.size > DAILY_QUOTA_BYTES) return NextResponse.json({ error: 'Günlük yükleme sınırına ulaştın (60 MB); yarın tekrar dene' }, { status: 429 })
   try {
     const id = await saveMedia(u.id, { kind, day, pose, data: Buffer.from(await file.arrayBuffer()) })
-    if (kind === 'exercise') {
-      const exId = Number(form.get('exerciseId'))
-      if (!Number.isInteger(exId) || !(await setExercisePhoto(u.id, exId, id))) return NextResponse.json({ error: 'Yalnızca kendi hareketine fotoğraf eklenebilir' }, { status: 403 })
+    if (kind === 'exercise' && !(await setExercisePhoto(u.id, exId, id))) {
+      await deleteMedia(u.id, id)
+      return NextResponse.json({ error: 'Yalnızca kendi hareketine fotoğraf eklenebilir' }, { status: 403 })
     }
     return NextResponse.json({ id })
   } catch (e) {
