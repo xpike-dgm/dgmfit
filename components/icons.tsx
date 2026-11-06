@@ -77,3 +77,5 @@ export const SetsIcon = (p: P) => <svg {...base(p)}><rect x="4" y="9" width="16"
 export const Repeat = (p: P) => <svg {...base(p)}><path d="M4 11V9a3 3 0 0 1 3-3h12l-3-3M20 13v2a3 3 0 0 1-3 3H5l3 3" /></svg>
 export const Gauge = (p: P) => <svg {...base(p)}><path d="M4 17a8 8 0 1 1 16 0" /><path d="M12 17l4-5" /><path d="M4 17h16" /></svg>
 export const EditSquare = (p: P) => <svg {...base(p)}><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" /><path d="M17.5 3.5l3 3L12 15H9v-3z" /></svg>
+export const Bookmark = (p: P & { filled?: boolean }) => { const { filled, ...r } = p; return <svg {...base(r)} fill={filled ? 'currentColor' : 'none'}><path d="M6 3h12v18l-6-4-6 4z" /></svg> }
+export const Smile = (p: P) => <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8M9 9.5h.01M15 9.5h.01" /></svg>

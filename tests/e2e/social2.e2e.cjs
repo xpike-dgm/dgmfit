@@ -138,7 +138,7 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await pa.goto(BASE + '/sosyal/bildirimler'); await pa.locator('[data-testid=notification][data-kind=nudge]').waitFor()
 
   // 8) 24 saatlik kart: A (bugün antrenmanı var) → C görür, antrenman özetiyle
-  await pa.goto(BASE + '/sosyal'); await pa.getByTestId('stories').getByRole('button', { name: /Salondaydım/ }).click()
+  await pa.goto(BASE + '/sosyal'); await pa.getByTestId('share-bubble').click(); await pa.getByTestId('share-choice').getByRole('button', { name: /Bugün salondaydım/ }).click()
   await pa.fill('#story-body', 'Bacak günü bitti'); await pa.getByRole('button', { name: 'Kartı paylaş' }).click(); await pa.waitForTimeout(800)
   await pc.goto(BASE + '/sosyal'); await pc.getByRole('button', { name: `${A} kartları` }).click()
   await pc.getByTestId('story-view').getByText('Bacak günü bitti').waitFor(); await pc.getByTestId('story-view').getByText(/Tohum · 40 dk|· \d+ dk/).first().waitFor().catch(() => fail('kartta antrenman özeti yok'))

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { fmtNum } from '@/lib/calc'
 import { shrinkImage } from '@/lib/client-image'
@@ -13,6 +14,7 @@ type S = { id: string; username: string; mine: boolean; body: string; data: { wo
 export default function Stories({ stories, mediaOn }: { stories: S[]; mediaOn: boolean }) {
   const [open, setOpen] = useState<string | null>(null)
   const [create, setCreate] = useState(false)
+  const [choose, setChoose] = useState(false)
   const [body, setBody] = useState('')
   const [media, setMedia] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -26,9 +28,9 @@ export default function Stories({ stories, mediaOn }: { stories: S[]; mediaOn: b
   }
   return (
     <section aria-label="Bugün salondaydım" className="flex gap-3 overflow-x-auto pb-1" data-testid="stories">
-      <button type="button" onClick={() => setCreate(true)} className="flex flex-col items-center gap-1 shrink-0 w-16">
-        <span className="w-14 h-14 rounded-full border-2 border-dashed border-acc text-acc text-2xl flex items-center justify-center">+</span>
-        <span className="text-[11px] text-mute text-center leading-tight">Salondaydım</span>
+      <button type="button" onClick={() => setChoose(true)} className="flex flex-col items-center gap-1 shrink-0 w-16" data-testid="share-bubble">
+        <span className="w-14 h-14 rounded-full bg-acc text-acc-ink text-2xl font-bold flex items-center justify-center">+</span>
+        <span className="text-[11px] font-bold text-center leading-tight">Paylaş</span>
       </button>
       {people.map((u) => (
         <button key={u} type="button" onClick={() => setOpen(u)} className="flex flex-col items-center gap-1 shrink-0 w-16" data-testid="story-ring" aria-label={`${u} kartları`}>
@@ -48,6 +50,16 @@ export default function Stories({ stories, mediaOn }: { stories: S[]; mediaOn: b
               {s.mine ? <button type="button" className="self-start text-[12px] text-danger underline" onClick={async () => { await storyAction({ op: 'delete', id: s.id }); setOpen(null); router.refresh() }}>Sil</button> : null}
             </div>
           ))}
+        </div>
+      </Sheet>
+      <Sheet open={choose} onClose={() => setChoose(false)} title="Paylaş">
+        <div className="flex flex-col gap-2 pb-5" data-testid="share-choice">
+          <Link href="/sosyal/yeni" className="min-h-[60px] px-4 rounded-[18px] bg-surface-2 flex flex-col justify-center">
+            <b className="text-[15px]">Gönderi</b><span className="text-[12.5px] text-mute">Antrenman, rekor, tarif, fotoğraf ya da not</span>
+          </Link>
+          <button type="button" onClick={() => { setChoose(false); setCreate(true) }} className="min-h-[60px] px-4 rounded-[18px] bg-surface-2 flex flex-col justify-center text-left">
+            <b className="text-[15px]">Bugün salondaydım</b><span className="text-[12.5px] text-mute">Arkadaşlarına 24 saatlik kart</span>
+          </button>
         </div>
       </Sheet>
       <Sheet open={create} onClose={() => setCreate(false)} title="Bugün salondaydım">

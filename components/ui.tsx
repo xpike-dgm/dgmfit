@@ -39,12 +39,15 @@ export const hdrBtn = 'h-9 px-3.5 rounded-full bg-white/20 text-white text-[13px
 export const hdrIcon = 'inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/20 text-white shrink-0'
 
 /** Sekme ana sayfasının renkli özet bandı: başlık, alt başlık, halka ve üç değer. Sonraki kart bandın üstüne biner. */
-export function Band({ title, sub, right, ring, visual, pills, children }: {
+export function Band({ title, sub, right, ring, ringHref, visual, pills, children }: {
   title: ReactNode; sub?: ReactNode; right?: ReactNode
   /** Halka yerine gösterilecek görsel (ör. su şişesi); null ise halka çizilir */
   visual?: ReactNode
   ring?: { value: number; big: ReactNode; small: ReactNode; label: string }
-  pills?: [ReactNode, ReactNode][]; children?: ReactNode
+  /** Halkaya dokununca açılacak sayfa (isteğe bağlı) */
+  ringHref?: string
+  /** [etiket, değer, bağlantı?, test kimliği?] — bağlantı verilirse kutu dokunulabilir olur */
+  pills?: [ReactNode, ReactNode, string?, string?][]; children?: ReactNode
 }) {
   return (
     <section className="band -mx-4 px-4 safe-top pb-12 -mb-9">
@@ -59,21 +62,24 @@ export function Band({ title, sub, right, ring, visual, pills, children }: {
         <div className="grid grid-cols-[92px_1fr] gap-3 items-center mt-4">
           {visual ? (
             <div className="flex flex-col items-center gap-1">{visual}{ring ? <b className="num text-[15px] font-bold leading-none">{ring.big}</b> : null}</div>
-          ) : ring ? (
-            <Ring size={92} stroke={9} value={ring.value} color="#fff" track="rgba(255,255,255,0.28)" label={ring.label}>
-              <span className="flex flex-col items-center leading-none text-center">
-                <b className="num text-[19px] font-bold">{ring.big}</b>
-                <span className="text-[10px] font-semibold opacity-85 mt-1">{ring.small}</span>
-              </span>
-            </Ring>
-          ) : <span />}
+          ) : ring ? (() => {
+            const r = (
+              <Ring size={92} stroke={9} value={ring.value} color="#fff" track="rgba(255,255,255,0.28)" label={ring.label}>
+                <span className="flex flex-col items-center leading-none text-center">
+                  <b className="num text-[19px] font-bold">{ring.big}</b>
+                  <span className="text-[10px] font-semibold opacity-85 mt-1">{ring.small}</span>
+                </span>
+              </Ring>
+            )
+            return ringHref ? <Link href={ringHref} aria-label={ring.label} className="rounded-full active:scale-[0.97] transition">{r}</Link> : r
+          })() : <span />}
           {pills ? (
             <div className="flex flex-col gap-1.5">
-              {pills.map(([k, v], i) => (
-                <div key={i} className="flex justify-between gap-2 rounded-xl bg-white/[0.18] px-3 py-[7px] text-[12.5px] font-semibold">
-                  <span className="opacity-95">{k}</span><b className="num font-bold whitespace-nowrap">{v}</b>
-                </div>
-              ))}
+              {pills.map(([k, v, href, tid], i) => {
+                const cls = 'flex justify-between items-center gap-2 rounded-xl bg-white/[0.18] px-3 py-[7px] text-[12.5px] font-semibold'
+                const inner = <><span className="opacity-95">{k}</span><b className="num font-bold whitespace-nowrap flex items-center gap-1">{v}{href ? <Next size={14} className="opacity-80" /> : null}</b></>
+                return href ? <Link key={i} href={href} data-testid={tid} className={cls + ' active:scale-[0.98] transition'}>{inner}</Link> : <div key={i} className={cls}>{inner}</div>
+              })}
             </div>
           ) : null}
         </div>

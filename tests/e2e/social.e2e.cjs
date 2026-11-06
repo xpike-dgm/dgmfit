@@ -118,7 +118,7 @@ function fake(port, handler) {
   await pb.goto(BASE + '/sosyal?g=kronolojik')
   const wp = pb.locator(`[data-testid=post][data-id="${workoutPost}"]`)
   await wp.waitFor().catch(() => fail('B akışında A\'nın antrenmanı yok'))
-  await wp.getByRole('button', { name: 'Tepki 💪' }).click(); await pb.waitForTimeout(400)
+  await wp.getByTestId('react-open').click(); await wp.getByRole('button', { name: 'Tepki 💪' }).click(); await pb.waitForTimeout(400)
   await pb.goto(`${BASE}/sosyal/p/${workoutPost}`)
   await pb.fill('#comment-input', 'Harika!'); await pb.getByRole('button', { name: 'Gönder', exact: true }).click()
   await pb.getByTestId('comment').getByText('Harika!').waitFor()

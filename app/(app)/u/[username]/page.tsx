@@ -36,7 +36,7 @@ export default async function Page(props: { params: Promise<{ username: string }
   const [partner, pend] = await Promise.all([v.rel === 'friend' ? partnerStatus(me.id, v.id) : null, self || (v.rel === 'friend' && v.showcase) ? pendingPRs(v.id) : []])
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="profile">
-      <TopBar back="/sosyal" title={v.username} right={self ? <Link href="/sosyal/ayarlar" className={hdrBtn}>Düzenle</Link> : undefined} />
+      <TopBar back="/sosyal" title={v.username} right={self ? <div className="flex gap-2"><Link href="/sosyal?g=kaydedilen" className={hdrBtn} data-testid="saved-posts">Kaydedilenler</Link><Link href="/sosyal/ayarlar" className={hdrBtn}>Düzenle</Link></div> : undefined} />
       <section className="card p-5 flex flex-col gap-3">
         <div className="flex items-center gap-4">
           <Avatar src={v.avatar} name={v.username} size={72} />

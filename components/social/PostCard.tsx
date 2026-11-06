@@ -6,6 +6,7 @@ import { fmtNum } from '@/lib/calc'
 import { MEAL_LABEL, type MealId } from '@/lib/food'
 import { POST_KINDS, REACTIONS, type Reaction } from '@/lib/social'
 import type { PostView } from '@/lib/social-data'
+import { Bookmark, Chat, Smile } from '@/components/icons'
 import { addRecipeMealAction, copyWorkoutAction, saveProgramAction, deletePostAction, friendAction, reactAction, reportAction, saveAction, saveRecipeAction } from '@/app/(app)/sosyal/actions'
 
 export function Avatar({ src, name, size = 40 }: { src: string | null; name: string; size?: number }) {
@@ -93,6 +94,7 @@ export default function PostCard({ p, detail = false }: { p: PostView; detail?: 
   const [counts, setCounts] = useState(p.reactions)
   const [saved, setSaved] = useState(p.saved)
   const [menu, setMenu] = useState(false)
+  const [pick, setPick] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [gone, setGone] = useState(false)
   const router = useRouter()
@@ -136,12 +138,14 @@ export default function PostCard({ p, detail = false }: { p: PostView; detail?: 
         </div>
       ) : null}
       <footer className="flex items-center gap-1.5 flex-wrap">
-        {(Object.keys(REACTIONS) as Reaction[]).map((k) => (
-          <button key={k} type="button" aria-pressed={mine === k} aria-label={`Tepki ${REACTIONS[k]}`} onClick={() => void tap(k)}
+        {/* kullanılmış tepkiler sayılarıyla; tümü "Tepki ver" ile açılır */}
+        {(pick ? (Object.keys(REACTIONS) as Reaction[]) : (Object.keys(REACTIONS) as Reaction[]).filter((k) => counts[k] || mine === k)).map((k) => (
+          <button key={k} type="button" aria-pressed={mine === k} aria-label={`Tepki ${REACTIONS[k]}`} onClick={() => { setPick(false); void tap(k) }}
             className={`h-9 px-2.5 rounded-full text-[14px] flex items-center gap-1 ${mine === k ? 'bg-acc/20 border border-acc' : 'bg-surface-2'}`}>{REACTIONS[k]}{counts[k] ? <span className="num text-[12px]">{counts[k]}</span> : null}</button>
         ))}
-        {!detail ? <Link href={`/sosyal/p/${p.id}`} className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center" data-testid="post-comments">💬 {p.comments}</Link> : null}
-        <button type="button" aria-pressed={saved} aria-label={saved ? "Kaydedilenlerden çıkar" : "Gönderiyi kaydet"} onClick={async () => { setSaved(!saved); await saveAction(p.id, !saved) }} className="ml-auto h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold">{saved ? 'Kaydedildi' : 'Kaydet'}</button>
+        {!pick ? <button type="button" aria-label="Tepki ver" aria-expanded={false} onClick={() => setPick(true)} className="h-9 w-9 rounded-full bg-surface-2 text-mute flex items-center justify-center" data-testid="react-open"><Smile size={18} /></button> : null}
+        {!detail ? <Link href={`/sosyal/p/${p.id}`} aria-label={`Yorumlar (${p.comments})`} className="h-9 px-3 rounded-full bg-surface-2 text-[13px] font-semibold inline-flex items-center gap-1.5" data-testid="post-comments"><Chat size={16} />{p.comments}</Link> : null}
+        <button type="button" aria-pressed={saved} aria-label={saved ? 'Kaydedilenlerden çıkar' : 'Gönderiyi kaydet'} onClick={async () => { setSaved(!saved); await saveAction(p.id, !saved) }} className={`ml-auto h-9 w-9 rounded-full flex items-center justify-center ${saved ? 'text-acc' : 'text-mute'}`}><Bookmark size={19} filled={saved} /></button>
       </footer>
       {msg ? <p role="status" className="text-[13px] text-acc">{msg}</p> : null}
     </article>
