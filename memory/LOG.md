@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Arayüz sadeleştirmesi (Sade/Gelişmiş mod)
+- Kullanıcının arkadaşları: "çok karışık, fazla yazı". Adımlar: (1) `scripts/ui-audit.cjs` ile ölçüm, (2) taslak — ilk sürüm elle çizilmiş ekranlarla reddedildi ("basit uygulama olmuş"); kullanıcı "kendi uygulamamız iyi, sadece sadeleştirme" dedi → değişiklikler `sade-taslak` dalında gerçek uygulamada yapılıp önce/sonra görüntüleriyle sunuldu (https://claude.ai/artifact/Rb6gpfu9QBSTSPvaw1aZJN) ve onaylandı, (3) uygulama, (4) ölçüm.
+- Ölçüm (kelime, önce → sonra): İstatistik 180 → 30, Özet 107 → 32, Fit 160 → 65, Program 216 → 146 (dokunulabilir 62 → 43, boy 3,5 → 2,3 ekran), Fitness 141 → 99, Hareket 250 → 176, Yemek 186 → 153; Bugün, Su, canlı antrenman değişmedi. Alt menü 7 bölme kaldı.
+- Doğrulama: commit `c25c20e` (taslak `44e5caa`); verify.sh VERIFY OK (169 birim, 21 e2e; yeni `sade.e2e.cjs`); release `2026-11-06T19-16-27-057Z` RELEASE OK; canlıda 4 profilin hepsi sade modda, logda hata 0, test kullanıcıları silindi.
+
 ## 2026-11-06 — Fitness bağımsız inceleme (2 Sonnet ajanı) ve düzeltmeler
 - Kullanıcı isteğiyle iki ajan (sunucu/mantık, ekran/akış) salt okuma inceledi; bulgular kodda doğrulandı, kullanıcı "hepsini düzelt" dedi. Yetki/IDOR açığı bulunmadı.
 - Düzeltilenler:
