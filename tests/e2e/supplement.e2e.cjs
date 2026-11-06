@@ -19,6 +19,9 @@ const fail = (m) => { throw new Error(m) }
   await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
   await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'male', birthDate: '1992-02-02', heightCm: 180, weightKg: 85, activity: 'moderate', goal: 'lose', targetWeightKg: 80, tempo: 'balanced', customDays: 120, experience: 'mid', trainingDays: 4, dietPref: null, allergies: [], wakeTime: '07:00', sleepTime: '23:00' })))
   await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
+  // Sadeleştirme (2026-11-06): bu test Gelişmiş mod araçlarını kullanır
+  await p.goto(BASE + '/profil/gorunum'); await p.getByTestId('ui-advanced').check(); await p.waitForTimeout(300)
+  await p.waitForFunction(() => { const c = document.querySelector('[data-testid=ui-advanced]'); return c && c.checked && !c.disabled })
   const shot = (n) => p.screenshot({ path: `${OUT}/supp-${n}.png`, fullPage: true })
   const status = (re) => p.getByRole('status').filter({ hasText: re }).first().waitFor()
 

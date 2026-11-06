@@ -78,6 +78,9 @@ function fake(port, handler) {
   await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
   await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'male', birthDate: '1990-05-05', heightCm: 180, weightKg: 85, activity: 'moderate', goal: 'lose', targetWeightKg: 78, tempo: 'balanced', customDays: 120, experience: 'new', trainingDays: 3, dietPref: null, allergies: ['fıstık'], wakeTime: '07:00', sleepTime: '23:00' })))
   await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
+  // Sadeleştirme (2026-11-06): bu test Gelişmiş mod araçlarını kullanır
+  await p.goto(BASE + '/profil/gorunum'); await p.getByTestId('ui-advanced').check(); await p.waitForTimeout(300)
+  await p.waitForFunction(() => { const c = document.querySelector('[data-testid=ui-advanced]'); return c && c.checked && !c.disabled })
 
   await p.goto(BASE + '/yonetim/ai')
   const sec = p.getByTestId('provider-claude')

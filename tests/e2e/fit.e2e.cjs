@@ -31,6 +31,9 @@ const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Eur
   await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
   await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'male', birthDate: '1995-05-05', heightCm: 177, weightKg: 78.4, activity: 'moderate', goal: 'lose', targetWeightKg: 72, tempo: 'balanced', customDays: 90, experience: null, trainingDays: 4, dietPref: null, allergies: [], wakeTime: '07:30', sleepTime: '23:30' })))
   await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
+  // Sadeleştirme (2026-11-06): bu test Gelişmiş mod araçlarını kullanır
+  await p.goto(BASE + '/profil/gorunum'); await p.getByTestId('ui-advanced').check(); await p.waitForTimeout(300)
+  await p.waitForFunction(() => { const c = document.querySelector('[data-testid=ui-advanced]'); return c && c.checked && !c.disabled })
 
   const hook = await p.request.post(BASE + '/api/test/fit', { data: { days: 20, kgPerDay: 0.08, yesterdayExtra: 400 } })
   const seeded = hook.status() === 200

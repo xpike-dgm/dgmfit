@@ -252,7 +252,12 @@
     "components/BarLoad.tsx",
     "app/(app)/fitness/rekor/PrAttempt.tsx",
     "tests/e2e/pr.e2e.cjs",
-    "tests/e2e/fixes.e2e.cjs"
+    "tests/e2e/fixes.e2e.cjs",
+    "tests/e2e/sade.e2e.cjs",
+    "lib/ui-mode.ts",
+    "components/InfoTip.tsx",
+    "app/(app)/profil/gorunum/AdvancedToggle.tsx",
+    "scripts/ui-audit.cjs"
   ],
   "tables": [
     "users",
@@ -906,6 +911,7 @@
     "0016_licensed.sql",
     "0017_favorites.sql",
     "0018_rir_half.sql",
-    "0019_supersets.sql"
+    "0019_supersets.sql",
+    "0020_ui_mode.sql"
   ]
 }
