@@ -161,3 +161,4 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-07 | Yönetici "son işlemler" ayrı iz tablosu tutmaz, mevcut tablolardan derlenir; mesaj ve gönderi içerikleri gösterilmez | Kullanıcı isteği + gizlilik | Yönetim |
 | 2026-11-07 | Fitness gün sekmesi yalnızca önizler; antrenman "Antrenmana başla" ile başlar. Canlı antrenmanda İptal Bitir'in yanında | Kullanıcı isteği | Fitness |
 | 2026-11-07 | Anatomi görselleri sunucudaki pakette 800 px WebP olarak da tutulur (varsa kod onu kullanır, yoksa PNG) | Performans ajanı: 744 KB → ~150 KB | Fitness |
+| 2026-11-07 | Otonom çalışma: kullanıcı planlanan işlerin (Faz 7, 8, 9, P-4..P-7) aralıksız yapılmasını istedi; soru sorulmaz, belirsizlikte önerilen seçenek uygulanır; test geçen her adım (görünüm dahil) canlıya alınır, ekran görüntüleri rapora eklenir; sıra STATE.md "OTONOM ÇALIŞMA" tablosunda | Kullanıcı kararı (soru-cevap) | Süreç |

@@ -261,6 +261,24 @@ Kaynak: kullanıcı mesajı 2026-11-05 ("ayarlara feedback butonu…", "whitelis
 
 0. Faz 5h tamamlandı (2026-11-06). Kullanıcıdan beklenen: yeni ekranlar hakkında geri bildirim (beğenmezse tasarım değişikliği).
 
+### OTONOM ÇALIŞMA (2026-11-07 başladı) — her adım bitince burayı güncelle, yeni adıma geçerken önce burayı oku
+Kullanıcı kararları: (1) aralıksız çalış, soru sorma, belirsizlikte önerdiğin seçenekle devam; (2) yayın: her adım verify.sh + canlı e2e geçince canlıya alınır (görünüm değişiklikleri dahil), ekran görüntüleri rapora; (3) P-6 yemek verisi biçimini Claude belirler (JSON şablonu + diğer AI için talimat); (4) sıra aşağıdaki gibi.
+Değişmez kurallar: Ağırsağlam içeriği repoya girmez, PRO içerik yok; /opt/dgmcraft ve fit.dgmcraft.online'a dokunma; gizli anahtar yazma; DGFIT_TEST_HOOKS canlıda yok; commit'te model adı yok; her adım: memory-check → verify.sh → commit → release.sh → canlı test kullanıcılarını sil → STATE/LOG/DECISIONS/ARCHITECTURE/manifest → push.
+Yerel ortam notu: `service postgresql start`; sunucu yeniden başlatma betiği scratchpad/restart.sh (yoksa verify.sh'teki komut); lisanslı yerel kopya scratchpad/licensed/agirsaglam (DGFIT_LICENSED_DIR).
+
+| # | Adım | Durum | Kanıt / not |
+| --- | --- | --- | --- |
+| A1 | Faz 9 altyapı: simülatör (vücut modeli, senaryo üretici, gerçek motorlarla gün gün koşucu, değişmezler, altın dosya, hızlı alt küme verify'da) | sırada | |
+| A2 | Faz 7-1: Bugünün durumu motoru + antrenman↔yemek↔su + tutarlılık e2e | sırada | |
+| A3 | Faz 8: hedefe ulaşma akışı, yağ oranı (Navy), hassas beslenme motoru, haftalık kalite döngüsü | sırada | |
+| A4 | Faz 9 tam set + düzeltmeler + gerileme | sırada | |
+| A5 | Faz 7-2: toparlanma↔öneri, kilo↔plan, tek bildirim planlayıcı, tek kayıt çok etki | sırada | |
+| A6 | Faz 7-3: sosyal↔her şey, koç↔her şey | sırada | |
+| A7 | P-4 kalite/hız | sırada | |
+| A8 | P-5 görsel kalanlar | sırada | |
+| A9 | P-6 yemek verisi içe aktarma aracı | sırada | |
+| A10 | P-7 özellikler | sırada | |
+
 ### Planlandı — onay bekliyor (2026-11-07, kullanıcı "yapılacaklar planına ekle" dedi; başlamak için açık onay gerekir)
 
 **Faz 7: Modüller arası entegrasyon (önerilen sıra: 7-1 → 7-2 → 7-3)**
