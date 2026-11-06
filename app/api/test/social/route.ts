@@ -33,8 +33,9 @@ export async function POST(req: Request) {
   if (finishWorkout) {
     const [x] = await db.select({ id: schema.exercises.id }).from(schema.exercises).where(eq(schema.exercises.key, finishWorkout.key)).limit(1)
     if (x) {
+      // kısa pencere: 40 dk önce başlatınca gece yarısını geçip dünün tarihine yazılıyordu (meydan okumada sayılmıyordu)
       const now = Date.now()
-      workout = await saveWorkout(u.id, { clientId: 'test-' + crypto.randomUUID(), programDayId: null, name: 'Test antrenmanı', startedAt: new Date(now - 40 * 60000).toISOString(), endedAt: new Date(now).toISOString(), notes: null, pain: false,
+      workout = await saveWorkout(u.id, { clientId: 'test-' + crypto.randomUUID(), programDayId: null, name: 'Test antrenmanı', startedAt: new Date(now - 8 * 60000).toISOString(), endedAt: new Date(now).toISOString(), notes: null, pain: false,
         exercises: [{ exerciseId: x.id, sets: Array.from({ length: finishWorkout.sets }, (_, i) => ({ kg: finishWorkout.kg, reps: finishWorkout.reps, rir: 1, type: 'normal' as const, completedAt: new Date(now - (finishWorkout.sets - i) * 120000).toISOString(), suggestedKg: null, suggestedReps: null, feedback: null })) }] })
     }
   }
