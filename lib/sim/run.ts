@@ -55,6 +55,7 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
   let switchedDay: number | null = null, recompMax = 0
   let lastTrend: number | null = null
   let fatAtSwitch = 0
+  const earlyDeltas: number[] = [] // P-4 ilk hafta: ilk iki check-in adımı
   let endTrend: number | null = null
 
   for (let i = 0; i < totalDays; i++) {
@@ -129,6 +130,7 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
         lastDir = dir
       }
       ck = cc.proposal.delta
+      if (earlyDeltas.length < 2) earlyDeltas.push(cc.proposal.delta)
       goal.dailyKcal = m.kcal; goal.carb = m.carb; goal.fat = m.fat; goal.tdee = cc.smoothTdee ?? goal.tdee
       lastCheckin = today; checkins++
       // kas hedefli kullanıcı hedefe ulaştıktan sonra harcamanın belirgin altına çekiliyor mu?
@@ -160,6 +162,8 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
   // ---- sonuç kontrolleri
   const cooperative = (s.adherence === 'perfect' || s.adherence === 'good') && s.underreport <= 0.05 && s.skipLogP <= 0.05 && (s.weighing === 'daily' || s.weighing === 'thrice') && s.appliesCheckin && !s.typoWeight
   const diff = s.targetWeightKg - s.weightKg
+  // P-4 ilk hafta: ilk check-in (glikojen/su dalgalanmasıyla) bir yöne ≥100 kcal itip ikincisi geri alıyorsa ilk haftanın ölçümü yanıltıyordur
+  if (cooperative && earlyDeltas.length === 2 && Math.abs(earlyDeltas[0]) >= 100 && Math.abs(earlyDeltas[1]) >= 100 && Math.sign(earlyDeltas[0]) !== Math.sign(earlyDeltas[1])) add('FIRST_WEEK_REVERSAL', 'warn', 14, `ilk check-in ${earlyDeltas[0]} kcal, ikincisi ${earlyDeltas[1]} kcal`)
   const endKg = endTrend ?? weightOf(body)
   if (cooperative && s.goal !== 'recomp' && plan.days >= 28 && reachedDay === null && !(plan.expectedDays && plan.expectedDays > plan.days * 1.1) && extendedDay === null) { // hedefe ulaşan: sonrası AFTER_REACH_DRIFT ile
     const tol = Math.max(1, Math.abs(diff) * 0.25)
