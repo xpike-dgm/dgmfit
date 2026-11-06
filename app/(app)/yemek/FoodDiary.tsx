@@ -10,6 +10,7 @@ import { MEALS, MEAL_LABEL, type MealId } from '@/lib/food'
 import { NUTRIENT_INFO, type NutrientKey } from '@/lib/nutrition'
 import { addQuickCalories, copyMeal, deleteMealItem, saveMealAsTemplate, updateMealItem } from './actions'
 import DayCardSheet from './DayCardSheet'
+import InfoTip from '@/components/InfoTip'
 
 interface Item { id: number; meal: MealId; name: string; grams: number; portionLabel: string | null; portionQty: number | null; kcal: number; protein: number; carb: number; fat: number; source: string }
 interface MealBlock { id: MealId; label: string; share: number; items: Item[]; totals: { kcal: number; protein: number; carb: number; fat: number } }
@@ -22,6 +23,10 @@ export default function FoodDiary(p: {
   trained?: boolean
   micro: Record<string, number>; suggested: MealId; yesterdayHas: Record<MealId, number>
   supplements?: ReactNode
+  /** Sade modda takviye kartı boşsa gizlenir */
+  hasSupplements?: boolean
+  /** Gelişmiş mod (sadeleştirme 2026-11-06) */
+  adv?: boolean
 }) {
   const router = useRouter()
   const [pending, start] = useTransition()
@@ -54,10 +59,15 @@ export default function FoodDiary(p: {
         <div className="flex items-center justify-between gap-2">
           <Link href={`/yemek?gun=${p.prevDay}`} aria-label="Önceki gün" className="w-11 h-11 rounded-full flex items-center justify-center text-mute"><Back size={20} /></Link>
           <div className="flex flex-col items-center text-center">
-            <span className="num text-[20px] font-bold leading-tight">{fmtNum(p.totals.kcal)} <span className="text-[13px] text-mute font-semibold">/ {fmtNum(budget)} kcal</span></span>
-            {p.burned ? <span className="text-xs text-mute">Hedef {fmtNum(p.target.kcal)} + egzersiz {fmtNum(p.burned)}</span> : null}
-            {p.adjust?.kcal ? <Link href="/fit" className="text-xs text-mute" data-testid="adjust-note">Plan {fmtNum(p.adjust.base)} {p.adjust.kcal > 0 ? '+' : '−'} {fmtNum(Math.abs(p.adjust.kcal))} dengeleme = {fmtNum(p.target.kcal)} kcal</Link> : null}
-            {p.adjust?.closed ? <span className="text-xs text-mute">Gün kapandı · değişiklikler dengelemeyi yeniden hesaplar</span> : null}
+            <span className="num text-[20px] font-bold leading-tight inline-flex items-center gap-1.5">{fmtNum(p.totals.kcal)} <span className="text-[13px] text-mute font-semibold">/ {fmtNum(budget)} kcal</span>
+              {!p.adv && (p.burned || p.adjust?.kcal || p.adjust?.closed) ? <InfoTip label="Kalori bütçesi">
+                {p.burned ? <span className="block">Hedef {fmtNum(p.target.kcal)} + egzersiz {fmtNum(p.burned)} kcal.</span> : null}
+                {p.adjust?.kcal ? <span className="block">Plan {fmtNum(p.adjust.base)} {p.adjust.kcal > 0 ? '+' : '−'} {fmtNum(Math.abs(p.adjust.kcal))} dengeleme = {fmtNum(p.target.kcal)} kcal.</span> : null}
+                {p.adjust?.closed ? <span className="block">Gün kapandı; değişiklikler dengelemeyi yeniden hesaplar.</span> : null}
+              </InfoTip> : null}</span>
+            {p.adv && p.burned ? <span className="text-xs text-mute">Hedef {fmtNum(p.target.kcal)} + egzersiz {fmtNum(p.burned)}</span> : null}
+            {p.adv && p.adjust?.kcal ? <Link href="/fit" className="text-xs text-mute" data-testid="adjust-note">Plan {fmtNum(p.adjust.base)} {p.adjust.kcal > 0 ? '+' : '−'} {fmtNum(Math.abs(p.adjust.kcal))} dengeleme = {fmtNum(p.target.kcal)} kcal</Link> : null}
+            {p.adv && p.adjust?.closed ? <span className="text-xs text-mute">Gün kapandı · değişiklikler dengelemeyi yeniden hesaplar</span> : null}
           </div>
           {p.nextDay ? <Link href={`/yemek?gun=${p.nextDay}`} aria-label="Sonraki gün" className="w-11 h-11 rounded-full flex items-center justify-center text-mute"><Next size={20} /></Link> : <span className="w-11 h-11 flex items-center justify-center text-faint opacity-40" aria-hidden><Next size={20} /></span>}
         </div>
@@ -76,7 +86,7 @@ export default function FoodDiary(p: {
         </button>
       </div>
 
-      {p.isToday ? (
+      {p.isToday && p.adv ? (
         <nav aria-label="AI planlama" className="grid grid-cols-3 gap-2" data-testid="ai-plan-links">
           <Link href="/yemek/plan" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">AI menü</Link>
           <Link href="/yemek/elimdeki" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">Elimde bunlar var</Link>
@@ -111,7 +121,7 @@ export default function FoodDiary(p: {
         </section>
       ))}
 
-      {p.supplements}
+      {p.adv || p.hasSupplements ? p.supplements : null}
 
       {Object.keys(p.micro).length ? (
         <details className="card px-4 py-3">
@@ -131,11 +141,11 @@ export default function FoodDiary(p: {
       <section className="rounded-[24px] p-4 flex gap-3 bg-coach border border-coach-line">
         <Spark size={18} className="text-acc shrink-0 mt-0.5" />
         <p className="text-sm leading-relaxed text-ink">
-          {p.trained && p.isToday && p.target.protein - p.totals.protein > 20 ? `Bugün antrenman yaptın: toparlanma için önümüzdeki öğünde 25–40 g protein al (kalan hedef ${fmtNum(p.target.protein - p.totals.protein)} g). Yoğurt + yulaf, tavuk, ton balığı ya da yumurta iyi seçenekler.`
+          {firstSentence(!p.adv, p.trained && p.isToday && p.target.protein - p.totals.protein > 20 ? `Bugün antrenman yaptın: toparlanma için önümüzdeki öğünde 25–40 g protein al (kalan hedef ${fmtNum(p.target.protein - p.totals.protein)} g). Yoğurt + yulaf, tavuk, ton balığı ya da yumurta iyi seçenekler.`
             : p.totals.kcal === 0 ? 'İlk öğününü ekleyerek başla. Son kullandıkların ve kayıtlı öğünlerin tek dokunuşla eklenir.'
             : p.target.protein - p.totals.protein > 25 && left > 150 ? `Kalan ${fmtNum(left)} kcal içinde ${fmtNum(p.target.protein - p.totals.protein)} g protein hedefin var. Tavuk, yoğurt, yumurta ya da baklagil iyi seçenekler.`
-              : left < 0 ? `Bugün hedefin ${fmtNum(-left)} kcal üstündesin. Fark, akıllı dengeleme ile sonraki günlere yayılacak (Faz 2b).`
-                : 'Makroların dengeli gidiyor. Akşam öğününü kalan bütçeye göre planlayabilirsin.'}
+              : left < 0 ? `Bugün hedefin ${fmtNum(-left)} kcal üstündesin. Fark, akıllı dengeleme ile sonraki günlere yayılacak.`
+                : 'Makroların dengeli gidiyor. Akşam öğününü kalan bütçeye göre planlayabilirsin.')}
         </p>
       </section>
 
@@ -154,6 +164,7 @@ export default function FoodDiary(p: {
             </button>
             <SaveTemplate disabled={!p.meals.find((m) => m.id === menu)?.items.length} onSave={(name) => { const m = menu; setMenu(null); run(() => saveMealAsTemplate(p.day, m, name), 'Öğün kaydedildi') }} />
             <button type="button" onClick={() => { const m = menu; setMenu(null); setQuick(m) }} className="min-h-[56px] px-4 rounded-[18px] bg-surface-2 text-left font-bold">Hızlı kalori ekle</button>
+            <Link href="/yemek/takviyeler" className="min-h-[56px] px-4 rounded-[18px] bg-surface-2 font-bold flex items-center">Takviyelerim</Link>
           </div>
         ) : null}
       </Sheet>
@@ -214,4 +225,11 @@ function SaveTemplate({ disabled, onSave }: { disabled: boolean; onSave: (name: 
       <button type="submit" disabled={disabled || !name.trim()} className="h-12 px-4 rounded-full bg-acc text-acc-ink font-extrabold text-sm disabled:opacity-40">Kaydet</button>
     </form>
   )
+}
+
+/** Sade modda uzun ipucunun yalnızca ilk cümlesi. */
+function firstSentence(short: boolean, t: string) {
+  if (!short) return t
+  const i = t.search(/[.!?](\s|$)/)
+  return i > 0 ? t.slice(0, i + 1) : t
 }

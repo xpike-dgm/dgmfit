@@ -119,7 +119,7 @@ export default async function Today() {
             <div className="flex flex-col min-w-0">
               <span className="flex items-center gap-1.5 text-[13px] font-extrabold"><Dumbbell size={16} className="text-acc" />Antrenman</span>
               <span className="text-[15px] font-extrabold leading-snug truncate mt-1">{trained ? `${tr.minutes} dk tamamlandı` : tr.next ? `Sıradaki: ${tr.next.name}` : 'Bugün kayıt yok'}</span>
-              <span className="text-[12px] text-mute truncate">{trained ? `+${fmtNum(t.burned)} kcal bütçeye eklendi` : tr.next ? 'Programdan istediğin günü seçebilirsin' : t.profile.trainingDays ? `Haftalık hedef · ${t.profile.trainingDays} gün` : 'Program oluşturarak başla'}</span>
+              <span className="text-[12px] text-mute truncate">{trained ? `+${fmtNum(t.burned)} kcal bütçeye eklendi` : tr.next ? null : t.profile.trainingDays ? `Haftalık hedef · ${t.profile.trainingDays} gün` : 'Program oluşturarak başla'}</span>
             </div>
             <span className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center shrink-0">{trained ? 'Detay' : 'Başlat'}</span>
           </div>

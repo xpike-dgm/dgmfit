@@ -52,9 +52,7 @@ export function DayClose({ day, closed, items, result }: { day: string; closed: 
         onClick={() => run(() => closeDayAction(day), (r) => text(String(r.kind), Number(r.diff)))}>
         {pending ? 'Kapatılıyor…' : 'Günü kapat'}
       </button>
-      <span className="text-[12px] text-mute leading-relaxed">
-        {items === 0 ? 'Kapatmak için önce bugünün öğünlerini kaydet. ' : ''}Kapatmazsan gün gece 03.00'te kendiliğinden kapanır. Kapandıktan sonra öğün değiştirirsen hesap yenilenir.
-      </span>
+      {items === 0 ? <span className="text-[12px] text-mute">Kapatmak için önce bugünün öğünlerini kaydet.</span> : null}
       <Msg m={msg} />
     </div>
   )
@@ -163,7 +161,7 @@ export function WeighIn({ last }: { last: number }) {
           className="flex-1 h-12 rounded-xl bg-surface-2 border border-line px-3 num text-lg text-ink" />
         <button type="submit" className={`${btn.primary} h-12 text-[15px] px-5`} disabled={pending}>Kaydet</button>
       </div>
-      {err ? <p role="alert" className="text-[13px] text-danger">{err}</p> : done ? <p role="status" className="text-[13px] text-acc">Tartı kaydedildi.</p> : <span className="text-[12px] text-mute">Sabah, tuvaletten sonra ve kahvaltıdan önce tartılmak en tutarlı sonucu verir.</span>}
+      {err ? <p role="alert" className="text-[13px] text-danger">{err}</p> : done ? <p role="status" className="text-[13px] text-acc">Tartı kaydedildi.</p> : null}
     </form>
   )
 }

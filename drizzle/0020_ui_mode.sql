@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "ui_advanced" boolean DEFAULT false NOT NULL;

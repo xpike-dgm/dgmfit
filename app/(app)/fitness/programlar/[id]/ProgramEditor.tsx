@@ -16,7 +16,7 @@ import { ExercisePicker } from '../../antrenman/LiveWorkout'
 type Ex = { id: string; exerciseId: number; name: string; kind: string; thumb?: string | null; images?: string[]; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null; superset?: number | null; note?: string | null }
 type Day = { id: string; name: string; focus: string; exercises: Ex[] }
 
-export default function ProgramEditor({ program }: { program: { id: string; name: string; active: boolean; notes: string[]; nextDayIdx: number; periodization: string; deloadEvery: number; startDay: string; days: Day[] } }) {
+export default function ProgramEditor({ program, adv = true }: { adv?: boolean; program: { id: string; name: string; active: boolean; notes: string[]; nextDayIdx: number; periodization: string; deloadEvery: number; startDay: string; days: Day[] } }) {
   const [edit, setEdit] = useState<Ex | null>(null)
   const [pick, setPick] = useState<string | null>(null)
   const [dayName, setDayName] = useState('')
@@ -40,7 +40,7 @@ export default function ProgramEditor({ program }: { program: { id: string; name
               <button type="button" onClick={() => setEdit(e)} className="flex-1 min-w-0 flex flex-col gap-1 text-left">
                 <span className="font-semibold text-[16px] leading-snug line-clamp-2">{e.name}</span>
                 {e.scheme ? <span className="num text-[12.5px] text-mute" data-testid="gz-row">{schemeLine(e)}</span>
-                  : <span className="num text-[13.5px] text-ink-2 flex items-center gap-3 flex-wrap">
+                  : <span className="num text-[13px] text-ink-2 flex items-center gap-x-2.5 gap-y-0.5 flex-wrap">
                     <span className="flex items-center gap-1"><SetsIcon size={16} />{e.sets} set</span>
                     <span className="flex items-center gap-1"><Repeat size={16} />{e.seconds ? `${e.seconds} sn` : e.setType === 'amrap' ? 'maks. tekrar' : e.repMin === e.repMax ? `${e.repMin} tekrar` : `${e.repMin}–${e.repMax} tekrar`}</span>
                     {e.seconds ? null : <span className="flex items-center gap-1" title="Tekrar yedeği"><Gauge size={16} />{e.rir.toFixed(1).replace('.', ',')} RiR</span>}
@@ -48,7 +48,6 @@ export default function ProgramEditor({ program }: { program: { id: string; name
                 {e.note ? <span className="text-[12px] text-mute" data-testid="ex-note">{e.note}</span> : null}
               </button>
               <button type="button" aria-label={`${e.name} düzenle`} onClick={() => setEdit(e)} className="w-11 h-11 rounded-full text-ink flex items-center justify-center shrink-0"><EditSquare size={26} /></button>
-              <button type="button" aria-label={`${e.name} sil`} disabled={pending} onClick={() => { if (confirm(`${e.name} bu günden çıkarılsın mı?`)) go(() => removeProgramExerciseAction(e.id)) }} className="w-9 h-9 rounded-full text-danger flex items-center justify-center shrink-0"><Trash size={16} /></button>
             </div>
   )
   return (
@@ -84,7 +83,7 @@ export default function ProgramEditor({ program }: { program: { id: string; name
         <button type="button" className={btn.secondary + ' h-12'} disabled={pending} onClick={() => go(() => addDayAction(program.id, dayName.trim() || `Gün ${program.days.length + 1}`), () => setDayName(''))}>Gün ekle</button>
       </section>
       {err ? <p role="alert" className="text-[13px] text-danger px-1">{err}</p> : null}
-      {program.days.some((d) => d.exercises.some((e) => !e.scheme)) ? <PeriodSettings program={program} pending={pending} go={go} /> : null}
+      {adv && program.days.some((d) => d.exercises.some((e) => !e.scheme)) ? <PeriodSettings program={program} pending={pending} go={go} /> : null}
 
       <Sheet open={!!pick} onClose={() => setPick(null)} title="Hareket ekle">
         {err ? <p role="alert" className="text-[13px] text-danger pb-2">{err}</p> : null}

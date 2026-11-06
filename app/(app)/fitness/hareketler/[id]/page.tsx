@@ -10,6 +10,8 @@ import { AG_SOURCE, FEATURE_LABEL, featureDescription, hasLicensedFile, licensed
 import { anatomyTexts, anatomyViews, isFavorite } from '@/lib/anatomy-data'
 import { LEVEL_COLOR, activationLevel, cnsBucket, viewKey } from '@/lib/anatomy'
 import { getToday } from '@/lib/today'
+import { isAdvanced } from '@/lib/ui-mode'
+import InfoTip from '@/components/InfoTip'
 import BodyFigure from '@/components/BodyFigure'
 import LicensedHero from './LicensedHero'
 import FeatureTiles from './FeatureTiles'
@@ -26,7 +28,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
   const u = await requireUser()
   const { id } = await props.params
   if (!/^\d+$/.test(id)) notFound()
-  const [x, pr] = await Promise.all([getExercise(u.id, Number(id)), exerciseProgress(u.id, Number(id))])
+  const [x, pr, adv] = await Promise.all([getExercise(u.id, Number(id)), exerciseProgress(u.id, Number(id)), isAdvanced(u.id)])
   if (!x || !pr) notFound()
   const L = x.licensed
   const vids = L ? { right: hasLicensedFile('videos', L.video.right) ? licensedUrl('videos', L.video.right) : null, wrong: hasLicensedFile('videos', L.video.wrong) ? licensedUrl('videos', L.video.wrong) : null } : null
@@ -55,9 +57,9 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
       <section className="card p-5 flex flex-col gap-4" aria-label="Kas etkisi" data-testid="ex-licensed">
         {L.cns !== null ? (
           <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between gap-2"><h2 className="text-[17px] font-extrabold">{texts?.cnsTitle}</h2><span className="text-[12.5px] font-bold num text-mute" data-testid="ex-cns">MSS yükü {fmtNum(L.cns)}/10</span></div>
+            <div className="flex items-center justify-between gap-2"><h2 className="text-[17px] font-extrabold flex items-center gap-2">{texts?.cnsTitle}{adv ? null : <InfoTip label="MSS yükü açıklaması">{texts?.cns[cnsBucket(L.cns) - 1]}</InfoTip>}</h2><span className="text-[12.5px] font-bold num text-mute" data-testid="ex-cns">MSS yükü {fmtNum(L.cns)}/10</span></div>
             <div className="h-4 rounded-md border border-line-2 overflow-hidden"><div className="h-full bg-[#E53935]" style={{ width: `${L.cns * 10}%` }} /></div>
-            <p className="text-[14px] text-ink-2 leading-relaxed">{texts?.cns[cnsBucket(L.cns) - 1]}</p>
+            {adv ? <p className="text-[14px] text-ink-2 leading-relaxed">{texts?.cns[cnsBucket(L.cns) - 1]}</p> : null}
           </div>
         ) : null}
         {views ? (
@@ -115,7 +117,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
           <ul className="list-disc pl-5 text-[14px] text-ink-2 flex flex-col gap-1">{pr.plateau.suggestions.map((t) => <li key={t}>{t}</li>)}</ul>
         </section>
       ) : null}
-      {pr.level ? (
+      {pr.level && adv ? (
         <section className="card p-5 flex flex-col gap-2" aria-label="Kuvvet seviyesi" data-testid="strength-level">
           <Eyebrow>Kuvvet seviyesi (yaklaşık)</Eyebrow>
           <span className="text-[20px] font-extrabold">{pr.level.level} <span className="text-[14px] text-mute font-normal num">· e1RM {fmtNum(pr.best, 1)} kg = vücut ağırlığının {String(pr.level.ratio).replace('.', ',')} katı</span></span>

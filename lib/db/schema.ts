@@ -80,6 +80,7 @@ export const profiles = pgTable('profiles', {
   wakeTime: text('wake_time'),
   sleepTime: text('sleep_time'),
   waistCm: real('waist_cm'),
+  uiAdvanced: boolean('ui_advanced').notNull().default(false), // Sadeleştirme (2026-11-06): false = sade mod
   onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })

@@ -8,13 +8,14 @@ import { Eyebrow, TopBar } from '@/components/ui'
 import BodyMap from './BodyMap'
 import { weekCns } from '@/lib/fitness-data'
 import { WeekCnsCard } from '../CnsCard'
+import { isAdvanced } from '@/lib/ui-mode'
 
 export const metadata = { title: 'Fitness istatistikleri · DgFit' }
 const STATUS = { 'yeşil': { c: 'var(--color-good)', t: 'Hazır' }, 'sarı': { c: 'var(--color-orange)', t: 'Toparlanıyor' }, 'kırmızı': { c: 'var(--color-danger)', t: 'Dinlendir' } } as const
 
 export default async function StatsPage() {
   const u = await requireUser()
-  const [s, cns] = await Promise.all([statsOverview(u.id), weekCns(u.id)])
+  const [s, cns, adv] = await Promise.all([statsOverview(u.id), weekCns(u.id), isAdvanced(u.id)])
   const maxV = Math.max(1, ...s.weeks.map((w) => w.volume))
   const W = 320, H = 140, L = 8, B = 20, bw = (W - L * 2) / s.weeks.length
   const trained = new Set(s.calendar)
@@ -46,7 +47,7 @@ export default async function StatsPage() {
         </svg>
       </section>
 
-      {cns.sessions.length ? <WeekCnsCard d={cns} /> : null}
+      {adv && cns.sessions.length ? <WeekCnsCard d={cns} /> : null}
       <section className="card p-5 flex flex-col gap-2" aria-label="Antrenman takvimi">
         <div className="flex justify-between items-center"><Eyebrow>Antrenman takvimi</Eyebrow><span className="text-[12px] text-mute num">{s.calendar.length} gün / 12 hafta</span></div>
         <div className="grid grid-flow-col gap-1" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }} data-testid="calendar">
@@ -60,6 +61,7 @@ export default async function StatsPage() {
       </section>
       </>}
 
+      {adv ? <>
       <section className="card p-5 flex flex-col gap-3" aria-label="Kas ısı haritası">
         <Eyebrow>Son 7 gün · kas ısı haritası</Eyebrow>
         <BodyMap heat={s.heat.map((h) => ({ muscle: h.muscle, sets: h.sets7, status: h.status }))} />
@@ -97,6 +99,7 @@ export default async function StatsPage() {
         ))}
         {!s.heat.some((h) => h.hoursAgo !== null) ? <p className="text-[13px] text-mute">Son 7 günde antrenman yok: tüm kaslar hazır.</p> : null}
       </section>
+      </> : null}
     </div>
   )
 }

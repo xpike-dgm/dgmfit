@@ -3,17 +3,20 @@ import { requireUser } from '@/lib/auth'
 import { THEME_COOKIE, parseTheme } from '@/lib/theme'
 import { TopBar } from '@/components/ui'
 import ThemePicker from './ThemePicker'
+import AdvancedToggle from './AdvancedToggle'
+import { isAdvanced } from '@/lib/ui-mode'
 
 export const metadata = { title: 'Görünüm' }
 const MODS: [string, string][] = [['today', 'Bugün'], ['plan', 'Fit'], ['water', 'Su'], ['food', 'Yemek'], ['fitness', 'Fitness'], ['social', 'Sosyal'], ['coach', 'Koç']]
 
 export default async function Page() {
-  await requireUser()
+  const u = await requireUser()
   const current = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
   return (
     <div className="px-4 flex flex-col gap-3">
       <TopBar back="/profil" title="Görünüm" sub="Tema bu cihazda saklanır" />
       <ThemePicker current={current} />
+      <AdvancedToggle on={await isAdvanced(u.id)} />
       <section className="card p-4 flex flex-col gap-3" aria-label="Modül renkleri">
         <h2 className="text-[15px] font-extrabold">Modül renkleri</h2>
         <p className="text-[13px] text-mute leading-relaxed">Her bölümün kendi rengi var; düğmeler ve seçili öğeler bulunduğun bölümün renginde görünür.</p>

@@ -8,6 +8,8 @@ import { fmtNum, GOALS, type GoalType } from '@/lib/calc'
 import { Band, Eyebrow } from '@/components/ui'
 import { Calendar, Pulse, Scale, Spark, Trend } from '@/components/icons'
 import { DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
+import InfoTip from '@/components/InfoTip'
+import { isAdvanced } from '@/lib/ui-mode'
 
 export const metadata = { title: 'Plan · DgFit' }
 
@@ -22,7 +24,7 @@ export default async function FitPage() {
   const s = await getFitScreen(user.id)
   if (!s) redirect('/kurulum')
   const { goal, today, checkin } = s
-  const cc = await carbCycleFor(user.id)
+  const [cc, adv] = await Promise.all([carbCycleFor(user.id), isAdvanced(user.id)])
   const type = goal.type as GoalType
   const totalDays = diffDays(goal.startDate, goal.endDate) + 1
   const dayIndex = Math.min(totalDays, diffDays(goal.startDate, today) + 1)
@@ -32,6 +34,9 @@ export default async function FitPage() {
   const last = s.closures[0]
   const span = Math.abs(goal.targetWeightKg - goal.startWeightKg)
   const progress = type === 'recomp' || span < 0.05 ? 0 : Math.max(0, Math.min(1, ((trendNow - goal.startWeightKg) * Math.sign(goal.targetWeightKg - goal.startWeightKg)) / span))
+  const forecastText = type === 'recomp' ? 'Rekompozisyonda kilonun sabit kalması beklenir; trend çizgisi ±1 kg bandında kalmalı.'
+            : checkin?.forecast.day ? <>Son haftaların hızıyla (<b className="text-ink">{fmtNum(Math.abs(checkin.forecast.kgPerWeek ?? 0), 2)} kg/hafta</b>) hedefe <b className="text-ink">{shortDate(checkin.forecast.day)}</b> civarında ulaşırsın{checkin.forecast.day > goal.endDate ? `, planlanandan ${diffDays(goal.endDate, checkin.forecast.day)} gün sonra` : checkin.forecast.day < goal.endDate ? `, planlanandan ${diffDays(checkin.forecast.day, goal.endDate)} gün önce` : ''}.</>
+            : <>Tahmin için en az 5 günlük tartı gerekiyor. Her sabah aynı koşulda tartılmak trendi netleştirir.</>
   const exceptionable = s.closures.find((c) => c.kind === 'over' && c.remaining < 0 && type === 'lose')
 
   return (
@@ -42,7 +47,7 @@ export default async function FitPage() {
       <FitFlash />
 
       <section aria-label="Hedef" className="card p-5 flex flex-col gap-3">
-        <div className="flex justify-between items-start gap-3">
+        {adv ? <div className="flex justify-between items-start gap-3">
           <div className="flex flex-col gap-0.5">
             <Eyebrow>{GOALS[type]?.label ?? 'Hedef'}</Eyebrow>
             <span className="num text-[30px] font-bold tracking-[-0.02em]">
@@ -51,8 +56,17 @@ export default async function FitPage() {
             <span className="text-sm text-mute">Gün {dayIndex} / {totalDays} · hedef tarih <b className="text-ink">{shortDate(goal.endDate)}</b></span>
           </div>
           <span className="w-11 h-11 rounded-full bg-surface-2 flex items-center justify-center text-acc"><Trend size={22} /></span>
-        </div>
+        </div> : (
+          <div className="flex items-center gap-2">
+            <Eyebrow>Kilo</Eyebrow>
+            <InfoTip label="Grafik açıklaması">
+              <span className="flex flex-wrap gap-x-3 gap-y-1 mb-2"><span>— Trend</span><span>··· Plan</span><span>• Tartı</span><span>- - Tahmin</span></span>
+              {forecastText}
+            </InfoTip>
+          </div>
+        )}
         <Roadmap s={s} />
+        {adv ? <>
         <div className="flex gap-4 text-[12px] text-ink-2 -mt-1" aria-hidden>
           <span className="flex items-center gap-1.5"><span className="w-3 h-[3px] rounded bg-acc" />Trend</span>
           <span className="flex items-center gap-1.5"><span className="w-3 border-t-[1.5px] border-dotted border-ink-2" />Plan</span>
@@ -64,18 +78,19 @@ export default async function FitPage() {
             : checkin?.forecast.day ? <>Son haftaların hızıyla (<b className="text-ink">{fmtNum(Math.abs(checkin.forecast.kgPerWeek ?? 0), 2)} kg/hafta</b>) hedefe <b className="text-ink">{shortDate(checkin.forecast.day)}</b> civarında ulaşırsın{checkin.forecast.day > goal.endDate ? `, planlanandan ${diffDays(goal.endDate, checkin.forecast.day)} gün sonra` : checkin.forecast.day < goal.endDate ? `, planlanandan ${diffDays(checkin.forecast.day, goal.endDate)} gün önce` : ''}.</>
             : <>Tahmin için en az 5 günlük tartı gerekiyor. Her sabah aynı koşulda tartılmak trendi netleştirir.</>}
         </p>
+        </> : null}
       </section>
 
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Trend kilo" value={`${fmtNum(trendNow, 1)} kg`} sub={lastWeigh ? `Son tartı ${fmtNum(lastWeigh.raw!, 1)} kg` : 'Tartı yok'} />
         <Stat label="Değişim" value={`${change > 0 ? '+' : change < 0 ? '−' : ''}${fmtNum(Math.abs(change), 1)} kg`} sub={`Başlangıç ${fmtNum(goal.startWeightKg, 1)} kg`} />
-        <Stat label="Ölçülen harcama" value={checkin?.tdee.tdee ? `${fmtNum(checkin.tdee.tdee)}` : '—'} sub={checkin?.tdee.tdee ? `kcal · güven ${checkin.tdee.confidence}` : `Veri toplanıyor · ${checkin?.tdee.loggedDays ?? 0}/10 tam gün`} />
-        <Stat label="Plan kalorisi" value={fmtNum(goal.dailyKcal)} sub={`kcal · tahmini harcama ${fmtNum(goal.tdee)}`} />
+        {adv ? <><Stat label="Ölçülen harcama" value={checkin?.tdee.tdee ? `${fmtNum(checkin.tdee.tdee)}` : '—'} sub={checkin?.tdee.tdee ? `kcal · güven ${checkin.tdee.confidence}` : `Veri toplanıyor · ${checkin?.tdee.loggedDays ?? 0}/10 tam gün`} />
+        <Stat label="Plan kalorisi" value={fmtNum(goal.dailyKcal)} sub={`kcal · tahmini harcama ${fmtNum(goal.tdee)}`} /></> : null}
       </div>
 
       <section aria-label="Bugün" className="card p-5 flex flex-col gap-3">
         <div className="flex justify-between items-center">
-          <Eyebrow>Bugün</Eyebrow>
+          <span className="flex items-center gap-2"><Eyebrow>Bugün</Eyebrow><InfoTip label="Gün kapatma">Günü kapatınca hedefle arasındaki fark sonraki günlere dağıtılır. Kapatmazsan gün gece 03.00'te kendiliğinden kapanır; kapandıktan sonra öğün değiştirirsen hesap yenilenir.</InfoTip></span>
           <span className="text-sm text-mute capitalize">{longDate(today)}</span>
         </div>
         <div className="flex items-end justify-between">
@@ -89,7 +104,7 @@ export default async function FitPage() {
           result={s.todayState.closure ? { kind: s.todayState.closure.closureKind ?? '', diff: s.todayState.closure.diffKcal ?? 0 } : null} />
       </section>
 
-      {last ? (
+      {last && adv ? (
         <section aria-label="Dengeleme" className="card p-5 flex flex-col gap-3" data-testid="balance-card">
           <div className="flex items-center gap-2"><Pulse size={18} className="text-acc" /><Eyebrow>Akıllı dengeleme</Eyebrow></div>
           <p className="text-[15px] leading-relaxed text-ink-2">{closureText(last)}</p>
@@ -120,7 +135,7 @@ export default async function FitPage() {
 
       {Math.abs(change) >= 1 ? <Link href="/sosyal/yeni?tur=milestone" className="card px-5 py-4 flex items-center justify-between" data-testid="share-milestone"><span className="text-[14px]">Kilometre taşını paylaş <span className="text-mute">(yalnızca değişim, kilo görünmez)</span></span><span className="text-acc font-bold">Paylaş</span></Link> : null}
 
-      <nav aria-label="Plan araçları" className="grid grid-cols-2 gap-2">
+      {adv ? <nav aria-label="Plan araçları" className="grid grid-cols-2 gap-2">
         {([
           ['/fit/gunler', 'Önümüzdeki 7 gün', `Bugün ${fmtNum(s.targets[0].kcal)} kcal`, Calendar],
           ['/fit/banka', 'Kalori bankası', s.banks.length ? `${s.banks.length} aktif` : 'Özel gün için biriktir', Spark],
@@ -133,10 +148,10 @@ export default async function FitPage() {
             <span className="flex flex-col min-w-0"><b className="text-[14px] leading-tight">{label}</b><span className="text-[12px] text-mute truncate">{sub}</span></span>
           </Link>
         ))}
-      </nav>
+      </nav> : null}
 
       <section aria-label="Tartı" className="card p-5 flex flex-col gap-3">
-        <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow></div>
+        <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow><InfoTip label="Tartı ipucu">Sabah, tuvaletten sonra ve kahvaltıdan önce tartılmak en tutarlı sonucu verir.</InfoTip></div>
         <WeighIn last={lastWeigh?.raw ?? goal.startWeightKg} />
         <Link href="/profil/hedef" className="text-[13px] text-mute underline underline-offset-4">Hedef ve plan</Link>
       </section>

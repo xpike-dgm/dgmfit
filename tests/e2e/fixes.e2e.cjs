@@ -72,7 +72,7 @@ const fail = (m) => { throw new Error(m) }
 
   // 5) Program sırası: ilk hareketi sil, yenisini ekle → sıra bench yok, squat, deadlift (yenilemede aynı)
   await p.goto(prog)
-  await p.getByRole('button', { name: BENCH + ' sil' }).click(); await p.getByTestId('program-ex').filter({ hasText: BENCH }).waitFor({ state: 'detached' })
+  await p.getByRole('button', { name: BENCH + ' düzenle' }).click(); await p.getByRole('button', { name: 'Programdan çıkar' }).click(); await p.getByTestId('program-ex').filter({ hasText: BENCH }).waitFor({ state: 'detached' })
   await addEx('barbell deadlift', 'Barbell Deadlift')
   for (let i = 0; i < 2; i++) {
     await p.reload()

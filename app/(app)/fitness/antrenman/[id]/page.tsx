@@ -10,6 +10,8 @@ import { Bar, btn, Eyebrow, TopBar } from '@/components/ui'
 import { Flame } from '@/components/icons'
 import DeleteWorkout from './DeleteWorkout'
 import { SessionCnsCard } from '../../CnsCard'
+import { isAdvanced } from '@/lib/ui-mode'
+import InfoTip from '@/components/InfoTip'
 
 export const metadata = { title: 'Antrenman özeti · DgFit' }
 
@@ -18,7 +20,7 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
   const { id } = await props.params
   const { yeni } = await props.searchParams
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound()
-  const s = await workoutSummary(u.id, id)
+  const [s, adv] = await Promise.all([workoutSummary(u.id, id), isAdvanced(u.id)])
   if (!s) notFound()
   const w = s.workout
   const min = Math.round(w.durationSec / 60)
@@ -37,9 +39,9 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
           <Big label="Süre" value={`${min} dk`} />
           <Big label="Hacim" value={`${fmtNum(w.volumeKg)} kg`} />
           <Big label="Çalışma seti" value={String(w.workSets)} />
-          <Big label="Kalori (net)" value={`${w.kcalNet} kcal`} sub={`brüt ${w.kcalGross}`} />
+          <Big label={adv ? 'Kalori (net)' : <>Kalori <InfoTip label="Kalori açıklaması">Net {w.kcalNet} kcal (brüt {w.kcalGross}) Fit bütçene egzersiz kredisi olarak eklendi; bugünün su hedefi antrenman süresi kadar arttı.</InfoTip></>} value={`${w.kcalNet} kcal`} sub={adv ? `brüt ${w.kcalGross}` : undefined} />
         </div>
-        <p className="text-[12px] text-mute">Net kalori Fit bütçene egzersiz kredisi olarak eklendi; bugünün su hedefi antrenman süresi kadar arttı.</p>
+        {adv ? <p className="text-[12px] text-mute">Net kalori Fit bütçene egzersiz kredisi olarak eklendi; bugünün su hedefi antrenman süresi kadar arttı.</p> : null}
       </section>
 
       {s.prs.length ? (
@@ -54,7 +56,7 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
         </section>
       ) : null}
 
-      {s.cns.exercises.length ? <SessionCnsCard c={s.cns} /> : null}
+      {adv && s.cns.exercises.length ? <SessionCnsCard c={s.cns} /> : null}
 
       {pv ? (
         <section aria-label="Önceki aynı gün" className="card p-5 flex flex-col gap-2">
@@ -65,7 +67,7 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
         </section>
       ) : null}
 
-      <section aria-label="Kas grubu dağılımı" className="card p-5 flex flex-col gap-2.5">
+      {adv ? <section aria-label="Kas grubu dağılımı" className="card p-5 flex flex-col gap-2.5">
         <Eyebrow>Kas grubu dağılımı (çalışma seti)</Eyebrow>
         {s.muscles.map(([m, c]) => (
           <div key={m} className="flex items-center gap-3">
@@ -74,7 +76,7 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
             <span className="num text-[13px] w-6 text-right">{c}</span>
           </div>
         ))}
-      </section>
+      </section> : null}
 
       <section aria-label="Hareketler" className="card p-5 flex flex-col gap-3">
         <Eyebrow>Hareketler</Eyebrow>
@@ -98,8 +100,8 @@ export default async function SummaryPage(props: { params: Promise<{ id: string 
   )
 }
 
-function Big({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return <div className="rounded-2xl bg-surface-2 px-3 py-2.5 flex flex-col"><span className="text-xs text-mute">{label}</span><span className="num text-[20px] font-bold">{value}</span>{sub ? <span className="text-[11px] text-mute">{sub}</span> : null}</div>
+function Big({ label, value, sub }: { label: React.ReactNode; value: string; sub?: string }) {
+  return <div className="rounded-2xl bg-surface-2 px-3 py-2.5 flex flex-col"><span className="text-xs text-mute flex items-center gap-1.5">{label}</span><span className="num text-[20px] font-bold">{value}</span>{sub ? <span className="text-[11px] text-mute">{sub}</span> : null}</div>
 }
 function Cmp({ label, cur, pct, invert }: { label: string; cur: string; pct: number; invert?: boolean }) {
   const good = invert ? pct < 0 : pct > 0
