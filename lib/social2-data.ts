@@ -350,3 +350,14 @@ export async function proofMedia(prId: number) {
   return readMedia(r.userId, r.proofMediaId)
 }
 export { socialProfile }
+
+/** Faz 7-3: bugün antrenman yapan karşılıklı partnerler (Bugün kartı: "sıra sende"). */
+export async function partnersTrainedToday(me: string, day: string): Promise<string[]> {
+  const mine = await db.select({ id: schema.friendLinks.friendId }).from(schema.friendLinks).where(and(eq(schema.friendLinks.userId, me), eq(schema.friendLinks.partner, true), eq(schema.friendLinks.status, 'accepted')))
+  if (!mine.length) return []
+  const theirs = await db.select({ id: schema.friendLinks.userId }).from(schema.friendLinks).where(and(inArray(schema.friendLinks.userId, mine.map((m) => m.id)), eq(schema.friendLinks.friendId, me), eq(schema.friendLinks.partner, true), eq(schema.friendLinks.status, 'accepted')))
+  if (!theirs.length) return []
+  const rows = await db.selectDistinct({ name: schema.users.username }).from(schema.workouts).innerJoin(schema.users, eq(schema.users.id, schema.workouts.userId))
+    .where(and(inArray(schema.workouts.userId, theirs.map((t) => t.id)), eq(schema.workouts.day, day), isNull(schema.workouts.deletedAt)))
+  return rows.map((r) => r.name)
+}

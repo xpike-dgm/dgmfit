@@ -57,6 +57,8 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   const fw = await post(pb, '/api/test/social', { finishWorkout: { key: 'Barbell_Squat', kg: 100, reps: 5, sets: 3 } })
   if (!fw.workout?.prs?.some((x) => x.suspect)) fail('100 kg (7 günde 60\'tan) şüpheli işaretlenmedi: ' + JSON.stringify(fw.workout?.prs))
   await pa.goto(BASE + '/sosyal/bildirimler'); await pa.locator('[data-testid=notification][data-kind=partner_workout]').waitFor().catch(() => fail('partner bildirimi yok'))
+  // Faz 7-3: Bugün'de "partnerin antrenman yaptı, sıra sende" kartı
+  await pa.goto(BASE + '/'); await pa.getByTestId('partner-card').waitFor().catch(() => fail('Bugün partner kartı yok'))
   await pb.goto(`${BASE}/u/${A}`); await pb.getByRole('button', { name: 'Ortak program: kopyala' }).click()
   await pb.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/); await pb.getByText(/Full Body.*\(/).first().waitFor().catch(() => fail('partner programı kopyalanmadı'))
 

@@ -1,4 +1,8 @@
 import 'server-only'
+import { goalStatus } from './goal-phase'
+import { recoveryFor } from './fitness-data'
+import { qualityCard, weeklyAdvice } from './fit-data'
+import { estimateBodyFat, leanMass } from './body-comp'
 // AI koç veri katmanı (Faz 4b): bağlam toplama, sohbet, onaylı eylemler, günlük içgörü, haftalık rapor.
 // Kural: tüm sayılar motorlardan (fit, weekly, safety, insights, coach-calc); dil modeli yalnızca yorumlar.
 import { and, asc, desc, eq, gte, isNull, sql } from 'drizzle-orm'
@@ -123,6 +127,22 @@ export async function coachContext(userId: string): Promise<CoachContext> {
     L.push(`Aktif program: ${program.name}. Günler: ` + program.days.map((d) => `"${d.name}": ${d.exercises.map((e) => `${e.name} ${e.sets}×${e.repMin}${e.repMax !== e.repMin ? '–' + e.repMax : ''}`).join(', ') || 'boş'}`).join(' | '))
   } else L.push('Aktif antrenman programı yok.')
   L.push('Güvenlik bayrakları: ' + (safety.flags.length ? safety.flags.map((f) => ({ low_intake: `son 7 günde ${safety.lowDays} gün çok düşük kalori`, no_rest: '7 gündür dinlenme günü yok', high_burn_low_intake: `günlük ortalama ${safety.avgBurn} kcal egzersize karşın taban altı beslenme` }[f])).join('; ') : 'yok') + '.')
+  // Faz 7-3: koç her şeyi bilir — vücut kompozisyonu, hedef aşaması, toparlanma, kazanım kalitesi, haftalık öneriler
+  const [gs, rec, qual, adv] = await Promise.all([
+    goalStatus(userId).catch(() => null),
+    recoveryFor(userId, today).catch(() => null),
+    goal ? qualityCard(userId, goal, checkin?.forecast.kgPerWeek ?? null, trendNow ?? goal.startWeightKg).catch(() => null) : Promise.resolve(null),
+    goal ? weeklyAdvice(userId, goal, checkin?.forecast.kgPerWeek ?? null).catch(() => []) : Promise.resolve([] as string[]),
+  ])
+  if (profile) {
+    const bfp = profile.bodyFatPct ?? estimateBodyFat(profile.sex as Sex, trendNow ?? profile.weightKg, profile.heightCm, ageFromBirthDate(profile.birthDate))
+    L.push(`Vücut: yağ oranı %${fmtNum(bfp, 1)} (${profile.bodyFatPct ? (profile.bodyFatSource === 'navy' ? 'ölçülerden' : 'kullanıcı girdi') : 'tahmin'}), yağsız kütle ${kg(leanMass(trendNow ?? profile.weightKg, bfp))} kg.`)
+  }
+  if (gs) L.push(gs.kind === 'reached' ? `Hedef aşaması: kullanıcı ${kg(gs.target)} kg hedefine ulaştı ve sonraki adımı henüz seçmedi (Bugün'de kart var: kilomu koruyup kas kazan / yeni hedef / şimdilik böyle).` : `Hedef aşaması: hedef tarih geçti, hedefe ${kg(gs.remainingKg)} kg kaldı; kullanıcıya süreyi uzatma kartı gösteriliyor.`)
+  if (goal?.phase && goal.phase > 1) L.push(`Bu, kullanıcının ${goal.phase}. hedef aşaması.`)
+  if (rec && rec.level !== 'ok') L.push(`Toparlanma: ${rec.level === 'deload' ? 'düşük (bugün %10 hafif önerilir)' : 'orta (ağırlık artışı önerilmiyor)'} — ${rec.reasons.join(', ')}.`)
+  if (qual && qual.verdict !== 'unknown') L.push(`Kazanım kalitesi: ${qual.text}`)
+  if (adv.length) L.push('Haftalık plan önerileri: ' + adv.join(' '))
   return { text: L.join('\n'), today, goal, sex, floor, safety, programDays: program ? program.days.map((d) => ({ id: d.id, name: d.name, programName: program.name })) : [], todayFacts, week }
 }
 

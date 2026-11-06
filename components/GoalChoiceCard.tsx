@@ -35,6 +35,7 @@ export default function GoalChoiceCard({ s }: { s: { kind: 'reached' | 'ended'; 
         <button type="button" disabled={pending} className={btn.ghost + ' text-mute'} onClick={() => go('later')} data-testid="choice-later">Şimdilik böyle devam</button>
       </div>
       {reached ? <p className="text-[12px] text-mute leading-snug">“Kilomu koru” seçersen hedef tarihin aynı kalır; kalori bakım düzeyinde olur, antrenman günleri biraz daha fazla. Protein yağsız kütlene göre yükselir.</p> : null}
+      {reached ? <a href="/sosyal/yeni?tur=milestone" className="text-[13px] font-bold text-acc self-start" data-testid="goal-share">Başarını paylaş ›</a> : null}
       {err ? <p role="alert" className="text-[13px] text-danger">{err}</p> : null}
     </section>
   )

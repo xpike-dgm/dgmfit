@@ -14,6 +14,7 @@ import { Drop, Dumbbell, Flame, Pulse, Target, User } from '@/components/icons'
 import { dayState } from '@/lib/day-state'
 import { goalStatus } from '@/lib/goal-phase'
 import GoalChoiceCard from '@/components/GoalChoiceCard'
+import { partnersTrainedToday } from '@/lib/social2-data'
 import { recentFoods } from '@/lib/food-data'
 import { minuteOfDay } from '@/lib/water-data'
 
@@ -22,7 +23,7 @@ export default async function Today() {
   await closePendingDays(user.id)
   const t = await getToday(user.id)
   if (!t) redirect('/kurulum')
-  const [tr, gs] = await Promise.all([todayTraining(user.id, t.day), goalStatus(user.id)])
+  const [tr, gs, partners] = await Promise.all([todayTraining(user.id, t.day), goalStatus(user.id), partnersTrainedToday(user.id, t.day).catch(() => [] as string[])])
   // Haftalık rapor kısayolu: Pazar 18.00'den Pazartesi sonuna kadar
   const weeklyReady = latestReportWeek() === mondayOf(t.day) || latestReportWeek() === addDays(mondayOf(t.day), -7) && new Date(t.day + 'T12:00:00Z').getUTCDay() === 1
 
@@ -99,6 +100,12 @@ export default async function Today() {
       </section>
 
       {gs ? <GoalChoiceCard s={gs} /> : null}
+      {partners.length && !(tr.workouts || tr.cardio) ? (
+        <Link href={tr.next ? `/fitness/antrenman?gun=${tr.next.id}` : '/fitness'} className="card px-4 py-3 flex items-center justify-between gap-3 border-l-4 border-acc" data-testid="partner-card">
+          <span className="text-[14px] leading-snug">Partnerin <b>@{partners[0]}</b>{partners.length > 1 ? ` ve ${partners.length - 1} kişi daha` : ''} bugün antrenmanını yaptı. Sıra sende!</span>
+          <span className="text-acc font-bold text-[13px] shrink-0">Başla ›</span>
+        </Link>
+      ) : null}
 
       {ds.postWorkoutProtein ? (
         <section className="card p-4 flex flex-col gap-2.5 border-l-4 border-[var(--color-protein)]" data-testid="post-workout-protein">
