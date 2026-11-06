@@ -2,6 +2,17 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Fitness bağımsız inceleme (2 Sonnet ajanı) ve düzeltmeler
+- Kullanıcı isteğiyle iki ajan (sunucu/mantık, ekran/akış) salt okuma inceledi; bulgular kodda doğrulandı, kullanıcı "hepsini düzelt" dedi. Yetki/IDOR açığı bulunmadı.
+- Düzeltilenler:
+  - Rekor ve kayıt: silinen antrenmanın rekorları kaldırılır ve hareket rekorları yeniden hesaplanır (`recomputeRecords`); ilk kayıt sıfırsa sonraki seans sahte rekor üretmez (`detectPRs`); destekli harekette etkin yük; aynı hareket iki kez gelirse güncel kayıtla kıyas; geçerli set yoksa kayıt reddedilir.
+  - Program: DUP için gerçek seans sayısı; GZCLP'de başarısız set sırayı kaydırmaz, T3 AMRAP kademenin son seti; program kopyası periyodizasyon/deload'u korur; hareket silince sıra yeniden numaralanır, ekleme `max+1`; tek kalan süperset çözülür; aktif yapma yalnızca var olan programa.
+  - Canlı antrenman ve rekor denemesi: başka günün/serbest yarım taslağı sorulmadan silinmez ("Yarım kalan antrenmanın var"); açık taslağa "bu hareketle başlat" hareketi ekler; hareket çıkarma onaylı ve seçim doğru; alternatif değiştirmede seçim yeni harekete geçer, çift dokunma engelli; rekor denemesinde başka hareketin yarım denemesi sorulur, çevrimdışı kaydetme hata verir.
+  - Hata mesajları ve girişler: hatalar pencere içinde (program düzenleyici, Aktif yap/Kopyala/Sil); filtre penceresi güncel; kalp/ekle hata ve bağlantıda geri alınır; sayı girişinde tek ayırıcı; RiR "2,5" ve "4+".
+  - Diğer: kardiyoda gerçek dışı hız reddedilir (ACSM sınırlı); lisanslı uçta bozuk % kodu ve klasör 404; favori yalnızca görünen harekete; Ağırsağlam program dinlenmesi 15–600 sn; dakika toplamı yuvarlanır; `roundTo('up')` tam katı atlamaz; çevrimdışı kuyrukta reddedilen antrenman sessizce silinmez.
+- Canlı veri: silinmiş tek antrenmandan kalan 2 rekor satırı (o hareketlerde başka antrenman yok) silindi; silinmiş antrenmana ait rekor satırı 0.
+- Doğrulama: commit `350a5f3`; verify.sh VERIFY OK (169 birim, 20 e2e; yeni `fixes.e2e.cjs`: 100 → 500 sil → 105 rekor (önceki 100) ve hareket sayfasında en ağır 105, "60.5.2" → "60.52", açık taslağa squat eklenip seçilir, gün değişince taslak sorusu + devam/sil, sil+ekle sonrası sıra yenilemede sabit); release `2026-11-06T17-41-42-385Z` RELEASE OK; logda hata 0; test kullanıcıları silindi.
+
 ## 2026-11-06 — Kullanıcı geri bildirimi: 3 düzeltme
 - Kullanıcı (ekran görüntüleriyle): "Kas haritası" kartı simsiyah; hareket listesinde fotoğraflar yok; hareket detayında alt menü görünüyor.
 - Düzeltme: kart tema kartı (`card`); liste ve hareket arama ucu lisanslı küçük resmi önce kullanır (`thumbFor`, `searchExercises().videoFile`), yoksa kütüphane görseli; `hidesNav` `/fitness/hareketler/<id>`'yi kapsar (liste sayfası hariç), detay sayfasına alt boşluk.
