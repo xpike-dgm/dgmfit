@@ -64,9 +64,9 @@ export default async function FitnessPage() {
       )}
 
       <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-3">
-        <Link href="/fitness/anatomi" className="rounded-[24px] p-4 flex flex-col gap-1.5 bg-black text-white min-h-[96px] relative overflow-hidden" data-testid="anatomy-link">
+        <Link href="/fitness/anatomi" className="card p-4 flex flex-col gap-1.5 min-h-[96px] relative overflow-hidden" data-testid="anatomy-link">
           <span className="text-[16px] font-extrabold">Kas haritası</span>
-          <span className="text-[12.5px] text-white/70 leading-snug">Kasa dokun, onu çalıştıran hareketleri videolu gör</span>
+          <span className="text-[12.5px] text-mute leading-snug">Kasa dokun, onu çalıştıran hareketleri videolu gör</span>
         </Link>
         <Link href="/fitness/kaydedilenler" className="card p-4 flex flex-col gap-1.5 min-h-[96px]" data-testid="favorites-link">
           <Heart size={20} filled className="text-[#E53935]" />

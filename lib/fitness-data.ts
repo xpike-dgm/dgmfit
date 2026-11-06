@@ -51,6 +51,7 @@ export async function searchExercises(userId: string, f: ExerciseFilter) {
     primary: schema.exercises.primary, kind: schema.exercises.kind, pattern: schema.exercises.pattern, level: schema.exercises.level, images: schema.exercises.images,
     curated: schema.exercises.curated, source: schema.exercises.source, category: schema.exercises.category,
     video: sql<boolean>`(${schema.exercises.licensed}->'video'->>'right') is not null`,
+    videoFile: sql<string | null>`${schema.exercises.licensed}->'video'->>'right'`,
   }).from(schema.exercises).where(and(...conds))
     .orderBy(...score, desc(sql`${schema.exercises.source} = 'user'`), desc(sql`${schema.exercises.licensed} is not null`), desc(schema.exercises.curated), asc(schema.exercises.nameTr))
     .limit(f.limit ?? 60)

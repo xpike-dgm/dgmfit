@@ -47,10 +47,14 @@ export const AG_MUSCLE_TR: Record<string, string> = {
 
 type Lic = { video: { right: string | null; wrong: string | null } } | null | undefined
 /** Lisanslı hareketin küçük resmi (videodan üretilmiş kare) ve doğru yapılış videosu; dosya yoksa null. */
+/** Lisanslı videonun küçük resmi (`thumbs/<video>.jpg`), dosya yoksa null. */
+export function thumbFor(video: string | null | undefined): string | null {
+  const t = video ? video.replace(/\.mp4$/, '.jpg') : null
+  return t && hasLicensedFile('thumbs', t) ? licensedUrl('thumbs', t) : null
+}
 export function exerciseMedia(l: Lic): { thumb: string | null; video: string | null } {
   const v = l?.video.right ?? null
-  const t = v ? v.replace(/\.mp4$/, '.jpg') : null
-  return { thumb: t && hasLicensedFile('thumbs', t) ? licensedUrl('thumbs', t) : null, video: v && hasLicensedFile('videos', v) ? licensedUrl('videos', v) : null }
+  return { thumb: thumbFor(v), video: v && hasLicensedFile('videos', v) ? licensedUrl('videos', v) : null }
 }
 
 /** RiR kaydırıcısı açıklamaları (0, 0,5 … 4, 4+ = 10 kademe): DgFit'in kendi metinleri. Paketteki RiR metinleri `premium` bölümünde

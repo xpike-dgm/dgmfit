@@ -2,6 +2,7 @@ import ExImg from '@/components/ExImg'
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
 import { imageUrl, searchExercises } from '@/lib/fitness-data'
+import { thumbFor } from '@/lib/licensed'
 import { EQUIPMENT, LEVEL, MUSCLES, MUSCLE_ORDER, PATTERN } from '@/lib/exercise-labels'
 import { TopBar } from '@/components/ui'
 import { Next } from '@/components/icons'
@@ -40,7 +41,7 @@ export default async function LibraryPage(props: { searchParams: Promise<SP> }) 
         {rows.map((r) => (
           <li key={r.id} className="border-b border-line last:border-0">
             <Link href={`/fitness/hareketler/${r.id}`} className="flex items-center gap-3 min-h-[64px]">
-              <ExImg src={r.images[0] ? imageUrl(r.images[0]) : null} size={48} className="w-12 h-12 rounded-xl shrink-0" />
+              <ExImg src={thumbFor(r.videoFile) ?? (r.images[0] ? imageUrl(r.images[0]) : null)} size={48} className="w-12 h-12 rounded-xl shrink-0" />
               <span className="flex-1 flex flex-col min-w-0">
                 <span className="flex items-center gap-1.5 min-w-0"><span className="font-semibold truncate">{r.nameTr}</span>{r.video ? <span className="text-[10.5px] font-bold px-1.5 py-0.5 rounded bg-acc/15 text-acc shrink-0" data-testid="video-badge">VİDEO</span> : null}</span>
                 <span className="text-[12px] text-mute truncate">{r.primary.map((m) => MUSCLES[m] ?? m).join(', ')} · {EQUIPMENT[r.equipment] ?? r.equipment}{r.source === 'user' ? ' · özel' : ''}</span>

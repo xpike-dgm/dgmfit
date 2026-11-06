@@ -96,7 +96,7 @@ export default async function ExercisePage(props: { params: Promise<{ id: string
     </>
   )
   return (
-    <div className="flex flex-col gap-3 px-4">
+    <div className="flex flex-col gap-3 px-4 pb-[max(env(safe-area-inset-bottom),24px)]">
       {top}
       {x.steps.length ? (
         <section className="card p-5 flex flex-col gap-2" aria-label="Teknik">

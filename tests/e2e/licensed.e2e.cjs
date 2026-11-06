@@ -32,8 +32,16 @@ const fail = (m) => { throw new Error(m) }
 
   // Eşleşen kütüphane hareketi: video + yanlış yapılış sekmesi + ileri sarma (Range)
   await p.goto(BASE + '/fitness/hareketler?q=barbell squat')
+  // Listede lisanslı küçük resimler (sunucuda thumbs/ varsa) gerçekten yüklenir
+  const thumbs = p.locator('img[src*="/api/lisansli/thumbs/"]')
+  if (await thumbs.count()) {
+    const loaded = await thumbs.first().evaluate((i) => new Promise((r) => { i.loading = 'eager'; if (i.complete) return r(i.naturalWidth > 0); i.onload = () => r(true); i.onerror = () => r(false); setTimeout(() => r(i.naturalWidth > 0), 8000) }))
+    if (!loaded) fail('listede küçük resim yüklenmedi')
+  }
+  console.log('listede lisanslı küçük resim:', await thumbs.count())
   await p.getByRole('link', { name: /^Barbell Squat/ }).filter({ has: p.getByTestId('video-badge') }).first().click()
   await p.getByTestId('ex-videos').waitFor()
+  if (await p.getByRole('navigation', { name: 'Ana menü' }).count()) fail('hareket detayında alt menü görünüyor')
   const src = await p.getByTestId('ex-video').getAttribute('src')
   const r = await p.evaluate(async (s) => { const x = await fetch(s, { headers: { Range: 'bytes=0-99' } }); return [x.status, x.headers.get('content-range'), (await x.arrayBuffer()).byteLength] }, src)
   if (r[0] !== 206 || !/^bytes 0-99\/\d+$/.test(r[1]) || r[2] !== 100) fail('video Range: ' + JSON.stringify(r))
