@@ -14,12 +14,14 @@ export async function POST(req: Request) {
   if (process.env.DGFIT_TEST_HOOKS !== '1') return new NextResponse(null, { status: 404 })
   const u = await getUser()
   if (!u) return NextResponse.json({ error: 'oturum yok' }, { status: 401 })
-  const { days = 20, kgPerDay = 0.08, yesterdayExtra = 0 } = (await req.json().catch(() => ({}))) as { days?: number; kgPerDay?: number; yesterdayExtra?: number }
+  const { days = 20, kgPerDay = 0.08, yesterdayExtra = 0, shiftEnd = false } = (await req.json().catch(() => ({}))) as { days?: number; kgPerDay?: number; yesterdayExtra?: number; shiftEnd?: boolean }
   const goal = await activeGoal(u.id)
   if (!goal) return NextResponse.json({ error: 'plan yok' }, { status: 400 })
   const today = dayString()
   const start = addDays(today, -days)
-  await db.update(schema.goals).set({ startDate: start }).where(eq(schema.goals.id, goal.id))
+  // shiftEnd: plan süresi korunarak bitiş de geri alınır (hedef tarihi geçmiş plan senaryosu)
+  const len = Math.round((Date.parse(goal.endDate) - Date.parse(goal.startDate)) / 86400000)
+  await db.update(schema.goals).set(shiftEnd ? { startDate: start, endDate: addDays(start, len) } : { startDate: start }).where(eq(schema.goals.id, goal.id))
   await db.delete(schema.weightLogs).where(and(eq(schema.weightLogs.userId, u.id)))
   for (let i = 0; i < days; i++) {
     const d = addDays(start, i)

@@ -53,7 +53,7 @@ const fail = (m) => { throw new Error(m) }
 
   // 2) Kilo veren kullanıcı: hedef tarih geçti, hedefe ulaşılmadı → süreyi uzat
   const B = await user('test_gm', { step: 10, sex: 'female', birthDate: '1992-05-05', heightCm: 165, weightKg: 70, activity: 'light', goal: 'lose', targetWeightKg: 66, tempo: 'balanced', customDays: 56, experience: null, trainingDays: 3, dietPref: null, allergies: [], wakeTime: '07:00', sleepTime: '23:00' })
-  await hook(B.p, { days: 70, kgPerDay: 0.02 })
+  await hook(B.p, { days: 70, kgPerDay: 0.02, shiftEnd: true })
   await B.p.goto(BASE + '/'); const c2 = B.p.getByTestId('goal-choice'); await c2.waitFor().catch(() => fail('hedef tarih geçince kart çıkmadı'))
   if ((await c2.getAttribute('data-kind')) !== 'ended') fail('kart türü ended değil')
   await B.p.screenshot({ path: `${OUT}/goal-04-tarih-gecti.png` })
