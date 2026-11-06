@@ -284,11 +284,12 @@ Kaynak: kullanıcı mesajı 2026-11-05 ("ayarlara feedback butonu…", "whitelis
 - Arayüz uçtan uca: zaman atlatma test kancasıyla (yalnızca yerel) birkaç uzun akış — 1 ayda hedefe varan kullanıcıda kartın çıkması ve seçimlerin planı doğru değiştirmesi, 6 aylık kilo verme, 1 yıllık recomp.
 - Bulunan her hata: önce senaryo testi eklenir (kırmızı), sonra düzeltilir (yeşil), sonra tam set yeniden.
 
-**Diğer önerilen işler (kullanıcıya sunuldu, seçim bekliyor)**
-- Kalite/hız: tüm uygulamada bağımsız hata taraması + düzeltmeler, güvenlik incelemesi + yedekten geri yükleme denemesi, iskelet yükleme ekranları, yemek günlüğünde anında güncelleme, liste sayfalama, görsel/erişilebilirlik kalanları (açık tema bant kontrastı, kesilen başlıklar, dokunma alanı, büyük yazı, tutarsız onay kutuları), ilk hafta simülasyonu.
-- Yemek verisi içe aktarma aracı (kullanıcı yemek verisini başka bir AI ile biriktiriyor; yemek veritabanı genişletme işini DgFit tarafında yapma — doğrulama, tekrar ayıklama, uç değer kontrolü, tek komutla içe aktarma).
-- Özellikler: haftalık akıllı özet, akıllı hatırlatmalar, hızlı kayıt ("her zamanki kahvaltım"), ilerleme paylaşım kartları, rozet/seri sistemi, fotoğraftan porsiyon tahmini, tarif linkinden içe aktarma, program sihirbazı v2, ölçü/fotoğraf karşılaştırma.
-- Yayın: Faz 6 mağaza paketleme, KVKK güncelleme + hesap silme/veri indirme, yönetimde kullanım istatistikleri.
+**Plana alınan diğer işler (kullanıcı 2026-11-07: "8, 9, 10, 11 dışında diğerlerini plana ekle"; başlamak için yine açık onay gerekir)**
+- P-4 Kalite/hız: bölüm bölüm bağımsız hata taraması (Bugün, Fit, Su, Yemek, Sosyal, Koç, Profil, Yönetim) + düzeltmeler + testleri; güvenlik incelemesi + yedekten geri yükleme denemesi; iskelet yükleme ekranları; yemek günlüğünde anında güncelleme (useOptimistic, gereksiz router.refresh kaldırma); hareket listesi 40 satır + "daha fazla"; ilk hafta simülasyonu (kayıttan 7. güne).
+- P-5 Görsel denetim kalanları: açık temada bant kutucuk kontrastı, yönetimde 320 px kesilen başlıklar, "…" ile kesilen alt başlıklar, tutarsız onay kutuları, dokunma alanı ≥44 px, büyük yazı ayarı.
+- P-6 Yemek verisi içe aktarma aracı (kullanıcının başka AI ile biriktirdiği veri: biçim tanımı, doğrulama, tekrar ayıklama, uç değer kontrolü, tek komutla içe aktarma). Yemek veritabanını DgFit tarafında genişletme işi yapılmaz.
+- P-7 Özellikler: haftalık akıllı özet, akıllı hatırlatmalar, hızlı kayıt ("her zamanki kahvaltım"), ilerleme paylaşım kartları, rozet/seri sistemi, fotoğraftan porsiyon tahmini, tarif linkinden içe aktarma, program sihirbazı v2, ölçü/fotoğraf karşılaştırma.
+- Plana alınmadı (kullanıcı hariç tuttu): yayın hazırlığı (Faz 6 mağaza paketi, KVKK + hesap silme/veri indirme, yönetimde kullanım istatistikleri). Kullanıcıya ait işler (OpenAI anahtarı, gerçek cihazda bildirim denemesi, e-posta doğrulama) aşağıdaki listede kalır.
 - Kural: görünümü değiştiren her şey önce dalda gerçek uygulamada gösterilir, onayla yayınlanır.
 
 1. Kullanıcı `deneme` ile giriş yapıp Profil → AI ayarları'ndan Claude ve OpenAI anahtarlarını girsin; ardından gerçek fotoğraf/yazı ve koç denemesi (yönetici sayfasında hata/kullanım/maliyet görünür).
