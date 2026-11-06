@@ -8,7 +8,7 @@ import { dayMacros } from './food-data'
 import { computeStreak, goalForDay } from './water'
 import { dayTargets, type DayTarget } from './fit-data'
 import { kcalAdherence } from './fit'
-import { dayBurned, waterBonusByDay } from './burn'
+import { burnedByDay, dayBurned, waterBonusByDay } from './burn'
 
 export interface TodayData {
   day: string
@@ -82,7 +82,7 @@ export async function getToday(userId: string, day: string = dayString()): Promi
   const wHistory = await goalHistory(userId)
   const sFrom = addDays(day, -119)
   const wFrom = sFrom < monday ? sFrom : monday
-  const [wTotals, wBonus] = await Promise.all([dailyTotals(userId, wFrom, day), waterBonusByDay(userId, wFrom, day)])
+  const [wTotals, wBonus, burnBy] = await Promise.all([dailyTotals(userId, wFrom, day), waterBonusByDay(userId, wFrom, day), burnedByDay(userId, monday, day)])
   const wGoal = (d: string) => (wHistory.length ? goalForDay(wHistory, d) : goal?.waterMl ?? 2500) + (wBonus.get(d) ?? 0)
   const waterMl = wTotals.get(day)?.total ?? 0
   target.water = wGoal(day)
@@ -99,7 +99,7 @@ export async function getToday(userId: string, day: string = dayString()): Promi
       ...(() => {
         if (d > day) return { frac: 0, water: 0, kcal: 0 }
         const water = Math.min(1, (wTotals.get(d)?.total ?? 0) / Math.max(1, wGoal(d)))
-        const kcal = kcalAdherence(eatenBy.get(d) ?? 0, weekTargets[i].kcal)
+        const kcal = kcalAdherence(eatenBy.get(d) ?? 0, weekTargets[i].kcal + (burnBy.get(d) ?? 0)) // Fit kapanışıyla aynı bütçe
         return { frac: Math.round(((water + kcal) / 2) * 100) / 100, water, kcal } // su + kalori uyumu ortalaması
       })(),
       today: d === day,

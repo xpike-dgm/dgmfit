@@ -112,7 +112,9 @@ export async function closeDay(userId: string, day: string): Promise<{ kind: str
     const win = balanceWindow(day, dayString(), goal.endDate) // geçmişe dağıtılmaz
     const upcoming = win ? (await dayTargets(userId, win.first, win.last, goal)).filter((u) => !u.closed) : []
     if (upcoming.length) {
-      const plan: PlanDay[] = upcoming.map((u) => ({ day: u.day, base: u.base, current: u.adjustment }))
+      // banka harcama günleri (düğün, tatil…) dengelemeden korunur: kullanıcının o gün için ayırdığı kalori kesilmez
+      const event = new Set((await db.select({ day: schema.kcalAdjustments.day }).from(schema.kcalAdjustments).where(and(eq(schema.kcalAdjustments.userId, userId), eq(schema.kcalAdjustments.reason, 'bank-spend'), gte(schema.kcalAdjustments.day, win!.first), sql`${schema.kcalAdjustments.deletedAt} is null`))).map((r) => r.day))
+      const plan: PlanDay[] = upcoming.map((u) => ({ day: u.day, base: u.base, current: u.adjustment, protected: event.has(u.day) }))
       const r = distributeDiff(c.diff, plan, calorieFloor(await sexOf(userId)))
       leftover = r.leftover
       if (r.adjustments.length) await db.insert(schema.kcalAdjustments).values(r.adjustments.map((a) => ({ userId, day: a.day, kcal: a.kcal, reason: 'balance', sourceDay: day })))
@@ -222,7 +224,8 @@ export async function checkinData(userId: string) {
     db.select().from(schema.events).where(and(eq(schema.events.userId, userId), eq(schema.events.type, 'plan.adjusted'), sql`${schema.events.payload}->>'kind' = 'checkin'`)).orderBy(desc(schema.events.createdAt)).limit(1),
   ])
   const intakeBy = new Map(closed.filter((c) => ['balanced', 'over', 'under', 'exception'].includes(c.closureKind ?? '')).map((c) => [c.day, c.eatenKcal ?? null]))
-  const lastCheckin = lastEvt[0] ? dayString(lastEvt[0].createdAt) : goal.startDate
+  // check-in sayacı aktif plana göre: yeni hedef/aşama başlayınca eski planın check-in'i sayılmaz
+  const lastCheckin = lastEvt[0] && dayString(lastEvt[0].createdAt) > goal.startDate ? dayString(lastEvt[0].createdAt) : goal.startDate
   const { tdee, smoothTdee, trendNow, forecast, due, proposal } = checkinCompute({ goal: { ...goal, type: goal.type as 'lose' }, series, intakeBy, today, lastCheckin, floor: calorieFloor(sex) })
   return { goal, tdee, smoothTdee, trendNow, forecast, due, lastCheckin, proposal }
 }
@@ -230,8 +233,12 @@ export async function checkinData(userId: string) {
 export async function applyCheckin(userId: string) {
   const d = await checkinData(userId)
   if (!d?.proposal || !d.tdee.tdee) return { error: 'Check-in için yeterli veri yok (en az 14 gün, 10 tam kayıtlı gün)' }
+  if (!d.due) return { error: 'Bu haftanın check-in\'i zaten yapıldı' }
   const m = scaleMacros({ kcal: d.goal.dailyKcal, protein: d.goal.proteinG, carb: d.goal.carbG, fat: d.goal.fatG }, d.proposal.kcal)
-  await db.update(schema.goals).set({ dailyKcal: m.kcal, carbG: m.carb, fatG: m.fat, tdee: d.smoothTdee ?? d.tdee.tdee }).where(eq(schema.goals.id, d.goal.id))
+  // iyimser kilit: iki sekme / çift dokunuş aynı öneriyi iki kez uygulamasın
+  const upd = await db.update(schema.goals).set({ dailyKcal: m.kcal, carbG: m.carb, fatG: m.fat, tdee: d.smoothTdee ?? d.tdee.tdee })
+    .where(and(eq(schema.goals.id, d.goal.id), eq(schema.goals.dailyKcal, d.goal.dailyKcal), eq(schema.goals.tdee, d.goal.tdee))).returning({ id: schema.goals.id })
+  if (!upd.length) return { error: 'Plan bu arada değişti; sayfayı yenileyip tekrar dene' }
   await publish(userId, 'plan.adjusted', { kind: 'checkin', from: d.goal.dailyKcal, to: m.kcal, measuredTdee: d.tdee.tdee, confidence: d.tdee.confidence })
   return { ok: true as const, kcal: m.kcal, delta: d.proposal.delta }
 }
@@ -263,7 +270,7 @@ export async function getFitScreen(userId: string) {
     today, goal, targets, series, banks, checkin, floor: calorieFloor(sex), quality,
     todayState: { eaten: eatenToday.kcal, items: Number(n), closed: targets[0].closed, closure: closedRows.find((c) => c.day === today) ?? null },
     closures: closedRows.filter((c) => c.day < today).map((c) => ({
-      day: c.day, kind: c.closureKind ?? 'untracked', eaten: c.eatenKcal ?? 0, target: c.baseKcal + c.adjustmentKcal,
+      day: c.day, kind: c.closureKind ?? 'untracked', eaten: c.eatenKcal ?? 0, target: c.baseKcal + c.adjustmentKcal + (c.burnedKcal ?? 0), // kapanıştaki bütçe (antrenman kredisi dahil; closureDiff ile aynı)
       diff: c.diffKcal ?? 0, leftover: c.leftoverKcal ?? 0, remaining: remaining.get(c.day) ?? 0,
     })),
   }

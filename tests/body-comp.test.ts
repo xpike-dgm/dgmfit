@@ -10,6 +10,7 @@ test('Donanma formülü: bilinen örnekler makul aralıkta', () => {
   assert.ok(f > 24 && f < 34, String(f))
   assert.equal(navyBodyFat('male', 180, 40, 39), null, 'bel boyundan küçükse hesap yok')
   assert.equal(navyBodyFat('female', 165, 33, 75, null), null, 'kadında kalça gerekir')
+  assert.equal(navyBodyFat('male', 180, 38, 38.1), null, 'bel boyundan yalnızca 0,1 cm büyük: ölçü hatası, %3 diye kaydedilmez')
 })
 
 test('Deurenberg tahmini ve yağsız kütle', () => {
@@ -78,4 +79,12 @@ test('kazanım kalitesi: hızlı / yavaş / iyi / recomp / kas kaybı', async ()
   assert.equal(gainQuality({ goal: 'recomp', weightKg: 80, weeklyKg: 0.01, rate, waistDeltaCm: -0.5, strengthDeltaPct: 3 }).verdict, 'good')
   assert.equal(gainQuality({ goal: 'lose', weightKg: 90, weeklyKg: -0.6, rate, waistDeltaCm: -2, strengthDeltaPct: -8 }).verdict, 'cut-muscle')
   assert.equal(gainQuality({ goal: 'gain', weightKg: 78, weeklyKg: null, rate, waistDeltaCm: null, strengthDeltaPct: null }).verdict, 'unknown')
+})
+
+test('recompDayKcal: haftalık ortalama 1–6 antrenman gününde bakıma eşit (±5 kcal yuvarlama)', () => {
+  for (const m of [1800, 2400, 3200]) for (let t = 1; t <= 6; t++) {
+    const avg = (recompDayKcal(m, true, t) * t + recompDayKcal(m, false, t) * (7 - t)) / 7
+    assert.ok(Math.abs(avg - m) <= 5, `${m} kcal, ${t} gün: ortalama ${avg}`)
+    assert.ok(recompDayKcal(m, false, t) >= m * 0.85 - 3, 'dinlenme günü en fazla %15 düşer')
+  }
 })

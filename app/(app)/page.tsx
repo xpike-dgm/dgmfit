@@ -65,7 +65,7 @@ export default async function Today() {
               <Link href="/profil" aria-label="Profil" className={hdrIcon}><User size={20} /></Link>
             </div>
           }
-          ring={{ value: usedFrac, big: fmtNum(left), small: 'kalan kcal', label: `Kalorinin yüzde ${Math.round(usedFrac * 100)}'i tüketildi` }}
+          ring={{ value: usedFrac, big: fmtNum(Math.abs(left)), small: left < 0 ? 'kcal fazla' : 'kalan kcal', label: `Kalorinin yüzde ${Math.round(usedFrac * 100)}'i tüketildi` }}
           pills={[['Hedef', `${fmtNum(t.target.kcal)} kcal`], ['Yenen', t.eaten.kcal ? fmtNum(t.eaten.kcal) : '0'], ['Egzersiz', '+' + fmtNum(t.burned)]]}
         >
           <nav aria-label="Bu hafta" className="grid grid-cols-7 gap-1 mt-3">

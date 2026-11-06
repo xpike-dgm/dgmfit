@@ -21,19 +21,20 @@ export async function saveBodyFat(userId: string, i: { pct?: number | null; neck
     if (!i.neck || !i.waist || i.neck < 20 || i.neck > 70 || i.waist < 40 || i.waist > 200) return { ok: false, error: 'Boyun 20–70 cm, bel 40–200 cm aralığında olmalı' }
     if (sex === 'female' && (!i.hips || i.hips < 50 || i.hips > 220)) return { ok: false, error: 'Kalça 50–220 cm aralığında olmalı' }
     bf = navyBodyFat(sex, p.heightCm, i.neck, i.waist, i.hips ?? null)
-    if (bf === null) return { ok: false, error: 'Ölçüler tutarsız görünüyor (bel boyundan büyük olmalı)' }
+    if (bf === null) return { ok: false, error: 'Ölçüler tutarsız görünüyor; boyun ve beli yeniden ölç (bel, göbek hizasından)' }
     source = 'navy'
-    // ölçüler tabloya da yazılır (Fit → Ölçüler geçmişinde görünsün)
-    await db.insert(schema.bodyMeasurements).values({ userId, day: dayString(), neckCm: i.neck, waistCm: i.waist, hipsCm: i.hips ?? null, bodyFatPct: bf })
   }
-  await db.update(schema.profiles).set({ bodyFatPct: bf, bodyFatSource: source, updatedAt: new Date() }).where(eq(schema.profiles.userId, userId))
   const goal = await activeGoal(userId)
-  if (goal) {
-    const today = dayString()
-    const trend = (await weightSeries(userId, today, today)).at(-1)?.trend ?? p.weightKg
-    const mp = macroPlan({ goal: goal.type as GoalType, sex, age: ageFromBirthDate(p.birthDate), weightKg: trend, heightCm: p.heightCm, bfPct: bf, kcal: goal.dailyKcal })
-    await db.update(schema.goals).set({ proteinG: mp.protein, carbG: mp.carb, fatG: mp.fat }).where(and(eq(schema.goals.id, goal.id)))
-  }
+  const today = dayString()
+  const trend = goal ? (await weightSeries(userId, today, today)).at(-1)?.trend ?? p.weightKg : p.weightKg
+  const mp = goal ? macroPlan({ goal: goal.type as GoalType, sex, age: ageFromBirthDate(p.birthDate), weightKg: trend, heightCm: p.heightCm, bfPct: bf, kcal: goal.dailyKcal }) : null
+  // ölçü + profil + hedef makroları tek işlemde (yarım kayıt kalmasın)
+  await db.transaction(async (tx) => {
+    // ölçüler tabloya da yazılır (Fit → Ölçüler geçmişinde görünsün)
+    if (source === 'navy') await tx.insert(schema.bodyMeasurements).values({ userId, day: today, neckCm: i.neck!, waistCm: i.waist!, hipsCm: i.hips ?? null, bodyFatPct: bf })
+    await tx.update(schema.profiles).set({ bodyFatPct: bf, bodyFatSource: source, updatedAt: new Date() }).where(eq(schema.profiles.userId, userId))
+    if (goal && mp) await tx.update(schema.goals).set({ proteinG: mp.protein, carbG: mp.carb, fatG: mp.fat }).where(and(eq(schema.goals.id, goal.id)))
+  })
   await publish(userId, 'bodyfat.updated', { bf, source })
   return { ok: true, bf }
 }

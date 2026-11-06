@@ -27,7 +27,8 @@ export function estimateBodyFat(sex: Sex, weightKg: number, heightCm: number, ag
 }
 
 function clampBf(v: number): number | null {
-  if (!Number.isFinite(v)) return null
+  // formülün geçerli aralığı dışı (ör. bel ≈ boyun → %−20) ölçü hatasıdır; sınıra kırpıp kaydetmek yanlış makro üretir
+  if (!Number.isFinite(v) || v < 2 || v > 65) return null
   return Math.round(Math.max(3, Math.min(60, v)) * 10) / 10
 }
 
@@ -102,10 +103,11 @@ export function macroPlan(i: MacroPlanInput): { protein: number; fat: number; ca
 /** Koruyup kas kazanma: antrenman günü bakım +%7, dinlenme günü −%12 (haftalık ortalama ≈ bakım). */
 export function recompDayKcal(maintenance: number, trainingDay: boolean, trainDaysPerWeek: number): number {
   const t = Math.max(1, Math.min(6, trainDaysPerWeek))
-  const up = Math.round(maintenance * 0.07)
-  // dinlenme günü düşüşü haftalık toplam sıfır olacak şekilde
-  const down = Math.round((up * t) / (7 - t))
-  return Math.round((trainingDay ? maintenance + up : maintenance - Math.min(down, Math.round(maintenance * 0.15))) / 5) * 5
+  // dinlenme günü düşüşü en fazla %15; antrenman günü fazlası haftalık toplam sıfır olacak şekilde ondan türetilir
+  // (5–6 antrenman gününde düşüş sınıra takılınca fazla küçülür; ortalama bakımın üstüne çıkmaz)
+  const down = Math.min(maintenance * 0.15, (maintenance * 0.07 * t) / (7 - t))
+  const up = (down * (7 - t)) / t
+  return Math.round((trainingDay ? maintenance + up : maintenance - down) / 5) * 5
 }
 
 /** Öğün başına protein: kilogram başına ~0,4 g, 3–5 öğüne. */

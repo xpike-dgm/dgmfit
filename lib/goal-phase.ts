@@ -1,9 +1,9 @@
 import 'server-only'
 // Faz 8: hedef aşamaları — hedefe ulaşma / hedef tarihin gelmesi, kullanıcının seçimi ve yeni aşamanın kurulması.
-import { and, eq } from 'drizzle-orm'
+import { and, eq, gte, isNull } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString } from './time'
-import { calorieFloor, KCAL_PER_KG, type Sex } from './calc'
+import { ageFromBirthDate, calorieFloor, KCAL_PER_KG, type Sex } from './calc'
 import { goalReached, macroPlan } from './body-comp'
 import { extendEndDate, extensionRate, goalAfterReach } from './fit'
 import { activeGoal, checkinData, weightSeries } from './fit-data'
@@ -25,8 +25,9 @@ export async function goalStatus(userId: string): Promise<GoalStatus> {
   const type = goal.type as 'lose' | 'gain'
   if (goal.reachedAt || goalReached(type, goal.targetWeightKg, series.slice(-3).map((s) => s.trend))) {
     if (!goal.reachedAt) {
-      await db.update(schema.goals).set({ reachedAt: new Date() }).where(eq(schema.goals.id, goal.id))
-      await publish(userId, 'goal.reached', { goalId: goal.id, target: goal.targetWeightKg, trend })
+      // eşzamanlı sayfa açılışlarında olay bir kez yayınlansın: yalnızca ilk yazan yayınlar
+      const hit = await db.update(schema.goals).set({ reachedAt: new Date() }).where(and(eq(schema.goals.id, goal.id), isNull(schema.goals.reachedAt))).returning({ id: schema.goals.id })
+      if (hit.length) await publish(userId, 'goal.reached', { goalId: goal.id, target: goal.targetWeightKg, trend })
     }
     return { kind: 'reached', trend, target: goal.targetWeightKg, type }
   }
@@ -44,6 +45,9 @@ export async function goalStatus(userId: string): Promise<GoalStatus> {
 export async function chooseAfterGoal(userId: string, choice: 'recomp' | 'extend' | 'later' | 'new'): Promise<{ ok: true; redirect?: string } | { ok: false; error: string }> {
   const goal = await activeGoal(userId)
   if (!goal) return { ok: false, error: 'Aktif plan yok' }
+  // yalnızca kart gösterilirken geçerli: tekrar gönderim / eski sekme yeni aşamayı bozmasın
+  const st = await goalStatus(userId)
+  if (choice !== 'new' && (!st || (choice === 'recomp' && st.kind !== 'reached') || (choice === 'extend' && st.kind !== 'ended'))) return { ok: false, error: 'Bu seçim artık geçerli değil; sayfayı yenile' }
   const today = dayString()
   const [profile] = await db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
   if (!profile) return { ok: false, error: 'Profil yok' }
@@ -68,10 +72,12 @@ export async function chooseAfterGoal(userId: string, choice: 'recomp' | 'extend
   const ck = await checkinData(userId).catch(() => null)
   const tdee = ck?.smoothTdee ?? goal.tdee
   const keep = goalAfterReach({ endDate: goal.endDate, today, tdee, floor: calorieFloor(sex) })
-  const age = Math.floor((Date.parse(today) - Date.parse(profile.birthDate)) / (365.25 * 86400000))
+  const age = ageFromBirthDate(profile.birthDate)
   const mp = macroPlan({ goal: 'recomp', sex, age, weightKg: trend, heightCm: profile.heightCm, bfPct: profile.bodyFatPct ?? null, kcal: keep.kcal })
   await db.transaction(async (tx) => {
     await tx.update(schema.goals).set({ active: false, reachedChoice: 'recomp' }).where(eq(schema.goals.id, goal.id))
+    // eski planın bugünden sonraki dengeleme düzeltmeleri yeni koruma planını kesmesin (banka etkinlikleri kalır)
+    await tx.update(schema.kcalAdjustments).set({ deletedAt: new Date() }).where(and(eq(schema.kcalAdjustments.userId, userId), eq(schema.kcalAdjustments.reason, 'balance'), gte(schema.kcalAdjustments.day, today), isNull(schema.kcalAdjustments.deletedAt)))
     await tx.insert(schema.goals).values({
       userId, type: 'recomp', startWeightKg: trend, targetWeightKg: trend, startDate: today, endDate: keep.endDate, tdee,
       dailyKcal: keep.kcal, proteinG: mp.protein, carbG: mp.carb, fatG: mp.fat, waterMl: goal.waterMl, phase: goal.phase + 1,

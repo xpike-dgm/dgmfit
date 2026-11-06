@@ -76,6 +76,8 @@ export async function sendWeeklyPushes(weekStart: string, onlyUser?: string): Pr
       .where(and(eq(schema.events.userId, u.userId), eq(schema.events.type, 'report.pushed'), sql`${schema.events.payload}->>'week' = ${weekStart}`)).limit(1)
     if (done) continue
     const ok = await sendToUser(u.userId, { title: 'Haftalık raporun hazır', body: 'Kalori, su ve antrenman haftanın özeti ve koçun önerileri seni bekliyor.', tag: 'weekly-report', url: '/rapor' })
+    // sessiz saat / günlük üst sınır yüzünden gitmediyse sonraki turda tekrar denenir; hafta geçince (8 gün) vazgeçilir
+    if (ok === 0 && dayString() < addDays(weekStart, 8)) continue
     await publish(u.userId, 'report.pushed', { week: weekStart, delivered: ok })
     if (ok) n++
   }
@@ -84,7 +86,7 @@ export async function sendWeeklyPushes(weekStart: string, onlyUser?: string): Pr
 
 /** Bir kullanıcı için kararı verir ve gerekiyorsa gönderir. Test için dışa açık. */
 export async function runForUser(userId: string, nowDate = new Date()) {
-  const day = dayString(nowDate)
+  const calDay = dayString(nowDate)
   const now = minuteOfDay(nowDate)
   const [[settings], [profile], history] = await Promise.all([
     db.select().from(schema.waterSettings).where(eq(schema.waterSettings.userId, userId)).limit(1),
@@ -92,16 +94,22 @@ export async function runForUser(userId: string, nowDate = new Date()) {
     goalHistory(userId),
   ])
   if (!settings?.remindersEnabled) return { sent: false, reason: 'kapalı' }
+  const wake = parseHm(profile?.wake, 450), sleep = parseHm(profile?.sleep, 1410)
+  // uyku gece yarısından sonraysa (ör. 00:30) gece yarısı–uyku arası bir önceki günün devamıdır:
+  // özet ve hatırlatmalar o günün kayıtlarıyla değerlendirilir (yeni günün boş verisiyle "0 ml içtin" gitmesin)
+  const tail = sleep <= wake && now < wake
+  const day = tail ? addDays(calDay, -1) : calDay
   const [start, end] = dayBounds(day)
   const logs = await db.select({ at: schema.waterLogs.loggedAt, ml: schema.waterLogs.effectiveMl }).from(schema.waterLogs)
     .where(and(eq(schema.waterLogs.userId, userId), isNull(schema.waterLogs.deletedAt), gte(schema.waterLogs.loggedAt, start), sql`${schema.waterLogs.loggedAt} < ${end.toISOString()}`))
   const total = logs.reduce((a, l) => a + l.ml, 0)
   const lastDrink = logs.length ? Math.max(...logs.map((l) => minuteOfDay(l.at))) : null
+  const wrap = (m: number) => (sleep <= wake && m < wake ? m + 1440 : m) // gece yarısı sonrası dakikalar aynı eksende
 
   const sentRows = await db.select().from(schema.waterReminders).where(and(eq(schema.waterReminders.userId, userId), eq(schema.waterReminders.day, day))).orderBy(schema.waterReminders.sentAt)
   // kullanıcının elle gönderdiği test bildirimleri gerçek hatırlatmaların aralığını etkilemez
   const sentToday: SentReminder[] = sentRows.filter((r) => r.kind !== 'test').map((r) => ({
-    at: r.minute, kind: r.kind as SentReminder['kind'],
+    at: wrap(r.minute), kind: r.kind as SentReminder['kind'],
     acted: r.actedAt ? true : nowDate.getTime() - r.sentAt.getTime() > ACT_WINDOW_MIN * 60000 ? false : null,
   }))
 
@@ -118,7 +126,6 @@ export async function runForUser(userId: string, nowDate = new Date()) {
   const hourStats = Array.from({ length: 24 }, () => ({ sent: 0, acted: 0 }))
   for (const r of statRows) hourStats[Number(r.h)] = { sent: Number(r.sent), acted: Number(r.acted) }
 
-  const wake = parseHm(profile?.wake, 450), sleep = parseHm(profile?.sleep, 1410)
   let weakestHour: number | null = null
   for (let h = Math.ceil(wake / 60); h < Math.floor(sleep / 60) - 1; h++) if (weakestHour === null || habit[h] < habit[weakestHour]) weakestHour = h
 

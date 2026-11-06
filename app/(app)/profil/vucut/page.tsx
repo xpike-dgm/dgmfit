@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { requireUser } from '@/lib/auth'
 import { getToday } from '@/lib/today'
 import { db, schema } from '@/lib/db'
@@ -17,7 +17,7 @@ export default async function Page() {
   if (!t) redirect('/kurulum')
   const p = t.profile
   const sex = p.sex as Sex
-  const [m] = await db.select().from(schema.bodyMeasurements).where(eq(schema.bodyMeasurements.userId, u.id)).orderBy(desc(schema.bodyMeasurements.day)).limit(1)
+  const [m] = await db.select().from(schema.bodyMeasurements).where(and(eq(schema.bodyMeasurements.userId, u.id), isNull(schema.bodyMeasurements.deletedAt))).orderBy(desc(schema.bodyMeasurements.day)).limit(1)
   const kg = t.weight.trend || p.weightKg
   const navy = m?.neckCm && m?.waistCm ? navyBodyFat(sex, p.heightCm, m.neckCm, m.waistCm, m.hipsCm) : null
   const est = estimateBodyFat(sex, kg, p.heightCm, t.age)

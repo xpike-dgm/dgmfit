@@ -21,3 +21,14 @@ export async function waterBonusByDay(userId: string, from: string, to: string):
     ) x group by day`)
   return new Map(rows.map((r) => [String(r.day), workoutWaterBonus(Number(r.min))]))
 }
+
+/** Gün başına antrenman + kardiyo net kalorisi [from, to] (hafta halkaları: hedef + egzersiz kredisi). */
+export async function burnedByDay(userId: string, from: string, to: string): Promise<Map<string, number>> {
+  const rows = await db.execute<{ day: string; kcal: number }>(sql`
+    select day::text as day, sum(k)::int as kcal from (
+      select day, kcal_net as k from workouts where user_id = ${userId} and day between ${from} and ${to} and deleted_at is null
+      union all
+      select day, kcal_net as k from cardio_sessions where user_id = ${userId} and day between ${from} and ${to} and deleted_at is null
+    ) x group by day`)
+  return new Map(rows.map((r) => [String(r.day), Number(r.kcal ?? 0)]))
+}

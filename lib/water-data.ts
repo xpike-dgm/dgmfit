@@ -43,7 +43,9 @@ export async function ensureWaterSetup(userId: string) {
   const [goal] = await db.select({ waterMl: schema.goals.waterMl, startDate: schema.goals.startDate }).from(schema.goals)
     .where(and(eq(schema.goals.userId, userId), eq(schema.goals.active, true))).limit(1)
   await db.transaction(async (tx) => {
-    await tx.insert(schema.waterSettings).values({ userId }).onConflictDoNothing()
+    // eşzamanlı ilk açılışlarda (iki sekme, sayfa + su ekleme) yalnızca ayarları ilk yazan kurulumu yapar
+    const created = await tx.insert(schema.waterSettings).values({ userId }).onConflictDoNothing().returning({ u: schema.waterSettings.userId })
+    if (!created.length) return
     await tx.insert(schema.waterGoalHistory).values({ userId, effectiveFrom: goal?.startDate ?? dayString(), baseMl: goal?.waterMl ?? 2500, weekday: null })
     await tx.insert(schema.waterContainers).values([
       { userId, name: 'Bardak', kind: 'glass', capacityMl: 200, sort: 0 },
@@ -263,8 +265,9 @@ export async function getWaterStats(userId: string, range: number): Promise<Wate
   }
 
   const sFrom = addDays(today, -119)
-  const sTotals = await dailyTotals(userId, sFrom, today)
-  const sDays = Array.from({ length: 120 }, (_, i) => { const d = addDays(sFrom, i); return { day: d, total: sTotals.get(d)?.total ?? 0, goal: goalForDay(history, d) } })
+  // seri, Su ve Bugün ekranlarıyla aynı hedefle (antrenman eki dahil) hesaplanır
+  const [sTotals, sBonus2] = await Promise.all([dailyTotals(userId, sFrom, today), waterBonusByDay(userId, sFrom, today)])
+  const sDays = Array.from({ length: 120 }, (_, i) => { const d = addDays(sFrom, i); return { day: d, total: sTotals.get(d)?.total ?? 0, goal: goalForDay(history, d) + (sBonus2.get(d) ?? 0) } })
   const fa = sDays.findIndex((d) => d.total > 0)
 
   return {
@@ -297,11 +300,11 @@ export async function getWaterInsights(userId: string) {
   const today = dayString()
   const history = await goalHistory(userId)
   const from = addDays(today, -364)
-  const detail = await dailyDetail(userId, from, today)
+  const [detail, iBonus] = await Promise.all([dailyDetail(userId, from, today), waterBonusByDay(userId, from, today)])
   const all = Array.from({ length: 365 }, (_, i) => {
     const d = addDays(from, i)
     const x = detail.get(d)
-    return { day: d, total: x?.total ?? 0, count: x?.count ?? 0, firstAt: x ? x.first : null, goal: goalForDay(history, d) }
+    return { day: d, total: x?.total ?? 0, count: x?.count ?? 0, firstAt: x ? x.first : null, goal: goalForDay(history, d) + (iBonus.get(d) ?? 0) }
   })
   const firstIdx = all.findIndex((d) => d.count > 0)
   const active = firstIdx >= 0 ? all.slice(firstIdx) : all.slice(-1)
