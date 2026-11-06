@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Faz 5h-5: MSS seans yükü
+- Antrenman özetinde "MSS yükü" kartı (5 kademe, puan, açıklama, en çok katkı veren 3 hareket), istatistikte son 7 günün seansları ve haftalık not. Kendi algoritmamız ve metinlerimiz: paketteki analiz metinleri Ağırsağlam'da PRO özelliği olduğu için kullanılmadı (DECISIONS).
+- Hata: efor çarpanında normal setlerde yüksek RiR indirimi (0,8) `max(1, …)` yüzünden kayboluyordu → birim testi yakaladı, düzeltildi.
+- Doğrulama: commit `4ea4eca`; verify.sh VERIFY OK (162 birim, 18 e2e); release `2026-11-06T00-04-08-038Z` RELEASE OK; logda hata 0; 12 test kullanıcısı silindi.
+
 ## 2026-11-06 — Faz 5h-4: ücretsiz programlar + süperset
 - 35 ücretsiz program şablon listesinde (süzgeç: Ev/Salon/Başlangıç/Orta/Tek antrenman/Haftalık), ayrıntı sayfası (küçük resim, hedef, dinlenme, not, süperset blokları, kaynak satırı), "Bu şablonu kullan" → kullanıcı programı. Paket çalışma anında okunur, DB'ye şablon kopyalanmaz. 0019: `program_exercises.superset`, `note`.
 - Süperset: editörde kırmızı çizgili blok + "Sonraki hareketle süperset yap / Süperseti boz"; canlıda S1 rozeti, "Süperset 1 · 1/3 · sonra: …" çipi, tur içinde dinlenmeden geçiş, tur sonunda dinlenme ve ilk üyeye dönüş.
