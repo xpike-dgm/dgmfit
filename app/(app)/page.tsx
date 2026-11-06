@@ -11,6 +11,9 @@ import QuickWaterButton from '@/components/QuickWaterButton'
 import InsightCard from '@/components/InsightCard'
 import { latestReportWeek, mondayOf } from '@/lib/coach-data'
 import { Drop, Dumbbell, Flame, Pulse, Target, User } from '@/components/icons'
+import { dayState } from '@/lib/day-state'
+import { recentFoods } from '@/lib/food-data'
+import { minuteOfDay } from '@/lib/water-data'
 
 export default async function Today() {
   const user = await requireUser()
@@ -21,9 +24,16 @@ export default async function Today() {
   // Haftalık rapor kısayolu: Pazar 18.00'den Pazartesi sonuna kadar
   const weeklyReady = latestReportWeek() === mondayOf(t.day) || latestReportWeek() === addDays(mondayOf(t.day), -7) && new Date(t.day + 'T12:00:00Z').getUTCDay() === 1
 
-  const budget = t.target.kcal + t.burned
-  const left = budget - t.eaten.kcal
-  const usedFrac = budget > 0 ? t.eaten.kcal / budget : 0
+  // Faz 7-1: kalan değerler tek kaynaktan (Yemek ve Fit ile aynı hesap)
+  const nowMin = minuteOfDay(new Date())
+  const ds = dayState({ target: t.target, eaten: t.eaten, burned: t.burned, waterMl: t.waterMl, waterBonus: t.waterBonus, workoutMin: t.workout.minutes,
+    sinceWorkoutMin: t.workout.endedAt ? Math.round((Date.now() - Date.parse(t.workout.endedAt)) / 60000) : null, nowMin })
+  const budget = ds.budget
+  const left = ds.left.kcal
+  const usedFrac = ds.pct.kcal
+  // antrenman sonrası protein: son kullanılanlardan 100 kcal başına en çok protein verenler
+  const proteinPicks = ds.postWorkoutProtein ? (await recentFoods(user.id, 30)).filter((f) => f.kcal > 0).sort((a, b) => b.protein / b.kcal - a.protein / a.kcal).slice(0, 3) : []
+  const mealNow = nowMin < 10 * 60 ? 'breakfast' : nowMin < 15 * 60 ? 'lunch' : nowMin < 21 * 60 ? 'dinner' : 'snack'
   const w = t.weight
   const recomp = t.goal?.type === 'recomp'
   const diffPlan = (w.progress - w.planned) * Math.abs(w.target - w.start)
@@ -40,7 +50,7 @@ export default async function Today() {
 
   return (
     <div className="px-4 flex flex-col gap-3">
-      <section aria-label="Kalori" className="flex flex-col gap-3">
+      <section aria-label="Kalori" className="flex flex-col gap-3" data-testid="today-state" data-left={left} data-budget={budget} data-water-goal={t.target.water} data-protein-left={ds.left.protein}>
         <Band
           title={<>{greeting()}, {user.username}</>}
           sub={<span className="capitalize">{longDate(t.day)}</span>}
@@ -85,6 +95,17 @@ export default async function Today() {
           ) : null}
         </div>
       </section>
+
+      {ds.postWorkoutProtein ? (
+        <section className="card p-4 flex flex-col gap-2.5 border-l-4 border-[var(--color-protein)]" data-testid="post-workout-protein">
+          <p className="text-[14px] leading-snug"><b>{ds.postWorkoutProtein.text}</b></p>
+          {proteinPicks.length ? (
+            <div className="flex flex-wrap gap-1.5">
+              {proteinPicks.map((f) => <Link key={f.id} href={`/yemek/ekle?ogun=${mealNow}`} className="h-9 px-3 rounded-full bg-surface-2 text-[12.5px] font-semibold inline-flex items-center">{f.name} · {Math.round(f.protein)} g/100 g</Link>)}
+            </div>
+          ) : <Link href={`/yemek/ekle?ogun=${mealNow}`} className="text-[13px] font-bold text-acc">Protein ekle</Link>}
+        </section>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3">
         <Link href="/fit" data-mod="plan" aria-label="Kilo hedefi ve plan" className={tile}>

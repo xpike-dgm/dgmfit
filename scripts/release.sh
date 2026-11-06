@@ -4,6 +4,11 @@
 #           ./scripts/release.sh fit food   (yalnızca seçilenler)
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Faz 9: tam senaryo simülasyonu (~4000 senaryo, ~2 dk) — değişmez ihlali ya da altın dosyadan sapma varsa yayın durur
+simlog=$(mktemp); simok=1
+node --experimental-strip-types scripts/sim.mjs full >"$simlog" 2>&1 || simok=0
+grep -E '^SİM|HATA|ALTIN' "$simlog" || true; rm -f "$simlog"
+[ $simok = 1 ] || { echo 'RELEASE: simülasyon başarısız'; exit 1; }
 ./scripts/bundle.sh | tail -1
 ./scripts/deploy.sh | tail -1
 for i in $(seq 1 30); do curl -sf https://dgfit.dgmcraft.online/api/health >/dev/null && break; sleep 2; done

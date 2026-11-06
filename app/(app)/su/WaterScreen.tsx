@@ -100,10 +100,10 @@ export default function WaterScreen({ data }: { data: Data }) {
   const maxPast = shiftDay(todayStr(), -365)
 
   return (
-    <div className="px-4 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3" data-testid="water-state" data-goal={data.goal} data-total={total}>
       <Band
         title={data.isToday ? 'Su' : dayLabel(data.day)}
-        sub={<>{data.isToday ? (!logs.length ? 'Günün ilk suyunu ekle' : ahead >= 0 ? `Tempondasın · ${fmtNum(ahead)} ml öndesin` : `İdeale ${fmtNum(-ahead)} ml kaldı`) : 'Geçmiş gün'} · seri {data.streak.current} gün</>}
+        sub={<>{data.bonus > 0 ? <span data-testid="water-bonus">Antrenman nedeniyle +{fmtNum(data.bonus)} ml · </span> : null}{data.isToday ? (!logs.length ? 'Günün ilk suyunu ekle' : ahead >= 0 ? `Tempondasın · ${fmtNum(ahead)} ml öndesin` : `İdeale ${fmtNum(-ahead)} ml kaldı`) : 'Geçmiş gün'} · seri {data.streak.current} gün</>}
         right={<Link href="/su/ayarlar" aria-label="Su ayarları" className={hdrIcon}><Gear size={20} /></Link>}
         visual={data.progressStyle === 'ring' ? undefined : <Progress style={data.progressStyle} frac={frac} idealFrac={data.goal ? ideal / data.goal : 0} pop={pop} total={total} />}
         ring={{ value: Math.min(1, frac), big: <span aria-live="polite">{fmtNum(total)}</span>, small: `ml · %${Math.round(frac * 100)}`, label: `Hedefin yüzde ${Math.round(frac * 100)}'i` }}

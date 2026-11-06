@@ -5,7 +5,7 @@ import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString, diffDays } from './time'
 import { calorieFloor, type Sex } from './calc'
-import { adaptiveTdee, checkinProposal, closureDiff, distributeDiff, exceptionDays, forecastDay, planBank, scaleMacros, WINDOW_DAYS, type PlanDay } from './fit'
+import { balanceWindow, checkinCompute, closureDiff, distributeDiff, exceptionDays, planBank, scaleMacros, targetKcal, trendSeries, type PlanDay } from './fit'
 import { dayMacros } from './food-data'
 import { publish } from './events'
 import { minuteOfDay } from './water-data'
@@ -45,10 +45,12 @@ async function adjustmentsBetween(userId: string, from: string, to: string) {
 export async function dayTargets(userId: string, from: string, to: string, goal?: Goal | null): Promise<DayTarget[]> {
   const g = goal === undefined ? await activeGoal(userId) : goal
   const baseMacros = { kcal: g?.dailyKcal ?? 2000, protein: g?.proteinG ?? 120, carb: g?.carbG ?? 200, fat: g?.fatG ?? 65 }
-  const [adj, closed] = await Promise.all([
+  const [adj, closed, sex] = await Promise.all([
     adjustmentsBetween(userId, from, to),
     db.select().from(schema.dailyTargets).where(and(eq(schema.dailyTargets.userId, userId), gte(schema.dailyTargets.day, from), lte(schema.dailyTargets.day, to))),
+    sexOf(userId),
   ])
+  const floor = calorieFloor(sex)
   const closedBy = new Map(closed.map((c) => [c.day, c]))
   // Karb döngüsü (Faz 4c): açık günlerde antrenman/dinlenme gününe göre karbonhidrat kaydırılır (haftalık toplam korunur)
   const [cc] = await db.select().from(schema.carbCycle).where(eq(schema.carbCycle.userId, userId)).limit(1)
@@ -67,8 +69,9 @@ export async function dayTargets(userId: string, from: string, to: string, goal?
       out.push({ day: d, base: c.baseKcal, adjustment: c.adjustmentKcal, kcal, protein: c.proteinG, carb: c.carbG, fat: c.fatG, closed: true, reasons: list.map((a) => ({ kcal: a.kcal, reason: a.reason, sourceDay: a.sourceDay })) })
       continue
     }
-    const adjustment = list.reduce((a, x) => a + x.kcal, 0)
     const bm = baseFor(d)
+    // etkin düzeltme: taban + düzeltme güvenli tabanın altına inmez (check-in tabanı sonradan düşürmüş olabilir)
+    const adjustment = targetKcal(bm.kcal, list.reduce((a, x) => a + x.kcal, 0), floor) - bm.kcal
     const m = scaleMacros(bm, bm.kcal + adjustment)
     out.push({ day: d, base: bm.kcal, adjustment, ...m, closed: false, reasons: list.map((a) => ({ kcal: a.kcal, reason: a.reason, sourceDay: a.sourceDay })) })
   }
@@ -102,9 +105,8 @@ export async function closeDay(userId: string, day: string): Promise<{ kind: str
   if (!claimed.length) return null
   let leftover = 0
   if (c.diff !== 0) {
-    const last = addDays(day, WINDOW_DAYS) < goal.endDate ? addDays(day, WINDOW_DAYS) : goal.endDate
-    const first = addDays(day, 1) > dayString() ? addDays(day, 1) : dayString() // geçmişe dağıtılmaz
-    const upcoming = first <= last ? (await dayTargets(userId, first, last, goal)).filter((u) => !u.closed) : []
+    const win = balanceWindow(day, dayString(), goal.endDate) // geçmişe dağıtılmaz
+    const upcoming = win ? (await dayTargets(userId, win.first, win.last, goal)).filter((u) => !u.closed) : []
     if (upcoming.length) {
       const plan: PlanDay[] = upcoming.map((u) => ({ day: u.day, base: u.base, current: u.adjustment }))
       const r = distributeDiff(c.diff, plan, calorieFloor(await sexOf(userId)))
@@ -201,16 +203,7 @@ export async function weightSeries(userId: string, from: string, to: string) {
     .where(and(eq(schema.weightLogs.userId, userId), isNull(schema.weightLogs.deletedAt))).orderBy(asc(schema.weightLogs.loggedAt))
   const byDay = new Map<string, number>()
   for (const l of logs) byDay.set(dayString(l.at), l.kg)
-  const first = [...byDay.keys()].sort()[0]
-  const out: { day: string; raw: number | null; trend: number | null }[] = []
-  let t: number | null = null
-  const start = first && first < from ? first : from
-  for (let d = start; d <= to; d = addDays(d, 1)) {
-    const raw = byDay.get(d) ?? null
-    if (raw !== null) t = t === null ? raw : t + 0.15 * (raw - t)
-    if (d >= from) out.push({ day: d, raw, trend: t === null ? null : Math.round(t * 100) / 100 })
-  }
-  return out
+  return trendSeries(byDay, from, to)
 }
 
 export async function checkinData(userId: string) {
@@ -225,12 +218,8 @@ export async function checkinData(userId: string) {
     db.select().from(schema.events).where(and(eq(schema.events.userId, userId), eq(schema.events.type, 'plan.adjusted'), sql`${schema.events.payload}->>'kind' = 'checkin'`)).orderBy(desc(schema.events.createdAt)).limit(1),
   ])
   const intakeBy = new Map(closed.filter((c) => ['balanced', 'over', 'under', 'exception'].includes(c.closureKind ?? '')).map((c) => [c.day, c.eatenKcal ?? null]))
-  const tdee = adaptiveTdee(series.map((s) => ({ day: s.day, intake: intakeBy.get(s.day) ?? null, kg: s.raw })))
-  const trendNow = series.filter((s) => s.trend !== null).at(-1)?.trend ?? goal.startWeightKg
-  const forecast = forecastDay(series.filter((s) => s.trend !== null).map((s) => ({ day: s.day, kg: s.trend! })), goal.targetWeightKg, today)
   const lastCheckin = lastEvt[0] ? dayString(lastEvt[0].createdAt) : goal.startDate
-  const due = diffDays(lastCheckin, today) >= 7
-  const proposal = tdee.tdee ? checkinProposal({ currentKcal: goal.dailyKcal, measuredTdee: tdee.tdee, trendKg: trendNow, targetKg: goal.targetWeightKg, daysLeft: diffDays(today, goal.endDate), floor: calorieFloor(sex), goal: goal.type as 'lose' }) : null
+  const { tdee, trendNow, forecast, due, proposal } = checkinCompute({ goal: { ...goal, type: goal.type as 'lose' }, series, intakeBy, today, lastCheckin, floor: calorieFloor(sex) })
   return { goal, tdee, trendNow, forecast, due, lastCheckin, proposal }
 }
 

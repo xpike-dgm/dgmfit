@@ -80,7 +80,7 @@ test('kalori bankası', () => {
 })
 
 test('makro ölçekleme: protein sabit', () => {
-  assert.deepEqual(scaleMacros({ kcal: 2140, protein: 157, carb: 234, fat: 65 }, 2040), { kcal: 2040, protein: 157, carb: 219, fat: 61 })
+  assert.deepEqual(scaleMacros({ kcal: 2140, protein: 157, carb: 234, fat: 65 }, 2040), { kcal: 2040, protein: 157, carb: 216, fat: 61 }) // karbonhidrat kalan kaloriden (toplam tutarlı)
 })
 
 test('adaptif harcama', () => {
@@ -122,4 +122,28 @@ test('kalori uyumu', () => {
   assert.equal(kcalAdherence(2400, 2000), 0.8) // %20 sapma
   assert.equal(kcalAdherence(1000, 2000), 0.2) // %50 sapma
   assert.equal(kcalAdherence(4000, 2000), 0)
+})
+
+test('scaleMacros: kalori çok düşünce karbonhidrat eksiye inmez, fark yağdan düşülür; toplam tutarlı', async () => {
+  const { scaleMacros } = await import('../lib/fit.ts')
+  const m = scaleMacros({ kcal: 2000, protein: 180, carb: 40, fat: 125 }, 1500)
+  assert.equal(m.carb, 0)
+  assert.ok(Math.abs(m.protein * 4 + m.carb * 4 + m.fat * 9 - 1500) <= 10, JSON.stringify(m))
+  const up = scaleMacros({ kcal: 2000, protein: 150, carb: 200, fat: 70 }, 2300)
+  assert.ok(Math.abs(up.protein * 4 + up.carb * 4 + up.fat * 9 - 2300) <= 10)
+})
+
+test('targetKcal: düzeltme hedefi güvenli tabanın altına itemez', async () => {
+  const { targetKcal } = await import('../lib/fit.ts')
+  assert.equal(targetKcal(1500, -150, 1500), 1500)
+  assert.equal(targetKcal(1800, -150, 1500), 1650)
+  assert.equal(targetKcal(1800, -400, 1500), 1500)
+  assert.equal(targetKcal(1600, 200, 1500), 1800)
+})
+
+test('scaleMacros: art arda 60 ölçekleme sonrası makrolar toplamı kaloriden en fazla 6 kcal sapar', async () => {
+  const { scaleMacros } = await import('../lib/fit.ts')
+  let g = { kcal: 1980, protein: 107, carb: 255, fat: 59 }
+  for (let i = 0; i < 60; i++) { const k = g.kcal + (i % 3 === 0 ? -137 : 143); g = scaleMacros(g, k) }
+  assert.ok(Math.abs(g.protein * 4 + g.carb * 4 + g.fat * 9 - g.kcal) <= 6, JSON.stringify(g))
 })

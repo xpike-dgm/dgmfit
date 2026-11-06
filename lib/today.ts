@@ -21,6 +21,9 @@ export interface TodayData {
   eaten: { kcal: number; protein: number; carb: number; fat: number }
   burned: number
   waterMl: number
+  /** Antrenmandan gelen su hedefi eki (ml) ve bugünkü son ağırlık antrenmanı (Faz 7-1) */
+  waterBonus: number
+  workout: { minutes: number; endedAt: string | null }
   streak: number
   weight: { latest: number; trend: number; start: number; target: number; progress: number; planned: number; history: { day: string; kg: number }[] }
   week: { day: string; label: string; num: string; frac: number; water: number; kcal: number; today: boolean; future: boolean }[]
@@ -83,6 +86,7 @@ export async function getToday(userId: string, day: string = dayString()): Promi
   const wGoal = (d: string) => (wHistory.length ? goalForDay(wHistory, d) : goal?.waterMl ?? 2500) + (wBonus.get(d) ?? 0)
   const waterMl = wTotals.get(day)?.total ?? 0
   target.water = wGoal(day)
+  const waterBonus = wBonus.get(day) ?? 0
   const sDays = Array.from({ length: 120 }, (_, i) => { const d = addDays(sFrom, i); return { day: d, total: wTotals.get(d)?.total ?? 0, goal: wGoal(d) } })
   const fa = sDays.findIndex((d) => d.total > 0)
   const streak = fa >= 0 ? computeStreak(sDays.slice(fa)).current : 0
@@ -103,10 +107,12 @@ export async function getToday(userId: string, day: string = dayString()): Promi
     }
   })
 
-  const [eaten, burned] = await Promise.all([dayMacros(userId, day), dayBurned(userId, day)])
+  const [eaten, burned, [wk]] = await Promise.all([dayMacros(userId, day), dayBurned(userId, day),
+    db.select({ min: sql<number>`coalesce(sum(duration_sec),0)/60.0`, ended: sql<Date | null>`max(ended_at)` }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), eq(schema.workouts.day, day), isNull(schema.workouts.deletedAt)))])
   return {
     day, profile, age: ageFromBirthDate(profile.birthDate), goal: goal ?? null, dayIndex, totalDays, target,
-    eaten, burned, waterMl, streak,
+    eaten, burned, waterMl, streak, waterBonus,
+    workout: { minutes: Math.round(Number(wk?.min ?? 0)), endedAt: wk?.ended ? new Date(wk.ended).toISOString() : null },
     weight: { latest, trend, start, target: tgt, progress, planned, history },
     week,
   }

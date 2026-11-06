@@ -102,12 +102,15 @@ export function planBank(i: { today: string; eventDay: string; extra: number; da
 /** Günlük hedef değişince protein sabit kalır; fark %60 karbonhidrat, %40 yağ olarak dağıtılır. */
 export function scaleMacros(base: { kcal: number; protein: number; carb: number; fat: number }, kcal: number) {
   const d = kcal - base.kcal
-  return {
-    kcal,
-    protein: base.protein,
-    carb: Math.max(0, Math.round(base.carb + (d * 0.6) / 4)),
-    fat: Math.max(0, Math.round(base.fat + (d * 0.4) / 9)),
-  }
+  let carb = base.carb + (d * 0.6) / 4
+  let fat = base.fat + (d * 0.4) / 9
+  // karbonhidrat sıfırın altına inemiyorsa eksik kısım yağdan düşülür (makrolar toplamı hedefle tutarlı kalsın — simülasyon bulgusu)
+  if (carb < 0) { fat += (carb * 4) / 9; carb = 0 }
+  fat = Math.max(0, Math.round(fat))
+  // karbonhidrat kalan kaloriden: yuvarlama hatası check-in'ler boyunca birikmez (simülasyon: 50 haftada ~90 kcal sapma)
+  carb = Math.round((kcal - base.protein * 4 - fat * 9) / 4)
+  if (carb < 0) { fat = Math.max(0, Math.round((kcal - base.protein * 4) / 9)); carb = 0 }
+  return { kcal, protein: base.protein, carb, fat }
 }
 
 export interface TdeeDay { day: string; intake: number | null; kg: number | null }
@@ -186,4 +189,51 @@ export function kcalAdherence(eaten: number, target: number): number {
   const off = Math.abs(eaten / target - 1)
   if (off <= 0.1) return 1
   return Math.max(0, Math.round((1 - (off - 0.1) * 2) * 100) / 100)
+}
+
+/** Gün kapanışında farkın dağıtılacağı pencere: yarından (geçmişe değil) en fazla 7 gün, hedef tarihi aşmadan. */
+export function balanceWindow(day: string, today: string, endDate: string): { first: string; last: string } | null {
+  const plus = (d: string, n: number) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10) }
+  const last = plus(day, WINDOW_DAYS) < endDate ? plus(day, WINDOW_DAYS) : endDate
+  const first = plus(day, 1) > today ? plus(day, 1) : today
+  return first <= last ? { first, last } : null
+}
+
+/** Gün başına son tartıdan üssel trend (α=0,15); tartı olmayan günler trendi taşır. */
+export function trendSeries(byDay: Map<string, number>, from: string, to: string): { day: string; raw: number | null; trend: number | null }[] {
+  const plus = (d: string) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + 1); return x.toISOString().slice(0, 10) }
+  const first = [...byDay.keys()].sort()[0]
+  const out: { day: string; raw: number | null; trend: number | null }[] = []
+  let t: number | null = null
+  const start = first && first < from ? first : from
+  for (let d = start; d <= to; d = plus(d)) {
+    const raw = byDay.get(d) ?? null
+    if (raw !== null) t = t === null ? raw : t + 0.15 * (raw - t)
+    if (d >= from) out.push({ day: d, raw, trend: t === null ? null : Math.round(t * 100) / 100 })
+  }
+  return out
+}
+
+export interface CheckinGoal { type: 'lose' | 'gain' | 'recomp'; startWeightKg: number; targetWeightKg: number; startDate: string; endDate: string; dailyKcal: number }
+
+/**
+ * Haftalık check-in hesabının saf hâli (veritabanı katmanı ve simülasyon aynısını kullanır).
+ * `series`: son 28 gün (tartı + trend), `intakeBy`: kapanmış ve sayılan günlerin yenen kalorisi.
+ */
+export function checkinCompute(i: { goal: CheckinGoal; series: { day: string; raw: number | null; trend: number | null }[]; intakeBy: Map<string, number | null>; today: string; lastCheckin: string; floor: number }) {
+  const days = (a: string, b: string) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000)
+  const tdee = adaptiveTdee(i.series.map((s) => ({ day: s.day, intake: i.intakeBy.get(s.day) ?? null, kg: s.raw })))
+  const trendNow = i.series.filter((s) => s.trend !== null).at(-1)?.trend ?? i.goal.startWeightKg
+  const forecast = forecastDay(i.series.filter((s) => s.trend !== null).map((s) => ({ day: s.day, kg: s.trend! })), i.goal.targetWeightKg, i.today)
+  const due = days(i.lastCheckin, i.today) >= 7
+  const proposal = tdee.tdee ? checkinProposal({ currentKcal: i.goal.dailyKcal, measuredTdee: tdee.tdee, trendKg: trendNow, targetKg: i.goal.targetWeightKg, daysLeft: days(i.today, i.goal.endDate), floor: i.floor, goal: i.goal.type }) : null
+  return { tdee, trendNow, forecast, due, proposal }
+}
+
+/**
+ * Günün etkin kalori hedefi: plan tabanı + dengeleme düzeltmesi, güvenli tabanın altına inmez.
+ * (Check-in tabanı düşürdüğünde önceden yazılmış eksi düzeltmeler hedefi tabanın altına itebiliyordu — simülasyon bulgusu.)
+ */
+export function targetKcal(base: number, adjustment: number, floor: number): number {
+  return Math.max(Math.min(base, floor), base + adjustment)
 }

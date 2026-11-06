@@ -81,6 +81,8 @@ async function logsBetween(userId: string, start: Date, end: Date) {
 }
 
 export interface WaterScreen {
+  /** Antrenmandan gelen su hedefi eki (ml), hedefe dahil */
+  bonus: number
   day: string
   isToday: boolean
   nowMin: number
@@ -159,7 +161,7 @@ export async function getWaterScreen(userId: string, day: string = dayString()):
   const streak = computeStreak(firstActive >= 0 ? days.slice(firstActive) : days.slice(-1))
 
   return {
-    day, isToday, nowMin, wake, sleep, goal, total, logs,
+    day, isToday, nowMin, wake, sleep, goal, total, logs, bonus: bonusToday,
     containers: containersRows.map((c) => ({ id: c.id, name: c.name, kind: c.kind, capacityMl: c.capacityMl, lastFill: c.lastFill, isDefault: c.isDefault })),
     buttons: (settings?.buttons?.length ? settings.buttons : DEFAULT_BUTTONS).slice(0, 8),
     frequent: frequentAmounts(freqInput, nowMin, 3),

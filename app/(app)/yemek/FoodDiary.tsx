@@ -49,7 +49,7 @@ export default function FoodDiary(p: {
   const q = `gun=${p.day}`
 
   return (
-    <div className="px-4 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-3" data-testid="diary-state" data-left={left} data-budget={budget}>
       <Band title="Yemek" sub={<span className="capitalize">{p.isToday ? `Bugün · ${p.dayLabel}` : p.dayLabel}</span>}
         right={<div className="flex items-center gap-2 shrink-0">{!p.isToday ? <Link href="/yemek" className={hdrBtn}>Bugüne dön</Link> : null}<DayCardSheet day={p.day} /></div>}
         ring={{ value: budget > 0 ? Math.min(1, p.totals.kcal / budget) : 0, big: fmtNum(Math.abs(left)), small: left >= 0 ? 'kalan kcal' : 'kcal aşım', label: `Bütçenin yüzde ${budget > 0 ? Math.round((p.totals.kcal / budget) * 100) : 0}'i` }}
