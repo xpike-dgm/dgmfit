@@ -10,14 +10,19 @@ import CustomExercise from './CustomExercise'
 import FilterSheet from './FilterSheet'
 
 export const metadata = { title: 'Hareketler · DgFit' }
-type SP = { q?: string; kas?: string; ekipman?: string; tip?: string; seviye?: string }
+type SP = { q?: string; kas?: string; ekipman?: string; tip?: string; seviye?: string; sayfa?: string }
 
 export default async function LibraryPage(props: { searchParams: Promise<SP> }) {
   const u = await requireUser()
   const sp = await props.searchParams
   const clean = (v: string | undefined, allowed: Record<string, string>) => (v && allowed[v] ? v : undefined)
   const f = { q: sp.q?.slice(0, 60), muscle: clean(sp.kas, MUSCLES), equipment: clean(sp.ekipman, EQUIPMENT), pattern: clean(sp.tip, PATTERN), level: clean(sp.seviye, LEVEL) }
-  const rows = await searchExercises(u.id, { ...f, limit: 80 })
+  // P-4: 40'ar satır (DOM ve ön yükleme yükü yarıya iner), "Daha fazla göster" ile 40 daha
+  const page = Math.max(1, Math.min(5, Number(sp.sayfa) || 1))
+  const limit = 40 * page
+  const rows = await searchExercises(u.id, { ...f, limit })
+  const more = rows.length === limit
+  const moreHref = '?' + new URLSearchParams({ ...Object.fromEntries(Object.entries(sp).filter(([k, v]) => v && k !== 'sayfa')), sayfa: String(page + 1) } as Record<string, string>).toString()
   return (
     <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="Hareket kütüphanesi" sub="Ara, filtrele ya da kendi hareketini ekle" />
@@ -36,7 +41,7 @@ export default async function LibraryPage(props: { searchParams: Promise<SP> }) 
         { key: 'tip', title: 'Hareket tipi', value: f.pattern, options: Object.entries(PATTERN) },
         { key: 'seviye', title: 'Zorluk', value: f.level, options: Object.entries(LEVEL) },
       ]} />
-      <p className="text-[12px] text-mute px-1" data-testid="lib-count">{rows.length === 80 ? 'İlk 80 sonuç' : `${rows.length} hareket`}</p>
+      <p className="text-[12px] text-mute px-1" data-testid="lib-count">{more ? `${rows.length}+ hareket` : `${rows.length} hareket`}</p>
       <ul className="card px-4 py-1 flex flex-col">
         {rows.map((r) => (
           <li key={r.id} className="border-b border-line last:border-0">
@@ -55,6 +60,7 @@ export default async function LibraryPage(props: { searchParams: Promise<SP> }) 
         ))}
         {!rows.length ? <li className="py-6 text-center text-mute text-sm">Sonuç yok. Filtreleri azalt ya da kendi hareketini ekle.</li> : null}
       </ul>
+      {more && page < 5 ? <Link href={moreHref} scroll={false} replace className="h-11 rounded-full border border-line-2 text-[14px] font-bold flex items-center justify-center" data-testid="lib-more">Daha fazla göster</Link> : null}
       <CustomExercise />
     </div>
   )

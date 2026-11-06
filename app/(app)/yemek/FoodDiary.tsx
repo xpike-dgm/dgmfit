@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition, type ReactNode } from 'react'
+import { useOptimistic, useState, useTransition, type ReactNode } from 'react'
 import Sheet from '@/components/Sheet'
 import { Band, Bar, btn, hdrBtn } from '@/components/ui'
 import { Back, Dots, Next, Plus, Spark, Trash } from '@/components/icons'
@@ -36,14 +36,30 @@ export default function FoodDiary(p: {
   const [quick, setQuick] = useState<MealId | null>(null)
   const [menu, setMenu] = useState<MealId | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  // P-4: silme ve miktar değişikliği sunucuyu beklemeden ekrana yansır (hata olursa yenilemede geri gelir)
+  type Op = { type: 'del'; id: number } | { type: 'upd'; id: number; grams: number; meal: MealId }
+  const [meals, applyOp] = useOptimistic(p.meals, (cur: MealBlock[], op: Op) => {
+    const all = cur.flatMap((m) => m.items)
+    const it = all.find((x) => x.id === op.id)
+    if (!it) return cur
+    const next = op.type === 'del' ? null : (() => { const f = it.grams > 0 ? op.grams / it.grams : 1; return { ...it, grams: op.grams, meal: op.meal, kcal: Math.round(it.kcal * f), protein: it.protein * f, carb: it.carb * f, fat: it.fat * f } })()
+    return cur.map((m) => {
+      const items = m.items.filter((x) => x.id !== op.id).concat(next && next.meal === m.id ? [next] : [])
+      const totals = items.reduce((a, x) => ({ kcal: a.kcal + x.kcal, protein: a.protein + x.protein, carb: a.carb + x.carb, fat: a.fat + x.fat }), { kcal: 0, protein: 0, carb: 0, fat: 0 })
+      return { ...m, items, totals }
+    })
+  })
+  const optimistic = meals !== p.meals
+  const totals = optimistic ? meals.reduce((a, m) => ({ kcal: a.kcal + m.totals.kcal, protein: a.protein + m.totals.protein, carb: a.carb + m.totals.carb, fat: a.fat + m.totals.fat }), { kcal: 0, protein: 0, carb: 0, fat: 0 }) : p.totals
   const budget = p.target.kcal + p.burned
-  const left = budget - p.totals.kcal
+  const left = budget - totals.kcal
   const macro = [
-    { k: 'P', name: 'Protein', v: p.totals.protein, g: p.target.protein, c: 'var(--color-protein)' },
-    { k: 'K', name: 'Karbonhidrat', v: p.totals.carb, g: p.target.carb, c: 'var(--color-orange)' },
-    { k: 'Y', name: 'Yağ', v: p.totals.fat, g: p.target.fat, c: 'var(--color-violet)' },
+    { k: 'P', name: 'Protein', v: totals.protein, g: p.target.protein, c: 'var(--color-protein)' },
+    { k: 'K', name: 'Karbonhidrat', v: totals.carb, g: p.target.carb, c: 'var(--color-orange)' },
+    { k: 'Y', name: 'Yağ', v: totals.fat, g: p.target.fat, c: 'var(--color-violet)' },
   ]
-  const run = (f: () => Promise<{ ok: boolean; error?: string }>, done?: string) => start(async () => {
+  const run = (f: () => Promise<{ ok: boolean; error?: string }>, done?: string, op?: Op) => start(async () => {
+    if (op) applyOp(op)
     const r = await f()
     setMsg(r.ok ? done ?? null : r.error ?? 'Hata')
     router.refresh()
@@ -54,14 +70,14 @@ export default function FoodDiary(p: {
     <div className="px-4 flex flex-col gap-3" data-testid="diary-state" data-left={left} data-budget={budget}>
       <Band title="Yemek" sub={<span className="capitalize">{p.isToday ? `Bugün · ${p.dayLabel}` : p.dayLabel}</span>}
         right={<div className="flex items-center gap-2 shrink-0">{!p.isToday ? <Link href="/yemek" className={hdrBtn}>Bugüne dön</Link> : null}<DayCardSheet day={p.day} /></div>}
-        ring={{ value: budget > 0 ? Math.min(1, p.totals.kcal / budget) : 0, big: fmtNum(Math.abs(left)), small: left >= 0 ? 'kalan kcal' : 'kcal aşım', label: `Bütçenin yüzde ${budget > 0 ? Math.round((p.totals.kcal / budget) * 100) : 0}'i` }}
+        ring={{ value: budget > 0 ? Math.min(1, totals.kcal / budget) : 0, big: fmtNum(Math.abs(left)), small: left >= 0 ? 'kalan kcal' : 'kcal aşım', label: `Bütçenin yüzde ${budget > 0 ? Math.round((totals.kcal / budget) * 100) : 0}'i` }}
         pills={macro.map((m) => [m.name, `${fmtNum(m.v)} / ${fmtNum(m.g)} g`] as [string, string])} />
 
       <section aria-label="Günlük özet" className="card px-2 py-2 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <Link href={`/yemek?gun=${p.prevDay}`} aria-label="Önceki gün" className="w-11 h-11 rounded-full flex items-center justify-center text-mute"><Back size={20} /></Link>
           <div className="flex flex-col items-center text-center">
-            <span className="num text-[20px] font-bold leading-tight inline-flex items-center gap-1.5">{fmtNum(p.totals.kcal)} <span className="text-[13px] text-mute font-semibold">/ {fmtNum(budget)} kcal</span>
+            <span className="num text-[20px] font-bold leading-tight inline-flex items-center gap-1.5">{fmtNum(totals.kcal)} <span className="text-[13px] text-mute font-semibold">/ {fmtNum(budget)} kcal</span>
               {!p.adv && (p.burned || p.adjust?.kcal || p.adjust?.closed) ? <InfoTip label="Kalori bütçesi">
                 {p.burned ? <span className="block">Hedef {fmtNum(p.target.kcal)} + egzersiz {fmtNum(p.burned)} kcal.</span> : null}
                 {p.adjust?.kcal ? <span className="block">Plan {fmtNum(p.adjust.base)} {p.adjust.kcal > 0 ? '+' : '−'} {fmtNum(Math.abs(p.adjust.kcal))} dengeleme = {fmtNum(p.target.kcal)} kcal.</span> : null}
@@ -98,7 +114,7 @@ export default function FoodDiary(p: {
 
       {msg ? <p role="status" className="text-sm text-ink-2 px-1">{msg}</p> : null}
 
-      {p.meals.map((m) => (
+      {meals.map((m) => (
         <section key={m.id} aria-label={m.label} className="card px-4 py-3 flex flex-col">
           <div className="flex items-center justify-between min-h-11">
             <div className="flex flex-col">
@@ -153,7 +169,7 @@ export default function FoodDiary(p: {
       </section>
 
       <Sheet open={!!edit} onClose={() => setEdit(null)} title={edit?.name ?? ''}>
-        {edit ? <EditItem item={edit} onSave={(v) => { setEdit(null); run(() => updateMealItem({ id: edit.id, ...v }), 'Kayıt güncellendi') }} onDelete={() => { setEdit(null); run(() => deleteMealItem(edit.id), 'Kayıt silindi') }} /> : null}
+        {edit ? <EditItem item={edit} onSave={(v) => { setEdit(null); run(() => updateMealItem({ id: edit.id, ...v }), 'Kayıt güncellendi', { type: 'upd', id: edit.id, grams: v.grams, meal: v.meal }) }} onDelete={() => { setEdit(null); run(() => deleteMealItem(edit.id), 'Kayıt silindi', { type: 'del', id: edit.id }) }} /> : null}
       </Sheet>
       <Sheet open={!!quick} onClose={() => setQuick(null)} title="Hızlı kalori">
         {quick ? <QuickForm meal={quick} onSave={(v) => { setQuick(null); run(() => addQuickCalories({ ...v, day: p.day }), 'Eklendi') }} /> : null}
