@@ -20,7 +20,7 @@ const fail = (m) => { throw new Error(m) }
     await p.fill('#username', u); await p.fill('#email', u + '@gmail.com'); await p.fill('#password', 'Deneme1234'); await p.fill('#confirm', 'Deneme1234'); await p.check('input[name=terms]')
     await p.waitForTimeout(500); await p.getByRole('button', { name: 'Hesabı oluştur' }).click(); await p.waitForURL('**/kurulum')
     await p.getByRole('button', { name: /Başlayalım/ }).waitFor(); await p.waitForTimeout(500)
-    await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'female', birthDate: '1994-04-04', heightCm: 166, weightKg: 62, activity: 'moderate', goal: 'maintain', targetWeightKg: 62, tempo: 'balanced', customDays: 90, experience: null, trainingDays: 3, dietPref: null, allergies: [], wakeTime: '07:30', sleepTime: '23:30' })))
+    await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'male', birthDate: '1990-03-03', heightCm: 180, weightKg: 80, activity: 'moderate', goal: 'lose', targetWeightKg: 76, tempo: 'balanced', customDays: 120, experience: 'mid', trainingDays: 4, dietPref: null, allergies: [], wakeTime: '07:00', sleepTime: '23:00' })))
     await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
     return { p, u, api: (path) => p.evaluate(async (x) => (await fetch(x)).json(), path) }
   }
@@ -43,9 +43,11 @@ const fail = (m) => { throw new Error(m) }
   await p.screenshot({ path: `${OUT}/foodsearch-02-tavuklu-pilav.png` })
 
   // 2) Barkod: bilinmeyen ürün → yok (OFF'ta da yok) → A ürünü ekler → B barkodla bulur ve ekler
-  const code = '2' + String(Date.now()).slice(-12) // 13 hane, "2" ile başlayan iç kullanım öneki: gerçek üründe yok
+  // 13 hane, "2" ile başlayan iç kullanım öneki (gerçek üründe yok) + EAN-13 denetim hanesi
+  const base = '2' + String(Date.now()).slice(-11)
+  const code = base + ((10 - ([...base].reduce((a, d, i) => a + Number(d) * (i % 2 ? 3 : 1), 0) % 10)) % 10)
   const miss = await A.api('/api/food/barcode?code=' + code)
-  if (miss.hit) fail('olmayan barkod bulundu')
+  if (miss.hit || miss.error === 'Geçersiz barkod') fail('olmayan barkod: ' + JSON.stringify(miss))
   await p.goto(`${BASE}/yemek/besin/yeni?barkod=${code}&ogun=snack`)
   await p.getByTestId('barcode-shared').waitFor()
   await p.fill('#cf-name', 'Test bisküvi ' + code.slice(-4)); await p.fill('#cf-brand', 'Deneme'); await p.fill('#cf-kcal', '480'); await p.fill('#cf-protein', '7'); await p.fill('#cf-carb', '65'); await p.fill('#cf-fat', '21')

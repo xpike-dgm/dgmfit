@@ -16,7 +16,7 @@ export interface MealProposal {
 export async function matchMeal(userId: string, r: MealResult): Promise<MealProposal[]> {
   const out: MealProposal[] = []
   for (const it of r.items) {
-    const hits = (await searchFoods(userId, it.name, 5)).slice(0, 3)
+    const hits = (await searchFoods(userId, it.name, 5)).filter((x) => !x.partial).slice(0, 3)
     out.push({
       name: it.name, grams: Math.round(it.grams), portion: it.portion, drink: it.drink, confidence: it.confidence,
       candidates: hits.map((h) => ({ id: h.id, name: h.name, sub: h.sub, per100: h.per100 as Nutrients, ...macrosFor(h.per100 as Nutrients, it.grams) })),

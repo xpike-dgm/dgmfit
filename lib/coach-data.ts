@@ -182,7 +182,7 @@ async function resolveWhatIf(userId: string, items: { name: string; grams: numbe
   if (!items.length) return null
   const resolved = []
   for (const it of items.slice(0, 5)) {
-    const [h] = await searchFoods(userId, it.name, 3)
+    const [h] = (await searchFoods(userId, it.name, 3)).filter((x) => !x.partial)
     resolved.push({ name: it.name, grams: Math.round(it.grams), foodName: h?.name ?? null, kcal: h ? macrosFor(h.per100 as Nutrients, it.grams).kcal : null })
   }
   const end = ctx.goal ? (addDays(ctx.today, 7) < ctx.goal.endDate ? addDays(ctx.today, 7) : ctx.goal.endDate) : addDays(ctx.today, 7)

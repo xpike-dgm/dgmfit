@@ -173,13 +173,13 @@ const trNum = (v) => v.toLocaleString('tr-TR')
   await shot('04-fitness')
 
   // Gün sekmesi yalnızca önizler (antrenmanı başlatmaz); "Antrenmana başla" o günü açar; İptal → sor → sil
-  const chips = p.getByTestId('day-picker').getByRole('link')
-  if ((await chips.count()) > 1) {
-    const second = chips.nth(1), name2 = (await second.innerText()).trim()
+  const chips = p.getByTestId('day-picker').locator('a:not([aria-current=true])')
+  if ((await chips.count()) > 0) {
+    const second = chips.first(), name2 = (await second.innerText()).trim()
     await second.click(); await p.waitForURL(/\/fitness\?gun=/)
-    if (!(await p.getByTestId('next-workout').innerText()).includes('Seçili gün')) fail('gün önizlemesi yok')
-    if (!(await p.getByTestId('next-workout').innerText()).includes(name2)) fail('önizlenen gün adı yok')
     const gun = new URL(p.url()).searchParams.get('gun')
+    await p.locator(`[data-testid=next-workout][data-day="${gun}"][data-selected=true]`).waitFor({ timeout: 8000 }).catch(() => fail('gün önizlemesi yok'))
+    if (!(await p.getByTestId('next-workout').innerText()).includes(name2)) fail('önizlenen gün adı yok')
     if (!(await p.getByRole('link', { name: /Antrenmana başla/ }).getAttribute('href')).endsWith('gun=' + gun)) fail('başla bağlantısı seçili günü açmıyor')
     await p.getByRole('link', { name: /Antrenmana başla/ }).click(); await p.waitForURL(/\/fitness\/antrenman\?gun=/)
     await p.getByRole('button', { name: 'İptal', exact: true }).click(); await p.getByRole('button', { name: 'Devam et' }).click()

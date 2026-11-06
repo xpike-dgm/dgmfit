@@ -29,7 +29,7 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
       <PendingSync />
 
       {day && h.program ? (
-        <section aria-label="Sıradaki antrenman" className="card p-5 flex flex-col gap-3" data-testid="next-workout">
+        <section aria-label="Sıradaki antrenman" className="card p-5 flex flex-col gap-3" data-testid="next-workout" data-day={day.id} data-selected={day.id !== h.next?.id ? 'true' : undefined}>
           <div className="flex items-center justify-between">
             <Eyebrow>{day.id === h.next?.id ? 'Sıradaki antrenman' : 'Seçili gün'}</Eyebrow>
             <Link href={`/fitness/programlar/${h.program.id}`} className="text-[13px] text-mute">{h.program.name}</Link>

@@ -37,7 +37,7 @@ export async function resolveFood(userId: string, name: string): Promise<FoodRow
   const n = normalizeSearch(name), b = bare(name)
   const hit = rows.find((r) => normalizeSearch(r.nameTr!) === n) ?? rows.find((r) => bare(r.nameTr!) === b) ?? rows.find((r) => (r.aliases ?? []).some((a) => normalizeSearch(a) === n))
   if (hit) return hit
-  const [h] = await searchFoods(userId, name, 3)
+  const [h] = (await searchFoods(userId, name, 3)).filter((x) => !x.partial) // yalnızca tam eşleşme (kısmi kök eşleşmesi yanlış yemeğe bağlar)
   if (!h) return null
   const [f] = await db.select().from(schema.foods).where(eq(schema.foods.id, h.id)).limit(1)
   return f ?? null
