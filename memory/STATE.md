@@ -261,6 +261,20 @@ Kaynak: kullanıcı mesajı 2026-11-05 ("ayarlara feedback butonu…", "whitelis
 
 0. Faz 5h tamamlandı (2026-11-06). Kullanıcıdan beklenen: yeni ekranlar hakkında geri bildirim (beğenmezse tasarım değişikliği).
 
+### Planlandı — onay bekliyor (2026-11-07, kullanıcı "yapılacaklar planına ekle" dedi; başlamak için açık onay gerekir)
+
+**Faz 7: Modüller arası entegrasyon (önerilen sıra: 7-1 → 7-2 → 7-3)**
+- 7-1 (1. gün): **Bugünün durumu motoru** — yenen/yakılan/içilen, uyku-toparlanma, antrenman yükü, kilo eğilimi, sıradaki öğün/antrenman tek kaynaktan; Bugün, Fit, Yemek, Su, Fitness, Koç ve bildirimler buradan okur. **Antrenman ↔ Yemek ↔ Su**: program gününe göre karb/protein hedefi (karb döngüsü programa bağlanır), antrenman sonrası protein açığı kartı (son/sık yenenlerden tek dokunuş), süre/yoğunluğa göre su hedefi artışı ("antrenman nedeniyle +500 ml"), antrenman öncesi az yemek/su uyarısı. **Tutarlılık e2e**: antrenman + yemek + su sonrası Bugün/Fit/Yemek/Su/Koç/bildirim aynı sayıları göstermeli.
+- 7-2 (2. gün): **Toparlanma ↔ öneri** (ağrı, MSS yükü, uyku, düşük kalori, art arda zor gün → hafif gün/deload; toparlanmamış kasa alternatif). **Kilo eğilimi ↔ plan** (haftalık tek karar: kalori + kardiyo + antrenman sayısı birlikte; anlık "hedefe varış" güncellemesi). **Tek bildirim planlayıcısı** (günlük üst sınır, öncelik, ortak sessiz saat). **Tek kayıt, çok etki** (hızlı ekle ile birden çok kayıt; her kayıttan sonra kalan kcal/protein/su satırı).
+- 7-3 (3. gün): **Sosyal ↔ her şey** (rekor/seri/hedefte hazır paylaşım kartı, tüm modüllerden meydan okuma ilerlemesi, partner dürtmesi). **Koç ↔ her şey** (durum motorunu bilir; önerileri tek onayla uygular).
+
+**Diğer önerilen işler (kullanıcıya sunuldu, seçim bekliyor)**
+- Kalite/hız: tüm uygulamada bağımsız hata taraması + düzeltmeler, güvenlik incelemesi + yedekten geri yükleme denemesi, iskelet yükleme ekranları, yemek günlüğünde anında güncelleme, liste sayfalama, görsel/erişilebilirlik kalanları (açık tema bant kontrastı, kesilen başlıklar, dokunma alanı, büyük yazı, tutarsız onay kutuları), ilk hafta simülasyonu.
+- Yemek verisi içe aktarma aracı (kullanıcı yemek verisini başka bir AI ile biriktiriyor; yemek veritabanı genişletme işini DgFit tarafında yapma — doğrulama, tekrar ayıklama, uç değer kontrolü, tek komutla içe aktarma).
+- Özellikler: haftalık akıllı özet, akıllı hatırlatmalar, hızlı kayıt ("her zamanki kahvaltım"), ilerleme paylaşım kartları, rozet/seri sistemi, fotoğraftan porsiyon tahmini, tarif linkinden içe aktarma, program sihirbazı v2, ölçü/fotoğraf karşılaştırma.
+- Yayın: Faz 6 mağaza paketleme, KVKK güncelleme + hesap silme/veri indirme, yönetimde kullanım istatistikleri.
+- Kural: görünümü değiştiren her şey önce dalda gerçek uygulamada gösterilir, onayla yayınlanır.
+
 1. Kullanıcı `deneme` ile giriş yapıp Profil → AI ayarları'ndan Claude ve OpenAI anahtarlarını girsin; ardından gerçek fotoğraf/yazı ve koç denemesi (yönetici sayfasında hata/kullanım/maliyet görünür).
 2. İsteğe bağlı Faz 6 (Capacitor ile mağaza sürümü, Apple Sağlık / Health Connect, Bluetooth şişe, akıllı saat, video) ya da kullanıcı geri bildirimine göre iyileştirmeler.
 2. Kullanıcıdan gerçek cihazda bildirim denemesi (Android Chrome + iOS ana ekran) geri bildirimi.
