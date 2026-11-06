@@ -264,3 +264,39 @@ export async function deleteInvite(code: string) {
 export async function inviteUsers(code: string) {
   return db.select({ id: schema.users.id, username: schema.users.username }).from(schema.users).where(eq(schema.users.inviteCode, code)).orderBy(desc(schema.users.createdAt)).limit(20)
 }
+
+export type ActivityKind = 'login' | 'meal' | 'water' | 'workout' | 'cardio' | 'weight' | 'measure' | 'program' | 'post' | 'comment' | 'message' | 'ai' | 'feedback' | 'profile'
+export interface Activity { kind: ActivityKind; at: Date; text: string; detail: string | null }
+
+/**
+ * Kullanıcının son işlemleri (yönetici için): kayıtlı tablolardan derlenir, ayrı bir iz tablosu tutulmaz.
+ * Mesaj ve gönderi içerikleri gösterilmez, yalnızca işlem yapıldığı bilgisi.
+ */
+export async function userActivity(id: string, limit = 80): Promise<Activity[]> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return []
+  const rows = await db.execute<{ kind: ActivityKind; at: Date | string; text: string; detail: string | null }>(sql`
+    select * from (
+      (select 'login' as kind, created_at as at, 'Giriş yaptı' as text, left(coalesce(user_agent, ''), 120) as detail from sessions where user_id = ${id} order by created_at desc limit 20)
+      union all (select 'meal', created_at, 'Öğün: ' || name, round(kcal)::text || ' kcal · ' || round(grams)::text || ' g' from meal_items where user_id = ${id} and deleted_at is null order by created_at desc limit 40)
+      union all (select 'water', created_at, 'Su: ' || ml::text || ' ml', drink from water_logs where user_id = ${id} and deleted_at is null order by created_at desc limit 30)
+      union all (select 'workout', coalesce(ended_at, created_at), 'Antrenman: ' || name, work_sets::text || ' set · ' || round(volume_kg)::text || ' kg · ' || round(duration_sec / 60.0)::text || ' dk' from workouts where user_id = ${id} and deleted_at is null order by created_at desc limit 20)
+      union all (select 'cardio', created_at, 'Kardiyo: ' || type, round(minutes)::text || ' dk' from cardio_sessions where user_id = ${id} and deleted_at is null order by created_at desc limit 20)
+      union all (select 'weight', logged_at, 'Tartı: ' || kg::text || ' kg', null from weight_logs where user_id = ${id} and deleted_at is null order by logged_at desc limit 20)
+      union all (select 'measure', created_at, 'Vücut ölçüsü girdi', null from body_measurements where user_id = ${id} and deleted_at is null order by created_at desc limit 10)
+      union all (select 'program', updated_at, 'Program: ' || name, case when active then 'aktif' else null end from programs where user_id = ${id} and deleted_at is null order by updated_at desc limit 10)
+      union all (select 'post', created_at, 'Gönderi paylaştı', kind from posts where user_id = ${id} and deleted_at is null order by created_at desc limit 15)
+      union all (select 'comment', created_at, 'Yorum yaptı', null from post_comments where user_id = ${id} and deleted_at is null order by created_at desc limit 15)
+      union all (select 'message', created_at, 'Mesaj gönderdi', null from direct_messages where sender_id = ${id} order by created_at desc limit 15)
+      union all (select 'ai', created_at, 'AI: ' || task, case when ok then provider else 'hata' end from ai_calls where user_id = ${id} order by created_at desc limit 20)
+      union all (select 'feedback', created_at, 'Geri bildirim gönderdi', kind from feedback where user_id = ${id} order by created_at desc limit 10)
+      union all (select 'profile', created_at, case type when 'profile.updated' then 'Profilini güncelledi' when 'profile.onboarded' then 'Kurulumu tamamladı' when 'day.closed' then 'Gün kapandı' else type end, null
+        from events where user_id = ${id} and type in ('profile.updated', 'profile.onboarded') order by created_at desc limit 10)
+    ) a order by at desc limit ${limit}`)
+  return rows.map((r) => ({ kind: r.kind, at: new Date(r.at), text: r.text, detail: r.detail || null }))
+}
+
+/** Bulunamayan barkodlar (en çok aranan önce). Ürün eklendiğinde `resolved_at` dolar ve listeden düşer. */
+export async function barcodeMissList(limit = 100) {
+  return db.select().from(schema.barcodeMisses).where(sql`${schema.barcodeMisses.resolvedAt} is null`)
+    .orderBy(desc(schema.barcodeMisses.count), desc(schema.barcodeMisses.lastAt)).limit(limit)
+}

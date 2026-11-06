@@ -26,3 +26,16 @@ test('Atwater ve arama normalizasyonu', () => {
   assert.equal(normalizeSearch('ÇİĞ KÖFTE'), 'cig kofte')
   assert.equal(normalizeSearch('Şeftali, %2'), 'seftali %2')
 })
+
+test('searchStems: Türkçe ekler kırpılır, kökler kısa sözcükleri bozmaz', async () => {
+  const { searchStems } = await import('../lib/nutrition.ts')
+  assert.deepEqual(searchStems('Tavuklu pilav'), ['tavuk', 'pilav'])
+  assert.deepEqual(searchStems('mercimek çorbası'), ['mercimek', 'corba'])
+  assert.deepEqual(searchStems('Pirinç pilavı'), ['pirinc', 'pilav'])
+  assert.deepEqual(searchStems('kıymalı börek'), ['kiyma', 'borek'])
+  assert.deepEqual(searchStems('etli nohut'), ['etli', 'nohut'])
+  assert.deepEqual(searchStems('çay ve simit'), ['cay', 'simit'])
+  assert.deepEqual(searchStems('köfteleri'), ['kofte'])
+  assert.deepEqual(searchStems('turşu'), ['turs'])
+  assert.deepEqual(searchStems('a'), [])
+})

@@ -84,7 +84,13 @@ function png() {
 
   // 4) Kullanıcı detayı: arama → kişiye özel AI kotası 0 → koç ekranında 0 hak
   await pa.goto(BASE + '/yonetim/kullanicilar?q=' + B); await pa.locator(`[data-testid=user-row][data-username="${B}"] a`).first().click(); await pa.waitForURL(/kullanicilar\/[0-9a-f-]{36}$/)
-  const userUrl = pa.url()
+  const userUrl = pa.url() + '?sekme=yonet'
+  // son işlemler: kayıt + kurulum + giriş tarih-saatle listelenir
+  await pa.getByTestId('tab-islemler').click(); await pa.getByTestId('activity').waitFor()
+  if (!(await pa.locator('[data-testid=activity-row][data-kind=login]').count())) fail('son işlemlerde giriş yok')
+  if (!/\d\d:\d\d/.test(await pa.getByTestId('activity-row').first().innerText())) fail('işlem saati yok')
+  await shot(pa, '06b-islemler')
+  await pa.goto(userUrl)
   await pa.fill('#user-ai-daily', '0'); await pa.getByRole('button', { name: 'Kaydet', exact: true }).click(); await status(pa, /AI bu hesapta kapatıldı/)
   await shot(pa, '06-kullanici')
   await pb.goto(BASE + '/koc'); if (!/bugün 0 AI hakkı/.test(await pb.getByTestId('coach-left').innerText())) fail('kişiye özel kota koç ekranına yansımadı')
@@ -113,15 +119,17 @@ function png() {
 
   // 8) Hesabı sil
   await pa.goto(BASE + '/yonetim/kullanicilar?q=' + C); await pa.locator(`[data-testid=user-row][data-username="${C}"] a`).first().click(); await pa.waitForURL(/kullanicilar\/[0-9a-f-]{36}$/)
+  await pa.getByTestId('tab-yonet').click(); await pa.waitForURL(/sekme=yonet/)
   await pa.getByRole('textbox', { name: 'Silme onayı' }).fill(C); await pa.getByTestId('delete-user').click(); await pa.waitForURL(/\/yonetim\/kullanicilar$/)
   await pc.goto(BASE + '/'); if (!pc.url().includes('/giris')) fail('silinen hesabın oturumu açık kaldı')
   // yönetici kendini silemez / engelleyemez: kendi sayfasında silme bölümü yok
   await pa.goto(BASE + '/yonetim/kullanicilar?q=' + A); await pa.locator(`[data-testid=user-row][data-username="${A}"] a`).first().click(); await pa.waitForURL(/kullanicilar\/[0-9a-f-]{36}$/)
+  await pa.getByTestId('tab-yonet').click(); await pa.waitForURL(/sekme=yonet/); await pa.getByText('Yönetici notu').first().waitFor()
   if (await pa.getByTestId('delete-user').count() || await pa.getByTestId('suspend').count()) fail('yönetici kendini silebiliyor/askıya alabiliyor')
 
   // 9) 320 px: yönetim sayfaları taşmaz
   await pa.setViewportSize({ width: 320, height: 640 })
-  for (const path of ['/yonetim', '/yonetim/kullanicilar', userUrl.replace(BASE, ''), '/yonetim/geri-bildirim', '/yonetim/davetler', '/yonetim/ai', '/yonetim/moderasyon', '/profil/geri-bildirim']) {
+  for (const path of ['/yonetim', '/yonetim/kullanicilar', userUrl.replace(BASE, ''), userUrl.replace(BASE, '').replace('yonet', 'islemler'), '/yonetim/geri-bildirim', '/yonetim/davetler', '/yonetim/ai', '/yonetim/moderasyon', '/profil/geri-bildirim']) {
     await pa.goto(BASE + path); await pa.waitForTimeout(300)
     const r = await pa.evaluate(() => ({ sw: document.documentElement.scrollWidth, out: [...document.querySelectorAll('button, a, input')].filter((e) => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > 321 && !e.closest('.overflow-x-auto') }).map((e) => (e.getAttribute('aria-label') || e.textContent || e.id || '').trim().slice(0, 30)) }))
     if (r.sw > 320 || r.out.length) fail(`320 px taşma ${path}: genişlik ${r.sw}, dışarıda: ${r.out.join(' | ')}`)

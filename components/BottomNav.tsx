@@ -1,5 +1,5 @@
 'use client'
-import Link from 'next/link'
+import Link, { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { hidesNav, tabFor, type TabId } from '@/lib/theme'
@@ -15,6 +15,11 @@ const items: ({ id: TabId; href: string; label: string; Icon: typeof Home } | nu
   { id: 'fitness', href: '/fitness', label: 'Fitness', Icon: Dumbbell },
   { id: 'social', href: '/sosyal', label: 'Sosyal', Icon: Users },
 ]
+/** Dokunulan sekme, sayfa gelene kadar hafifçe yanıp söner (dokunuş hemen hissedilsin). */
+function Pending() {
+  const { pending } = useLinkStatus()
+  return pending ? <span aria-hidden className="absolute inset-0 rounded-2xl bg-current opacity-10 animate-pulse" /> : null
+}
 const TAB_MOD: Record<TabId, string> = { today: 'today', plan: 'plan', water: 'water', food: 'food', fitness: 'fitness', social: 'social' }
 
 export default function BottomNav() {
@@ -29,8 +34,8 @@ export default function BottomNav() {
           {items.map((it, i) =>
             it ? (
               <Link key={it.href} href={it.href} data-mod={TAB_MOD[it.id]} aria-current={tab === it.id ? 'page' : undefined}
-                className="mx-0.5 flex flex-col items-center justify-center gap-1 h-[52px] rounded-2xl text-[10.5px] font-bold text-mute aria-[current=page]:text-acc aria-[current=page]:bg-[color-mix(in_oklab,var(--color-acc)_15%,transparent)]">
-                <it.Icon size={21} /><span className="max-[350px]:sr-only">{it.label}</span>
+                className="relative mx-0.5 flex flex-col items-center justify-center gap-1 h-[52px] rounded-2xl text-[10.5px] font-bold text-mute active:scale-95 transition aria-[current=page]:text-acc aria-[current=page]:bg-[color-mix(in_oklab,var(--color-acc)_15%,transparent)]">
+                <it.Icon size={21} /><span className="max-[350px]:sr-only">{it.label}</span><Pending />
               </Link>
             ) : (
               <button key={i} type="button" onClick={() => setOpen(true)} aria-label="Hızlı ekle" aria-haspopup="dialog"

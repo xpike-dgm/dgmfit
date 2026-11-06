@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
-import { LICENSED_DIR, hasLicensedFile, licensedText, licensedUrl } from './licensed'
+import { LICENSED_DIR, hasLicensedFile, licensedText, licensedUrl, thumbFor } from './licensed'
 import { smoothPath, type Gender, type Side } from './anatomy'
 
 export interface AnatomyArea { key: string; d: string }
@@ -19,7 +19,8 @@ export function anatomyViews(): Record<string, AnatomyView> | null {
     for (const v of raw) {
       const key = v.image.replace(/\.png$/, '')
       const [gender, side] = key.split('_') as [Gender, Side]
-      out[key] = { key, gender, side, w: v.width, h: v.height, image: licensedUrl('anatomy', v.image)!, areas: v.areas.map((a) => ({ key: a.muscle_key, d: smoothPath(a.points) })).filter((a) => a.d) }
+      const webp = v.image.replace(/\.png$/, '.webp') // 800 px WebP (~150 KB) varsa onu, yoksa özgün PNG (~700 KB)
+      out[key] = { key, gender, side, w: v.width, h: v.height, image: licensedUrl('anatomy', hasLicensedFile('anatomy', webp) ? webp : v.image)!, areas: v.areas.map((a) => ({ key: a.muscle_key, d: smoothPath(a.points) })).filter((a) => a.d) }
     }
     viewsCache = Object.keys(out).length ? out : null
   } catch { viewsCache = null }
@@ -37,12 +38,12 @@ export function anatomyTexts() {
   }
 }
 
-export interface FeedItem { id: number; name: string; video: string | null; muscles: Record<string, number>; rating: { avg: number; count: number } | null; fav: boolean }
+export interface FeedItem { id: number; name: string; video: string | null; thumb: string | null; muscles: Record<string, number>; rating: { avg: number; count: number } | null; fav: boolean }
 
 const L = schema.exercises.licensed
 function toItem(r: { id: number; name: string; licensed: typeof schema.exercises.$inferSelect['licensed'] }, favs: Set<number>): FeedItem {
   const l = r.licensed!
-  return { id: r.id, name: r.name, video: hasLicensedFile('videos', l.video.right) ? licensedUrl('videos', l.video.right) : null, muscles: l.muscles, rating: l.rating ?? null, fav: favs.has(r.id) }
+  return { id: r.id, name: r.name, video: hasLicensedFile('videos', l.video.right) ? licensedUrl('videos', l.video.right) : null, thumb: thumbFor(l.video.right), muscles: l.muscles, rating: l.rating ?? null, fav: favs.has(r.id) }
 }
 async function favSet(userId: string, ids: number[]) {
   if (!ids.length) return new Set<number>()

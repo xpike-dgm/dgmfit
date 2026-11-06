@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { requireAdmin } from '@/lib/admin'
-import { dashboard } from '@/lib/admin-data'
+import { barcodeMissList, dashboard } from '@/lib/admin-data'
 import { providerOverview } from '@/lib/ai/engine'
 import { FEEDBACK_KINDS, type FeedbackKind } from '@/lib/access'
 import { longDate, dayString } from '@/lib/time'
 import { Band } from '@/components/ui'
-import { Chat, Clock, Shield, Spark, Ticket, Users } from '@/components/icons'
+import { Chat, Clock, Search, Shield, Spark, Ticket, Users } from '@/components/icons'
 import ActivityBars from './ActivityBars'
 import { AdminCard, Avatar, PreviewRow, ago } from './ui'
 
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function Page() {
   await requireAdmin()
-  const [d, ai] = await Promise.all([dashboard(), providerOverview()])
+  const [d, ai, misses] = await Promise.all([dashboard(), providerOverview(), barcodeMissList()])
   const mod = d.moderation.posts + d.moderation.comments + d.moderation.reports + d.moderation.proofs
   const usable = ai.providers.filter((p) => !p.skipped)
   const tile = (label: string, value: number, sub: string, hot = false) => (
@@ -59,6 +59,10 @@ export default async function Page() {
         </AdminCard>
         <AdminCard href="/yonetim/davetler" testId="card-invites" icon={<Ticket size={22} />} title="Davet kodları" value={d.invites.active} unit="etkin"
           hint="Kodla kayıt olan onay beklemeden girer" />
+        <AdminCard href="/yonetim/barkodlar" testId="card-barcodes" icon={<Search size={22} />} title="Bulunamayan barkodlar" value={misses.length} unit="ürün"
+          hint="Okutulup hiçbir veritabanında bulunamayan ürünler">
+          {misses.slice(0, 3).map((m) => <PreviewRow key={m.code} left={<b className="num">{m.code}</b>} right={`${m.count} kez · ${ago(m.lastAt)}`} />)}
+        </AdminCard>
       </div>
       <p className="text-[12px] text-mute text-center px-4 pb-2">Yöneticiler sunucu ayarından gelir (DGFIT_ADMINS) ve onay gerektirmez.</p>
     </div>

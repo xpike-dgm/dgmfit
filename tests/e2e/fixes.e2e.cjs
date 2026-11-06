@@ -21,7 +21,7 @@ const fail = (m) => { throw new Error(m) }
   await p.evaluate(() => localStorage.setItem('dgfit:onboarding:v1', JSON.stringify({ step: 10, sex: 'male', birthDate: '1990-03-03', heightCm: 180, weightKg: 80, activity: 'moderate', goal: 'lose', targetWeightKg: 76, tempo: 'balanced', customDays: 120, experience: 'mid', trainingDays: 4, dietPref: null, allergies: [], wakeTime: '07:00', sleepTime: '23:00' })))
   await p.reload(); await p.getByRole('button', { name: /Planı başlat/ }).click(); await p.waitForURL(BASE + '/')
   const idOf = async (q, name) => { await p.goto(BASE + '/fitness/hareketler?q=' + encodeURIComponent(q)); const l = p.getByRole('link', { name: new RegExp('^' + name) }).first(); return [(await l.getAttribute('href')).split('/').pop(), (await l.locator('span.font-semibold').first().innerText()).trim()] }
-  const [bench, BENCH] = await idOf('barbell bench press', 'Barbell Bench Press'), [squat] = await idOf('barbell squat', 'Barbell Squat')
+  const [bench, BENCH] = await idOf('barbell bench press', 'Barbell Bench Press'), [squat, SQUAT] = await idOf('barbell squat', 'Barbell Squat')
   const sec = (n) => p.locator('section[data-testid="live-exercise"]:not([hidden])', { hasText: n }).first()
   const oneSet = async (name, kg, reps) => {
     const s = sec(name); await s.waitFor()
@@ -48,8 +48,8 @@ const fail = (m) => { throw new Error(m) }
   await kgIn.fill('60'); await sec('Barbell Bench Press').getByLabel('Set 1 tekrar', { exact: true }).fill('8'); await sec('Barbell Bench Press').getByRole('button', { name: 'Set 1 tamamla' }).click()
   // 3) Açık serbest taslağa "bu hareketle başlat": squat eklenir ve seçilir, bench seti korunur
   await p.goto(BASE + '/fitness/antrenman?hareket=' + squat)
-  await p.getByTestId('live-strip').getByRole('tab', { name: 'Barbell Squat', exact: true }).waitFor().catch(() => fail('açık taslağa squat eklenmedi'))
-  if ((await p.getByTestId('live-strip').getByRole('tab', { name: 'Barbell Squat', exact: true }).getAttribute('aria-selected')) !== 'true') fail('eklenen hareket seçili değil')
+  await p.getByTestId('live-strip').getByRole('tab', { name: SQUAT, exact: true }).waitFor().catch(() => fail('açık taslağa squat eklenmedi'))
+  if ((await p.getByTestId('live-strip').getByRole('tab', { name: SQUAT, exact: true }).getAttribute('aria-selected')) !== 'true') fail('eklenen hareket seçili değil')
   await p.getByTestId('live-strip').getByRole('tab', { name: BENCH, exact: true }).click()
   await sec('Barbell Bench Press').getByRole('button', { name: 'Set 1 geri al' }).waitFor().catch(() => fail('bench seti kayboldu'))
 

@@ -16,5 +16,6 @@ export default async function Page(props: { params: Promise<{ kas: string }>; se
   if (!views || !Object.hasOwn(AG_MUSCLE_TR, kas)) notFound()
   const gender = g === 'female' || g === 'male' ? g : (await getToday(u.id))?.profile.sex === 'female' ? 'female' : 'male'
   const items = await muscleFeed(u.id, kas)
-  return <ExerciseFeed title={AG_MUSCLE_TR[kas]} items={items} views={views} gender={gender} back="/fitness/anatomi" />
+  const mine = Object.fromEntries(Object.entries(views).filter(([, v]) => v.gender === gender)) // yalnızca seçili cinsiyetin iki görünümü
+  return <ExerciseFeed title={AG_MUSCLE_TR[kas]} items={items} views={mine} gender={gender} back="/fitness/anatomi" />
 }

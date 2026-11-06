@@ -322,7 +322,8 @@
     "stories",
     "feedback",
     "invites",
-    "exercise_favorites"
+    "exercise_favorites",
+    "barcode_misses"
   ],
   "routes": [
     "/",
@@ -443,7 +444,8 @@
     "/fitness/anatomi",
     "/fitness/anatomi/[kas]",
     "/fitness/kaydedilenler",
-    "/fitness/rekor"
+    "/fitness/rekor",
+    "/yonetim/barkodlar"
   ],
   "events": [
     "profile.onboarded",
@@ -912,6 +914,7 @@
     "0017_favorites.sql",
     "0018_rir_half.sql",
     "0019_supersets.sql",
-    "0020_ui_mode.sql"
+    "0020_ui_mode.sql",
+    "0021_barcode_misses.sql"
   ]
 }

@@ -19,16 +19,17 @@ export default function ExerciseFeed({ title, items, views, gender, back, empty 
   const [msg, setMsg] = useState<string | null>(null)
   const root = useRef<HTMLDivElement>(null)
 
-  // Görünen video oynar, diğerleri durur (veri ve pil için)
+  // Yalnızca görünen hareket ve iki komşusu video + kas figürü taşır (80 videoyu birden kurmamak için); görünen oynar
+  const [cur, setCur] = useState(0)
   useEffect(() => {
-    const vids = [...(root.current?.querySelectorAll('video') ?? [])]
-    const io = new IntersectionObserver((es) => es.forEach((e) => {
-      const v = e.target as HTMLVideoElement
-      if (e.isIntersecting && e.intersectionRatio > 0.6) { if (v.preload === 'none') v.preload = 'auto'; v.play().catch(() => {}) } else v.pause()
-    }), { root: root.current, threshold: [0, 0.6, 1] })
-    vids.forEach((v) => io.observe(v))
+    const secs = [...(root.current?.querySelectorAll<HTMLElement>('section[data-i]') ?? [])]
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting && e.intersectionRatio > 0.6) setCur(Number((e.target as HTMLElement).dataset.i)) }), { root: root.current, threshold: [0, 0.6, 1] })
+    secs.forEach((x) => io.observe(x))
     return () => io.disconnect()
   }, [items])
+  useEffect(() => {
+    root.current?.querySelectorAll<HTMLVideoElement>('video').forEach((v) => { if (Number(v.dataset.i) === cur) v.play().catch(() => {}); else v.pause() })
+  }, [cur])
 
   const busy = useRef(false)
   async function toggleFav(id: number) {
@@ -71,10 +72,12 @@ export default function ExerciseFeed({ title, items, views, gender, back, empty 
           {items.map((it, i) => {
             const fills = Object.fromEntries(Object.entries(it.muscles).filter(([, r]) => r >= 2).map(([k, r]) => [k, LEVEL_COLOR[activationLevel(r)]]))
             const keys = Object.entries(it.muscles).filter(([, r]) => r >= 6).map(([k]) => k)
-            const fig = views[viewKey(gender, bestSide(it.muscles))]
+            const near = Math.abs(i - cur) <= 1
+            const fig = near ? views[viewKey(gender, bestSide(it.muscles))] : null
             return (
-              <section key={it.id} className="relative h-full w-full snap-start snap-always overflow-hidden" data-testid="feed-item" data-name={it.name}>
-                {it.video ? <video src={it.video} className="absolute inset-0 w-full h-full object-cover" muted loop playsInline preload={i === 0 ? 'auto' : 'none'} aria-hidden /> : <div className="absolute inset-0 bg-[#1C1F26]" />}
+              <section key={it.id} data-i={i} className="relative h-full w-full snap-start snap-always overflow-hidden" data-testid="feed-item" data-name={it.name}>
+                {it.video && near ? <video data-i={i} src={it.video} poster={it.thumb ?? undefined} className="absolute inset-0 w-full h-full object-cover" muted loop playsInline autoPlay={i === cur} preload={i === cur ? 'auto' : 'metadata'} aria-hidden />
+                  : it.thumb ? <img src={it.thumb} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /> /* eslint-disable-line @next/next/no-img-element */ : <div className="absolute inset-0 bg-[#1C1F26]" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent pointer-events-none" />
                 <div className="absolute left-0 right-0 bottom-0 px-5 pb-[max(28px,env(safe-area-inset-bottom))] flex flex-col gap-3">
                   {fig ? <BodyFigure view={fig} fills={fills} crop={cropFor(keys.length ? keys : Object.keys(it.muscles))} className="w-36 h-auto -ml-3 drop-shadow-xl" label={`${it.name} çalışan kaslar`} /> : null}

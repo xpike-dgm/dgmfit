@@ -18,7 +18,7 @@ const PROVIDER: Record<string, string> = { claude: 'Claude', openai: 'OpenAI', c
 const WATER_DRINKS = new Set(['water', 'mineral', 'tea', 'coffee', 'ayran', 'juice', 'other'])
 
 /** AI ile öğün: fotoğraf ya da yaz/söyle → kalemler → veritabanı eşleşmesi → kullanıcı onayı. Kalori veritabanından hesaplanır. */
-export default function AiMeal({ day, meal, onAdded }: { day: string; meal: MealId; onAdded: (lines: string[], kcal: number) => void }) {
+export default function AiMeal({ day, meal, onAdded, ask }: { day: string; meal: MealId; onAdded: (lines: string[], kcal: number) => void; ask?: { text: string; n: number } | null }) {
   const [mode, setMode] = useState<null | 'text'>(null)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -30,12 +30,21 @@ export default function AiMeal({ day, meal, onAdded }: { day: string; meal: Meal
   const [listening, setListening] = useState(false)
   const [speech, setSpeech] = useState(false)
   const rec = useRef<Recog | null>(null)
+  const box = useRef<HTMLElement>(null)
   const router = useRouter()
   useEffect(() => {
     const w = window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }
     setSpeech(!!(w.SpeechRecognition || w.webkitSpeechRecognition))
     return () => rec.current?.stop()
   }, [])
+
+  // Aramada bulunamayan yemeği AI'ye sor: metni doldur, gönder ve kutuyu göster
+  useEffect(() => {
+    if (!ask?.text) return
+    setMode('text'); setText(ask.text); void send({ text: ask.text })
+    box.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ask?.n])
 
   const send = async (body: FormData | { text: string }) => {
     setBusy(true); setErr(null)
@@ -83,7 +92,7 @@ export default function AiMeal({ day, meal, onAdded }: { day: string; meal: Meal
   })
 
   return (
-    <section className="card p-4 flex flex-col gap-3" aria-label="AI ile ekle" data-testid="ai-meal">
+    <section ref={box} className="card p-4 flex flex-col gap-3" aria-label="AI ile ekle" data-testid="ai-meal">
       <div className="flex items-center gap-2"><Spark size={18} className="text-acc" /><span className="font-bold text-[15px]">AI ile ekle</span><span className="text-[11px] text-mute ml-auto">kalori veritabanından hesaplanır</span></div>
       <div className="grid grid-cols-2 gap-2">
         <label className={`${btn.secondary} cursor-pointer ${busy ? 'opacity-50' : ''}`}>

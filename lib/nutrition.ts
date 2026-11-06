@@ -62,3 +62,20 @@ export function normalizeSearch(s: string): string {
     .replace(/[âà]/g, 'a').replace(/[îì]/g, 'i').replace(/[ûù]/g, 'u')
     .replace(/[^a-z0-9%]+/g, ' ').trim()
 }
+
+const STOP = new Set(['ve', 'ile', 'bir', 'de', 'da', 'icin', 'of', 'the', 'and', 'with'])
+/**
+ * Arama sözcükleri: Türkçe ekleri kırpılmış kökler ("tavuklu pilav" → ["tavuk", "pilav"], "mercimek çorbası" → ["mercimek", "corba"]).
+ * Kökler alt dize olarak arandığı için ekli yazımlar ("Tavuklu pilav", "Pirinç pilavı") da eşleşir.
+ */
+export function searchStems(q: string): string[] {
+  const out: string[] = []
+  for (const w of normalizeSearch(q).split(' ')) {
+    if (w.length < 2 || STOP.has(w)) continue
+    let s = w
+    const m = /^(.{3,}?)(lari|leri|lar|ler)$/.exec(s) ?? /^(.{3,}?)(li|lu)$/.exec(s) ?? /^(.{4,}?)(si|su)$/.exec(s) ?? /^(.{4,}?)[iu]$/.exec(s)
+    if (m) s = m[1]
+    if (!out.includes(s)) out.push(s)
+  }
+  return out.slice(0, 6)
+}

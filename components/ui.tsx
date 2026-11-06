@@ -131,8 +131,8 @@ export function Menu({ items, title }: { title?: string; items: { href: string; 
       {title ? <h2 className="text-[13px] font-bold tracking-[0.06em] uppercase text-mute pt-3 pb-1">{title}</h2> : null}
       {items.map((it, i) => (
         <Link key={it.href} href={it.href} data-testid={it.testId} className={`flex items-center justify-between gap-3 min-h-[54px] py-2 ${i || title ? 'border-t border-line' : ''}`}>
-          <span className="text-[15px] font-semibold">{it.label}</span>
-          <span className="flex items-center gap-1 text-[13px] text-mute text-right">{it.value}<Next size={16} className="shrink-0" /></span>
+          <span className="text-[15px] font-semibold min-w-0">{it.label}</span>
+          <span className="flex items-center gap-1 text-[13px] text-mute text-right shrink-0 whitespace-nowrap">{it.value}<Next size={16} className="shrink-0" /></span>
         </Link>
       ))}
     </nav>

@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import BodyFigure from '@/components/BodyFigure'
 import BackButton from '@/components/BackButton'
 import { FemaleSign, Heart, MaleSign, Rotate } from '@/components/icons'
@@ -17,10 +17,14 @@ export default function AnatomyExplorer({ views, counts, initialGender }: { view
   const [side, setSide] = useState<Side>('front')
   const [sel, setSel] = useState<string | null>(null)
   const view = views[viewKey(gender, side)] ?? Object.values(views)[0]
+  // Görünen figürdeki kasların sayfalarını önceden yükle: dokununca bekleme olmasın
+  useEffect(() => {
+    for (const a of view?.areas ?? []) if (counts[a.key]) router.prefetch(`/fitness/anatomi/${a.key}?g=${gender}`)
+  }, [view, counts, gender, router])
   function pick(k: string) {
     if (!counts[k] || sel) return // çift dokunuşta iki kez yönlendirme olmasın
     setSel(k)
-    setTimeout(() => router.push(`/fitness/anatomi/${k}?g=${gender}`), 260)
+    router.push(`/fitness/anatomi/${k}?g=${gender}`) // seçim rengi hemen görünür; sayfa yüklenirken loading.tsx gösterilir
   }
   return (
     <div className="fixed inset-0 z-30 bg-black text-white flex flex-col safe-top" data-testid="anatomy">
@@ -32,10 +36,10 @@ export default function AnatomyExplorer({ views, counts, initialGender }: { view
         <button type="button" className={round} aria-label={side === 'front' ? 'Arkadan göster' : 'Önden göster'} onClick={() => setSide(side === 'front' ? 'back' : 'front')} data-testid="side-toggle"><Rotate size={24} /></button>
       </div>
       <Link href="/fitness/kaydedilenler" className="absolute right-4 top-4 safe-top z-10 w-14 h-14 flex items-center justify-center" aria-label="Kaydedilen hareketler"><Heart size={34} filled /></Link>
-      <div className="flex-1 min-h-0 flex items-center justify-center px-6 pt-2 pb-24">
+      <div className="flex-1 min-h-0 flex items-center justify-center px-6 pt-2">
         <BodyFigure view={view} fills={sel ? { [sel]: SELECT_COLOR } : {}} onSelect={pick} className="h-full w-auto max-w-full" label={`${gender === 'male' ? 'Erkek' : 'Kadın'} ${side === 'front' ? 'ön' : 'arka'} kas haritası; bir kasa dokun`} />
       </div>
-      <p className="absolute bottom-24 left-0 right-0 text-center text-[13px] text-white/60 pointer-events-none">Bir kasa dokun, o kası çalıştıran hareketler açılsın</p>
+      <p className="shrink-0 text-center text-[13px] text-white/75 px-6 pt-3 pb-[max(20px,env(safe-area-inset-bottom))]">Bir kasa dokun, o kası çalıştıran hareketler açılsın</p>
     </div>
   )
 }

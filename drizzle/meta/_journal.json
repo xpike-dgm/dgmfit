@@ -148,6 +148,13 @@
       "when": 1793991611029,
       "tag": "0020_ui_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793996925138,
+      "tag": "0021_barcode_misses",
+      "breakpoints": true
     }
   ]
 }

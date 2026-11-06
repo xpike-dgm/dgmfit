@@ -56,6 +56,15 @@ export const invites = pgTable('invites', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+/** Bulunamayan barkodlar: yönetici hangi ürünlerin eksik olduğunu görür (kullanıcı kimliği tutulmaz, yalnızca sayı). */
+export const barcodeMisses = pgTable('barcode_misses', {
+  code: text('code').primaryKey(),
+  count: integer('count').notNull().default(1),
+  firstAt: timestamp('first_at', { withTimezone: true }).notNull().defaultNow(),
+  lastAt: timestamp('last_at', { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+})
+
 export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(), // sha256(token)
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),

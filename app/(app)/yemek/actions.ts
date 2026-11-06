@@ -10,6 +10,7 @@ import { macrosFor } from '@/lib/food'
 import { computeRecipe, normalizeSearch, NUTRIENT_KEYS, type Nutrients } from '@/lib/nutrition'
 import { ensureWaterSetup } from '@/lib/water-data'
 import { refreshClosedDay } from '@/lib/fit-data'
+import { resolveBarcodeMiss } from '@/lib/food-data'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 const Meal = z.enum(['breakfast', 'lunch', 'dinner', 'snack'])
@@ -58,7 +59,8 @@ export async function addMealItem(input: z.input<typeof AddInput>): Promise<R<{ 
   let day: string
   try { day = checkDay(p.data.day) } catch (e) { return { ok: false, error: (e as Error).message } }
   const [f] = await db.select().from(schema.foods).where(and(eq(schema.foods.id, p.data.foodId), isNull(schema.foods.deletedAt))).limit(1)
-  if (!f || (f.userId && f.userId !== userId)) return { ok: false, error: 'Besin bulunamadı' }
+  // başkasının besini yalnızca barkodlu paketli ürünse (topluluk) eklenebilir
+  if (!f || (f.userId && f.userId !== userId && !(f.source === 'user' && f.barcode))) return { ok: false, error: 'Besin bulunamadı' }
   const m = macrosFor(f.per100, p.data.grams)
   const [row] = await db.insert(schema.mealItems).values({
     userId, day, meal: p.data.meal, foodId: f.id, name: f.nameTr ?? f.nameEn ?? 'Besin', grams: p.data.grams,
@@ -181,6 +183,7 @@ export async function createFood(input: z.input<typeof FoodInput>): Promise<R<{ 
     per100, kcal: per100.kcal ?? 0, protein: per100.protein ?? 0, carb: per100.carb ?? 0, fat: per100.fat ?? 0, portions,
     search: normalizeSearch([d.name, d.brand].filter(Boolean).join(' ')),
   }).returning({ id: schema.foods.id })
+  if (d.barcode) await resolveBarcodeMiss(d.barcode)
   revalidatePath('/yemek/ekle')
   return { ok: true, id: row.id }
 }

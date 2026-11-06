@@ -1,5 +1,5 @@
 // DgFit service worker — uygulama kabuğu önbelleği + çevrimdışı sayfa.
-const VERSION = 'dgfit-v3'
+const VERSION = 'dgfit-v4'
 const STATIC = `${VERSION}-static`
 const PAGES = `${VERSION}-pages` // çevrimdışı açılabilen sayfalar (canlı antrenman)
 const OFFLINE_URL = '/offline.html'
@@ -12,6 +12,8 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))))
+      // gezinme isteği, service worker uyanırken paralel başlasın (soğuk açılışta bekleme kısalır)
+      .then(() => self.registration.navigationPreload && self.registration.navigationPreload.enable())
       .then(() => self.clients.claim()),
   )
 })
@@ -42,7 +44,7 @@ self.addEventListener('fetch', (e) => {
     e.respondWith((async () => {
       const c = await caches.open(PAGES)
       try {
-        const res = await fetch(req)
+        const res = (await e.preloadResponse) || (await fetch(req))
         if (res.ok && !res.redirected) c.put(req, res.clone())
         return res
       } catch {
@@ -55,7 +57,9 @@ self.addEventListener('fetch', (e) => {
 
   // Diğer sayfalar: önce ağ, çevrimdışıysa çevrimdışı sayfası
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).catch(() => caches.match(OFFLINE_URL)))
+    e.respondWith((async () => {
+      try { return (await e.preloadResponse) || (await fetch(req)) } catch { return caches.match(OFFLINE_URL) }
+    })())
   }
 })
 

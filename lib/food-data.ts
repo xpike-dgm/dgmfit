@@ -1,7 +1,7 @@
 import 'server-only'
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
-import { normalizeSearch } from './nutrition'
+import { normalizeSearch, searchStems } from './nutrition'
 import { mapOffProduct, sumMacros, type MealId, type Macros, MEALS } from './food'
 
 export interface FoodHit {
@@ -29,24 +29,40 @@ export function toHit(f: FoodRow): FoodHit {
   return { id: f.id, name, sub, source: f.source, kcal: f.kcal, protein: f.protein, carb: f.carb, fat: f.fat, portions: f.portions, approx: f.approx, attribution: f.attribution, per100: f.per100 }
 }
 
-/** Türkçe karakter duyarsız, yazım hatasına dayanıklı arama. Küratörlü Türkçe adlar ve kullanıcının kendi besinleri önde. */
-export async function searchFoods(userId: string, q: string, limit = 30): Promise<FoodHit[]> {
+/**
+ * Türkçe karakter ve ek duyarsız arama: sorgu köklere ayrılır ("tavuklu pilav" → tavuk + pilav). Tüm kökleri içeren
+ * sonuçlar önce gelir; hiçbiri tam eşleşmezse kısmi eşleşenler `partial` işaretiyle döner (arayüz "yakın sonuçlar" der).
+ * Küratörlü Türkçe adlar ve kullanıcının kendi besinleri önde.
+ */
+export async function searchFoods(userId: string, q: string, limit = 30): Promise<(FoodHit & { partial?: boolean })[]> {
   const nq = normalizeSearch(q)
-  if (nq.length < 2) return []
-  const like = '%' + nq.replace(/[%_]/g, '') + '%'
-  const rows = await db.execute<FoodRow & { score: number }>(sql`
-    select f.*, (
-      case when f.user_id = ${userId} then 3 else 0 end
-      + case when f.name_tr is not null then 2 else 0 end
-      + case when f.search like ${nq + '%'} then 1.5 when f.search like ${like} then 1 else 0 end
-      + word_similarity(${nq}, f.search)
-    ) as score
-    from foods f
-    where f.deleted_at is null and (f.user_id is null or f.user_id = ${userId}) and f.source <> 'user-supplement'
-      and (f.search like ${like} or word_similarity(${nq}, f.search) > (case when f.name_tr is null then 0.7 else 0.45 end))
-    order by score desc, length(f.search) asc
+  const stems = searchStems(q)
+  if (nq.length < 2 || !stems.length) return []
+  const likes = stems.map((t) => '%' + t.replace(/[%_]/g, '') + '%')
+  const matched = sql.join(likes.map((l) => sql`(case when f.search like ${l} then 1 else 0 end)`), sql` + `)
+  const anyLike = sql.join(likes.map((l) => sql`f.search like ${l}`), sql` or `)
+  const rows = await db.execute<FoodRow & { score: number; matched: number }>(sql`
+    select * from (
+      select f.*, (${matched})::int as matched, (
+        case when f.user_id = ${userId} then 3 else 0 end
+        + case when f.name_tr is not null then 2 else 0 end
+        + case when f.search like ${nq + '%'} then 1.5 when f.search like ${'%' + nq + '%'} then 1 else 0 end
+        + word_similarity(${nq}, f.search) * 2
+      ) as score
+      from foods f
+      where f.deleted_at is null and (f.user_id is null or f.user_id = ${userId} or (f.source = 'user' and f.barcode is not null)) and f.source <> 'user-supplement'
+        and ((${anyLike}) or word_similarity(${nq}, f.search) > (case when f.name_tr is null then 0.7 else 0.45 end))
+    ) x
+    where x.name_tr is not null or x.matched = ${stems.length} or x.user_id = ${userId}
+    order by x.matched desc, x.score desc, length(x.search) asc
     limit ${limit}`)
-  return rows.map((r) => toHit(camel(r)))
+  const n = stems.length
+  return rows.map((r) => {
+    const row = camel(r)
+    const h = toHit(row)
+    if (row.userId && row.userId !== userId) h.sub = `${r.brand ? r.brand + ' · ' : ''}kullanıcı ekledi`
+    return { ...h, partial: n > 1 && Number(r.matched) < n ? true : undefined }
+  })
 }
 
 /** postgres-js ham satırını drizzle alan adlarına çevirir. */
@@ -86,7 +102,7 @@ export async function recentFoods(userId: string, limit = 15): Promise<(FoodHit 
 
 export async function getFood(userId: string, id: number): Promise<FoodHit & { recipe: unknown; imageUrl: string | null; nameEn: string | null } | null> {
   const [f] = await db.select().from(schema.foods).where(and(eq(schema.foods.id, id), isNull(schema.foods.deletedAt))).limit(1)
-  if (!f || (f.userId && f.userId !== userId)) return null
+  if (!f || (f.userId && f.userId !== userId && !(f.source === 'user' && f.barcode))) return null
   return { ...toHit(f), recipe: f.recipe, imageUrl: f.imageUrl, nameEn: f.nameEn }
 }
 
@@ -131,12 +147,49 @@ export async function userFoods(userId: string) {
 
 const OFF_UA = 'DgFit/0.1 (https://dgfit.dgmcraft.online)'
 
-/** Barkod: önce yerel veritabanı, yoksa Open Food Facts (önbelleğe alınır). */
-export async function lookupBarcode(userId: string, code: string): Promise<{ hit: FoodHit | null; from: 'local' | 'off' | 'none'; error?: string }> {
+/** EAN-13 ↔ UPC-A: okuyucu 12 haneli UPC verebilir; veritabanları çoğu zaman başına 0 eklenmiş 13 haneli hâli tutar. */
+export function barcodeVariants(code: string): string[] {
+  const v = [code]
+  if (code.length === 12) v.push('0' + code)
+  if (code.length === 13 && code.startsWith('0')) v.push(code.slice(1))
+  return v
+}
+
+/**
+ * Barkod: önce yerel veritabanı (genel + kendi ürünlerin), sonra başka kullanıcıların eklediği ürün (topluluk),
+ * sonra Open Food Facts (önbelleğe alınır). Hiçbirinde yoksa barkod "bulunamayanlar" listesine sayılır.
+ */
+export async function lookupBarcode(userId: string, code: string): Promise<{ hit: FoodHit | null; from: 'local' | 'community' | 'off' | 'none'; error?: string }> {
+  const codes = barcodeVariants(code)
+  const inCodes = sql`${schema.foods.barcode} in (${sql.join(codes.map((c) => sql`${c}`), sql`, `)})`
   const [local] = await db.select().from(schema.foods)
-    .where(and(eq(schema.foods.barcode, code), isNull(schema.foods.deletedAt), sql`(${schema.foods.userId} is null or ${schema.foods.userId} = ${userId})`))
+    .where(and(inCodes, isNull(schema.foods.deletedAt), sql`(${schema.foods.userId} is null or ${schema.foods.userId} = ${userId})`))
     .orderBy(sql`case when ${schema.foods.userId} = ${userId} then 0 else 1 end`).limit(1)
   if (local) return { hit: toHit(local), from: 'local' }
+  const [shared] = await db.select().from(schema.foods)
+    .where(and(inCodes, isNull(schema.foods.deletedAt), eq(schema.foods.source, 'user')))
+    .orderBy(desc(schema.foods.createdAt)).limit(1)
+  if (shared) return { hit: { ...toHit(shared), sub: `${shared.brand ? shared.brand + ' · ' : ''}kullanıcı ekledi`, source: 'community' }, from: 'community' }
+  const miss = async () => {
+    await db.insert(schema.barcodeMisses).values({ code }).onConflictDoUpdate({ target: schema.barcodeMisses.code, set: { count: sql`${schema.barcodeMisses.count} + 1`, lastAt: new Date(), resolvedAt: null } })
+  }
+  for (const c of codes) {
+    const r = await offLookup(c)
+    if (r.hit || r.error) {
+      if (!r.hit) await miss()
+      return r
+    }
+  }
+  await miss()
+  return { hit: null, from: 'none' }
+}
+
+/** Kullanıcı bulunamayan bir barkodla ürün eklediğinde listeden düşer. */
+export async function resolveBarcodeMiss(code: string) {
+  await db.update(schema.barcodeMisses).set({ resolvedAt: new Date() }).where(sql`${schema.barcodeMisses.code} in (${sql.join(barcodeVariants(code).map((c) => sql`${c}`), sql`, `)})`)
+}
+
+async function offLookup(code: string): Promise<{ hit: FoodHit | null; from: 'off' | 'none'; error?: string }> {
   try {
     const ctl = AbortSignal.timeout(8000)
     const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_tr,generic_name,generic_name_tr,brands,quantity,serving_size,serving_quantity,nutriments,image_front_small_url`, { headers: { 'User-Agent': OFF_UA }, signal: ctl })

@@ -63,6 +63,7 @@ export default function CreateFood({ name, barcode, back, aiOn = false }: { name
           {ocr.msg ? <p role="status" className="text-[13px] text-ink-2">{ocr.msg}</p> : null}
         </section>
       ) : null}
+      {v.barcode ? <p className="text-[12px] text-mute px-1" data-testid="barcode-shared">Barkodlu ürünler paylaşılır: bu barkodu okutan diğer kullanıcılar ürünü (adı, markası, besin değerleri) bulur. Senin adın görünmez.</p> : null}
       <section className="card p-5 flex flex-col gap-3 mt-2">
         <div className="flex flex-col gap-1"><label htmlFor="cf-name" className="text-xs text-mute">Ad</label><input id="cf-name" value={v.name} onChange={set('name')} className={input} placeholder="Ör. Ev yapımı granola" /></div>
         <div className="grid grid-cols-2 gap-2">

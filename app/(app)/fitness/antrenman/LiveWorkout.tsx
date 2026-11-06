@@ -220,10 +220,10 @@ export default function LiveWorkout(p: Props) {
           <BackButton fallback="/fitness" className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-ink shrink-0" />
           <span className="flex flex-col min-w-0 flex-1">
             <span className="text-[19px] font-extrabold truncate">{d.name}</span>
-            {resumed ? <span className="text-[12px] text-acc">Kaldığın yerden devam ediyorsun</span> : p.week ? <span className="text-[12px] text-mute">Programın {p.week}. haftası</span> : null}
+            {resumed ? <span className="text-[12px] text-acc truncate">Kaldığın yerden devam ediyorsun</span> : p.week ? <span className="text-[12px] text-mute">Programın {p.week}. haftası</span> : null}
           </span>
-          <span className="num text-[16px] font-bold text-ink-2 shrink-0" data-testid="live-clock">{mmss(Math.floor(stats.min * 60))}</span>
-          <button type="button" className="h-11 px-5 rounded-xl bg-[#E53935] text-white font-extrabold text-[15px] shrink-0" onClick={() => setSheet({ kind: 'finish' })}>Bitir</button>
+          <button type="button" className="h-11 px-3 rounded-xl border border-line-2 text-ink-2 font-bold text-[14px] shrink-0" onClick={() => setSheet({ kind: 'discard' })}>İptal</button>
+          <button type="button" className="h-11 px-4 rounded-xl bg-[#E53935] text-white font-extrabold text-[15px] shrink-0" onClick={() => setSheet({ kind: 'finish' })}>Bitir</button>
         </div>
         {msg ? <p role="status" className="text-[13px] text-orange">{msg}</p> : null}
         {p.fuel && !resumed ? <p className="text-[12px] text-ink-2 rounded-xl bg-surface-2 px-3 py-2" data-testid="fuel">{p.fuel}</p> : null}
@@ -240,16 +240,17 @@ export default function LiveWorkout(p: Props) {
           const fin = e.sets.length > 0 && e.sets.every((t) => t.done)
           return (
             <button key={e.exerciseId + '-' + ei} type="button" role="tab" aria-selected={ei === se} aria-label={e.name} onClick={() => { setSel(ei); setRirAt(null) }}
-              className={`relative shrink-0 snap-start w-[112px] h-[92px] rounded-2xl overflow-hidden border-[3px] transition ${ei === se ? 'border-[#E53935]' : 'border-transparent'} bg-surface-2`}>
+              className="relative shrink-0 snap-start w-[128px] aspect-video rounded-xl overflow-hidden bg-surface-2">
               {e.thumb ? <img src={e.thumb} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
-                : e.images?.[0] ? <ExImg src={`/media/exercises/${e.images[0]}`} size={112} className="w-full h-full" />
+                : e.images?.[0] ? <ExImg src={`/media/exercises/${e.images[0]}`} size={128} className="w-full h-full" />
                   : <span className="absolute inset-0 p-2 text-[11.5px] font-bold leading-tight text-left text-ink-2">{e.name}</span>}
               {fin ? <span className="absolute inset-0 bg-black/50 flex items-center justify-center text-white"><Check size={28} /></span> : null}
+              {ei === se ? <span className="absolute inset-0 rounded-xl ring-[3px] ring-inset ring-[#E53935] pointer-events-none" aria-hidden /> : null}
               {ssNo.get(ei) ? <span className="absolute bottom-1.5 left-1.5 h-5 px-1.5 rounded-md bg-[#E53935] text-white text-[10.5px] font-extrabold flex items-center" aria-hidden>S{ssNo.get(ei)}</span> : null}
             </button>
           )
         })}
-        <button type="button" aria-label="Hareket ekle" onClick={() => setSheet({ kind: 'add' })} className="shrink-0 w-[72px] h-[92px] rounded-2xl border-2 border-dashed border-line-2 flex items-center justify-center text-ink-2"><Plus size={22} /></button>
+        <button type="button" aria-label="Hareket ekle" onClick={() => setSheet({ kind: 'add' })} className="shrink-0 w-[60px] aspect-[60/72] rounded-xl border-2 border-dashed border-line-2 flex items-center justify-center text-ink-2"><Plus size={22} /></button>
       </div>
       {allSets ? (
         <div className="flex items-center gap-2" aria-label={`${doneSets} / ${allSets} set tamamlandı`}>
@@ -341,7 +342,6 @@ export default function LiveWorkout(p: Props) {
           <input type="checkbox" checked={d.pain} onChange={(ev) => update((x) => { x.pain = ev.target.checked; return x })} className="w-5 h-5 accent-[var(--color-orange)]" />
           Ağrı ya da rahatsızlık oldu (sonraki öneriler temkinli olur)
         </label>
-        <button type="button" className="text-[13px] text-danger self-start py-2" onClick={() => setSheet({ kind: 'discard' })}>Antrenmanı sil</button>
       </section>
 
       {rirAt && ra ? (
@@ -476,11 +476,11 @@ export default function LiveWorkout(p: Props) {
         </div>
       </Sheet>
 
-      <Sheet open={sheet?.kind === 'discard'} onClose={() => setSheet(null)} title="Antrenman silinsin mi?">
+      <Sheet open={sheet?.kind === 'discard'} onClose={() => setSheet(null)} title="Antrenman iptal edilsin mi?">
         <div className="flex flex-col gap-3 pb-4">
           <p className="text-[14px] text-ink-2">Bu antrenmanda girdiğin setler kaydedilmeden silinir.</p>
-          <button type="button" className={`${btn.secondary} text-danger`} onClick={() => { writeJson(LIVE_KEY, null); router.push('/fitness') }}>Sil</button>
-          <button type="button" className={btn.ghost} onClick={() => setSheet(null)}>Vazgeç</button>
+          <button type="button" className={`${btn.secondary} text-danger`} onClick={() => { cancelPush(); writeJson(LIVE_KEY, null); router.push('/fitness') }}>İptal et ve sil</button>
+          <button type="button" className={btn.ghost} onClick={() => setSheet(null)}>Devam et</button>
         </div>
       </Sheet>
     </div>

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRef, useState } from 'react'
 import BackButton from '@/components/BackButton'
 import Sheet from '@/components/Sheet'
-import { Heart, Pencil, Send } from '@/components/icons'
+import { Check, Close, Heart, Pencil, Send } from '@/components/icons'
 import { addToDayAction, favoriteAction, programDaysAction } from '../../anatomi/actions'
 
 type Programs = { id: string; name: string; active: boolean; days: { id: string; name: string }[] }[]
@@ -46,10 +46,12 @@ export default function LicensedHero(p: P) {
         </div>
       </header>
       {p.right && p.wrong ? (
-        <div className="absolute top-[calc(env(safe-area-inset-top)+64px)] left-1/2 -translate-x-1/2 grid grid-cols-2 gap-1 p-1 rounded-full bg-black/45 backdrop-blur" role="tablist" aria-label="Video">
-          {([['right', 'Doğru yapılış'], ['wrong', 'Yanlış yapılış']] as const).map(([k, l]) => (
-            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => { setTab(k); setVidErr(false) }}
-              className={`h-8 px-3.5 rounded-full text-[12.5px] font-bold whitespace-nowrap transition ${tab === k ? (k === 'right' ? 'bg-[#2F8A3A]' : 'bg-[#E53935]') : 'text-white/80'}`}>{l}</button>
+        <div className="absolute top-[calc(env(safe-area-inset-top)+64px)] inset-x-0 mx-auto w-fit flex gap-2 p-1 rounded-full bg-black/45 backdrop-blur" role="tablist" aria-label="Video">
+          {([['right', 'Doğru yapılış', '#2F8A3A'], ['wrong', 'Yanlış yapılış', '#E53935']] as const).map(([k, l, c]) => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} aria-label={l} title={l} onClick={() => { setTab(k); setVidErr(false) }}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition" style={tab === k ? { background: c, color: '#fff' } : { color: c }}>
+              {k === 'right' ? <Check size={22} /> : <Close size={20} />}
+            </button>
           ))}
         </div>
       ) : null}

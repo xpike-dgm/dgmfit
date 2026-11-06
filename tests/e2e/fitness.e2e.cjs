@@ -172,6 +172,21 @@ const trNum = (v) => v.toLocaleString('tr-TR')
   if (await p.evaluate(() => localStorage.getItem('dgfit:pending-workouts:v1'))) fail('kuyruk boşalmadı')
   await shot('04-fitness')
 
+  // Gün sekmesi yalnızca önizler (antrenmanı başlatmaz); "Antrenmana başla" o günü açar; İptal → sor → sil
+  const chips = p.getByTestId('day-picker').getByRole('link')
+  if ((await chips.count()) > 1) {
+    const second = chips.nth(1), name2 = (await second.innerText()).trim()
+    await second.click(); await p.waitForURL(/\/fitness\?gun=/)
+    if (!(await p.getByTestId('next-workout').innerText()).includes('Seçili gün')) fail('gün önizlemesi yok')
+    if (!(await p.getByTestId('next-workout').innerText()).includes(name2)) fail('önizlenen gün adı yok')
+    const gun = new URL(p.url()).searchParams.get('gun')
+    if (!(await p.getByRole('link', { name: /Antrenmana başla/ }).getAttribute('href')).endsWith('gun=' + gun)) fail('başla bağlantısı seçili günü açmıyor')
+    await p.getByRole('link', { name: /Antrenmana başla/ }).click(); await p.waitForURL(/\/fitness\/antrenman\?gun=/)
+    await p.getByRole('button', { name: 'İptal', exact: true }).click(); await p.getByRole('button', { name: 'Devam et' }).click()
+    await p.getByRole('button', { name: 'İptal', exact: true }).click(); await p.getByRole('button', { name: 'İptal et ve sil' }).click(); await p.waitForURL(BASE + '/fitness')
+    if (await p.evaluate(() => localStorage.getItem('dgfit:live:v1'))) fail('iptal edilen antrenman taslağı kaldı')
+  } else console.log('UYARI: tek günlük program, gün önizlemesi atlandı')
+
   if (errors.length) fail('Tarayıcı hataları:\n' + errors.join('\n'))
   await b.close()
   console.log('FITNESS E2E OK', u)

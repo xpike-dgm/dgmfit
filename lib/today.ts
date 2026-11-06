@@ -103,9 +103,10 @@ export async function getToday(userId: string, day: string = dayString()): Promi
     }
   })
 
+  const [eaten, burned] = await Promise.all([dayMacros(userId, day), dayBurned(userId, day)])
   return {
     day, profile, age: ageFromBirthDate(profile.birthDate), goal: goal ?? null, dayIndex, totalDays, target,
-    eaten: await dayMacros(userId, day), burned: await dayBurned(userId, day), waterMl, streak,
+    eaten, burned, waterMl, streak,
     weight: { latest, trend, start, target: tgt, progress, planned, history },
     week,
   }

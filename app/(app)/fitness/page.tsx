@@ -12,9 +12,11 @@ import { isAdvanced } from '@/lib/ui-mode'
 export const metadata = { title: 'Fitness · DgFit' }
 const WD = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct']
 
-export default async function FitnessPage() {
+export default async function FitnessPage(props: { searchParams: Promise<{ gun?: string }> }) {
   const u = await requireUser()
-  const [h, adv] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id)])
+  const [h, adv, sp] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id), props.searchParams])
+  // gün sekmesi yalnızca önizlemeyi değiştirir; antrenman "Antrenmana başla" ile başlar
+  const day = (sp.gun && h.program?.days.find((d) => d.id === sp.gun)) || h.next
   const shown = adv ? 6 : 3 // sade modda sıradaki antrenmanın ilk 3 hareketi
   const weekDone = h.week.reduce((a, w) => a + w.n, 0)
   const target = h.trainingDays ?? h.program?.days.length ?? 3
@@ -26,34 +28,34 @@ export default async function FitnessPage() {
         pills={[['Hacim', `${fmtNum(h.week.reduce((a, w) => a + w.vol, 0))} kg`], ['Süre', `${fmtNum(h.week.reduce((a, w) => a + w.min, 0))} dk`], ['Kardiyo', `${fmtNum(h.cardioWeekMin)} dk`]]} />
       <PendingSync />
 
-      {h.next && h.program ? (
+      {day && h.program ? (
         <section aria-label="Sıradaki antrenman" className="card p-5 flex flex-col gap-3" data-testid="next-workout">
           <div className="flex items-center justify-between">
-            <Eyebrow>Sıradaki antrenman</Eyebrow>
+            <Eyebrow>{day.id === h.next?.id ? 'Sıradaki antrenman' : 'Seçili gün'}</Eyebrow>
             <Link href={`/fitness/programlar/${h.program.id}`} className="text-[13px] text-mute">{h.program.name}</Link>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[24px] font-extrabold leading-tight">{h.next.name}</span>
-            <span className="text-sm text-mute">{h.next.focus || `${h.next.exercises.length} hareket`}</span>
+            <span className="text-[24px] font-extrabold leading-tight">{day.name}</span>
+            <span className="text-sm text-mute">{day.focus || `${day.exercises.length} hareket`}</span>
           </div>
           <ul className="flex flex-col gap-1.5">
-            {h.next.exercises.slice(0, shown).map((e) => (
+            {day.exercises.slice(0, shown).map((e) => (
               <li key={e.id} className="flex justify-between text-[14px]"><span className="text-ink-2">{e.name}</span><span className="num text-mute">{e.sets} × {e.seconds ? `${e.seconds} sn` : e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}</span></li>
             ))}
-            {h.next.exercises.length > shown ? <li className="text-[13px] text-mute">+{h.next.exercises.length - shown} hareket</li> : null}
+            {day.exercises.length > shown ? <li className="text-[13px] text-mute">+{day.exercises.length - shown} hareket</li> : null}
           </ul>
           {h.program.days.length > 1 ? (
             <nav aria-label="Başka bir gün seç" className="flex flex-col gap-1.5">
               <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-5 px-5" data-testid="day-picker">
                 {h.program.days.map((d) => (
-                  <Link key={d.id} href={`/fitness/antrenman?gun=${d.id}`} aria-current={d.id === h.next!.id ? 'true' : undefined}
+                  <Link key={d.id} href={d.id === h.next?.id ? '/fitness' : `/fitness?gun=${d.id}`} replace scroll={false} aria-current={d.id === day.id ? 'true' : undefined}
                     className="shrink-0 h-9 px-3.5 rounded-full text-[13px] font-bold inline-flex items-center bg-surface-2 aria-[current=true]:bg-acc aria-[current=true]:text-acc-ink">{d.name}</Link>
                 ))}
               </div>
             </nav>
           ) : null}
-          {h.next.exercises.length
-            ? <Link href={`/fitness/antrenman?gun=${h.next.id}`} className={btn.primary}><Dumbbell size={20} />Antrenmana başla</Link>
+          {day.exercises.length
+            ? <Link href={`/fitness/antrenman?gun=${day.id}`} className={btn.primary}><Dumbbell size={20} />Antrenmana başla</Link>
             : <Link href={`/fitness/programlar/${h.program.id}`} className={btn.secondary}>Bu güne hareket ekle</Link>}
         </section>
       ) : (
