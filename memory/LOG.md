@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Kullanıcı geri bildirimi: 3 düzeltme
+- Kullanıcı (ekran görüntüleriyle): "Kas haritası" kartı simsiyah; hareket listesinde fotoğraflar yok; hareket detayında alt menü görünüyor.
+- Düzeltme: kart tema kartı (`card`); liste ve hareket arama ucu lisanslı küçük resmi önce kullanır (`thumbFor`, `searchExercises().videoFile`), yoksa kütüphane görseli; `hidesNav` `/fitness/hareketler/<id>`'yi kapsar (liste sayfası hariç), detay sayfasına alt boşluk.
+- Doğrulama: commit `30788f4`; verify.sh VERIFY OK (165 birim, 19 e2e; lisanslı e2e'de alt menü yok + küçük resim yüklenmesi); release `2026-11-06T15-59-06-349Z` RELEASE OK; canlı kontrol: "barbell" listesinde 20/20 küçük resim yüklendi, detayda alt menü 0, kart koyu temada kart renginde; logda hata 0; test kullanıcıları silindi.
+
 ## 2026-11-06 — Faz 5h-6: plakalar + rekor denemesi
 - `BarLoad` (lisanslı bar/plaka görselleri, yoksa çizim) canlı plaka hesaplayıcıda ve `/fitness/rekor`da. Rekor denemesi: hedef + bar → bar×8 + 5 ısınma + 3 deneme; ağır setlerde "Bu set nasıl geçti?" (Kaldıramadım/Zorlandım/Normaldi/Hafifti) → sonraki deneme ayarı; dinlenme sayacı; yerelde saklanır; "Günlüğe ekle" → "Rekor denemesi" antrenmanı.
 - Kapsam: Ağırsağlam'da Rekor Denemesi PRO → kendi algoritma ve metin; ayrıca 5h-3'teki RiR açıklamaları paketin `premium` bölümündendi → DgFit'in kendi metnine çevrildi (DECISIONS).
