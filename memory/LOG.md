@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Faz 5h-6: plakalar + rekor denemesi
+- `BarLoad` (lisanslı bar/plaka görselleri, yoksa çizim) canlı plaka hesaplayıcıda ve `/fitness/rekor`da. Rekor denemesi: hedef + bar → bar×8 + 5 ısınma + 3 deneme; ağır setlerde "Bu set nasıl geçti?" (Kaldıramadım/Zorlandım/Normaldi/Hafifti) → sonraki deneme ayarı; dinlenme sayacı; yerelde saklanır; "Günlüğe ekle" → "Rekor denemesi" antrenmanı.
+- Kapsam: Ağırsağlam'da Rekor Denemesi PRO → kendi algoritma ve metin; ayrıca 5h-3'teki RiR açıklamaları paketin `premium` bölümündendi → DgFit'in kendi metnine çevrildi (DECISIONS).
+- Hatalar: ilk kez yapılan harekette rekor kartı çıkmaz (genel kural) → test özet içeriğine bakacak şekilde düzeltildi; plaka hesaplayıcıda yinelenen metin fitness e2e'yi bozdu → eski metin kaldırıldı, test `data-plates` okur.
+- Doğrulama: commit `135b110`; verify.sh VERIFY OK (165 birim, 19 e2e); release `2026-11-06T00-27-40-968Z` RELEASE OK; logda hata 0; 13 test kullanıcısı silindi.
+
 ## 2026-11-06 — Faz 5h-5: MSS seans yükü
 - Antrenman özetinde "MSS yükü" kartı (5 kademe, puan, açıklama, en çok katkı veren 3 hareket), istatistikte son 7 günün seansları ve haftalık not. Kendi algoritmamız ve metinlerimiz: paketteki analiz metinleri Ağırsağlam'da PRO özelliği olduğu için kullanılmadı (DECISIONS).
 - Hata: efor çarpanında normal setlerde yüksek RiR indirimi (0,8) `max(1, …)` yüzünden kayboluyordu → birim testi yakaladı, düzeltildi.
