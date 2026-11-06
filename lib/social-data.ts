@@ -1,6 +1,7 @@
 import 'server-only'
 // Sosyal veri katmanı (Faz 5a). Görünürlük kararları lib/social.ts'deki saf fonksiyonlardan; her okuma izleyici ilişkisine göre süzülür.
 import crypto from 'node:crypto'
+import { z } from 'zod'
 import { and, asc, desc, eq, gte, inArray, isNull, ne, or, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { dayString } from './time'
@@ -15,7 +16,7 @@ import { getWaterInsights } from './water-data'
 import { PR_LABEL, type PrType } from './training'
 import { DEFAULT_ITEMS, GOAL_BADGE, ITEMS, feedScore, itemVisible, longestWeekStreak, milestoneText, postVisible, profileAccess, suggestionScore,
   type Audience, type Item, type ItemVis, type PostKind, type Reaction, type Relation, type Visibility } from './social'
-import { combine, moderateText, type ModResult } from './moderation'
+import { cleanTextError, combine, moderateText, type ModResult } from './moderation'
 import { aiAvailable, runTask } from './ai/engine'
 import { MEAL_LABEL, type MealId } from './food'
 
@@ -69,11 +70,10 @@ export const notifyText = (kind: string, actor: string) => (TEXT[kind as NotifyK
 /** Bildirim: uygulama içi kayıt + tercih açıksa push. `extra`: push metnine ek (ör. dürtme mesajı), `url`: dokununca açılacak sayfa. */
 export async function notify(userId: string, kind: NotifyKind, actorId: string, postId: string | null = null, opt: { extra?: string; url?: string } = {}) {
   if (userId === actorId || (await relationOf(userId, actorId)) === 'blocked') return
-  // tepki bildirimi gönderi başına saatte 1 (yığılmasın)
-  if (kind === 'reaction' && postId) {
-    const [x] = await db.select({ id: schema.notifications.id }).from(schema.notifications).where(and(eq(schema.notifications.userId, userId), eq(schema.notifications.kind, 'reaction'), eq(schema.notifications.postId, postId), gte(schema.notifications.createdAt, new Date(Date.now() - 3600_000)))).limit(1)
-    if (x) return
-  }
+  // aynı (alıcı, aktör, tür, hedef) bildirimi saatte en fazla 1 kez (spam/yığılma önlemi)
+  const [dup] = await db.select({ id: schema.notifications.id }).from(schema.notifications).where(and(eq(schema.notifications.userId, userId), eq(schema.notifications.actorId, actorId), eq(schema.notifications.kind, kind),
+    postId ? eq(schema.notifications.postId, postId) : isNull(schema.notifications.postId), gte(schema.notifications.createdAt, new Date(Date.now() - 3600_000)))).limit(1)
+  if (dup) return
   await db.insert(schema.notifications).values({ userId, kind, actorId, postId })
   const p = await socialProfile(userId)
   if ((p.notify as Record<string, boolean>)[kind] === false) return
@@ -113,10 +113,17 @@ export async function showcase(userId: string, ids: number[]) {
   if (!ids.length) return []
   const rows = await db.select({ r: schema.exerciseRecords, name: schema.exercises.nameTr }).from(schema.exerciseRecords).innerJoin(schema.exercises, eq(schema.exercises.id, schema.exerciseRecords.exerciseId))
     .where(and(eq(schema.exerciseRecords.userId, userId), inArray(schema.exerciseRecords.exerciseId, ids)))
+  const notSuspect = or(isNull(schema.personalRecords.suspect), eq(schema.personalRecords.verified, true))
   const hist = await db.select({ exerciseId: schema.personalRecords.exerciseId, value: schema.personalRecords.value, at: schema.personalRecords.createdAt }).from(schema.personalRecords)
-    .where(and(eq(schema.personalRecords.userId, userId), inArray(schema.personalRecords.exerciseId, ids), eq(schema.personalRecords.type, 'kg'))).orderBy(asc(schema.personalRecords.createdAt))
+    .where(and(eq(schema.personalRecords.userId, userId), inArray(schema.personalRecords.exerciseId, ids), eq(schema.personalRecords.type, 'kg'), notSuspect)).orderBy(asc(schema.personalRecords.createdAt))
+  // şüpheli ve doğrulanmamış rekorlar vitrine girmez: en iyi değer rekordan önceki değere çekilir (strengthScore ile aynı kural)
+  const sus = await db.select().from(schema.personalRecords).where(and(eq(schema.personalRecords.userId, userId), inArray(schema.personalRecords.exerciseId, ids), inArray(schema.personalRecords.type, ['kg', 'e1rm']), sql`${schema.personalRecords.suspect} is not null`, eq(schema.personalRecords.verified, false)))
+  const clean = (exId: number, type: 'kg' | 'e1rm', best: number) => {
+    for (const x of sus.filter((q) => q.exerciseId === exId && q.type === type).sort((a, b) => b.value - a.value)) if (x.value >= best - 1e-9) best = Math.min(best, x.previous ?? 0)
+    return best
+  }
   return ids.map((id) => rows.find((r) => r.r.exerciseId === id)).filter((r) => !!r).map((r) => ({
-    exerciseId: r!.r.exerciseId, name: r!.name, kg: Math.round((r!.r.records.kg ?? 0) * 10) / 10, e1rm: Math.round(r!.r.records.e1rm ?? 0),
+    exerciseId: r!.r.exerciseId, name: r!.name, kg: Math.round(clean(r!.r.exerciseId, 'kg', r!.r.records.kg ?? 0) * 10) / 10, e1rm: Math.round(clean(r!.r.exerciseId, 'e1rm', r!.r.records.e1rm ?? 0)),
     history: hist.filter((h) => h.exerciseId === r!.r.exerciseId).map((h) => ({ day: dayString(h.at), kg: h.value })),
   }))
 }
@@ -158,6 +165,8 @@ export async function updateSocialProfile(userId: string, v: { bio: string | nul
     const [m] = await mediaMeta([v.avatarId])
     if (!m || m.userId !== userId || m.kind !== 'avatar') throw new Error('Geçersiz fotoğraf')
   }
+  const bad = cleanTextError('Biyografi', v.bio) ?? cleanTextError('Salon adı', v.gym)
+  if (bad) throw new Error(bad)
   await socialProfile(userId)
   const set = { bio: v.bio, gym: v.gym, visibility: v.visibility, items: v.items, showGoal: v.showGoal, showcase: v.showcase.slice(0, 6), notify: v.notify, updatedAt: new Date(), ...(v.avatarId !== undefined ? { avatarId: v.avatarId } : {}) }
   await db.update(schema.socialProfiles).set(set).where(eq(schema.socialProfiles.userId, userId))
@@ -291,6 +300,7 @@ async function snapshot(userId: string, kind: PostKind, ref: string | null | und
     const id = Number(ref)
     const [r] = Number.isInteger(id) ? await db.select({ pr: schema.personalRecords, name: schema.exercises.nameTr }).from(schema.personalRecords).innerJoin(schema.exercises, eq(schema.exercises.id, schema.personalRecords.exerciseId)).where(and(eq(schema.personalRecords.id, id), eq(schema.personalRecords.userId, userId))).limit(1) : []
     if (!r) throw new Error('Rekor bulunamadı')
+    if (r.pr.suspect && !r.pr.verified) throw new Error('Doğrulanmamış rekor paylaşılamaz; önce tanıklık ya da kanıt gerekir')
     return { name: r.name, type: r.pr.type, label: PR_LABEL[r.pr.type as PrType] ?? r.pr.type, value: r.pr.value, previous: r.pr.previous, day: dayString(r.pr.createdAt) }
   }
   if (kind === 'recipe') {
@@ -513,6 +523,10 @@ export async function saveRecipeCopy(viewerId: string, postId: string): Promise<
 }
 
 export async function report(viewerId: string, targetType: 'post' | 'comment' | 'user', targetId: string, reason: string, note: string | null) {
+  if (!z.string().uuid().safeParse(targetId).success) throw new Error('Geçersiz şikayet hedefi')
+  // aynı kişinin aynı hedefe tekrar şikayeti sessizce yok sayılır
+  const [dup] = await db.select({ id: schema.reports.id }).from(schema.reports).where(and(eq(schema.reports.reporterId, viewerId), eq(schema.reports.targetType, targetType), eq(schema.reports.targetId, targetId))).limit(1)
+  if (dup) return
   await db.insert(schema.reports).values({ reporterId: viewerId, targetType, targetId, reason, note })
   // aynı gönderi 3 farklı kişiden şikayet alırsa onaya düşer
   if (targetType === 'post') {

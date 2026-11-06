@@ -1,13 +1,13 @@
 import 'server-only'
 // Sosyal genişleme veri katmanı (Faz 5b): gruplar + sohbet, meydan okuma/düello, sıralama, mesaj, dürtme, partner, 24 saatlik kartlar, PR doğrulama.
 // İlerleme ve puanlar lib/social-rank.ts saf fonksiyonlarıyla kayıtlardan hesaplanır; saklanmaz.
-import { and, asc, desc, eq, gte, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNull, notInArray, or, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString } from './time'
 import { gatherDays } from './coach-data'
 import { getProgram, insertProgram, listPrograms } from './fitness-data'
 import { mediaMeta } from './media'
-import { moderateText } from './moderation'
+import { cleanTextError, moderateText } from './moderation'
 import { LIFTS } from './progress'
 import { consistency, dots, duelResult, METRICS, NUDGE, nudgeAllowed, progressOf, prSuspicious, rankBoard, STORY_HOURS, TEMPLATES, WITNESSES_NEEDED, type Metric, type NudgeKind } from './social-rank'
 import { friendIds, hiddenIds, notify, relationOf, socialProfile } from './social-data'
@@ -21,6 +21,8 @@ async function mustBeFriend(me: string, other: string) {
 // ───────── Gruplar ─────────
 
 export async function createGroup(me: string, name: string, description: string | null) {
+  const bad = cleanTextError('Grup adı', name) ?? cleanTextError('Grup açıklaması', description)
+  if (bad) throw new Error(bad)
   const [g] = await db.insert(schema.groups).values({ ownerId: me, name: name.slice(0, 60), description: description?.slice(0, 200) || null }).returning({ id: schema.groups.id })
   await db.insert(schema.groupMembers).values({ groupId: g.id, userId: me, status: 'joined', invitedBy: me })
   return g.id
@@ -104,12 +106,13 @@ export async function groupView(me: string, groupId: string) {
   const { blocked } = await hiddenIds(me)
   const msgs = await db.select({ m: schema.groupMessages, username: schema.users.username }).from(schema.groupMessages).innerJoin(schema.users, eq(schema.users.id, schema.groupMessages.userId))
     .where(eq(schema.groupMessages.groupId, groupId)).orderBy(desc(schema.groupMessages.createdAt)).limit(50)
-  const joined = members.filter((x) => x.status === 'joined')
+  const visibleMembers = members.filter((x) => !blocked.has(x.userId))
+  const joined = visibleMembers.filter((x) => x.status === 'joined')
   const ranked = await Promise.all(joined.filter((x) => x.rankOptIn).map(async (x) => ({ userId: x.userId, name: x.username, str: await strengthScore(x.userId), cons: await consistencyScore(x.userId) })))
   const challenges = await db.select().from(schema.challenges).where(and(eq(schema.challenges.groupId, groupId), isNull(schema.challenges.deletedAt), gte(schema.challenges.endDay, addDays(dayString(), -7)))).orderBy(desc(schema.challenges.createdAt))
   return {
     id: g.id, name: g.name, description: g.description, invited: false as const, owner: g.ownerId === me, myOptIn: m.m.rankOptIn,
-    members: members.map((x) => ({ id: x.userId, username: x.username, status: x.status, owner: x.userId === g.ownerId })),
+    members: visibleMembers.map((x) => ({ id: x.userId, username: x.username, status: x.status, owner: x.userId === g.ownerId })),
     messages: msgs.reverse().filter((x) => !blocked.has(x.m.userId)).map((x) => ({ id: x.m.id, username: x.username, body: x.m.body, flagged: x.m.flagged, mine: x.m.userId === me, createdAt: x.m.createdAt.toISOString() })),
     dotsBoard: rankBoard(ranked.filter((r) => r.str.dots !== null).map((r) => ({ userId: r.userId, name: r.name, value: r.str.dots!, total: r.str.total, excluded: r.str.excluded })), null),
     consBoard: rankBoard(ranked.map((r) => ({ userId: r.userId, name: r.name, value: r.cons })), 100),
@@ -135,11 +138,14 @@ export async function createChallenge(me: string, c: NewChallenge): Promise<stri
   if (!metric || !(metric in METRICS)) throw new Error('Ölçüt seç')
   const days = Math.max(1, Math.min(90, Math.round(t?.days ?? (c.scope === 'duel' ? 7 : c.days ?? 7))))
   const start = dayString(), end = addDays(start, days - 1)
-  let invite = [...new Set(c.inviteIds)].filter((x) => x !== me)
+  const bad = c.template ? null : cleanTextError('Meydan okuma başlığı', c.title)
+  if (bad) throw new Error(bad)
+  const { blocked } = await hiddenIds(me)
+  let invite = [...new Set(c.inviteIds)].filter((x) => x !== me && !blocked.has(x))
   if (c.scope === 'group') {
     const m = c.groupId ? await membership(me, c.groupId) : null
     if (m?.m.status !== 'joined') throw new Error('Grup bulunamadı')
-    invite = (await db.select({ id: schema.groupMembers.userId }).from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, c.groupId!), eq(schema.groupMembers.status, 'joined')))).map((r) => r.id).filter((x) => x !== me)
+    invite = (await db.select({ id: schema.groupMembers.userId }).from(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, c.groupId!), eq(schema.groupMembers.status, 'joined')))).map((r) => r.id).filter((x) => x !== me && !blocked.has(x))
   } else {
     const fr = new Set(await friendIds(me))
     invite = invite.filter((x) => fr.has(x))
@@ -155,8 +161,9 @@ export async function createChallenge(me: string, c: NewChallenge): Promise<stri
 export async function respondChallenge(me: string, id: string, status: 'joined' | 'declined' | 'left') {
   await db.update(schema.challengeMembers).set({ status }).where(and(eq(schema.challengeMembers.challengeId, id), eq(schema.challengeMembers.userId, me)))
 }
-async function board(c: typeof schema.challenges.$inferSelect) {
-  const ms = await db.select({ userId: schema.challengeMembers.userId, status: schema.challengeMembers.status }).from(schema.challengeMembers).where(eq(schema.challengeMembers.challengeId, c.id))
+async function board(c: typeof schema.challenges.$inferSelect, viewerId: string) {
+  const { blocked } = await hiddenIds(viewerId)
+  const ms = (await db.select({ userId: schema.challengeMembers.userId, status: schema.challengeMembers.status }).from(schema.challengeMembers).where(eq(schema.challengeMembers.challengeId, c.id))).filter((m) => m.userId === viewerId || !blocked.has(m.userId))
   const joined = ms.filter((m) => m.status === 'joined')
   const names = await unameMap(ms.map((m) => m.userId))
   const to = c.endDay < dayString() ? c.endDay : dayString()
@@ -166,9 +173,9 @@ async function board(c: typeof schema.challenges.$inferSelect) {
 export async function challengeView(me: string, id: string) {
   const [c] = await db.select().from(schema.challenges).where(and(eq(schema.challenges.id, id), isNull(schema.challenges.deletedAt))).limit(1)
   if (!c) return null
-  const b = await board(c)
-  const mine = b.members.find((m) => m.userId === me)
-  if (!mine || mine.status === 'declined') return null
+  const [mine] = await db.select({ status: schema.challengeMembers.status }).from(schema.challengeMembers).where(and(eq(schema.challengeMembers.challengeId, id), eq(schema.challengeMembers.userId, me))).limit(1)
+  if (!mine || mine.status === 'declined' || mine.status === 'left') return null
+  const b = await board(c, me)
   const ended = c.endDay < dayString()
   const duel = c.scope === 'duel' && b.rows.length === 2 ? duelResult(b.rows[0], b.rows[1], ended) : null
   return { id: c.id, title: c.title, metric: c.metric, metricLabel: METRICS[c.metric as Metric].label, unit: METRICS[c.metric as Metric].unit, param: c.param, target: c.target, startDay: c.startDay, endDay: c.endDay, scope: c.scope, ended, myStatus: mine.status, board: b.rows, invited: b.invited, duel }
@@ -223,7 +230,8 @@ export async function thread(me: string, username: string) {
   }
 }
 export async function unreadDMs(me: string) {
-  const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.directMessages).where(and(eq(schema.directMessages.recipientId, me), isNull(schema.directMessages.readAt)))
+  const { blocked } = await hiddenIds(me)
+  const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.directMessages).where(and(eq(schema.directMessages.recipientId, me), isNull(schema.directMessages.readAt), blocked.size ? notInArray(schema.directMessages.senderId, [...blocked]) : undefined))
   return Number(r?.n ?? 0)
 }
 
@@ -319,6 +327,7 @@ export async function witnessPR(me: string, prId: number) {
   if (!r || !r.suspect || r.verified) throw new Error('Doğrulama bekleyen rekor yok')
   if (r.userId === me) throw new Error('Kendi rekoruna tanıklık edemezsin')
   await mustBeFriend(me, r.userId)
+  if (r.witnesses.includes(me)) return { verified: r.verified, witnesses: r.witnesses.length }
   const w = [...new Set([...r.witnesses, me])]
   // aynı antrenmanın aynı hareketteki tüm şüpheli rekorları birlikte doğrulanır
   const verified = w.length >= WITNESSES_NEEDED
