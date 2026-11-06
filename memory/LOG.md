@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-06 — Sosyal sayfası sadeleştirmesi
+- Kullanıcı (ekran görüntüsüyle): "Sosyal'de çok fazla buton yok mu". 6 madde onaylandı ve `sosyal-sade` dalında gerçek uygulamada gösterildi: bant kutuları menü (Meydan okuma / Mesajlar / Gruplar, halka → Arkadaşlar; `Band` artık `ringHref` ve kutu bağlantısı alır), 4'lü düğme satırı ve Paylaş/Profilim satırı kalktı, hikâye satırında "+ Paylaş" balonu (Gönderi / Bugün salondaydım), akış sekmeleri 2 (Kaydedilenler kendi profilde), gönderide yalnızca kullanılmış tepkiler + tek "Tepki ver" + kaydet simgesi, arkadaş yokken "Arkadaşlarını ekle" kartı, Ara ve Profil simge. Akıştan önceki dokunulabilir öğe ~18 → ~9.
+- Testler: `social` (tepki seçiciyi açar), `social2` (Paylaş balonu → Bugün salondaydım), `sade` (Sosyal bölümü).
+- Not: yerel Postgres kapsayıcı yeniden başlayınca kapanıyor; e2e öncesi `service postgresql start`.
+- Doğrulama: commit `4753cf8`; verify.sh VERIFY OK (169 birim, 21 e2e); release `2026-11-06T19-47-07-078Z` RELEASE OK; logda hata 0; test kullanıcıları silindi.
+
 ## 2026-11-06 — Arayüz sadeleştirmesi (Sade/Gelişmiş mod)
 - Kullanıcının arkadaşları: "çok karışık, fazla yazı". Adımlar: (1) `scripts/ui-audit.cjs` ile ölçüm, (2) taslak — ilk sürüm elle çizilmiş ekranlarla reddedildi ("basit uygulama olmuş"); kullanıcı "kendi uygulamamız iyi, sadece sadeleştirme" dedi → değişiklikler `sade-taslak` dalında gerçek uygulamada yapılıp önce/sonra görüntüleriyle sunuldu (https://claude.ai/artifact/Rb6gpfu9QBSTSPvaw1aZJN) ve onaylandı, (3) uygulama, (4) ölçüm.
 - Ölçüm (kelime, önce → sonra): İstatistik 180 → 30, Özet 107 → 32, Fit 160 → 65, Program 216 → 146 (dokunulabilir 62 → 43, boy 3,5 → 2,3 ekran), Fitness 141 → 99, Hareket 250 → 176, Yemek 186 → 153; Bugün, Su, canlı antrenman değişmedi. Alt menü 7 bölme kaldı.
