@@ -268,9 +268,9 @@ Yerel ortam notu: `service postgresql start`; sunucu yeniden başlatma betiği s
 
 | # | Adım | Durum | Kanıt / not |
 | --- | --- | --- | --- |
-| A1 | Faz 9 altyapı: simülatör (vücut modeli, senaryo üretici, gerçek motorlarla gün gün koşucu, değişmezler, altın dosya, hızlı alt küme verify'da) | sırada | |
-| A2 | Faz 7-1: Bugünün durumu motoru + antrenman↔yemek↔su + tutarlılık e2e | sırada | |
-| A3 | Faz 8: hedefe ulaşma akışı, yağ oranı (Navy), hassas beslenme motoru, haftalık kalite döngüsü | sırada | |
+| A1 | Faz 9 altyapı: simülatör (vücut modeli, senaryo üretici, gerçek motorlarla gün gün koşucu, değişmezler, altın dosya, hızlı alt küme verify'da) | tamamlandı | commit `2354960`; verify.sh VERIFY OK (183 birim, 23 e2e); release `2026-11-06T23-05-45-823Z` RELEASE OK (tam sim 4012 senaryo yayın öncesi); simülasyonun bulduğu 2 canlı hata düzeltildi (hedef kalori tabanın altına inebiliyordu; makro yuvarlama birikmesi); logda hata 0; 11 test kullanıcısı silindi |
+| A2 | Faz 7-1: Bugünün durumu motoru + antrenman↔yemek↔su + tutarlılık e2e | tamamlandı | aynı commit/release; `lib/day-state.ts`, Bugün antrenman sonrası protein kartı, Su'da antrenman eki açıklaması, `integration.e2e.cjs` canlıda OK |
+| A3 | Faz 8: hedefe ulaşma akışı, yağ oranı (Navy), hassas beslenme motoru, haftalık kalite döngüsü | devam ediyor | git worktree `/home/user/dgmfit-a3` dalı `a3-hedef-zekasi` (yayın paketine yarım iş girmesin diye); 0022 migration, computePlan yağsız kütle makroları + kas temposu uyarısı, check-in yön koruması + ölü bant + harcama yumuşatma, recomp antrenman/dinlenme günü, hedefe ulaşma/tarih geçti kartı + seçimler, /profil/vucut, Yemek detaylı hedefler, Fit kalite kartı, goal.e2e.cjs; sim'e hedefe ulaşma seçimi ve süre uzatma eklendi |
 | A4 | Faz 9 tam set + düzeltmeler + gerileme | sırada | |
 | A5 | Faz 7-2: toparlanma↔öneri, kilo↔plan, tek bildirim planlayıcı, tek kayıt çok etki | sırada | |
 | A6 | Faz 7-3: sosyal↔her şey, koç↔her şey | sırada | |
