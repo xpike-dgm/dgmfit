@@ -53,6 +53,8 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
   let minT = Infinity, maxT = -Infinity, checkins = 0, reachedDay: number | null = null
   let lastDir = 0, reversalsAfterReach = 0
   let switchedDay: number | null = null, recompMax = 0
+  let lastTrend: number | null = null
+  let fatAtSwitch = 0
   let endTrend: number | null = null
 
   for (let i = 0; i < totalDays; i++) {
@@ -140,7 +142,7 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
         const keep = goalAfterReach({ endDate: goal.endDate, today, tdee: goal.tdee, floor })
         const mp = macroPlan({ goal: 'recomp', sex: s.sex, age: s.age, weightKg: trend, heightCm: s.heightCm, bfPct: null, kcal: keep.kcal })
         Object.assign(goal, { type: 'recomp' as const, targetWeightKg: trend, startWeightKg: trend, startDate: today, endDate: keep.endDate, dailyKcal: keep.kcal, protein: mp.protein, carb: mp.carb, fat: mp.fat })
-        adj.clear(); lastCheckin = today; switchedDay = i
+        adj.clear(); lastCheckin = today; switchedDay = i; fatAtSwitch = body.fatKg
       }
     }
     // Faz 8: hedef tarih geçti, hedefe ulaşılmadı → Bugün kartı → "süreyi uzat"
@@ -151,6 +153,7 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
     }
     if (switchedDay !== null && i > switchedDay && i <= switchedDay + 120 && trend !== null) recompMax = Math.max(recompMax, Math.abs(trend - goal.targetWeightKg))
     if (i === plan.days - 1) endTrend = trend
+    lastTrend = trend
     if (keepDays) days.push({ i, target, intake, logged, weighed, trend, trueKg: Math.round(weightOf(body) * 10) / 10, fatPct: Math.round(bodyFatOf(body) * 10) / 10, checkin: ck })
   }
 
@@ -162,9 +165,10 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
     const tol = Math.max(1, Math.abs(diff) * 0.25)
     if (Math.abs(endKg - s.targetWeightKg) > tol) add('MISS', 'warn', plan.days, `plan sonunda trend ${endKg.toFixed(1)} kg, hedef ${s.targetWeightKg} (tolerans ±${tol.toFixed(1)})`)
   }
-  if (cooperative && s.goal === 'recomp' && Math.abs(endKg - s.weightKg) > 2) add('RECOMP_DRIFT', 'warn', plan.days, `koruma hedefinde kilo ${s.weightKg} → ${endKg.toFixed(1)}`)
-  if (switchedDay !== null && recompMax > 2.5 && (s.adherence === 'perfect' || s.adherence === 'good') && s.appliesCheckin) add('AFTER_REACH_DRIFT', 'warn', switchedDay, `hedefe ulaşıp korumaya geçtikten sonra kilo hedeften ${recompMax.toFixed(1)} kg uzaklaştı`)
-  if (cooperative && extendedDay !== null && reachedDay === null) add('NOT_REACHED_AFTER_EXTENSION', 'warn', totalDays, `süre uzatıldı (${extendedFrom.toFixed(1)} kg kalmıştı) ama uzatılan sürede de hedefe ulaşılmadı`)
+  // koruma hedefinde sorun kilo değil yağ artışıdır (kas kazanırken tartı biraz yükselebilir)
+  if (cooperative && s.goal === 'recomp' && Math.abs(endKg - s.weightKg) > 2 && body.fatKg - fat0 > 1) add('RECOMP_DRIFT', 'warn', plan.days, `koruma hedefinde kilo ${s.weightKg} → ${endKg.toFixed(1)}, yağ +${(body.fatKg - fat0).toFixed(1)} kg`)
+  if (cooperative && switchedDay !== null && recompMax > 2.5 && body.fatKg - fatAtSwitch > 1) add('AFTER_REACH_DRIFT', 'warn', switchedDay, `hedefe ulaşıp korumaya geçtikten sonra kilo hedeften ${recompMax.toFixed(1)} kg uzaklaştı`)
+  if (cooperative && extendedDay !== null && reachedDay === null && Math.abs((lastTrend ?? 0) - goal.targetWeightKg) > Math.max(0.6, extendedFrom * 0.25)) add('NOT_REACHED_AFTER_EXTENSION', 'warn', totalDays, `süre uzatıldı (${extendedFrom.toFixed(1)} kg kalmıştı) ama uzatılan sürede de hedefe ulaşılmadı`)
   if (cooperative && reversalsAfterReach >= 3) add('OSCILLATION', 'warn', plan.days, `hedefe ulaştıktan sonra check-in yönü ${reversalsAfterReach} kez değişti`)
   const safeWeekly = Math.max(maxWeeklyKg(s.goal, s.weightKg), plan.weeklyKg)
   if (cooperative && s.goal !== 'recomp' && reachedDay !== null && reachedDay > 7) {
