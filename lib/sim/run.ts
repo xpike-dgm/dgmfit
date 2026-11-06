@@ -4,6 +4,8 @@
 import { calorieFloor, computePlan, HARD_MAX_WEEKLY_KG, maxWeeklyKg } from '../calc.ts'
 import { balanceWindow, CHECKIN_MAX_STEP, checkinCompute, closureDiff, distributeDiff, scaleMacros, targetKcal, trendSeries, type PlanDay } from '../fit.ts'
 import { bodyFatOf, makeBody, scaleReading, stepBody, trueTdee, weightOf } from './body.ts'
+import { goalReached, macroPlan } from '../body-comp.ts'
+import { dayBaseKcal, extendEndDate, goalAfterReach, trainingWeekdays } from '../fit.ts'
 import { rng, seedOf } from './rng.ts'
 import type { Scenario } from './scenarios.ts'
 
@@ -28,9 +30,9 @@ export interface SimResult {
 export function runScenario(s: Scenario, keepDays = false): SimResult {
   const r = rng(seedOf(s.id + ':run'))
   const floor = calorieFloor(s.sex)
-  const plan = computePlan({ sex: s.sex, age: s.age, heightCm: s.heightCm, weightKg: s.weightKg, activity: s.activity, goal: s.goal, targetWeightKg: s.targetWeightKg, days: s.planDays })
+  const plan = computePlan({ sex: s.sex, age: s.age, heightCm: s.heightCm, weightKg: s.weightKg, activity: s.activity, goal: s.goal, targetWeightKg: s.targetWeightKg, days: s.planDays, experience: { none: 'new', novice: 'new', intermediate: 'mid', advanced: 'adv' }[s.training] })
   // uygulamadaki goals satırı (kurulum)
-  const goal = { type: s.goal, startWeightKg: s.weightKg, targetWeightKg: s.targetWeightKg, startDate: START, endDate: plus(START, plan.days - 1), dailyKcal: plan.dailyKcal, protein: plan.proteinG, carb: plan.carbG, fat: plan.fatG }
+  const goal = { type: s.goal as 'lose' | 'gain' | 'recomp', startWeightKg: s.weightKg, targetWeightKg: s.targetWeightKg, startDate: START, endDate: plus(START, plan.days - 1), dailyKcal: plan.dailyKcal, protein: plan.proteinG, carb: plan.carbG, fat: plan.fatG, tdee: plan.tdee }
   const adj = new Map<string, number>() // gün → toplam dengeleme düzeltmesi
   const weights = new Map<string, number>([[START, s.weightKg]]) // kurulumda tartı yazılır
   const closed = new Map<string, { kind: string; eaten: number }>()
@@ -38,25 +40,30 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
   const body = makeBody({ sex: s.sex, age: s.age, heightCm: s.heightCm, weightKg: s.weightKg, bodyFatPct: s.bodyFatPct, activityFactor: s.activityTrue, metabolicBias: s.metabolicBias, training: s.training })
   const lean0 = body.leanKg, fat0 = body.fatKg
   const findings: Finding[] = []
+  const cooperative0 = (s.adherence === 'perfect' || s.adherence === 'good') && s.underreport <= 0.05 && s.skipLogP <= 0.05 && (s.weighing === 'daily' || s.weighing === 'thrice') && s.appliesCheckin && !s.typoWeight
   const add = (code: string, severity: Severity, day: number, detail: string) => { if (findings.filter((f) => f.code === code).length < 3) findings.push({ code, severity, day, detail }) }
-  const trainWeekdays = [1, 3, 5, 2, 4, 6, 0].slice(0, s.trainDays)
-  const totalDays = plan.days + s.tailDays
+  const trainWeekdays = s.trainDays > 0 ? trainingWeekdays(s.trainDays) : [] // kullanıcı uygulamanın gün düzenine uyar
+  const appWeekdays = trainingWeekdays(s.trainDays || 3)
+  let totalDays = plan.days + s.tailDays
+  let extendedDay: number | null = null, extendedFrom = 0
   const vacFrom = s.vacation ? Math.floor(plan.days * 0.4) : -1
   const illFrom = s.illness ? Math.floor(plan.days * 0.6) : -1
   const typoDay = s.typoWeight ? Math.floor(plan.days * 0.3) + 3 : -1
   const days: DayLog[] = []
   let minT = Infinity, maxT = -Infinity, checkins = 0, reachedDay: number | null = null
   let lastDir = 0, reversalsAfterReach = 0
+  let switchedDay: number | null = null, recompMax = 0
   let endTrend: number | null = null
 
   for (let i = 0; i < totalDays; i++) {
     const d = plus(START, i)
-    const target = targetKcal(goal.dailyKcal, adj.get(d) ?? 0, floor) // fit-data dayTargets ile aynı
+    const base = dayBaseKcal(goal.type, goal.dailyKcal, dow(d), appWeekdays, floor) // recomp: antrenman/dinlenme günü
+    const target = targetKcal(base, adj.get(d) ?? 0, floor) // fit-data dayTargets ile aynı
     const macros = scaleMacros({ kcal: goal.dailyKcal, protein: goal.protein, carb: goal.carb, fat: goal.fat }, target)
     // ---- değişmezler (her gün)
     if (!Number.isFinite(target)) add('NAN', 'error', i, 'hedef kalori sayı değil')
     if (target < floor) add('FLOOR', 'error', i, `hedef ${target} < taban ${floor}`)
-    if (Math.abs(target - goal.dailyKcal) > 251) add('DAYCAP', 'error', i, `günlük düzeltme ${target - goal.dailyKcal} > 250`) // dayCap üst sınırı
+    if (Math.abs(target - base) > 251) add('DAYCAP', 'error', i, `günlük düzeltme ${target - base} > 250`) // dayCap üst sınırı
     const mk = macros.protein * 4 + macros.carb * 4 + macros.fat * 9
     if (Math.abs(mk - target) > Math.max(40, target * 0.05)) add('MACRO', 'error', i, `makrolar ${Math.round(mk)} kcal ≠ hedef ${target} (P${macros.protein} K${macros.carb} Y${macros.fat}; taban ${goal.dailyKcal} P${goal.protein} K${goal.carb} Y${goal.fat})`)
     minT = Math.min(minT, target); maxT = Math.max(maxT, target)
@@ -98,7 +105,7 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
       const win = balanceWindow(d, today, goal.endDate)
       if (win) {
         const upcoming: PlanDay[] = []
-        for (let x = win.first; x <= win.last; x = plus(x, 1)) upcoming.push({ day: x, base: goal.dailyKcal, current: targetKcal(goal.dailyKcal, adj.get(x) ?? 0, floor) - goal.dailyKcal })
+        for (let x = win.first; x <= win.last; x = plus(x, 1)) { const bx = dayBaseKcal(goal.type, goal.dailyKcal, dow(x), appWeekdays, floor); upcoming.push({ day: x, base: bx, current: targetKcal(bx, adj.get(x) ?? 0, floor) - bx }) }
         const res = distributeDiff(c.diff, upcoming, floor)
         for (const a of res.adjustments) adj.set(a.day, (adj.get(a.day) ?? 0) + a.kcal)
       }
@@ -110,25 +117,39 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
     const series = trendSeries(weights, from, today)
     const intakeBy = new Map<string, number | null>()
     for (const [k, v] of closed) if (k >= from && ['balanced', 'over', 'under', 'exception'].includes(v.kind)) intakeBy.set(k, v.eaten)
-    const cc = checkinCompute({ goal: { type: s.goal, startWeightKg: goal.startWeightKg, targetWeightKg: goal.targetWeightKg, startDate: goal.startDate, endDate: goal.endDate, dailyKcal: goal.dailyKcal }, series, intakeBy, today, lastCheckin, floor })
+    const cc = checkinCompute({ goal: { type: goal.type, startWeightKg: goal.startWeightKg, targetWeightKg: goal.targetWeightKg, startDate: goal.startDate, endDate: goal.endDate, dailyKcal: goal.dailyKcal, tdee: goal.tdee }, series, intakeBy, today, lastCheckin, floor })
     if (cc.due && cc.proposal && cc.tdee.tdee && s.appliesCheckin) {
       if (Math.abs(cc.proposal.delta) > CHECKIN_MAX_STEP) add('STEP', 'error', i, `check-in adımı ${cc.proposal.delta}`)
       const m = scaleMacros({ kcal: goal.dailyKcal, protein: goal.protein, carb: goal.carb, fat: goal.fat }, cc.proposal.kcal)
-      if (cc.proposal.delta !== 0) {
+      if (Math.abs(cc.proposal.delta) >= 100) { // küçük düzeltmeler zikzak sayılmaz
         const dir = Math.sign(cc.proposal.delta)
         if (reachedDay !== null && lastDir !== 0 && dir !== lastDir) reversalsAfterReach++
         lastDir = dir
       }
       ck = cc.proposal.delta
-      goal.dailyKcal = m.kcal; goal.carb = m.carb; goal.fat = m.fat
+      goal.dailyKcal = m.kcal; goal.carb = m.carb; goal.fat = m.fat; goal.tdee = cc.smoothTdee ?? goal.tdee
       lastCheckin = today; checkins++
       // kas hedefli kullanıcı hedefe ulaştıktan sonra harcamanın belirgin altına çekiliyor mu?
-      if (s.goal === 'gain' && reachedDay !== null && goal.dailyKcal < cc.tdee.tdee - 150) add('GAIN_PUSHED_DEFICIT', 'warn', i, `kas hedefli kullanıcı hedefe ulaştıktan sonra ${goal.dailyKcal} kcal (ölçülen harcama ${cc.tdee.tdee}) — açığa sokuluyor`)
+      if (cooperative0 && goal.type === 'gain' && reachedDay !== null && cc.proposal.delta < 0 && goal.dailyKcal < cc.tdee.tdee - 150) add('GAIN_PUSHED_DEFICIT', 'warn', i, `kas hedefli kullanıcı hedefe ulaştıktan sonra ${goal.dailyKcal} kcal (ölçülen harcama ${cc.tdee.tdee}) — açığa sokuluyor`)
     }
     const trend = series.at(-1)?.trend ?? null
-    if (reachedDay === null && trend !== null && i > 3 && s.goal !== 'recomp') {
-      if ((s.goal === 'gain' && trend >= s.targetWeightKg - 0.3) || (s.goal === 'lose' && trend <= s.targetWeightKg + 0.3)) reachedDay = i
+    // Faz 8: hedefe ulaşma (uygulamadaki goalReached ile aynı: son 3 günün trendi) → Bugün kartı → kullanıcının seçimi
+    if (reachedDay === null && i > 3 && goal.type !== 'recomp' && goalReached(goal.type, goal.targetWeightKg, series.slice(-3).map((x) => x.trend))) {
+      reachedDay = i
+      if (s.afterReach === 'recomp' && trend !== null) {
+        const keep = goalAfterReach({ endDate: goal.endDate, today, tdee: goal.tdee, floor })
+        const mp = macroPlan({ goal: 'recomp', sex: s.sex, age: s.age, weightKg: trend, heightCm: s.heightCm, bfPct: null, kcal: keep.kcal })
+        Object.assign(goal, { type: 'recomp' as const, targetWeightKg: trend, startWeightKg: trend, startDate: today, endDate: keep.endDate, dailyKcal: keep.kcal, protein: mp.protein, carb: mp.carb, fat: mp.fat })
+        adj.clear(); lastCheckin = today; switchedDay = i
+      }
     }
+    // Faz 8: hedef tarih geçti, hedefe ulaşılmadı → Bugün kartı → "süreyi uzat"
+    if (extendedDay === null && reachedDay === null && goal.type !== 'recomp' && today > goal.endDate && trend !== null && s.afterEnd === 'extend') {
+      const end = extendEndDate({ trendKg: trend, targetKg: goal.targetWeightKg, weeklyKg: plan.weeklyKg, today })
+      goal.endDate = end; extendedDay = i; extendedFrom = Math.abs(trend - goal.targetWeightKg)
+      totalDays = Math.min(i + 1 + Math.round((Date.parse(end) - Date.parse(today)) / 86400000) + 14, plan.days + s.tailDays + 380)
+    }
+    if (switchedDay !== null && i > switchedDay && i <= switchedDay + 120 && trend !== null) recompMax = Math.max(recompMax, Math.abs(trend - goal.targetWeightKg))
     if (i === plan.days - 1) endTrend = trend
     if (keepDays) days.push({ i, target, intake, logged, weighed, trend, trueKg: Math.round(weightOf(body) * 10) / 10, fatPct: Math.round(bodyFatOf(body) * 10) / 10, checkin: ck })
   }
@@ -137,18 +158,20 @@ export function runScenario(s: Scenario, keepDays = false): SimResult {
   const cooperative = (s.adherence === 'perfect' || s.adherence === 'good') && s.underreport <= 0.05 && s.skipLogP <= 0.05 && (s.weighing === 'daily' || s.weighing === 'thrice') && s.appliesCheckin && !s.typoWeight
   const diff = s.targetWeightKg - s.weightKg
   const endKg = endTrend ?? weightOf(body)
-  if (cooperative && s.goal !== 'recomp' && plan.days >= 28) {
+  if (cooperative && s.goal !== 'recomp' && plan.days >= 28 && reachedDay === null && !(plan.expectedDays && plan.expectedDays > plan.days * 1.1) && extendedDay === null) { // hedefe ulaşan: sonrası AFTER_REACH_DRIFT ile
     const tol = Math.max(1, Math.abs(diff) * 0.25)
     if (Math.abs(endKg - s.targetWeightKg) > tol) add('MISS', 'warn', plan.days, `plan sonunda trend ${endKg.toFixed(1)} kg, hedef ${s.targetWeightKg} (tolerans ±${tol.toFixed(1)})`)
   }
   if (cooperative && s.goal === 'recomp' && Math.abs(endKg - s.weightKg) > 2) add('RECOMP_DRIFT', 'warn', plan.days, `koruma hedefinde kilo ${s.weightKg} → ${endKg.toFixed(1)}`)
-  if (reversalsAfterReach >= 3) add('OSCILLATION', 'warn', plan.days, `hedefe ulaştıktan sonra check-in yönü ${reversalsAfterReach} kez değişti`)
+  if (switchedDay !== null && recompMax > 2.5 && (s.adherence === 'perfect' || s.adherence === 'good') && s.appliesCheckin) add('AFTER_REACH_DRIFT', 'warn', switchedDay, `hedefe ulaşıp korumaya geçtikten sonra kilo hedeften ${recompMax.toFixed(1)} kg uzaklaştı`)
+  if (cooperative && extendedDay !== null && reachedDay === null) add('NOT_REACHED_AFTER_EXTENSION', 'warn', totalDays, `süre uzatıldı (${extendedFrom.toFixed(1)} kg kalmıştı) ama uzatılan sürede de hedefe ulaşılmadı`)
+  if (cooperative && reversalsAfterReach >= 3) add('OSCILLATION', 'warn', plan.days, `hedefe ulaştıktan sonra check-in yönü ${reversalsAfterReach} kez değişti`)
   const safeWeekly = Math.max(maxWeeklyKg(s.goal, s.weightKg), plan.weeklyKg)
   if (cooperative && s.goal !== 'recomp' && reachedDay !== null && reachedDay > 7) {
     const rate = (Math.abs(diff) / reachedDay) * 7
     if (rate > Math.max(1.5 * safeWeekly, 0.25) && rate > HARD_MAX_WEEKLY_KG * 0.5) add('TOO_FAST', 'warn', reachedDay, `hedefe haftada ${rate.toFixed(2)} kg ile ulaşıldı (güvenli ${safeWeekly.toFixed(2)})`)
   }
-  if (s.goal === 'gain' && reachedDay !== null && reachedDay < plan.days * 0.5) add('GAIN_EARLY_NO_PROMPT', 'warn', reachedDay, `kas hedefli kullanıcı hedefe ${reachedDay}. günde ulaştı (plan ${plan.days} gün); uygulama sonraki adımı sormuyor`)
+  // (GAIN_EARLY_NO_PROMPT kaldırıldı: Faz 8 ile hedefe ulaşınca Bugün'de seçim kartı çıkıyor)
   void trueTdee
   return {
     id: s.id, goal: s.goal, startKg: s.weightKg, targetKg: s.targetWeightKg, planDays: plan.days,

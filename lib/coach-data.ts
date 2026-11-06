@@ -144,7 +144,7 @@ async function shortenSafe(userId: string, ctx: CoachContext, daysLeft: number):
   if (!p || !ctx.goal) return 'Profil ya da hedef yok'
   const series = await weightSeries(userId, addDays(ctx.today, -28), ctx.today)
   const nowKg = series.filter((s) => s.trend !== null).at(-1)?.trend ?? ctx.goal.startWeightKg
-  const plan = computePlan({ sex: p.sex as Sex, age: ageFromBirthDate(p.birthDate), heightCm: p.heightCm, weightKg: nowKg, activity: p.activity as Activity, goal: ctx.goal.type as GoalType, targetWeightKg: ctx.goal.targetWeightKg, days: daysLeft })
+  const plan = computePlan({ sex: p.sex as Sex, age: ageFromBirthDate(p.birthDate), heightCm: p.heightCm, weightKg: nowKg, activity: p.activity as Activity, goal: ctx.goal.type as GoalType, targetWeightKg: ctx.goal.targetWeightKg, days: daysLeft, experience: p.experience, bfPct: p.bodyFatPct })
   return plan.safe ? null : `Bu süre güvenli değil (en az ${plan.safeDays} gün gerekir).`
 }
 

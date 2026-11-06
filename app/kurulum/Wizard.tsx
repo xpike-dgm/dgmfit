@@ -76,7 +76,7 @@ export default function Wizard({ username }: { username: string }) {
 
   const plan = useMemo(() => {
     if (!s.sex || age === null || !s.activity || !s.goal) return null
-    return computePlan({ sex: s.sex, age, heightCm: s.heightCm, weightKg: s.weightKg, activity: s.activity, goal: s.goal, targetWeightKg: target, days })
+    return computePlan({ sex: s.sex, age, heightCm: s.heightCm, weightKg: s.weightKg, activity: s.activity, goal: s.goal, targetWeightKg: target, days, experience: s.experience ?? null })
   }, [s.sex, age, s.heightCm, s.weightKg, s.activity, s.goal, target, days])
 
   const [hMin, hMax] = healthyWeightRange(s.heightCm)

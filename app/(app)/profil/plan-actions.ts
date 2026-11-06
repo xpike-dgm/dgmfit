@@ -34,7 +34,7 @@ export async function replanAction(raw: ReplanInput): Promise<{ ok: true } | { o
   if (d.goal === 'lose' && target >= nowKg) return { ok: false, error: 'Kilo vermek için hedef, güncel kilondan düşük olmalı.' }
   if (d.goal === 'gain' && target <= nowKg) return { ok: false, error: 'Kilo almak için hedef, güncel kilondan yüksek olmalı.' }
   if (d.goal === 'lose' && target < 18.5 * (d.heightCm / 100) ** 2 - 0.05) return { ok: false, error: 'Hedef kilo sağlıklı aralığın altında.' }
-  const plan = computePlan({ sex: t.profile.sex as Sex, age: ageFromBirthDate(t.profile.birthDate), heightCm: d.heightCm, weightKg: nowKg, activity: d.activity, goal: d.goal, targetWeightKg: target, days: d.goal === 'recomp' ? 90 : d.days })
+  const plan = computePlan({ sex: t.profile.sex as Sex, age: ageFromBirthDate(t.profile.birthDate), heightCm: d.heightCm, weightKg: nowKg, activity: d.activity, goal: d.goal, targetWeightKg: target, days: d.goal === 'recomp' ? 90 : d.days, experience: t.profile.experience, bfPct: t.profile.bodyFatPct })
   if (!plan.allowed && d.goal !== 'recomp') return { ok: false, error: plan.warnings[0] ?? 'Bu tempo planlanamaz.' }
   const today = dayString()
   const now = new Date()

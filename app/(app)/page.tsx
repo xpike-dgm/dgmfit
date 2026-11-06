@@ -12,6 +12,8 @@ import InsightCard from '@/components/InsightCard'
 import { latestReportWeek, mondayOf } from '@/lib/coach-data'
 import { Drop, Dumbbell, Flame, Pulse, Target, User } from '@/components/icons'
 import { dayState } from '@/lib/day-state'
+import { goalStatus } from '@/lib/goal-phase'
+import GoalChoiceCard from '@/components/GoalChoiceCard'
 import { recentFoods } from '@/lib/food-data'
 import { minuteOfDay } from '@/lib/water-data'
 
@@ -20,7 +22,7 @@ export default async function Today() {
   await closePendingDays(user.id)
   const t = await getToday(user.id)
   if (!t) redirect('/kurulum')
-  const tr = await todayTraining(user.id, t.day)
+  const [tr, gs] = await Promise.all([todayTraining(user.id, t.day), goalStatus(user.id)])
   // Haftalık rapor kısayolu: Pazar 18.00'den Pazartesi sonuna kadar
   const weeklyReady = latestReportWeek() === mondayOf(t.day) || latestReportWeek() === addDays(mondayOf(t.day), -7) && new Date(t.day + 'T12:00:00Z').getUTCDay() === 1
 
@@ -95,6 +97,8 @@ export default async function Today() {
           ) : null}
         </div>
       </section>
+
+      {gs ? <GoalChoiceCard s={gs} /> : null}
 
       {ds.postWorkoutProtein ? (
         <section className="card p-4 flex flex-col gap-2.5 border-l-4 border-[var(--color-protein)]" data-testid="post-workout-protein">

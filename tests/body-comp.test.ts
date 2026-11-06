@@ -35,7 +35,7 @@ test('makro planı: protein yağsız kütleden, yağ ≥ 0,6 g/kg, toplam kalori
 
 test('kas kazanım temposu deneyime göre; yağ oranı yüksekse yavaşlar', () => {
   assert.deepEqual(gainRatePctMonth('new', 'male', 15), { lo: 1, hi: 1.5 })
-  assert.deepEqual(gainRatePctMonth('pro', 'male', 12), { lo: 0.25, hi: 0.5 })
+  assert.deepEqual(gainRatePctMonth('adv', 'male', 12), { lo: 0.25, hi: 0.5 })
   assert.ok(gainRatePctMonth('new', 'male', 26).hi <= 1)
 })
 
@@ -67,4 +67,15 @@ test('günün durumu: kalan, antrenman sonrası protein, su bonusu', () => {
   assert.match(s.waterBonusText!, /\+500 ml/)
   const late = dayState({ target: { kcal: 2200, protein: 150, carb: 220, fat: 70, water: 3000 }, eaten: { kcal: 1200, protein: 140, carb: 120, fat: 40 }, burned: 0, waterMl: 0, waterBonus: 0, workoutMin: 60, sinceWorkoutMin: 30, nowMin: 600 })
   assert.equal(late.postWorkoutProtein, null, 'protein açığı 20 g altında kart yok')
+})
+
+test('kazanım kalitesi: hızlı / yavaş / iyi / recomp / kas kaybı', async () => {
+  const { gainQuality } = await import('../lib/body-comp.ts')
+  const rate = { lo: 1, hi: 1.5 }
+  assert.equal(gainQuality({ goal: 'gain', weightKg: 78, weeklyKg: 0.5, rate, waistDeltaCm: 1, strengthDeltaPct: 5 }).verdict, 'fast')
+  assert.equal(gainQuality({ goal: 'gain', weightKg: 78, weeklyKg: 0.05, rate, waistDeltaCm: 0, strengthDeltaPct: 0 }).verdict, 'slow')
+  assert.equal(gainQuality({ goal: 'gain', weightKg: 78, weeklyKg: 0.22, rate, waistDeltaCm: 0.5, strengthDeltaPct: 4 }).verdict, 'good')
+  assert.equal(gainQuality({ goal: 'recomp', weightKg: 80, weeklyKg: 0.01, rate, waistDeltaCm: -0.5, strengthDeltaPct: 3 }).verdict, 'good')
+  assert.equal(gainQuality({ goal: 'lose', weightKg: 90, weeklyKg: -0.6, rate, waistDeltaCm: -2, strengthDeltaPct: -8 }).verdict, 'cut-muscle')
+  assert.equal(gainQuality({ goal: 'gain', weightKg: 78, weeklyKg: null, rate, waistDeltaCm: null, strengthDeltaPct: null }).verdict, 'unknown')
 })

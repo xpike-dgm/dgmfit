@@ -16,3 +16,14 @@ export async function logWeight(kg: number): Promise<{ error?: string }> {
   revalidatePath('/'); revalidatePath('/fit')
   return {}
 }
+
+/** Faz 8: hedefe ulaşınca / hedef tarih gelince Bugün kartındaki seçim. */
+export async function goalChoiceAction(choice: 'recomp' | 'extend' | 'later' | 'new'): Promise<{ ok: boolean; error?: string; redirect?: string }> {
+  const u = await getUser()
+  if (!u) return { ok: false, error: 'Oturum yok' }
+  if (!['recomp', 'extend', 'later', 'new'].includes(choice)) return { ok: false, error: 'Geçersiz seçim' }
+  const { chooseAfterGoal } = await import('@/lib/goal-phase')
+  const r = await chooseAfterGoal(u.id, choice)
+  revalidatePath('/'); revalidatePath('/fit'); revalidatePath('/yemek')
+  return r.ok ? { ok: true, redirect: r.redirect } : { ok: false, error: r.error }
+}

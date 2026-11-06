@@ -23,6 +23,8 @@ export default function FoodDiary(p: {
   trained?: boolean
   micro: Record<string, number>; suggested: MealId; yesterdayHas: Record<MealId, number>
   supplements?: ReactNode
+  /** Faz 8: detaylı besin hedefleri (sunucuda hazırlanır) */
+  detail?: ReactNode
   /** Sade modda takviye kartı boşsa gizlenir */
   hasSupplements?: boolean
   /** Gelişmiş mod (sadeleştirme 2026-11-06) */
@@ -121,6 +123,7 @@ export default function FoodDiary(p: {
         </section>
       ))}
 
+      {p.detail ?? null}
       {p.adv || p.hasSupplements ? p.supplements : null}
 
       {Object.keys(p.micro).length ? (

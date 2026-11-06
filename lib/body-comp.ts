@@ -2,10 +2,10 @@
 // Kaynaklar: ABD Donanması çevre ölçüsü formülü (Hodgdon & Beckett 1984), Deurenberg (1991) VKİ tahmini,
 // Katch-McArdle BMR, ISSN/ACSM protein önerileri (yağsız kütle başına), WHO doymuş yağ/şeker sınırları,
 // Türkiye Beslenme Rehberi (TÜBER 2022) ve IOM DRI mikro besin değerleri.
-import type { Sex } from './calc.ts'
+export type Sex = 'male' | 'female'
 
 export type BodyFatSource = 'user' | 'navy' | 'estimate'
-export type Experience = 'new' | 'mid' | 'pro' | null
+export type Experience = 'new' | 'mid' | 'adv' | null
 
 /** ABD Donanması formülü (cm). Kadında kalça gerekir. Mantıksız ölçüde null. */
 export function navyBodyFat(sex: Sex, heightCm: number, neckCm: number, waistCm: number, hipsCm?: number | null): number | null {
@@ -45,7 +45,7 @@ export function bfCategory(sex: Sex, bf: number): string {
  * Yeni başlayan %1–1,5, orta %0,5–1, ileri %0,25–0,5 (Helms ve ark.). Yağ oranı yüksekse alt uç.
  */
 export function gainRatePctMonth(exp: Experience, sex: Sex, bf: number | null): { lo: number; hi: number } {
-  const r = exp === 'pro' ? { lo: 0.25, hi: 0.5 } : exp === 'mid' ? { lo: 0.5, hi: 1 } : { lo: 1, hi: 1.5 }
+  const r = exp === 'adv' ? { lo: 0.25, hi: 0.5 } : exp === 'mid' ? { lo: 0.5, hi: 1 } : { lo: 1, hi: 1.5 }
   const high = bf !== null && bf > (sex === 'male' ? 20 : 30)
   return high ? { lo: r.lo * 0.5, hi: r.lo } : r
 }
@@ -122,4 +122,36 @@ export function proteinPerMeal(proteinG: number, weightKg: number): { meals: num
 export function goalReached(goal: 'lose' | 'gain' | 'recomp', targetKg: number, trendLast3: (number | null)[]): boolean {
   if (goal === 'recomp' || trendLast3.length < 3 || trendLast3.some((t) => t === null)) return false
   return trendLast3.every((t) => (goal === 'gain' ? t! >= targetKg - 0.3 : t! <= targetKg + 0.3))
+}
+
+export type QualityVerdict = 'good' | 'fast' | 'slow' | 'stall' | 'cut-ok' | 'cut-muscle' | 'unknown'
+
+/**
+ * Faz 8: haftalık kazanım kalitesi — kilo trendi + bel ölçüsü + kuvvet birlikte okunur.
+ * gain: kilo ideal tempoda mı (deneyime göre), bel çok hızlı mı büyüyor, kuvvet artıyor mu.
+ * recomp: kilo sabit, bel sabit/azalıyor, kuvvet artıyor → işliyor.
+ * lose: kilo düşüyor ve kuvvet korunuyor mu.
+ */
+export function gainQuality(i: {
+  goal: 'lose' | 'gain' | 'recomp'; weightKg: number; weeklyKg: number | null
+  rate: { lo: number; hi: number } // ayda vücut ağırlığının %'si
+  waistDeltaCm: number | null // ~4 haftalık değişim
+  strengthDeltaPct: number | null // ana hareketlerde tahmini 1 tekrar maks. değişimi (%)
+}): { verdict: QualityVerdict; text: string } {
+  if (i.weeklyKg === null) return { verdict: 'unknown', text: 'Değerlendirme için en az 2 hafta düzenli tartı gerekli.' }
+  const pctMonth = ((i.weeklyKg * 4.345) / i.weightKg) * 100
+  const s = i.strengthDeltaPct, w = i.waistDeltaCm
+  const strength = s === null ? '' : s >= 2 ? ` Kuvvetin %${Math.round(s)} arttı.` : s <= -3 ? ` Kuvvetin %${Math.round(-s)} düştü.` : ' Kuvvetin yerinde.'
+  if (i.goal === 'gain') {
+    if (pctMonth > i.rate.hi * 1.25 || (w !== null && w > 2)) return { verdict: 'fast', text: `Kilo ayda %${pctMonth.toFixed(1)} artıyor${w !== null ? `, bel ${w > 0 ? '+' : ''}${w.toFixed(1)} cm` : ''}: önerilen tempodan hızlı, fazlası yağ olabilir. Günlük fazlayı ~150 kcal azaltmayı düşün.${strength}` }
+    if (pctMonth < i.rate.lo * 0.5 && (s === null || s < 2)) return { verdict: 'slow', text: `Kilo ayda %${pctMonth.toFixed(1)} artıyor; kas kazanımı için yavaş.${strength} Günlük ~100–150 kcal artırmak işe yarar.` }
+    return { verdict: 'good', text: `Kilo ayda %${pctMonth.toFixed(1)} artıyor (önerilen %${i.rate.lo}–${i.rate.hi})${w !== null ? `, bel ${w > 0 ? '+' : ''}${w.toFixed(1)} cm` : ''}: kaliteli kazanım.${strength}` }
+  }
+  if (i.goal === 'recomp') {
+    if (s !== null && s < -3) return { verdict: 'stall', text: `Kuvvetin %${Math.round(-s)} düştü; toparlanma ve protein yetersiz olabilir. Uykuna ve proteinine dikkat et.` }
+    if (s !== null && s >= 2 && (w === null || w <= 0.5)) return { verdict: 'good', text: `Kilon sabit, kuvvetin %${Math.round(s)} arttı${w !== null ? `, bel ${w > 0 ? '+' : ''}${w.toFixed(1)} cm` : ''}: kilonu koruyup kas kazanıyorsun.` }
+    return { verdict: s === null ? 'unknown' : 'stall', text: s === null ? 'Kilonu koruyorsun. Kas kazanımını görmek için antrenmanlarını kaydet ve 2 haftada bir bel ölçünü gir.' : `Kilon sabit ama kuvvet artışı yavaş.${strength} Programda kademeli yüklenmeye (her hafta biraz daha) dikkat et.` }
+  }
+  if (s !== null && s <= -5) return { verdict: 'cut-muscle', text: `Kilo veriyorsun ama kuvvetin %${Math.round(-s)} düştü: kas kaybı riski. Proteini artır, açığı biraz küçült.` }
+  return { verdict: 'cut-ok', text: `Kilo haftada ${Math.abs(i.weeklyKg).toFixed(2)} kg azalıyor.${strength || ' Antrenmanlarını kaydedersen kas korumayı da izleriz.'}` }
 }

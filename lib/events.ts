@@ -16,6 +16,9 @@ export type EventType =
   | 'water.logged'
   | 'day.closed'
   | 'plan.adjusted'
+  | 'goal.reached'
+  | 'goal.choice'
+  | 'bodyfat.updated'
   | 'coach.action'
   | 'report.pushed'
 

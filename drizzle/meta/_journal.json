@@ -155,6 +155,13 @@
       "when": 1793996925138,
       "tag": "0021_barcode_misses",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794005902328,
+      "tag": "0022_goal_intelligence",
+      "breakpoints": true
     }
   ]
 }

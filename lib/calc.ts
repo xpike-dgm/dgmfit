@@ -1,4 +1,5 @@
 // DgFit hesaplama motoru — saf fonksiyonlar (sunucu ve istemcide aynı sonuç).
+import { estimateBodyFat, gainRatePctMonth, macroPlan } from './body-comp.ts'
 
 export type Sex = 'male' | 'female'
 export type Activity = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'
@@ -75,6 +76,10 @@ export interface PlanInput {
   goal: GoalType
   targetWeightKg: number
   days: number
+  /** Faz 8: bilinen yağ oranı (%) — yoksa VKİ'den tahmin edilir */
+  bfPct?: number | null
+  /** Faz 8: antrenman deneyimi (new | mid | pro) — kas kazanım temposu için */
+  experience?: string | null
 }
 
 export interface Plan {
@@ -125,7 +130,9 @@ export function computePlan(p: PlanInput): Plan {
   let expectedDays: number | null = null
 
   if (p.goal === 'recomp') {
-    delta = -Math.round(t * 0.05)
+    // Faz 8: haftalık ortalama bakım (antrenman günü fazla, dinlenme günü az — dayTargets); yağ oranı yüksekse hafif açık
+    const bf = p.bfPct ?? estimateBodyFat(p.sex, p.weightKg, p.heightCm, p.age)
+    delta = bf > (p.sex === 'male' ? 22 : 32) ? -Math.round(t * 0.05) : 0
   } else {
     const diffKg = p.targetWeightKg - p.weightKg
     const totalKcal = Math.abs(diffKg) * KCAL_PER_KG
@@ -174,13 +181,18 @@ export function computePlan(p: PlanInput): Plan {
   const realDelta = kcal - t
   kcal = Math.round(kcal / 5) * 5
 
-  // Protein referans ağırlığı: obezite durumunda VKİ 25'teki ağırlık.
-  const h = p.heightCm / 100
-  const refWeight = bmi(p.weightKg, p.heightCm) > 30 ? 25 * h * h : p.weightKg
-  const proteinPerKg = p.goal === 'gain' ? 1.8 : 2.0
-  const proteinG = Math.round(refWeight * proteinPerKg)
-  const fatG = Math.round(Math.max((kcal * 0.27) / 9, p.weightKg * 0.6))
-  const carbG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4))
+  // Faz 8: makrolar yağsız kütleye göre (lib/body-comp.ts macroPlan) — yağ oranı bilinmiyorsa tahmin
+  const mp = macroPlan({ goal: p.goal, sex: p.sex, age: p.age, weightKg: p.weightKg, heightCm: p.heightCm, bfPct: p.bfPct ?? null, kcal })
+  const proteinG = mp.protein, fatG = mp.fat, carbG = mp.carb
+  // Kas kazanımı temposu (deneyime göre): çok hızlıysa fazlası yağ olabilir, çok yavaşsa kazanım düşük kalır
+  if (p.goal === 'gain' && p.targetWeightKg > p.weightKg) {
+    const exp = p.experience === 'adv' || p.experience === 'mid' || p.experience === 'new' ? p.experience : 'new'
+    const r = gainRatePctMonth(exp, p.sex, mp.bfPct)
+    const pctMonth = ((Math.abs(realDelta) * 30.4) / KCAL_PER_KG / p.weightKg) * 100
+    const daysFor = (pct: number) => Math.ceil(((p.targetWeightKg - p.weightKg) / ((p.weightKg * pct) / 100)) * 30.4)
+    if (pctMonth > r.hi * 1.05) warnings.push(`Kas kazanımı için hızlı: ayda kilonun %${fmtNum(round2(pctMonth), 2)}'i. Senin deneyiminde önerilen %${fmtNum(r.lo, 2)}–${fmtNum(r.hi, 2)}; fazlası yağ olarak birikebilir. Önerilen süre en az ${fmtNum(daysFor(r.hi))} gün.`)
+    else if (pctMonth < r.lo * 0.6) warnings.push(`Kas kazanımı için yavaş: ayda kilonun %${fmtNum(round2(pctMonth), 2)}'i. Senin deneyiminde %${fmtNum(r.lo, 2)}–${fmtNum(r.hi, 2)} önerilir (yaklaşık ${fmtNum(daysFor(r.lo))}–${fmtNum(daysFor(r.hi))} gün). Daha uzun süre de olur; hedefe erken ulaşırsan uygulama sana sonraki adımı sorar.`)
+  }
 
   return {
     bmr: Math.round(b),

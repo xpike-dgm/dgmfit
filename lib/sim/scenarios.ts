@@ -14,6 +14,10 @@ export interface Scenario {
   bodyFatPct: number; activityTrue: number; metabolicBias: number; training: Training; trainDays: number
   adherence: Adherence; underreport: number; skipLogP: number; weighing: Weighing; appliesCheckin: boolean
   vacation: boolean; illness: boolean; typoWeight: boolean
+  /** Hedefe ulaşınca Bugün kartındaki seçim: koruyup kas kazan | sonra (mevcut planla devam) */
+  afterReach: 'recomp' | 'later'
+  /** Hedef tarih geldi, hedefe ulaşılmadı: süreyi uzat | sonra */
+  afterEnd: 'extend' | 'later'
   /** Planın bitiminden sonra da izlenen gün sayısı */
   tailDays: number
   tags: string[]
@@ -62,6 +66,8 @@ function make(id: string, over: Partial<Scenario> = {}): Scenario | null {
     weighing: over.weighing ?? r.pick(['daily', 'daily', 'thrice', 'weekly', 'irregular'] as const),
     appliesCheckin: over.appliesCheckin ?? r.chance(0.85),
     vacation: over.vacation ?? r.chance(0.2), illness: over.illness ?? r.chance(0.1), typoWeight: over.typoWeight ?? r.chance(0.1),
+    afterReach: over.afterReach ?? (r.chance(0.6) ? 'recomp' : 'later'),
+    afterEnd: over.afterEnd ?? (r.chance(0.75) ? 'extend' : 'later'),
     tailDays: over.tailDays ?? 30,
     tags: over.tags ?? [],
   }

@@ -1,6 +1,7 @@
 // Fit motoru — kalori dengeleme, kalori bankası, adaptif harcama, tahmin. Saf ve testli (tests/fit.test.ts).
 // Spesifikasyon 5.3 (dengeleme), 5.4 (adaptif TDEE), 5.5 (kilo trendi/tahmin).
 import { KCAL_PER_KG } from './calc.ts'
+import { recompDayKcal } from './body-comp.ts'
 
 export const WINDOW_DAYS = 7
 export const MAX_UNDER_CREDIT = 300 // eksik yenen günden en fazla bu kadar kalori sonraki günlere eklenir
@@ -170,8 +171,17 @@ export function forecastDay(series: { day: string; kg: number }[], targetKg: num
  */
 export function checkinProposal(i: { currentKcal: number; measuredTdee: number; trendKg: number; targetKg: number; daysLeft: number; floor: number; goal: 'lose' | 'gain' | 'recomp' }): { kcal: number; delta: number; reason: string } {
   let wanted: number
-  if (i.goal === 'recomp' || i.daysLeft <= 0) wanted = Math.round(i.measuredTdee * (i.goal === 'recomp' ? 0.95 : 1))
+  if (i.goal === 'recomp') {
+    // koruyup kas: bakım + hedef kiloya hafif çekim (kas kazanırken tartı yukarı kayarsa yağdan yakılır; ±250 kcal)
+    wanted = Math.round(i.measuredTdee + Math.max(-250, Math.min(250, ((i.targetKg - i.trendKg) * KCAL_PER_KG) / 90)))
+  } else if (i.daysLeft <= 0) wanted = Math.round(i.measuredTdee)
   else wanted = Math.round(i.measuredTdee + ((i.targetKg - i.trendKg) * KCAL_PER_KG) / i.daysLeft)
+  // Faz 8: hedef yönünün tersine itilmez — kas/kilo almak isteyen hedefi aşsa bile bakımın altına, kilo veren bakımın üstüne çekilmez
+  // (simülasyon: kas hedefli kullanıcıların %17'si hedefe ulaşınca açığa sokuluyordu). Sonraki adımı kullanıcı seçer.
+  if (i.goal === 'gain') wanted = Math.max(wanted, Math.round(i.measuredTdee))
+  if (i.goal === 'lose') wanted = Math.min(wanted, Math.round(i.measuredTdee))
+  // ölü bant: 60 kcal'den küçük fark ölçüm gürültüsüdür, plan değişmez (hedef etrafında zikzak olmasın)
+  if (Math.abs(wanted - i.currentKcal) < 60) wanted = i.currentKcal
   const clamped = Math.max(i.floor, Math.min(i.currentKcal + CHECKIN_MAX_STEP, Math.max(i.currentKcal - CHECKIN_MAX_STEP, wanted)))
   const kcal = Math.round(clamped / 5) * 5
   const delta = kcal - i.currentKcal
@@ -214,7 +224,7 @@ export function trendSeries(byDay: Map<string, number>, from: string, to: string
   return out
 }
 
-export interface CheckinGoal { type: 'lose' | 'gain' | 'recomp'; startWeightKg: number; targetWeightKg: number; startDate: string; endDate: string; dailyKcal: number }
+export interface CheckinGoal { type: 'lose' | 'gain' | 'recomp'; startWeightKg: number; targetWeightKg: number; startDate: string; endDate: string; dailyKcal: number; /** son kullanılan harcama tahmini (kurulum formülü ya da önceki check-in) */ tdee?: number | null }
 
 /**
  * Haftalık check-in hesabının saf hâli (veritabanı katmanı ve simülasyon aynısını kullanır).
@@ -226,8 +236,10 @@ export function checkinCompute(i: { goal: CheckinGoal; series: { day: string; ra
   const trendNow = i.series.filter((s) => s.trend !== null).at(-1)?.trend ?? i.goal.startWeightKg
   const forecast = forecastDay(i.series.filter((s) => s.trend !== null).map((s) => ({ day: s.day, kg: s.trend! })), i.goal.targetWeightKg, i.today)
   const due = days(i.lastCheckin, i.today) >= 7
-  const proposal = tdee.tdee ? checkinProposal({ currentKcal: i.goal.dailyKcal, measuredTdee: tdee.tdee, trendKg: trendNow, targetKg: i.goal.targetWeightKg, daysLeft: days(i.today, i.goal.endDate), floor: i.floor, goal: i.goal.type }) : null
-  return { tdee, trendNow, forecast, due, proposal }
+  // Faz 8: ölçülen harcama haftadan haftaya ±100–200 kcal oynar; öncekiyle yarı yarıya karıştırılır (zikzak olmasın)
+  const smooth = tdee.tdee && i.goal.tdee ? Math.round((tdee.tdee + i.goal.tdee) / 2) : tdee.tdee
+  const proposal = smooth ? checkinProposal({ currentKcal: i.goal.dailyKcal, measuredTdee: smooth, trendKg: trendNow, targetKg: i.goal.targetWeightKg, daysLeft: days(i.today, i.goal.endDate), floor: i.floor, goal: i.goal.type }) : null
+  return { tdee, smoothTdee: smooth, trendNow, forecast, due, proposal }
 }
 
 /**
@@ -236,4 +248,42 @@ export function checkinCompute(i: { goal: CheckinGoal; series: { day: string; ra
  */
 export function targetKcal(base: number, adjustment: number, floor: number): number {
   return Math.max(Math.min(base, floor), base + adjustment)
+}
+
+/**
+ * Faz 8: hedefe ulaşıp "kilomu koruyup kas kazanmak" seçilince yeni aşama: hedef tarih aynı kalır (14 günden azsa 90 gün),
+ * kalori ölçülen/son harcama (bakım), güvenli tabanın altına inmez.
+ */
+export function goalAfterReach(i: { endDate: string; today: string; tdee: number; floor: number }): { endDate: string; kcal: number } {
+  const plus = (d: string, n: number) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10) }
+  const endDate = i.endDate > plus(i.today, 13) ? i.endDate : plus(i.today, 89)
+  return { endDate, kcal: Math.max(i.floor, Math.round(i.tdee / 5) * 5) }
+}
+
+/**
+ * Faz 8: hedef tarih geldi ama hedefe ulaşılmadı → "süreyi uzat": kalan farkı planın haftalık temposuyla bitirecek
+ * yeni tarih (en az 14, en çok 365 gün).
+ */
+export function extendEndDate(i: { trendKg: number; targetKg: number; weeklyKg: number; today: string }): string {
+  const plus = (d: string, n: number) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10) }
+  const rate = Math.max(0.1, i.weeklyKg)
+  const days = Math.ceil((Math.abs(i.targetKg - i.trendKg) / rate) * 7)
+  return plus(i.today, Math.max(14, Math.min(365, days)))
+}
+
+/** Haftalık antrenman günü sayısından varsayılan günler (0 = Pazar). Karb döngüsü günleri seçiliyse onlar kullanılır. */
+export function trainingWeekdays(n: number | null | undefined, custom?: number[] | null): number[] {
+  if (custom?.length) return custom
+  const map: Record<number, number[]> = { 1: [3], 2: [1, 4], 3: [1, 3, 5], 4: [1, 2, 4, 5], 5: [1, 2, 3, 4, 5], 6: [1, 2, 3, 4, 5, 6], 7: [0, 1, 2, 3, 4, 5, 6] }
+  return map[Math.max(1, Math.min(7, n ?? 3))]
+}
+
+/**
+ * Günün plan tabanı. Koruyup kas kazanma (recomp) hedefinde antrenman günü fazla, dinlenme günü az kalori
+ * (haftalık ortalama plan kalorisi); diğer hedeflerde her gün aynı.
+ */
+export function dayBaseKcal(goalType: string, dailyKcal: number, weekday: number, weekdays: number[], floor: number): number {
+  if (goalType !== 'recomp' || !weekdays.length || weekdays.length >= 7) return dailyKcal
+  // dinlenme günü güvenli tabanın altına inmez (simülasyon bulgusu: tabandaki kullanıcıda 1165 < 1200)
+  return Math.max(Math.min(dailyKcal, floor), recompDayKcal(dailyKcal, weekdays.includes(weekday), weekdays.length))
 }

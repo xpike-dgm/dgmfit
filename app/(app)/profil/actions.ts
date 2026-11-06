@@ -2,7 +2,7 @@
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { setAdvanced } from '@/lib/ui-mode'
-import { requireUser } from '@/lib/auth'
+import { getUser, requireUser } from '@/lib/auth'
 import { THEME_COOKIE, parseTheme } from '@/lib/theme'
 
 /** Tema tercihi cihaz başına çerezde saklanır (sunucu ilk çizimde doğru temayı basar). */
@@ -23,4 +23,14 @@ export async function setAdvancedAction(on: boolean): Promise<{ ok: true } | { o
   await setAdvanced(u.id, on)
   revalidatePath('/', 'layout')
   return { ok: true }
+}
+
+/** Faz 8: yağ oranını kaydet (doğrudan ya da ölçülerden) ve aktif hedefin makrolarını yağsız kütleye göre yenile. */
+export async function saveBodyFatAction(i: { pct?: number | null; neck?: number | null; waist?: number | null; hips?: number | null }): Promise<{ ok: boolean; bf?: number; error?: string }> {
+  const u = await getUser()
+  if (!u) return { ok: false, error: 'Oturum yok' }
+  const { saveBodyFat } = await import('@/lib/body-fat-data')
+  const r = await saveBodyFat(u.id, i)
+  revalidatePath('/profil/vucut'); revalidatePath('/'); revalidatePath('/yemek'); revalidatePath('/fit')
+  return r
 }

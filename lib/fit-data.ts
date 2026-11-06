@@ -5,11 +5,12 @@ import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString, diffDays } from './time'
 import { calorieFloor, type Sex } from './calc'
-import { balanceWindow, checkinCompute, closureDiff, distributeDiff, exceptionDays, planBank, scaleMacros, targetKcal, trendSeries, type PlanDay } from './fit'
+import { balanceWindow, checkinCompute, closureDiff, dayBaseKcal, distributeDiff, exceptionDays, planBank, scaleMacros, targetKcal, trainingWeekdays, trendSeries, type PlanDay } from './fit'
 import { dayMacros } from './food-data'
 import { publish } from './events'
 import { minuteOfDay } from './water-data'
 import { dayBurned } from './burn'
+import { gainQuality, gainRatePctMonth, type Experience } from './body-comp'
 
 type Goal = typeof schema.goals.$inferSelect
 
@@ -45,17 +46,20 @@ async function adjustmentsBetween(userId: string, from: string, to: string) {
 export async function dayTargets(userId: string, from: string, to: string, goal?: Goal | null): Promise<DayTarget[]> {
   const g = goal === undefined ? await activeGoal(userId) : goal
   const baseMacros = { kcal: g?.dailyKcal ?? 2000, protein: g?.proteinG ?? 120, carb: g?.carbG ?? 200, fat: g?.fatG ?? 65 }
-  const [adj, closed, sex] = await Promise.all([
+  const [adj, closed, [prof]] = await Promise.all([
     adjustmentsBetween(userId, from, to),
     db.select().from(schema.dailyTargets).where(and(eq(schema.dailyTargets.userId, userId), gte(schema.dailyTargets.day, from), lte(schema.dailyTargets.day, to))),
-    sexOf(userId),
+    db.select({ sex: schema.profiles.sex, trainingDays: schema.profiles.trainingDays }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1),
   ])
-  const floor = calorieFloor(sex)
+  const floor = calorieFloor((prof?.sex as Sex) ?? 'female')
   const closedBy = new Map(closed.map((c) => [c.day, c]))
   // Karb döngüsü (Faz 4c): açık günlerde antrenman/dinlenme gününe göre karbonhidrat kaydırılır (haftalık toplam korunur)
   const [cc] = await db.select().from(schema.carbCycle).where(eq(schema.carbCycle.userId, userId)).limit(1)
   const cyc = cc?.enabled && cc.weekdays.length ? cc : null
+  // Faz 8: koruyup kas kazanmada antrenman günü fazla / dinlenme günü az kalori (karb döngüsü günleri seçiliyse onlar)
+  const recompDays = g?.type === 'recomp' ? trainingWeekdays(prof?.trainingDays, cc?.enabled ? cc.weekdays : null) : null
   const baseFor = (d: string) => {
+    if (recompDays) return scaleMacros(baseMacros, dayBaseKcal('recomp', baseMacros.kcal, new Date(d + 'T12:00:00Z').getUTCDay(), recompDays, floor))
     if (!cyc) return baseMacros
     const { carbDelta: _, ...m } = carbCycleDay(baseMacros, cyc.weekdays.includes(new Date(d + 'T12:00:00Z').getUTCDay()), cyc.weekdays.length, cyc.shiftG)
     return m
@@ -219,15 +223,15 @@ export async function checkinData(userId: string) {
   ])
   const intakeBy = new Map(closed.filter((c) => ['balanced', 'over', 'under', 'exception'].includes(c.closureKind ?? '')).map((c) => [c.day, c.eatenKcal ?? null]))
   const lastCheckin = lastEvt[0] ? dayString(lastEvt[0].createdAt) : goal.startDate
-  const { tdee, trendNow, forecast, due, proposal } = checkinCompute({ goal: { ...goal, type: goal.type as 'lose' }, series, intakeBy, today, lastCheckin, floor: calorieFloor(sex) })
-  return { goal, tdee, trendNow, forecast, due, lastCheckin, proposal }
+  const { tdee, smoothTdee, trendNow, forecast, due, proposal } = checkinCompute({ goal: { ...goal, type: goal.type as 'lose' }, series, intakeBy, today, lastCheckin, floor: calorieFloor(sex) })
+  return { goal, tdee, smoothTdee, trendNow, forecast, due, lastCheckin, proposal }
 }
 
 export async function applyCheckin(userId: string) {
   const d = await checkinData(userId)
   if (!d?.proposal || !d.tdee.tdee) return { error: 'Check-in için yeterli veri yok (en az 14 gün, 10 tam kayıtlı gün)' }
   const m = scaleMacros({ kcal: d.goal.dailyKcal, protein: d.goal.proteinG, carb: d.goal.carbG, fat: d.goal.fatG }, d.proposal.kcal)
-  await db.update(schema.goals).set({ dailyKcal: m.kcal, carbG: m.carb, fatG: m.fat, tdee: d.tdee.tdee }).where(eq(schema.goals.id, d.goal.id))
+  await db.update(schema.goals).set({ dailyKcal: m.kcal, carbG: m.carb, fatG: m.fat, tdee: d.smoothTdee ?? d.tdee.tdee }).where(eq(schema.goals.id, d.goal.id))
   await publish(userId, 'plan.adjusted', { kind: 'checkin', from: d.goal.dailyKcal, to: m.kcal, measuredTdee: d.tdee.tdee, confidence: d.tdee.confidence })
   return { ok: true as const, kcal: m.kcal, delta: d.proposal.delta }
 }
@@ -254,12 +258,39 @@ export async function getFitScreen(userId: string) {
     group by source_day order by source_day desc`)
   const remaining = new Map(pendingFrom.map((r) => [String(r.day), Number(r.kcal)]))
   const sex = await sexOf(userId)
+  const quality = await qualityCard(userId, goal, checkin?.forecast.kgPerWeek ?? null, checkin?.trendNow ?? goal.startWeightKg).catch(() => null)
   return {
-    today, goal, targets, series, banks, checkin, floor: calorieFloor(sex),
+    today, goal, targets, series, banks, checkin, floor: calorieFloor(sex), quality,
     todayState: { eaten: eatenToday.kcal, items: Number(n), closed: targets[0].closed, closure: closedRows.find((c) => c.day === today) ?? null },
     closures: closedRows.filter((c) => c.day < today).map((c) => ({
       day: c.day, kind: c.closureKind ?? 'untracked', eaten: c.eatenKcal ?? 0, target: c.baseKcal + c.adjustmentKcal,
       diff: c.diffKcal ?? 0, leftover: c.leftoverKcal ?? 0, remaining: remaining.get(c.day) ?? 0,
     })),
   }
+}
+
+/** Faz 8: kazanım kalitesi için ölçümler — 4 haftalık bel değişimi ve ana hareketlerde e1RM değişimi (%). */
+async function qualityInputs(userId: string): Promise<{ waistDeltaCm: number | null; strengthDeltaPct: number | null }> {
+  const today = dayString()
+  const ms = await db.select({ day: schema.bodyMeasurements.day, waist: schema.bodyMeasurements.waistCm }).from(schema.bodyMeasurements)
+    .where(and(eq(schema.bodyMeasurements.userId, userId), gte(schema.bodyMeasurements.day, addDays(today, -42)), isNull(schema.bodyMeasurements.deletedAt), sql`${schema.bodyMeasurements.waistCm} is not null`))
+    .orderBy(asc(schema.bodyMeasurements.day))
+  const waistDeltaCm = ms.length >= 2 && diffDays(ms[0].day, ms.at(-1)!.day) >= 14 ? Math.round((ms.at(-1)!.waist! - ms[0].waist!) * 10) / 10 : null
+  const rows = await db.execute<{ ex: number; recent: number | null; prior: number | null }>(sql`
+    select exercise_id as ex,
+      max(case when w.day >= ${addDays(today, -14)} then s.kg * (1 + s.reps / 30.0) end) as recent,
+      max(case when w.day < ${addDays(today, -14)} and w.day >= ${addDays(today, -42)} then s.kg * (1 + s.reps / 30.0) end) as prior
+    from workout_sets s join workouts w on w.id = s.workout_id
+    where s.user_id = ${userId} and w.deleted_at is null and s.type = 'normal' and s.kg > 0 and s.reps between 1 and 15 and w.day >= ${addDays(today, -42)}
+    group by exercise_id`)
+  const pairs = rows.filter((r) => r.recent && r.prior).map((r) => (Number(r.recent) / Number(r.prior) - 1) * 100)
+  const strengthDeltaPct = pairs.length >= 2 ? Math.round((pairs.reduce((a, b) => a + b, 0) / pairs.length) * 10) / 10 : null
+  return { waistDeltaCm, strengthDeltaPct }
+}
+
+export async function qualityCard(userId: string, goal: Goal, weeklyKg: number | null, weightKg: number) {
+  const [p] = await db.select({ sex: schema.profiles.sex, exp: schema.profiles.experience, bf: schema.profiles.bodyFatPct }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
+  const q = await qualityInputs(userId)
+  const rate = gainRatePctMonth((p?.exp ?? 'new') as Experience, (p?.sex as Sex) ?? 'male', p?.bf ?? null)
+  return { ...gainQuality({ goal: goal.type as 'lose' | 'gain' | 'recomp', weightKg, weeklyKg, rate, ...q }), ...q }
 }

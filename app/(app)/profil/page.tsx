@@ -37,6 +37,7 @@ export default async function Page() {
       <Menu title="Ayarlar" items={[
         { href: '/profil/hesap', label: 'Hesap ve kişisel bilgiler' },
         { href: '/profil/hedef', label: 'Hedef ve plan', value: g ? `${fmtNum(g.dailyKcal)} kcal` : undefined },
+        { href: '/profil/vucut', label: 'Vücut yağ oranı', value: t?.profile.bodyFatPct ? `%${fmtNum(t.profile.bodyFatPct, 1)}` : 'ekle', testId: 'bodyfat-link' },
         { href: '/profil/gorunum', label: 'Görünüm', value: THEMES.find((x) => x.id === theme)?.label },
         { href: '/profil/bildirimler', label: 'Bildirimler' },
         { href: '/sosyal/ayarlar', label: 'Gizlilik ve sosyal profil' },

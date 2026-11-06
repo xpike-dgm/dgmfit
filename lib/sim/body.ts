@@ -62,7 +62,7 @@ export function stepBody(b: Body, intakeKcal: number, exerciseKcal: number, trai
   let dL: number
   const lifts = b.init.training !== 'none'
   if (lifts && proteinOk) {
-    const capL = leanCapPerDay(b) * (trainedToday ? 2.2 : 0.5) // antrenman günleri sentez yüksek, haftalık ortalama ≈ kapasite
+    const capL = leanCapPerDay(b) * (trainedToday ? 1.6 : 0.4) // antrenman günleri sentez yüksek; haftada 4 günde ortalama ≈ kapasite
     const f = E >= 300 ? 1 : E >= 0 ? 0.55 + (0.45 * E) / 300 : E >= -500 ? 0.55 + (0.55 * E) / 500 : Math.max(-0.4, (E + 500) / 1250)
     dL = capL * f
   } else {

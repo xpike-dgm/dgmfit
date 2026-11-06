@@ -445,7 +445,8 @@
     "/fitness/anatomi/[kas]",
     "/fitness/kaydedilenler",
     "/fitness/rekor",
-    "/yonetim/barkodlar"
+    "/yonetim/barkodlar",
+    "/profil/vucut"
   ],
   "events": [
     "profile.onboarded",
@@ -458,7 +459,10 @@
     "day.closed",
     "plan.adjusted",
     "coach.action",
-    "report.pushed"
+    "report.pushed",
+    "goal.reached",
+    "goal.choice",
+    "bodyfat.updated"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -915,6 +919,7 @@
     "0018_rir_half.sql",
     "0019_supersets.sql",
     "0020_ui_mode.sql",
-    "0021_barcode_misses.sql"
+    "0021_barcode_misses.sql",
+    "0022_goal_intelligence.sql"
   ]
 }

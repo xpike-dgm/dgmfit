@@ -40,9 +40,20 @@ test('kilo alma fazlası', () => {
   assert.equal(p.safe, true)
 })
 
-test('rekompozisyon hafif açık', () => {
-  const p = computePlan({ sex: 'male', age: 30, heightCm: 175, weightKg: 75, activity: 'moderate', goal: 'recomp', targetWeightKg: 75, days: 90 })
-  assert.ok(p.dailyDelta < 0 && p.dailyDelta > -200)
+test('rekompozisyon: normal yağ oranında bakım, yüksek yağ oranında hafif açık (Faz 8)', () => {
+  const p = computePlan({ sex: 'male', age: 30, heightCm: 175, weightKg: 75, activity: 'moderate', goal: 'recomp', targetWeightKg: 75, days: 90, bfPct: 16 })
+  assert.equal(p.dailyDelta, 0)
+  const h = computePlan({ sex: 'male', age: 30, heightCm: 175, weightKg: 92, activity: 'moderate', goal: 'recomp', targetWeightKg: 92, days: 90, bfPct: 28 })
+  assert.ok(h.dailyDelta < 0 && h.dailyDelta > -200)
+})
+
+test('kas kazanımı temposu uyarısı deneyime göre (Faz 8)', () => {
+  const slow = computePlan({ sex: 'male', age: 27, heightCm: 178, weightKg: 78, activity: 'moderate', goal: 'gain', targetWeightKg: 80, days: 200, experience: 'new', bfPct: 17 })
+  assert.ok(slow.warnings.some((w) => w.startsWith('Kas kazanımı için yavaş')), slow.warnings.join(' | '))
+  const fast = computePlan({ sex: 'male', age: 27, heightCm: 178, weightKg: 78, activity: 'moderate', goal: 'gain', targetWeightKg: 84, days: 60, experience: 'adv', bfPct: 12 })
+  assert.ok(fast.warnings.some((w) => w.startsWith('Kas kazanımı için hızlı')), fast.warnings.join(' | '))
+  const ok = computePlan({ sex: 'male', age: 27, heightCm: 178, weightKg: 78, activity: 'moderate', goal: 'gain', targetWeightKg: 80, days: 75, experience: 'new', bfPct: 15 })
+  assert.ok(!ok.warnings.some((w) => w.startsWith('Kas kazanımı')), ok.warnings.join(' | '))
 })
 
 test('su ve tempo', () => {

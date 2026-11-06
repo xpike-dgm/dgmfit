@@ -84,6 +84,9 @@ export const profiles = pgTable('profiles', {
   targetWeightKg: real('target_weight_kg').notNull(),
   experience: text('experience'),
   trainingDays: integer('training_days'),
+  /** Faz 8: vücut yağ oranı (%) ve kaynağı: user (kendisi girdi) | navy (ölçülerden) — boşsa tahmin kullanılır */
+  bodyFatPct: real('body_fat_pct'),
+  bodyFatSource: text('body_fat_source'),
   dietPref: text('diet_pref'),
   allergies: jsonb('allergies').$type<string[]>(),
   wakeTime: text('wake_time'),
@@ -118,6 +121,10 @@ export const goals = pgTable('goals', {
   fatG: integer('fat_g').notNull(),
   waterMl: integer('water_ml').notNull(),
   active: boolean('active').notNull().default(true),
+  /** Faz 8: hedef kiloya (trend) ulaşıldığı an ve kullanıcının seçimi: recomp | new | later */
+  reachedAt: timestamp('reached_at', { withTimezone: true }),
+  reachedChoice: text('reached_choice'),
+  phase: integer('phase').notNull().default(1),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index('goals_user_active_idx').on(t.userId, t.active)])
 
