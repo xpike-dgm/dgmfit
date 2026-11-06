@@ -29,7 +29,8 @@ for (const t of tr) {
       portions.unshift({ label, g: p.g })
     } else portions.unshift({ label, g })
   }
-  const row = { source: 'usda', sourceId: String(f.id), key: t.k, nameTr: t.tr, nameEn: f.en, category: t.c, n: f.n, portions: dedupe(portions), approx: !!t.approx, aliases: t.a ?? [] }
+  // aynı USDA besinine bağlanan ikinci Türkçe ad (ör. şehriye = makarna) kendi kimliğini alır; ilk eşleme eski kimliğini korur
+  const row = { source: 'usda', sourceId: usedIds.has(f.id) ? `${f.id}:${t.k}` : String(f.id), key: t.k, nameTr: t.tr, nameEn: f.en, category: t.c, n: f.n, portions: dedupe(portions), approx: !!t.approx, aliases: t.a ?? [] }
   curated.set(t.k, row); usedIds.add(f.id); rows.push(row)
 }
 
