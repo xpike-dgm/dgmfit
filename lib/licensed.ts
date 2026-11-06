@@ -53,9 +53,19 @@ export function exerciseMedia(l: Lic): { thumb: string | null; video: string | n
   return { thumb: t && hasLicensedFile('thumbs', t) ? licensedUrl('thumbs', t) : null, video: v && hasLicensedFile('videos', v) ? licensedUrl('videos', v) : null }
 }
 
-/** RiR kaydırıcısı açıklamaları (0, 0,5 … 4, 4+ = 10 kademe): paket metni, yoksa DgFit'in kısa metni. */
-const RIR_FALLBACK = ['Tükeniş: bir tekrar daha çıkmaz.', 'Belki bir tekrar daha.', '1 tekrar daha vardı.', '1–2 tekrar daha vardı.', '2 tekrar daha vardı.', '2–3 tekrar daha vardı.', '3 tekrar daha vardı.', '3–4 tekrar daha vardı.', '4 tekrar daha vardı.', 'Çok hafif: tükenişten uzak.']
+/** RiR kaydırıcısı açıklamaları (0, 0,5 … 4, 4+ = 10 kademe): DgFit'in kendi metinleri. Paketteki RiR metinleri `premium` bölümünde
+ * (Ağırsağlam PRO özelliği) olduğu için kullanılmaz (DECISIONS 2026-11-06). */
+const RIR_TEXT = ['Tükeniş: bir tekrar daha çıkmaz.', 'Belki bir tekrar daha.', '1 tekrar daha vardı.', '1–2 tekrar daha vardı.', '2 tekrar daha vardı.', '2–3 tekrar daha vardı.', '3 tekrar daha vardı.', '3–4 tekrar daha vardı.', '4 tekrar daha vardı.', 'Çok hafif: tükenişten uzak.']
 export function rirTexts(): { steps: string[]; info: string } {
-  const r = licensedText<{ premium?: { exercise_logs?: { rir?: Record<string, string> } } }>('tam-ekran-metinleri.tr')?.premium?.exercise_logs?.rir
-  return { steps: RIR_FALLBACK.map((f, i) => r?.[String(i)] ?? f), info: r?.info ?? 'RIR: setin sonunda kaç tekrar daha yapabilirdin. 0 = tükendim, 4+ = çok hafifti.' }
+  return { steps: RIR_TEXT, info: 'RiR: setin sonunda kaç tekrar daha yapabilirdin. 0 = tükendim, 4+ = çok hafifti.' }
+}
+
+/** Faz 5h-6: bar ve plaka görselleri (izinli içerik). Dosya yoksa null → çizim. */
+const PLATE_FILE: Record<string, string> = { '25': 'plateTwentyFive.png', '20': 'plateTwenty.png', '15': 'plateFiveTeen.png', '10': 'plateTen.png', '5': 'plateFive.png', '2.5': 'plateTwoAndHalf.png', '1.25': 'plateOneAndQuarter.png' }
+export type PlateImages = { bar: { olympic: string | null; half: string | null }; plates: Record<string, string> }
+export function plateImages(): PlateImages | null {
+  const plates: Record<string, string> = {}
+  for (const [kg, f] of Object.entries(PLATE_FILE)) if (hasLicensedFile('plates', f)) plates[kg] = licensedUrl('plates', f)!
+  const bar = { olympic: hasLicensedFile('plates', 'barOlympic.png') ? licensedUrl('plates', 'barOlympic.png') : null, half: hasLicensedFile('plates', 'barHalfOlympic.png') ? licensedUrl('plates', 'barHalfOlympic.png') : null }
+  return Object.keys(plates).length || bar.olympic ? { bar, plates } : null
 }

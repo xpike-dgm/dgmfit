@@ -246,7 +246,12 @@
     "tests/e2e/agprogram.e2e.cjs",
     "lib/cns.ts",
     "tests/cns.test.ts",
-    "app/(app)/fitness/CnsCard.tsx"
+    "app/(app)/fitness/CnsCard.tsx",
+    "lib/pr-attempt.ts",
+    "tests/pr-attempt.test.ts",
+    "components/BarLoad.tsx",
+    "app/(app)/fitness/rekor/PrAttempt.tsx",
+    "tests/e2e/pr.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -431,7 +436,8 @@
     "/api/lisansli/[kind]/[file]",
     "/fitness/anatomi",
     "/fitness/anatomi/[kas]",
-    "/fitness/kaydedilenler"
+    "/fitness/kaydedilenler",
+    "/fitness/rekor"
   ],
   "events": [
     "profile.onboarded",

@@ -13,11 +13,13 @@ import { alternativesAction, liveExerciseAction, saveWorkoutAction } from '../ac
 import { LIVE_KEY, queuePending, readJson, writeJson } from '../live-store'
 import { EQUIPMENT } from '@/lib/exercise-labels'
 import { afterSupersetSet, supersetBlocks, supersetMembers } from '@/lib/supersets'
+import BarLoad from '@/components/BarLoad'
+import type { PlateImages } from '@/lib/licensed'
 
 type LSet = { kg: string; reps: string; rir: number | null; type: SetType; seconds: string; done: boolean; completedAt: string | null; feedback: string | null; ph: { kg: number; reps: number; seconds: number } }
 type LEx = Omit<LiveExercise, 'sets'> & { targetSets: number; sets: LSet[]; suggestion: Suggestion | null }
 type Draft = { v: 1; clientId: string; programDayId: string | null; name: string; startedAt: string; exercises: LEx[]; notes: string; pain: boolean; restEndsAt: number | null; restTotal: number; restFor: string; restPush?: boolean }
-interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[]; week?: number | null; fuel?: string | null; rir?: { steps: string[]; info: string } }
+interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[]; week?: number | null; fuel?: string | null; rir?: { steps: string[]; info: string }; plateImages?: PlateImages | null }
 /** RiR: 0–4 yarım adım, 5 = "4+"; kaydırıcı kademesi 0–9 */
 const rirIdx = (r: number) => (r >= 5 ? 9 : Math.max(0, Math.min(8, Math.round(r * 2))))
 const idxRir = (i: number) => (i >= 9 ? 5 : i / 2)
@@ -409,7 +411,7 @@ export default function LiveWorkout(p: Props) {
       </Sheet>
 
       <Sheet open={sheet?.kind === 'plates'} onClose={() => setSheet(null)} title="Plaka hesaplayıcı">
-        {cur ? <PlateCalc initial={n(cur.sets.find((s) => !s.done)?.kg ?? '') || cur.sets.find((s) => !s.done)?.ph.kg || cur.suggestion?.kg || 60} gym={p.gym} /> : null}
+        {cur ? <PlateCalc initial={n(cur.sets.find((s) => !s.done)?.kg ?? '') || cur.sets.find((s) => !s.done)?.ph.kg || cur.suggestion?.kg || 60} gym={p.gym} plateImgs={p.plateImages ?? null} /> : null}
       </Sheet>
 
       <Sheet open={sheet?.kind === 'reject'} onClose={() => setSheet(null)} title="Öneri neden uygun değil?">
@@ -491,20 +493,14 @@ function prevSet(e: LEx, si: number): string | null {
   return `${fmt(x.kg)} × ${x.reps}`
 }
 
-function PlateCalc({ initial, gym }: { initial: number; gym: { barKg: number; plates: number[]; increment: number } }) {
+function PlateCalc({ initial, gym, plateImgs }: { initial: number; gym: { barKg: number; plates: number[]; increment: number }; plateImgs: PlateImages | null }) {
   const [kg, setKg] = useState(String(initial))
-  const r = platesFor(n(kg) || 0, gym.barKg, gym.plates)
   return (
     <div className="flex flex-col gap-3 pb-4" data-testid="plate-calc">
       <label className="flex items-center gap-3 text-sm font-semibold" htmlFor="pc-kg">Toplam
         <input id="pc-kg" inputMode="decimal" value={kg} onChange={(e) => setKg(e.target.value)} className="w-28 h-12 rounded-xl bg-surface-2 border border-line px-3 num text-lg text-right" /> kg
       </label>
-      <p className="text-[15px]">{r.perSide.length ? <>Her tarafa <b className="num">{r.perSide.map(fmt).join(' + ')}</b> kg</> : 'Yalnızca bar'} <span className="text-mute">(bar {fmt(gym.barKg)} kg)</span></p>
-      {r.remainder ? <p className="text-[13px] text-orange">Plakalarınla tam {fmt(n(kg))} kg olmuyor; en yakın {fmt(r.achieved)} kg.</p> : null}
-      <div className="flex items-center gap-1 h-20 justify-center" aria-hidden>
-        <span className="w-16 h-2 rounded bg-ink-2" />
-        {r.perSide.map((pl, i) => <span key={i} className="rounded-sm bg-orange" style={{ width: 8 + Math.min(pl, 25) / 5, height: 20 + pl * 2.2 }} />)}
-      </div>
+      <BarLoad total={n(kg) || 0} bar={gym.barKg} plates={gym.plates} images={plateImgs} />
     </div>
   )
 }

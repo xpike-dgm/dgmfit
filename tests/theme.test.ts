@@ -21,6 +21,7 @@ test('adres → modül ve sekme', () => {
 test('canlı antrenman alt barı gizler, özet gizlemez; tema çerezi', () => {
   assert.equal(hidesNav('/fitness/antrenman'), true)
   assert.equal(hidesNav('/fitness/antrenman?program=1'), true)
+  assert.equal(hidesNav('/fitness/rekor?ex=5'), true)
   assert.equal(hidesNav('/fitness/antrenman/12'), false)
   assert.equal(hidesNav('/koc'), true)
   assert.equal(hidesNav('/koc?s=1'), true)

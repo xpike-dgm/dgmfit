@@ -37,5 +37,5 @@ export function tabFor(path: string): TabId {
 /** Alt barın gizlendiği odak ekranları (canlı antrenman, koç sohbeti: yazma alanı ekranın altında). */
 export function hidesNav(path: string): boolean {
   const p = path.split('?')[0]
-  return p === '/fitness/antrenman' || p === '/koc' || p === '/fitness/anatomi' || p.startsWith('/fitness/anatomi/') || p === '/fitness/kaydedilenler'
+  return p === '/fitness/antrenman' || p === '/koc' || p === '/fitness/anatomi' || p.startsWith('/fitness/anatomi/') || p === '/fitness/kaydedilenler' || p === '/fitness/rekor'
 }

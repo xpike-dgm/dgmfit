@@ -86,7 +86,7 @@ const trNum = (v) => v.toLocaleString('tr-TR')
   // plaka hesaplayıcı
   await focus('Barbell Squat')
   await p.getByRole('button', { name: 'Barbell Squat seçenekleri' }).click(); await p.getByRole('button', { name: 'Plaka hesapla' }).click()
-  await p.fill('#pc-kg', '100'); await p.getByTestId('plate-calc').getByText(/25 \+ 15/).waitFor().catch(() => fail('plaka 100 kg: 25 + 15 değil'))
+  await p.fill('#pc-kg', '100'); await p.waitForFunction(() => document.querySelector('[data-testid=plate-calc] [data-testid=bar-load]')?.getAttribute('data-plates') === '25,15', null, { timeout: 5000 }).catch(() => fail('plaka 100 kg: 25 + 15 değil'))
   await p.keyboard.press('Escape')
   // sayfa yenilense de taslak sürer
   await p.reload(); await p.getByText('Kaldığın yerden devam ediyorsun').waitFor(); await expectVolume(3360, 'yeniden yükleme sonrası')

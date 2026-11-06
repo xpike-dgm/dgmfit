@@ -73,6 +73,11 @@ export default async function FitnessPage() {
           <span className="font-bold text-[14px]">Kaydedilenler</span>
         </Link>
       </div>
+      <Link href="/fitness/rekor" className="card p-4 flex items-center gap-3" data-testid="pr-link">
+        <span className="w-11 h-11 rounded-2xl bg-[#E53935]/12 text-[#E53935] flex items-center justify-center shrink-0"><Flame size={22} /></span>
+        <span className="flex-1 min-w-0 flex flex-col"><b className="text-[15px]">Rekor denemesi</b><span className="text-[12.5px] text-mute">Isınma basamakları, plaka dizilimi ve 3 deneme</span></span>
+        <Next size={18} className="text-mute shrink-0" />
+      </Link>
 
       <div className="grid grid-cols-2 gap-3">
         <Link href="/fitness/antrenman" className="card p-4 flex flex-col gap-2 min-h-[104px]">
