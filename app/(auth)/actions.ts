@@ -82,10 +82,12 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
   const login = String(fd.get('login') ?? '').trim()
   const password = String(fd.get('password') ?? '')
   const values = { login }
+  if (login.length > 254 || password.length > 1024) return { errors: { form: 'Kullanıcı adı/e-posta veya şifre hatalı' }, values: { login: login.slice(0, 64) } }
   if (!login || !password) return { errors: { form: 'Kullanıcı adı/e-posta ve şifre gerekli' }, values }
 
   const ip = await clientIp()
-  if (!rateLimit('login:' + ip, 20) || !rateLimit('login-u:' + login.toLowerCase(), 8)) {
+  // kullanıcı başına sınır IP ile birlikte anahtarlanır: üçüncü kişi başkasının hesabını kilitleyemez
+  if (!rateLimit('login:' + ip, 20) || !rateLimit('login-u:' + ip + ':' + login.toLowerCase().slice(0, 64), 8)) {
     return { errors: { form: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar dene.' }, values }
   }
 

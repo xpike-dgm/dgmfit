@@ -111,8 +111,13 @@ export async function requireUser(): Promise<CurrentUser> {
 
 // Basit bellek içi deneme sınırlayıcı (tek süreç).
 const attempts = new Map<string, { n: number; until: number }>()
+const ATTEMPTS_SWEEP_AT = 5000
+const KEY_MAX = 128
 export function rateLimit(key: string, max = 8, windowMs = 10 * 60 * 1000): boolean {
   const now = Date.now()
+  key = key.slice(0, KEY_MAX)
+  // bellek şişmesin: eşik aşılınca süresi dolanları temizle
+  if (attempts.size > ATTEMPTS_SWEEP_AT) for (const [k, v] of attempts) if (v.until < now) attempts.delete(k)
   const a = attempts.get(key)
   if (!a || a.until < now) {
     attempts.set(key, { n: 1, until: now + windowMs })
