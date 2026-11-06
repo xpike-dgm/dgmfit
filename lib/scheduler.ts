@@ -131,7 +131,7 @@ export async function runForUser(userId: string, nowDate = new Date()) {
   const delivered = await sendToUser(userId, {
     title: d.title, body: d.body, tag: d.tag, url: `/su?hatirlatma=${row.id}`, reminderId: row.id,
     actions: d.kind === 'remind' ? [{ action: `add:${d.amount}`, title: `${d.amount} ml içtim` }, { action: 'snooze', title: 'Sonra' }] : [],
-  })
+  }, 'planned') // kendi sessiz saat/üst sınır kuralı var (decideReminder); ortak günlük sınıra sayılır
   await db.update(schema.waterReminders).set({ delivered }).where(eq(schema.waterReminders.id, row.id))
   return { sent: true, kind: d.kind, delivered, id: row.id }
 }

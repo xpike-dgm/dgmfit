@@ -14,6 +14,6 @@ export async function POST() {
   const delivered = await sendToUser(u.id, {
     title: row.title, body: row.body, tag: 'water-test', url: `/su?hatirlatma=${row.id}`, reminderId: row.id,
     actions: [{ action: 'add:200', title: '200 ml içtim' }, { action: 'snooze', title: 'Sonra' }],
-  })
+  }, 'urgent')
   return NextResponse.json({ ok: delivered > 0, delivered })
 }

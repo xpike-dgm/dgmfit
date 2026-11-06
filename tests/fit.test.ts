@@ -147,3 +147,11 @@ test('scaleMacros: art arda 60 ölçekleme sonrası makrolar toplamı kaloriden 
   for (let i = 0; i < 60; i++) { const k = g.kcal + (i % 3 === 0 ? -137 : 143); g = scaleMacros(g, k) }
   assert.ok(Math.abs(g.protein * 4 + g.carb * 4 + g.fat * 9 - g.kcal) <= 6, JSON.stringify(g))
 })
+
+test('plan önerisi: tabandaki yavaş kilo verene kardiyo, antrenmansız kas hedefine antrenman', async () => {
+  const { planAdvice } = await import('../lib/fit.ts')
+  assert.ok(planAdvice({ goal: 'lose', weeklyKg: -0.1, plannedWeeklyKg: 0.5, atFloor: true, cardioMinWeek: 0, workoutsWeek: 2, targetTrainDays: 3 }).some((a) => /kardiyo/.test(a)))
+  assert.ok(planAdvice({ goal: 'lose', weeklyKg: 0.3, plannedWeeklyKg: 0.5, atFloor: false, cardioMinWeek: 0, workoutsWeek: 2, targetTrainDays: 3 }).some((a) => /eksik/.test(a)))
+  assert.ok(planAdvice({ goal: 'gain', weeklyKg: 0, plannedWeeklyKg: 0.2, atFloor: false, cardioMinWeek: 0, workoutsWeek: 1, targetTrainDays: 4 }).some((a) => /en az 3/.test(a)))
+  assert.deepEqual(planAdvice({ goal: 'gain', weeklyKg: 0.2, plannedWeeklyKg: 0.2, atFloor: false, cardioMinWeek: 0, workoutsWeek: 4, targetTrainDays: 4 }), [])
+})

@@ -11,6 +11,7 @@ import { fmtNum } from '@/lib/calc'
 import { MEAL_LABEL, type MealId } from '@/lib/food'
 import { addMealItem, addSavedMeal, deleteUserFood } from '../actions'
 import AiMeal from './AiMeal'
+import ImpactLine from '@/components/ImpactLine'
 
 interface Hit extends SheetFood { kcal: number; source: string; count?: number; partial?: boolean }
 
@@ -80,6 +81,7 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
       {added.length ? (
         <div className="rounded-2xl bg-coach border border-coach-line px-4 py-3 text-sm flex flex-col gap-1" role="status">
           {added.map((a, i) => <span key={i} className="flex items-center gap-2"><Check size={14} className="text-acc" />{a}</span>)}
+          <ImpactLine n={added.length} />
           <Link href={`/yemek?gun=${day}`} className="text-acc font-bold text-sm mt-1">Günlüğe dön</Link>
         </div>
       ) : null}

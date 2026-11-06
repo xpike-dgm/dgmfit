@@ -12,7 +12,7 @@ export function scheduleRest(userId: string, seconds: number, next: string | nul
   cancelRest(userId)
   const t = setTimeout(() => {
     timers.delete(userId)
-    void sendToUser(userId, { title: 'Dinlenme bitti', body: next ? `Sıradaki: ${next}` : 'Sıradaki sete geç', tag: 'dgfit-rest', url }).catch((e) => console.error('[dgfit] dinlenme bildirimi', e))
+    void sendToUser(userId, { title: 'Dinlenme bitti', body: next ? `Sıradaki: ${next}` : 'Sıradaki sete geç', tag: 'dgfit-rest', url }, 'urgent').catch((e) => console.error('[dgfit] dinlenme bildirimi', e))
   }, Math.round(seconds * 1000))
   timers.set(userId, t)
 }

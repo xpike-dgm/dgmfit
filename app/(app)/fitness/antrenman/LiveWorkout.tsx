@@ -19,7 +19,7 @@ import type { PlateImages } from '@/lib/licensed'
 type LSet = { kg: string; reps: string; rir: number | null; type: SetType; seconds: string; done: boolean; completedAt: string | null; feedback: string | null; ph: { kg: number; reps: number; seconds: number } }
 type LEx = Omit<LiveExercise, 'sets'> & { targetSets: number; sets: LSet[]; suggestion: Suggestion | null }
 type Draft = { v: 1; clientId: string; programDayId: string | null; name: string; startedAt: string; exercises: LEx[]; notes: string; pain: boolean; restEndsAt: number | null; restTotal: number; restFor: string; restPush?: boolean }
-interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[]; week?: number | null; fuel?: string | null; rir?: { steps: string[]; info: string }; plateImages?: PlateImages | null; addIds?: number[] }
+interface Props { name: string; programDayId: string | null; bodyKg: number; deficitKcal: number; gym: { barKg: number; plates: number[]; increment: number }; exercises: LiveExercise[]; week?: number | null; fuel?: string | null; recovery?: 'ok' | 'easy' | 'deload'; recoveryText?: string | null; rir?: { steps: string[]; info: string }; plateImages?: PlateImages | null; addIds?: number[] }
 /** RiR: 0–4 yarım adım, 5 = "4+"; kaydırıcı kademesi 0–9 */
 const rirIdx = (r: number) => (r >= 5 ? 9 : Math.max(0, Math.min(8, Math.round(r * 2))))
 const idxRir = (i: number) => (i >= 9 ? 5 : i / 2)
@@ -31,14 +31,14 @@ const n = (s: string) => { const v = Number(String(s).replace(',', '.')); return
 const fmt = (v: number) => (Math.round(v * 100) / 100).toLocaleString('tr-TR')
 const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.max(0, sec % 60)).padStart(2, '0')}`
 
-function buildExercise(e: LiveExercise, inc: number, deficitKcal: number): LEx {
+function buildExercise(e: LiveExercise, inc: number, deficitKcal: number, recovery?: 'ok' | 'easy' | 'deload'): LEx {
   if (e.scheme?.sets.length) {
     // GZCLP: ağırlık ve tekrar kademeden gelir, son set AMRAP
     const sets: LSet[] = e.scheme.sets.map((x) => ({ kg: '', reps: '', seconds: '', rir: null, type: x.amrap ? 'amrap' : 'normal', done: false, completedAt: null, feedback: null, ph: { kg: x.kg, reps: x.reps, seconds: 0 } }))
     const { sets: _t, ...rest } = e
     return { ...rest, targetSets: sets.length, sets, suggestion: null }
   }
-  let suggestion = suggestNext({ history: e.history, target: { repMin: e.repMin, repMax: e.repMax, rir: e.rir }, kind: e.kind, increment: inc, deficitKcal, feedback: e.feedback })
+  let suggestion = suggestNext({ history: e.history, target: { repMin: e.repMin, repMax: e.repMax, rir: e.rir }, kind: e.kind, increment: inc, deficitKcal, feedback: e.feedback, recovery })
   if (suggestion && e.period && e.period.loadPct < 1 && e.kind === 'weight_reps') suggestion = { ...suggestion, kg: roundTo(suggestion.kg * e.period.loadPct, inc, 'down'), reason: suggestion.reason + ' Deload haftası: ağırlık %90.' }
   const last = e.history.at(-1)?.sets.filter((s) => s.type !== 'warmup') ?? []
   const sets: LSet[] = Array.from({ length: e.sets }, (_, i) => {
@@ -75,7 +75,7 @@ export default function LiveWorkout(p: Props) {
   // tamamlanmış seti olan taslağı varsa sessizce silinmez: kullanıcıya sorulur.
   const fresh = useCallback((): Draft => ({
     v: 1, clientId: crypto.randomUUID(), programDayId: p.programDayId, name: p.name, startedAt: new Date().toISOString(),
-    exercises: p.exercises.map((e) => buildExercise(e, p.gym.increment, p.deficitKcal)), notes: '', pain: false, restEndsAt: null, restTotal: 0, restFor: '',
+    exercises: p.exercises.map((e) => buildExercise(e, p.gym.increment, p.deficitKcal, p.recovery)), notes: '', pain: false, restEndsAt: null, restTotal: 0, restFor: '',
   }), [p])
   useEffect(() => {
     const saved = readJson<Draft>(LIVE_KEY)
@@ -83,7 +83,7 @@ export default function LiveWorkout(p: Props) {
     if (saved && recent && saved.programDayId === p.programDayId) {
       // "Bu hareketle antrenman başlat": hareket taslakta yoksa eklenir ve seçilir
       const add = p.exercises.filter((e) => p.addIds?.includes(e.exerciseId) && !saved.exercises.some((x) => x.exerciseId === e.exerciseId))
-      if (add.length) { focusAt.current = saved.exercises.length; saved.exercises.push(...add.map((e) => buildExercise(e, p.gym.increment, p.deficitKcal))) }
+      if (add.length) { focusAt.current = saved.exercises.length; saved.exercises.push(...add.map((e) => buildExercise(e, p.gym.increment, p.deficitKcal, p.recovery))) }
       setD(saved); setResumed(true); return
     }
     if (saved && recent && saved.exercises.some((e) => e.sets.some((t) => t.done))) { setConflict(saved); return }
@@ -227,6 +227,7 @@ export default function LiveWorkout(p: Props) {
         </div>
         {msg ? <p role="status" className="text-[13px] text-orange">{msg}</p> : null}
         {p.fuel && !resumed ? <p className="text-[12px] text-ink-2 rounded-xl bg-surface-2 px-3 py-2" data-testid="fuel">{p.fuel}</p> : null}
+        {p.recoveryText && !resumed ? <p className="text-[12px] text-ink-2 rounded-xl bg-surface-2 px-3 py-2" data-testid="recovery" data-level={p.recovery}>{p.recoveryText}</p> : null}
         <div className="grid grid-cols-4 gap-2 text-center" data-testid="live-stats">
           <Stat label="Süre" value={mmss(Math.floor(stats.min * 60))} />
           <Stat label="Hacim" value={`${fmt(stats.volume)} kg`} />
@@ -409,7 +410,7 @@ export default function LiveWorkout(p: Props) {
                 if (!r.ok) { setMsg(r.error); return }
                 const old = d.exercises[sheet.ex]
                 // hedefler korunur, yeni hareketin geçmişi ve önerisi gelir; tamamlanmış setler eski harekette kalır
-                const nx = buildExercise({ ...r.exercise, sets: old.targetSets, repMin: old.repMin, repMax: old.repMax, rir: old.rir, rest: old.rest, superset: old.superset, note: old.note }, p.gym.increment, p.deficitKcal)
+                const nx = buildExercise({ ...r.exercise, sets: old.targetSets, repMin: old.repMin, repMax: old.repMax, rir: old.rir, rest: old.rest, superset: old.superset, note: old.note }, p.gym.increment, p.deficitKcal, p.recovery)
                 const k = sheet.ex, split = old.sets.some((t) => t.done)
                 update((x) => { const o = x.exercises[k]; if (o.sets.some((t) => t.done)) { o.sets = o.sets.filter((t) => t.done); x.exercises.splice(k + 1, 0, nx) } else x.exercises[k] = nx; return x })
                 setSel(split ? k + 1 : k); setRirAt(null); setSheet(null)
@@ -462,7 +463,7 @@ export default function LiveWorkout(p: Props) {
         <ExercisePicker onPick={async (id) => {
           const r = await liveExerciseAction(id)
           if (!r.ok) { setMsg(r.error); return }
-          update((x) => { x.exercises.push(buildExercise(r.exercise, p.gym.increment, p.deficitKcal)); return x })
+          update((x) => { x.exercises.push(buildExercise(r.exercise, p.gym.increment, p.deficitKcal, p.recovery)); return x })
           setSheet(null)
         }} />
       </Sheet>

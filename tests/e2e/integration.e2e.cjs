@@ -38,6 +38,7 @@ const fail = (m) => { throw new Error(m) }
   // 2) yemek + su
   await p.goto(BASE + '/yemek/ekle?ogun=breakfast'); await p.fill('#food-q', 'simit'); await p.getByRole('button', { name: /^Simit/ }).first().click()
   await p.getByRole('button', { name: 'Kahvaltıya ekle' }).click(); await p.getByText(/Simit · \d+ kcal/).waitFor()
+  await p.getByTestId('impact-line').filter({ hasText: /Kalan .* kcal · protein %\d+ · su %\d+/ }).waitFor().catch(() => fail('kayıttan sonra etki satırı yok'))
   await p.goto(BASE + '/'); await p.getByRole('button', { name: /ml su ekle$/ }).first().click(); await p.waitForTimeout(1200)
 
   // 3) aynı sayılar: Bugün = Yemek (kalan kcal, bütçe); Bugün = Su (su hedefi, ek dahil)

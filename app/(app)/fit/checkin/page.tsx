@@ -6,12 +6,14 @@ import { addDays, shortDate } from '@/lib/time'
 import { Eyebrow } from '@/components/ui'
 import { Pulse } from '@/components/icons'
 import { CheckinApply } from '../FitClient'
+import { weeklyAdvice } from '@/lib/fit-data'
 
 export const metadata = { title: 'Haftalık check-in' }
 
 export default async function Page() {
   const user = await requireUser()
   const { goal, checkin } = await loadFit(user.id)
+  const advice = await weeklyAdvice(user.id, goal, checkin?.forecast.kgPerWeek ?? null).catch(() => [])
   return (
     <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fit" title="Haftalık check-in" sub="Plan, ölçülen harcamana göre ayarlanır" />
@@ -35,6 +37,12 @@ export default async function Page() {
           </p>
         )}
       </section>
+      {advice.length ? (
+        <section aria-label="Bu haftanın önerileri" className="card p-5 flex flex-col gap-2" data-testid="plan-advice">
+          <Eyebrow>Kalorinin yanında</Eyebrow>
+          <ul className="flex flex-col gap-2 text-[14px] text-ink-2 leading-snug list-disc pl-5">{advice.map((a) => <li key={a}>{a}</li>)}</ul>
+        </section>
+      ) : null}
     </div>
   )
 }

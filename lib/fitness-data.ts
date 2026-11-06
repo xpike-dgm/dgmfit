@@ -1,4 +1,5 @@
 import 'server-only'
+import { recoveryState, recoveryText } from './recovery'
 import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { exerciseMedia } from './licensed'
@@ -383,7 +384,10 @@ export async function liveSession(userId: string, programDayId: string | null, e
   const nowMin = minuteOfDay(new Date())
   const fuel = eaten.kcal < target * 0.3 && (!lastMeal || Date.now() - lastMeal.at.getTime() > 4 * 3600_000) && nowMin >= 6 * 60
     ? `Bugün ${Math.round(eaten.kcal)} kcal yedin${lastMeal ? ', son öğün 4 saatten önce' : ''}. Antrenmandan 1–2 saat önce karbonhidrat + protein içeren hafif bir öğün performansı artırır.` : null
+  // Faz 7-2: toparlanma — haftalık MSS yükü + art arda günler + düşük yakıt + ağrı → öneri sabit/hafif
+  const rec = await recoveryFor(userId, today).catch(() => ({ level: 'ok' as const, reasons: [] as string[] }))
   return {
+    recovery: rec.level, recoveryText: recoveryText(rec),
     name, programDayId, bodyKg: profile?.weightKg ?? 70, deficitKcal: goal ? Math.max(0, goal.tdee - goal.dailyKcal) : 0,
     gym: { barKg: gym.barKg, plates: gym.plates, increment: gym.increment }, week: meta ? week + 1 : null, periodization: meta?.periodization ?? null, fuel,
     exercises,
@@ -633,4 +637,21 @@ export async function setSchemeKg(userId: string, peId: string, kg: number) {
   if (!pe?.scheme?.startsWith('gzclp-')) throw new Error('Bu hareket GZCLP değil')
   const tier = pe.scheme.slice(6) as Tier
   await db.update(schema.programExercises).set({ schemeState: { ...(pe.schemeState ?? { tier, stage: 0, lastBaseKg: null }), kg } }).where(eq(schema.programExercises.id, peId))
+}
+
+/** Faz 7-2: bugünkü toparlanma durumu (lib/recovery.ts girdileri veritabanından). */
+export async function recoveryFor(userId: string, today: string = dayString()) {
+  const [wc, days, closed, [lastW]] = await Promise.all([
+    weekCns(userId),
+    db.selectDistinct({ day: schema.workouts.day }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt), sql`${schema.workouts.day} >= ${addDays(today, -7)} and ${schema.workouts.day} < ${today}`)),
+    db.select({ kind: schema.dailyTargets.closureKind, eaten: schema.dailyTargets.eatenKcal, base: schema.dailyTargets.baseKcal, adj: schema.dailyTargets.adjustmentKcal }).from(schema.dailyTargets)
+      .where(and(eq(schema.dailyTargets.userId, userId), sql`${schema.dailyTargets.closedAt} is not null`, sql`${schema.dailyTargets.day} >= ${addDays(today, -3)}`)),
+    db.select({ pain: schema.workouts.pain }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt))).orderBy(desc(schema.workouts.startedAt)).limit(1),
+  ])
+  const set = new Set(days.map((d) => String(d.day)))
+  let consecutive = 0
+  for (let d = addDays(today, -1); set.has(d); d = addDays(d, -1)) consecutive++
+  const lowFuel = closed.filter((c) => c.kind === 'under' && (c.eaten ?? 0) <= c.base + c.adj - 400).length
+  const cnsLevelW = wc.week.hard >= 3 ? 5 : wc.week.hard >= 2 ? 4 : wc.week.avgLevel || null
+  return recoveryState({ cnsLevel: cnsLevelW, consecutiveDays: consecutive, lowFuelDays: lowFuel, painRecent: !!lastW?.pain })
 }

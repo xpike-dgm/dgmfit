@@ -1,4 +1,6 @@
 import 'server-only'
+import { pushAllowed, type PushKind } from './push-plan'
+import { dayString } from './time'
 import webpush from 'web-push'
 import { eq, sql } from 'drizzle-orm'
 import { db, schema } from './db'
@@ -34,7 +36,17 @@ export interface PushPayload {
 }
 
 /** Kullanıcının tüm aboneliklerine gönderir; 404/410 dönen abonelikler silinir. Başarılı gönderim sayısını döndürür. */
-export async function sendToUser(userId: string, payload: PushPayload): Promise<number> {
+const sentToday = new Map<string, number>() // `${gün}|${kullanıcı}` → gönderilen otomatik bildirim (süreç içi)
+
+export async function sendToUser(userId: string, payload: PushPayload, kind: PushKind = 'normal'): Promise<number> {
+  // Faz 7-2: tek bildirim planlayıcısı — otomatik bildirimler günlük sınır + uyanık saatler
+  const day = dayString(), key = `${day}|${userId}`
+  if (kind !== 'urgent') {
+    const [p] = await db.select({ wake: schema.profiles.wakeTime, sleep: schema.profiles.sleepTime }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
+    const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date())
+    const nowMin = Number(parts.find((x) => x.type === 'hour')!.value) * 60 + Number(parts.find((x) => x.type === 'minute')!.value)
+    if (!pushAllowed({ kind, sentToday: sentToday.get(key) ?? 0, nowMin, wake: p?.wake, sleep: p?.sleep }).ok) return 0
+  }
   await vapid()
   const subs = await db.select().from(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, userId))
   let ok = 0
@@ -49,5 +61,6 @@ export async function sendToUser(userId: string, payload: PushPayload): Promise<
       else await db.update(schema.pushSubscriptions).set({ failures: sql`${schema.pushSubscriptions.failures} + 1` }).where(eq(schema.pushSubscriptions.id, s.id))
     }
   }))
+  if (ok && kind !== 'urgent') { sentToday.set(key, (sentToday.get(key) ?? 0) + 1); if (sentToday.size > 5000) for (const k of sentToday.keys()) if (!k.startsWith(day)) sentToday.delete(k) }
   return ok
 }

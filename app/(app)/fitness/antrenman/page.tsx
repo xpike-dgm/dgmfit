@@ -11,5 +11,5 @@ export default async function LivePage(props: { searchParams: Promise<{ gun?: st
   const dayId = gun && /^[0-9a-f-]{36}$/.test(gun) ? gun : null
   const extra = hareket && /^\d+$/.test(hareket) ? [Number(hareket)] : []
   const s = await liveSession(u.id, dayId, extra)
-  return <LiveWorkout name={s.name} programDayId={dayId && s.programDayId ? dayId : null} bodyKg={s.bodyKg} deficitKcal={s.deficitKcal} gym={s.gym} exercises={s.exercises} week={s.week} fuel={s.fuel} rir={rirTexts()} plateImages={plateImages()} addIds={extra} />
+  return <LiveWorkout name={s.name} programDayId={dayId && s.programDayId ? dayId : null} bodyKg={s.bodyKg} deficitKcal={s.deficitKcal} gym={s.gym} exercises={s.exercises} week={s.week} fuel={s.fuel} recovery={s.recovery} recoveryText={s.recoveryText} rir={rirTexts()} plateImages={plateImages()} addIds={extra} />
 }

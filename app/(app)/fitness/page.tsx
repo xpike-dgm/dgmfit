@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
-import { fitnessHome } from '@/lib/fitness-data'
+import { fitnessHome, recoveryFor } from '@/lib/fitness-data'
+import { recoveryText } from '@/lib/recovery'
 import { addDays, shortDate } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { PR_LABEL, CARDIO, type PrType } from '@/lib/training'
@@ -14,7 +15,7 @@ const WD = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct']
 
 export default async function FitnessPage(props: { searchParams: Promise<{ gun?: string }> }) {
   const u = await requireUser()
-  const [h, adv, sp] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id), props.searchParams])
+  const [h, adv, sp, rec] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id), props.searchParams, recoveryFor(u.id).catch(() => null)])
   // gün sekmesi yalnızca önizlemeyi değiştirir; antrenman "Antrenmana başla" ile başlar
   const day = (sp.gun && h.program?.days.find((d) => d.id === sp.gun)) || h.next
   const shown = adv ? 6 : 3 // sade modda sıradaki antrenmanın ilk 3 hareketi
@@ -27,6 +28,7 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
         ring={{ value: target ? Math.min(1, weekDone / target) : 0, big: `${weekDone}/${target}`, small: 'bu hafta', label: `Bu hafta ${weekDone} / ${target} antrenman` }}
         pills={[['Hacim', `${fmtNum(h.week.reduce((a, w) => a + w.vol, 0))} kg`], ['Süre', `${fmtNum(h.week.reduce((a, w) => a + w.min, 0))} dk`], ['Kardiyo', `${fmtNum(h.cardioWeekMin)} dk`]]} />
       <PendingSync />
+      {rec && rec.level !== 'ok' ? <p className="card px-4 py-3 text-[13.5px] leading-snug border-l-4 border-orange" data-testid="recovery-card" data-level={rec.level}>{recoveryText(rec)}</p> : null}
 
       {day && h.program ? (
         <section aria-label="Sıradaki antrenman" className="card p-5 flex flex-col gap-3" data-testid="next-workout" data-day={day.id} data-selected={day.id !== h.next?.id ? 'true' : undefined}>

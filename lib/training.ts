@@ -72,6 +72,8 @@ export interface SuggestInput {
   increment?: number // salondaki en küçük artış (iki taraf toplamı), varsayılan 2,5
   deficitKcal?: number // Fit'ten: plan açığı (tdee − hedef); > CAUTION_DEFICIT ise artış yok
   feedback?: { tooHeavy: number; tooLight: number } // son reddetme nedenleri
+  /** Faz 7-2: toparlanma (lib/recovery.ts) — easy: artış yok, deload: %10 hafif */
+  recovery?: 'ok' | 'easy' | 'deload'
 }
 
 /**
@@ -102,7 +104,7 @@ export function suggestNext(i: SuggestInput): Suggestion | null {
   const allTop = workSets(last).every((x) => x.reps >= i.target.repMax)
   const e = hist.map(sessionE1rm)
   const drop = (a: number, b: number) => b < a * 0.97
-  const caution = (i.deficitKcal ?? 0) > CAUTION_DEFICIT || !!last.pain
+  const caution = (i.deficitKcal ?? 0) > CAUTION_DEFICIT || !!last.pain || i.recovery === 'easy'
 
   if (i.kind === 'bodyweight' || i.kind === 'assisted') {
     if (allTop) {
@@ -114,6 +116,10 @@ export function suggestNext(i: SuggestInput): Suggestion | null {
     return { kg: top.kg, reps, rir, rule: 'reps', confidence, reason: `Aynı yükle ${reps} tekrar hedefle.` }
   }
 
+  if (i.recovery === 'deload') {
+    const kg = roundTo(top.kg * 0.9, inc, 'down')
+    return { kg, reps: i.target.repMin, rir: Math.max(rir, 2), rule: 'deload', confidence, reason: 'Toparlanma düşük (yük, art arda günler ya da az yeme): bu seans %10 hafiflet.' }
+  }
   if (e.length >= 3 && drop(e.at(-3)!, e.at(-2)!) && drop(e.at(-2)!, e.at(-1)!)) {
     const kg = roundTo(top.kg * 0.9, inc, 'down')
     return { kg, reps: i.target.repMin, rir: Math.max(rir, 2), rule: 'deload', confidence, reason: `Tahmini maksimumun iki antrenmandır %3'ten fazla düşüyor (${e.slice(-3).map((x) => Math.round(x)).join(' → ')} kg). Bu seans %10 hafiflet, toparlan.` }
@@ -148,6 +154,7 @@ export function suggestNext(i: SuggestInput): Suggestion | null {
 }
 
 function cautionText(i: SuggestInput, last: Session) {
+  if (i.recovery === 'easy' && !last.pain && (i.deficitKcal ?? 0) <= CAUTION_DEFICIT) return 'Toparlanman düşük: bugün ağırlığı artırma, aynı yükle tekniğe odaklan.'
   return last.pain ? 'Geçen seans ağrı notu var: ağırlığı artırma, tekniğe odaklan.' : `Kalori açığın büyük (${Math.round(i.deficitKcal ?? 0)} kcal): kuvveti korumak hedef, ağırlığı artırma.`
 }
 

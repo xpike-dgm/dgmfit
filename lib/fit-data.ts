@@ -5,7 +5,7 @@ import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { addDays, dayString, diffDays } from './time'
 import { calorieFloor, type Sex } from './calc'
-import { balanceWindow, checkinCompute, closureDiff, dayBaseKcal, distributeDiff, exceptionDays, planBank, scaleMacros, targetKcal, trainingWeekdays, trendSeries, type PlanDay } from './fit'
+import { balanceWindow, checkinCompute, closureDiff, dayBaseKcal, distributeDiff, exceptionDays, planAdvice, planBank, scaleMacros, targetKcal, trainingWeekdays, trendSeries, type PlanDay } from './fit'
 import { dayMacros } from './food-data'
 import { publish } from './events'
 import { minuteOfDay } from './water-data'
@@ -293,4 +293,19 @@ export async function qualityCard(userId: string, goal: Goal, weeklyKg: number |
   const q = await qualityInputs(userId)
   const rate = gainRatePctMonth((p?.exp ?? 'new') as Experience, (p?.sex as Sex) ?? 'male', p?.bf ?? null)
   return { ...gainQuality({ goal: goal.type as 'lose' | 'gain' | 'recomp', weightKg, weeklyKg, rate, ...q }), ...q }
+}
+
+/** Faz 7-2: check-in ekranı için haftalık plan önerileri (kardiyo, antrenman sayısı). */
+export async function weeklyAdvice(userId: string, goal: Goal, weeklyKg: number | null): Promise<string[]> {
+  const today = dayString()
+  const from = addDays(today, -6)
+  const [[c], [w], [p]] = await Promise.all([
+    db.select({ min: sql<number>`coalesce(sum(minutes),0)` }).from(schema.cardioSessions).where(and(eq(schema.cardioSessions.userId, userId), isNull(schema.cardioSessions.deletedAt), gte(schema.cardioSessions.day, from))),
+    db.select({ n: sql<number>`count(distinct day)::int` }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), isNull(schema.workouts.deletedAt), gte(schema.workouts.day, from))),
+    db.select({ sex: schema.profiles.sex, td: schema.profiles.trainingDays }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1),
+  ])
+  return planAdvice({
+    goal: goal.type as 'lose' | 'gain' | 'recomp', weeklyKg, plannedWeeklyKg: Math.abs(goal.tdee - goal.dailyKcal) * 7 / 7700,
+    atFloor: goal.dailyKcal <= calorieFloor((p?.sex as Sex) ?? 'female') + 10, cardioMinWeek: Number(c?.min ?? 0), workoutsWeek: Number(w?.n ?? 0), targetTrainDays: p?.td ?? null,
+  })
 }

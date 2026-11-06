@@ -293,3 +293,24 @@ export function extensionRate(observedKgPerWeek: number | null, plannedKgPerWeek
   if (observedKgPerWeek !== null && Math.sign(observedKgPerWeek) === Math.sign(needKg) && Math.abs(observedKgPerWeek) >= 0.1) return Math.min(Math.abs(observedKgPerWeek), Math.max(0.1, plannedKgPerWeek) * 1.5)
   return Math.max(0.1, plannedKgPerWeek)
 }
+
+/**
+ * Faz 7-2: haftalık tek karar — kalori dışında kardiyo ve antrenman sayısı önerisi (check-in ekranında).
+ * Kalori değişikliğini checkinProposal yapar; bu fonksiyon onun yetmediği yerleri söyler.
+ */
+export function planAdvice(i: {
+  goal: 'lose' | 'gain' | 'recomp'; weeklyKg: number | null; plannedWeeklyKg: number; atFloor: boolean
+  cardioMinWeek: number; workoutsWeek: number; targetTrainDays: number | null
+}): string[] {
+  const out: string[] = []
+  const w = i.weeklyKg
+  if (i.goal === 'lose' && w !== null) {
+    if (w > 0.15) out.push('Son haftalarda kilon artıyor. Kayıtların eksik olabilir (atıştırmalar, içecekler, yağ); birkaç gün her şeyi tartarak kaydetmeyi dene.')
+    else if (i.atFloor && Math.abs(w) < i.plannedWeeklyKg * 0.6) out.push(`Kalori güvenli tabanda ve tempo planın gerisinde. Kaloriyi daha düşürmek yerine haftaya ${i.cardioMinWeek < 90 ? '90–150' : '60'} dk tempolu yürüyüş ya da kardiyo ekle (yaklaşık ${i.cardioMinWeek < 90 ? '400–700' : '300'} kcal).`)
+  }
+  if (i.goal === 'gain' && w !== null && w < 0.05 && i.workoutsWeek < 3) out.push(`Bu hafta ${i.workoutsWeek} ağırlık antrenmanı yaptın. Kas kazanımı için haftada en az 3 antrenman gerekli; fazla kalori tek başına kas yapmaz.`)
+  if (i.goal === 'recomp' && i.workoutsWeek < 3) out.push(`Kilonu koruyup kas kazanmak için haftada en az 3 ağırlık antrenmanı gerekli (bu hafta ${i.workoutsWeek}).`)
+  if (i.targetTrainDays && i.workoutsWeek < i.targetTrainDays - 1 && i.goal !== 'lose') out.push(`Hedefin haftada ${i.targetTrainDays} antrenman; bu hafta ${i.workoutsWeek}.`)
+  if (i.goal === 'lose' && i.workoutsWeek === 0) out.push('Kilo verirken haftada 2–3 ağırlık antrenmanı kas kaybını önler; kaybın yağdan gelmesini sağlar.')
+  return out
+}
