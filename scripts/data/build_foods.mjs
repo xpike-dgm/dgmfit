@@ -38,7 +38,7 @@ for (const t of tr) {
 
 for (const p of products) {
   const row = { source: 'dgfit-label', sourceId: p.k, key: p.k, nameTr: p.tr, nameEn: null, brand: p.brand, barcode: p.barcode, category: p.c, n: { ...p.n },
-    portions: dedupe([...p.p.map(([label, g]) => ({ label, g })), { label: '100 g', g: 100 }]), approx: false, aliases: p.a ?? [] }
+    portions: dedupe([...p.p.map(([label, g]) => ({ label, g })), { label: '100 g', g: 100 }]), approx: false, aliases: p.a ?? [], attribution: p.src ?? null }
   curated.set(p.k, row); rows.push(row) // tariflerde malzeme olarak da kullanılabilir
 }
 

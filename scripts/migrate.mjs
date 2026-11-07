@@ -43,7 +43,7 @@ async function seedFoods(sql) {
     source: r.source, source_id: r.sourceId, key: r.key, name_tr: r.nameTr, name_en: r.nameEn, category: r.category,
     per100: r.n, kcal: r.n.kcal ?? 0, protein: r.n.protein ?? 0, carb: r.n.carb ?? 0, fat: r.n.fat ?? 0,
     portions: r.portions, approx: r.approx, aliases: r.aliases ?? [], recipe: r.recipe ?? null, search: r.search, brand: r.brand ?? null, barcode: r.barcode ?? null,
-    attribution: r.source === 'usda' ? 'USDA FoodData Central' : r.source === 'dgfit' ? 'DgFit tarifi (USDA malzemelerinden hesaplanmış)' : r.source === 'dgfit-label' ? 'Ürün etiketi' : null,
+    attribution: r.attribution ?? (r.source === 'usda' ? 'USDA FoodData Central' : r.source === 'dgfit' ? 'DgFit tarifi (USDA malzemelerinden hesaplanmış)' : r.source === 'dgfit-label' ? 'Ürün etiketi' : null),
   }))
   const cols = ['source', 'source_id', 'key', 'name_tr', 'name_en', 'category', 'per100', 'kcal', 'protein', 'carb', 'fat', 'portions', 'approx', 'aliases', 'recipe', 'search', 'attribution', 'brand', 'barcode']
   await sql.begin(async (tx) => {

@@ -26,7 +26,7 @@ export function toHit(f: FoodRow): FoodHit {
   const name = f.nameTr ?? f.nameEn ?? 'Besin'
   const sub = f.source === 'off' ? (f.brand ?? 'Paketli ürün')
     : f.source === 'user' ? 'Kendi besinin' : f.source === 'user-recipe' ? 'Kendi tarifin'
-      : f.source === 'dgfit' ? `${f.category ?? 'Yemek'} · tarif (hesaplanmış)` : f.nameTr ? (f.category ?? null) : 'USDA (İngilizce ad)'
+      : f.source === 'dgfit' ? `${f.category ?? 'Yemek'} · tarif (hesaplanmış)` : f.source === 'dgfit-label' ? ([f.brand, f.category].filter(Boolean).join(' · ') || null) : f.nameTr ? (f.category ?? null) : 'USDA (İngilizce ad)'
   return { id: f.id, name, sub, source: f.source, kcal: f.kcal, protein: f.protein, carb: f.carb, fat: f.fat, portions: f.portions, approx: f.approx, attribution: f.attribution, per100: f.per100 }
 }
 

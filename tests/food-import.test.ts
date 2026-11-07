@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { IMPORT_FORMAT, kcalRange, slug, validateImport, type ImportContext } from '../lib/food-import.ts'
+import { IMPORT_FORMAT, csvToImport, kcalRange, parseCsv, slug, validateImport, type ImportContext } from '../lib/food-import.ts'
 
 const ctx = (): ImportContext => ({
   usda: [
@@ -63,9 +63,12 @@ test('validateImport: ürün etiketi denetimleri (Atwater, şeker, barkod, tekra
     { ...base, ad: 'Barkodsuz', barkod: '8690000000013', '100g': { kcal: 450, protein: 9, karbonhidrat: 65, yag: 17 } },
     { ...base, ad: 'Aynı barkod', barkod: '8690000000012', '100g': { kcal: 450, protein: 9, karbonhidrat: 65, yag: 17 } },
   ] }, ctx())
-  assert.equal(r.add.products.length, 1)
+  // geçersiz barkod satırı düşürmez: barkodsuz eklenir + uyarı
+  assert.equal(r.add.products.length, 2)
   assert.equal(r.add.products[0].n.sodium, 400)
-  assert.equal(r.issues.filter((i) => i.level === 'hata').length, 3)
+  assert.equal(r.add.products.find((p) => p.tr === 'Barkodsuz')?.barcode, null)
+  assert.equal(r.issues.filter((i) => i.level === 'hata').length, 2)
+  assert.ok(r.issues.some((i) => i.level === 'uyarı' && /barkod geçersiz/.test(i.msg)))
   assert.equal(r.skipped.length, 1)
 })
 
@@ -73,4 +76,33 @@ test('validateImport: kategoriye göre uç değer uyarısı (eklenir)', () => {
   const r = validateImport({ format: IMPORT_FORMAT, besinler: [{ ad: 'Mercimek kuru', kategori: 'Sebzeler', usda: 3 }] }, ctx())
   assert.equal(r.add.foods.length, 1)
   assert.equal(r.issues[0].level, 'uyarı')
+})
+
+test('validateImport: hazır 100 g değerleri kaynaksız da kabul edilir (dosya kaynağı ya da varsayılan)', () => {
+  const r = validateImport({ format: IMPORT_FORMAT, kaynak: 'Derleme 2026', urunler: [
+    { ad: 'Tavuk döner', kategori: 'Hazır yemekler', '100g': { kcal: 210, protein: 18, karbonhidrat: 6, yag: 12.5 } },
+    { ad: 'Çiğ köfte', kategori: 'Hazır yemekler', kaynak: 'üretici', '100g': { kcal: 190, protein: 5, karbonhidrat: 34, yag: 3.5 } },
+  ] }, ctx())
+  assert.equal(r.issues.filter((i) => i.level === 'hata').length, 0)
+  assert.deepEqual(r.add.products.map((p) => p.src), ['Derleme 2026', 'üretici'])
+  const r2 = validateImport({ format: IMPORT_FORMAT, urunler: [{ ad: 'Simit', kategori: 'Fırın ürünleri', '100g': { kcal: 330, protein: 10, karbonhidrat: 58, yag: 6 } }] }, ctx())
+  assert.equal(r2.add.products[0].src, 'Dış veri derlemesi')
+})
+
+test('CSV: virgül/noktalı virgül, tırnak, ondalık virgül, porsiyon ve eş anlamlılar; bozuk satır yalnız kendisi düşer', () => {
+  assert.deepEqual(parseCsv('a,b\n"x, y","1"\n'), [['a', 'b'], ['x, y', '1']])
+  const csv = 'ad;kategori;marka;barkod;kcal;protein;karbonhidrat;yağ;tuz_g;porsiyon;eşanlamlar\n' +
+    'Ayran;İçecekler;;;36;1,7;2,6;2;0,6;1 kutu=200;ayran içeceği|yayık ayranı\n' +
+    '"Bisküvi, sade";Atıştırmalık;Y;8690000000029;450;9;65;17;;1 adet=10|1 paket=150;\n' +
+    'Bozuk;Atıştırmalık;;;0;20;50;10;;;\n'
+  const f = csvToImport(csv, 'test.csv')
+  assert.equal(f.urunler!.length, 3)
+  assert.equal(f.urunler![0]['100g'].protein, 1.7)
+  assert.deepEqual(f.urunler![0].esanlamlar, ['ayran içeceği', 'yayık ayranı'])
+  assert.equal(f.urunler![1].ad, 'Bisküvi, sade')
+  const r = validateImport(f, ctx())
+  assert.equal(r.add.products.length, 2)
+  assert.equal(r.add.products[0].n.sodium, 240)
+  assert.deepEqual(r.add.products.find((p) => p.tr === 'Bisküvi, sade')?.p, [['1 adet', 10], ['1 paket', 150]])
+  assert.equal(r.issues.filter((i) => i.level === 'hata').length, 1, 'yalnız bozuk satır')
 })

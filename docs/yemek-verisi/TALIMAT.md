@@ -16,9 +16,10 @@ DgFit'te kalori ve makro değerleri **hesaplanır**, elle yazılmaz. Bu yüzden 
 | --- | --- | --- |
 | `besinler` | Türkçe ad + **USDA SR Legacy** karşılığı (`usda`: FDC numarası, ör. `168421`, ya da birebir İngilizce açıklama) | USDA veritabanından |
 | `yemekler` | Malzemeler ve gramları + pişmiş toplam ağırlık | Malzemelerden hesaplanır |
-| `urunler` | Paketli ürünün **etiketindeki** 100 g değerleri + `kaynak` | Etiketten (fiziksel tutarlılık denetlenir) |
+| `urunler` | Elindeki **hazır 100 g değerleri** (paketli ürün, hazır yemek, genel besin fark etmez) | Olduğu gibi kabul edilir |
 
-Bir yemeğin kalorisini internetten bulup yazma: tarifini yaz, DgFit hesaplar.
+Elinde zaten 100 g değerleri olan veriler (binlerce satır) için `urunler` bölümünü ya da aşağıdaki **CSV** biçimini kullan;
+tek tek araştırma, etiket fotoğrafı ya da barkod gerekmez. Yalnız fiziksel olarak imkânsız satırlar (aşağıdaki denetimler) ayrılır.
 
 ## Alanlar
 
@@ -38,12 +39,29 @@ Bir yemeğin kalorisini internetten bulup yazma: tarifini yaz, DgFit hesaplar.
 - `pismis_agirlik`: tencerede çıkan toplam pişmiş ağırlık (g). Çiğ toplamın %40–130'u arasında olmalı.
 - `porsiyonlar`: `[["1 kase", 250], ["1 tabak", 300]]`
 
-### urunler (paketli ürün)
-- `ad`, `marka`, `barkod` (EAN-13/EAN-8/UPC; ambalajdaki numara, sağlama basamağı denetlenir), `kategori`
+### urunler (hazır 100 g değerleri)
+- `ad` (zorunlu), `kategori` (zorunlu), `marka` ve `barkod` (EAN-13/EAN-8/UPC) isteğe bağlı. Barkodun sağlama basamağı tutmazsa ürün barkodsuz eklenir.
 - `100g`: `kcal`, `protein`, `karbonhidrat`, `yag` zorunlu; `lif`, `seker`, `doymus_yag`, `sodyum_mg` ya da `tuz_g` isteğe bağlı
-- `kaynak`: etiket fotoğrafı ya da üreticinin ürün sayfası (zorunlu)
+- `kaynak` isteğe bağlı (satır başına ya da dosyanın en üstünde bir kez; uygulamada "Kaynak: …" olarak görünür)
 
-## Denetimler (dosya bunlardan geçmezse eklenmez)
+## Toplu veri: CSV
+Binlerce satır için en kolayı CSV. İlk satır başlık; sütun sırası serbest; virgül ya da noktalı virgülle ayrılabilir
+(noktalı virgüllü dosyada ondalık virgül olur: `1,7`). Örnek: `SABLON.csv`.
+
+| Sütun | Zorunlu | Örnek |
+| --- | --- | --- |
+| `ad` | evet | Ayran |
+| `kategori` | evet | İçecekler |
+| `kcal`, `protein`, `karbonhidrat`, `yag` | evet | 36 · 1,7 · 2,6 · 2 |
+| `marka`, `barkod` | hayır | Sütaş · 8690000000029 |
+| `lif`, `seker`, `doymus_yag`, `sodyum_mg` ya da `tuz_g` | hayır | 0 · 2,6 · 1,3 · 0,6 |
+| `porsiyon` | hayır | `1 kutu=200|1 bardak=250` (ad=gram, `|` ile ayrılır) |
+| `esanlamlar` | hayır | `ayran içeceği|yayık ayranı` |
+| `kaynak` | hayır | TÜRKOMP |
+
+Değerler her zaman **100 g** içindir (porsiyon değil). Aynı ad + marka ya da aynı barkod zaten varsa satır atlanır.
+
+## Denetimler (yalnız bunlara takılan satırlar ayrılır)
 - USDA karşılığı bulunmalı (bulunamazsa araç yakın kayıtları önerir)
 - Ürünlerde: 100 g'da en fazla 900 kcal, makrolar toplamı en fazla 105 g (etiket yuvarlaması payı), kalori makrolarla uyumlu (4/4/9), şeker ≤ karbonhidrat, doymuş yağ ≤ yağ
 - Tariflerde: tüm malzemeler bulunmalı; pişmiş ağırlık çiğ toplamla tutarlı olmalı
@@ -59,5 +77,7 @@ DgFit'teki besin ve yemek anahtarları `data/tr-foods.json` ve `data/tr-dishes.j
 ```bash
 node --experimental-strip-types scripts/food-import.mjs gelen.json            # rapor: hatalar, uyarılar, atlananlar, hesaplanan değerler
 node --experimental-strip-types scripts/food-import.mjs gelen.json --uygula   # hata yoksa ekler ve besin verisini yeniden derler
+node --experimental-strip-types scripts/food-import.mjs veri.csv --uygula --hatalilari-atla   # bozuk satırları rapora ayırır, kalanı ekler
 ```
+Tam rapor `<dosya>.rapor.txt` olarak yazılır (hatalı satırlar CSV satır numarasıyla).
 Sonra normal yayın akışı (`./scripts/verify.sh` → `./scripts/release.sh`) yeni besinleri canlıya taşır.

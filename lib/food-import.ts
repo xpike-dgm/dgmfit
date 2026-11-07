@@ -4,7 +4,9 @@
 // İlke (CLAUDE.md kural 6): besin değerleri elle yazılmaz, hesaplanır.
 //  - besinler: Türkçe ad + USDA SR Legacy eşlemesi (fdc_id ya da tam İngilizce açıklama) → değerler USDA'dan
 //  - yemekler: malzeme gramajları + pişmiş ağırlık → değerler computeRecipe ile malzemelerden
-//  - urunler: paketli ürün etiketi (100 g başına) → fiziksel tutarlılık (per100Problem) ve barkod sağlaması denetlenir
+//  - urunler: hazır 100 g değerleri (etiket ya da güvenilir dış derleme; kullanıcı kararı 2026-11-07) → olduğu gibi kabul edilir;
+//    yalnız fiziksel olarak imkânsız satırlar (per100Problem, şeker > karbonhidrat…) ayrılır. Kaynak isteğe bağlı.
+//  - CSV: csvToImport ile aynı `urunler` biçimine çevrilir (toplu veri için).
 import { computeRecipe, normalizeSearch, type Nutrients } from './nutrition.ts'
 import { isValidBarcode, per100Problem } from './food.ts'
 
@@ -14,9 +16,11 @@ export type Portion = [string, number]
 export interface InFood { ad: string; kategori: string; usda: string | number; porsiyonlar?: Portion[]; esanlamlar?: string[]; anahtar?: string; yaklasik?: boolean }
 export interface InDish { ad: string; kategori: string; malzemeler: Record<string, number>; pismis_agirlik: number; porsiyonlar?: Portion[]; esanlamlar?: string[]; anahtar?: string }
 export interface InProduct {
-  ad: string; marka?: string | null; barkod?: string | null; kategori: string; kaynak: string
+  ad: string; marka?: string | null; barkod?: string | null; kategori: string; kaynak?: string | null
   '100g': { kcal: number; protein: number; karbonhidrat: number; yag: number; lif?: number; seker?: number; doymus_yag?: number; sodyum_mg?: number; tuz_g?: number }
   porsiyonlar?: Portion[]; esanlamlar?: string[]; anahtar?: string
+  /** CSV'den gelen satırın dosyadaki satır numarası (raporda) */
+  _satir?: number
 }
 export interface ImportFile { format: string; kaynak?: string; besinler?: InFood[]; yemekler?: InDish[]; urunler?: InProduct[] }
 
@@ -153,8 +157,8 @@ export function validateImport(file: unknown, ctx: ImportContext): ImportResult 
 
   // 2) paketli ürünler (etiket)
   for (const [i, x] of (f.urunler ?? []).entries()) {
-    const where = `urunler[${i}] ${x?.ad ?? ''}`.trim()
-    if (!str(x?.ad, 2, 80) || !str(x?.kategori, 2, 40) || !str(x?.kaynak, 3, 300)) { issues.push({ level: 'hata', where, msg: 'ad, kategori ve kaynak (etiket fotoğrafı/üretici sayfası) gerekli' }); continue }
+    const where = (x?._satir ? `satır ${x._satir} ${x?.ad ?? ''}` : `urunler[${i}] ${x?.ad ?? ''}`).trim()
+    if (!str(x?.ad, 2, 80) || !str(x?.kategori, 2, 40)) { issues.push({ level: 'hata', where, msg: 'ad (2–80 karakter) ve kategori (2–40) gerekli' }); continue }
     const v = x['100g']
     if (!v || !isNum(v.kcal, 0, 900) || !isNum(v.protein, 0, 100) || !isNum(v.karbonhidrat, 0, 100) || !isNum(v.yag, 0, 100)) { issues.push({ level: 'hata', where, msg: '"100g" içinde kcal, protein, karbonhidrat, yag sayı olarak gerekli' }); continue }
     const n: Nutrients = { kcal: v.kcal, protein: v.protein, carb: v.karbonhidrat, fat: v.yag }
@@ -167,15 +171,16 @@ export function validateImport(file: unknown, ctx: ImportContext): ImportResult 
     if (bad) { issues.push({ level: 'hata', where, msg: bad }); continue }
     if ((n.sugar ?? 0) > (n.carb ?? 0) + 0.5) { issues.push({ level: 'hata', where, msg: 'şeker karbonhidrattan fazla olamaz' }); continue }
     if ((n.satFat ?? 0) > (n.fat ?? 0) + 0.5) { issues.push({ level: 'hata', where, msg: 'doymuş yağ toplam yağdan fazla olamaz' }); continue }
-    const code = x.barkod ? String(x.barkod).trim() : null
-    if (code && !isValidBarcode(code)) { issues.push({ level: 'hata', where, msg: `barkod geçersiz (sağlama basamağı tutmuyor): ${code}` }); continue }
+    let code = x.barkod ? String(x.barkod).replace(/\s/g, '') : null
+    // geçersiz barkod satırı düşürmez: ürün barkodsuz eklenir (aramayla bulunur), uyarı verilir
+    if (code && !isValidBarcode(code)) { issues.push({ level: 'uyarı', where, msg: `barkod geçersiz (sağlama basamağı tutmuyor), barkodsuz eklendi: ${code}` }); code = null }
     if (code && barcodes.has(code)) { skipped.push({ where, why: `barkod zaten var (${code})` }); continue }
     const p = portionsOk(x.porsiyonlar, where, issues)
     const k = claim(where, x.marka ? `${x.ad} ${x.marka}` : x.ad, x.anahtar)
     if (!k) continue
     if (code) barcodes.add(code)
     const a = aliases(x.esanlamlar, where)
-    add.products.push({ k, tr: x.ad.trim(), brand: x.marka?.trim() || null, barcode: code, c: x.kategori.trim(), n, p, ...(a ? { a } : {}), src: x.kaynak.trim() })
+    add.products.push({ k, tr: x.ad.trim(), brand: x.marka?.trim() || null, barcode: code, c: x.kategori.trim(), n, p, ...(a ? { a } : {}), src: (typeof x.kaynak === 'string' && x.kaynak.trim()) || (typeof f.kaynak === 'string' && f.kaynak.trim()) || 'Dış veri derlemesi' })
     usdaOf.set(k, n)
     outlier(where, x.kategori, v.kcal)
     preview.push({ where, name: x.ad, kcal: v.kcal, protein: v.protein, carb: v.karbonhidrat, fat: v.yag })
@@ -206,4 +211,59 @@ export function validateImport(file: unknown, ctx: ImportContext): ImportResult 
     preview.push({ where, name: x.ad, kcal: Math.round(r.per100.kcal ?? 0), protein: r.per100.protein ?? 0, carb: r.per100.carb ?? 0, fat: r.per100.fat ?? 0 })
   }
   return { issues, add, skipped, preview }
+}
+
+// ───────── CSV (toplu veri) ─────────
+/** CSV satırlarını ayırır: tırnaklı alanlar, "" kaçışı, virgül ya da noktalı virgül (ilk satıra göre). */
+export function parseCsv(text: string): string[][] {
+  const t = text.replace(/^\uFEFF/, '')
+  const first = t.split(/\r?\n/, 1)[0] ?? ''
+  const delim = (first.match(/;/g)?.length ?? 0) > (first.match(/,/g)?.length ?? 0) ? ';' : (first.includes('\t') && !first.includes(',') ? '\t' : ',')
+  const rows: string[][] = []
+  let row: string[] = [], cell = '', q = false
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i]
+    if (q) {
+      if (c === '"' && t[i + 1] === '"') { cell += '"'; i++ } else if (c === '"') q = false; else cell += c
+    } else if (c === '"') q = true
+    else if (c === delim) { row.push(cell); cell = '' }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(cell); if (row.some((x) => x.trim())) rows.push(row); row = []; cell = '' }
+    else cell += c
+  }
+  row.push(cell); if (row.some((x) => x.trim())) rows.push(row)
+  return rows
+}
+
+const HEAD: Record<string, string> = {
+  ad: 'ad', isim: 'ad', urun: 'ad', 'ürün': 'ad', kategori: 'kategori', marka: 'marka', barkod: 'barkod',
+  kcal: 'kcal', kalori: 'kcal', enerji: 'kcal', protein: 'protein', karbonhidrat: 'karbonhidrat', karb: 'karbonhidrat', yag: 'yag', 'yağ': 'yag',
+  lif: 'lif', seker: 'seker', 'şeker': 'seker', doymus_yag: 'doymus_yag', 'doymuş_yağ': 'doymus_yag', sodyum_mg: 'sodyum_mg', tuz_g: 'tuz_g',
+  porsiyonlar: 'porsiyonlar', porsiyon: 'porsiyonlar', esanlamlar: 'esanlamlar', 'eşanlamlar': 'esanlamlar', kaynak: 'kaynak',
+}
+const numTr = (s: string | undefined) => { if (s === undefined || !s.trim()) return undefined; const v = Number(s.trim().replace(/\s/g, '').replace(',', '.')); return Number.isFinite(v) ? v : NaN }
+
+/**
+ * CSV → `dgfit-yemek/1` (yalnız `urunler`). Başlıklar (sıra serbest): ad, kategori, marka, barkod, kcal, protein, karbonhidrat,
+ * yag, lif, seker, doymus_yag, sodyum_mg, tuz_g, porsiyonlar ("1 adet=30|1 paket=150"), esanlamlar ("a|b"), kaynak.
+ * Ondalık virgül de olur (noktalı virgülle ayrılmış dosyada).
+ */
+export function csvToImport(text: string, kaynak?: string): ImportFile {
+  const rows = parseCsv(text)
+  if (!rows.length) return { format: IMPORT_FORMAT, urunler: [] }
+  const cols = rows[0].map((h) => HEAD[h.trim().toLocaleLowerCase('tr-TR').replace(/\s+/g, '_')] ?? null)
+  const urunler: InProduct[] = []
+  for (const [ri, r] of rows.slice(1).entries()) {
+    const o: Record<string, string> = {}
+    cols.forEach((c, i) => { if (c && r[i] !== undefined) o[c] = r[i].trim() })
+    const num = (k: string) => numTr(o[k])
+    const g: InProduct['100g'] = { kcal: num('kcal') as number, protein: num('protein') as number, karbonhidrat: num('karbonhidrat') as number, yag: num('yag') as number }
+    for (const k of ['lif', 'seker', 'doymus_yag', 'sodyum_mg', 'tuz_g'] as const) { const v = num(k); if (v !== undefined && !Number.isNaN(v)) g[k] = v }
+    const porsiyonlar = o.porsiyonlar ? o.porsiyonlar.split(/[;|]/).map((x) => x.split('=')).filter((x) => x.length === 2).map(([l, v]) => [l.trim(), numTr(v) ?? NaN] as Portion) : undefined
+    urunler.push({
+      ad: o.ad ?? '', kategori: o.kategori ?? '', marka: o.marka || null, barkod: o.barkod || null, '100g': g,
+      ...(porsiyonlar?.length ? { porsiyonlar } : {}), ...(o.esanlamlar ? { esanlamlar: o.esanlamlar.split('|').map((x) => x.trim()).filter(Boolean) } : {}),
+      ...(o.kaynak ? { kaynak: o.kaynak } : {}), _satir: ri + 2,
+    })
+  }
+  return { format: IMPORT_FORMAT, ...(kaynak ? { kaynak } : {}), urunler }
 }

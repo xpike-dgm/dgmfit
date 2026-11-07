@@ -339,7 +339,8 @@
     "app/(app)/profil/ozellestirme/duzen/page.tsx",
     "app/(app)/profil/ozellestirme/stil/ColorsStyle.tsx",
     "app/(app)/profil/ozellestirme/stil/daha/page.tsx",
-    "app/(app)/profil/ozellestirme/sablonlar/LibraryUse.tsx"
+    "app/(app)/profil/ozellestirme/sablonlar/LibraryUse.tsx",
+    "docs/yemek-verisi/SABLON.csv"
   ],
   "tables": [
     "users",
@@ -1057,7 +1058,9 @@
     "lib/food-import.ts": [
       "validateImport",
       "slug",
-      "kcalRange"
+      "kcalRange",
+      "csvToImport",
+      "parseCsv"
     ],
     "lib/cards/layout.ts": [
       "resolveScreen",
