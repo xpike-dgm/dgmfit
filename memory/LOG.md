@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö1b-1 tamamlandı (diğer ekranlar)
+- Fit, Fitness, Su (WaterScreen), Yemek (FoodDiary) CardBoard'a geçti; kayıtta fit/fitness/water/food kartları; `LayoutCtx.advanced`; stüdyo ekran başına durum (`allScreenLayouts`) — önceki sürümde tüm ekranlar Bugün'ün durumunu gösteriyordu.
+- Görsel kontrol: Su düzenlemesinde ✎/− düğmeleri içeriğin (içecek çipleri, miktar düğmeleri) üstüne biniyordu → kart başlık şeridi; bandın alt taşması yer tutucunun üstüne biniyordu → düzenlemede kapalı.
+- verify'da sosyal-2 e2e iki kez düştü (yalnız başına da): 2. tanık rekoru doğrulayınca bekleyen liste boşalıyor, bileşen null dönüp "Rekor doğrulandı" mesajını siliyordu (gerçek UX hatası, zamanlamaya bağlı) → kart mesajla kalır.
+- Doğrulama: commit `ef8b3fe`; verify.sh VERIFY OK (225 birim); release `2026-11-07T04-19-32-106Z` RELEASE OK; canlıda 12 e2e OK; 14 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö1a tamamlandı
 - Kart kaydı + düzen modeli (saf, 6 test), 0024 ui_designs, Bugün 11 karta bölündü (yeni 'Seriler' çekmecede), düzenleme modu (basılı tut-sürükle, FLIP, kenarda kaydırma, −, ✎ boyut + yukarı/aşağı, çekmece: dokun/sürükle, geri al, Vazgeç/Bitti), stüdyo `/profil/ozellestirme`, gizli kartın verisi hesaplanmaz, koç kartı gizlense de güvenlik kartı.
 - Görsel kontrol (ekran görüntüleri): yarım boyutta antrenman kartı sıkışıyordu → düğme alt satıra kayar; düzenlemede boş koşullu kartlar çok yer kaplıyordu → küçük yer tutucu.
