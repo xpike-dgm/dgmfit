@@ -179,3 +179,4 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-07 | Yemek verisi dışarıdan `dgfit-yemek/1` biçiminde gelir; besin değeri yalnızca paketli ürün etiketinde yazılır, diğerleri USDA eşlemesi ya da tariften hesaplanır; içe aktarma repo verisine yazar ve normal yayınla canlıya gider (yönetim panelinden yükleme yok) | P-6; CLAUDE.md kural 6 | Yemek |
 | 2026-11-07 | Akıllı öğün hatırlatması varsayılan açık, öğün başına günde en fazla bir, alışkanlık ≥5 günle belirlenir; push planlayıcısında 'planlı' öncelik | P-7 | Yemek |
 | 2026-11-07 | Tarif linki içe aktarma kural tabanlı (JSON-LD + Türkçe ölçü tablosu), AI kullanmaz; eşleşmeyen malzemeler kullanıcıya listelenir | P-7; AI anahtarı yokken de çalışsın | Yemek |
+| 2026-11-07 | Özelleştirmeye giriş Profil → hesap ve ayarlar → Özelleştirme (stüdyo); düzenleme yerinde (ekran üstünde düzenleme modu); kodlamadan önce prototip onayı | Kullanıcı: "çok kapsamlı bir şey olacak" | Ortak |
