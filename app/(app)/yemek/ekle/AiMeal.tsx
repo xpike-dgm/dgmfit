@@ -153,7 +153,7 @@ export default function AiMeal({ day, meal, onAdded, ask }: { day: string; meal:
                   <div className="flex gap-1.5" role="group" aria-label={`${r.name} porsiyon düzeltme`}>
                     {([['Az', 0.7], ['Tahmin', 1], ['Çok', 1.4]] as const).map(([l, f]) => {
                       const g = Math.round((r.grams * f) / 5) * 5
-                      return <button key={l} type="button" aria-pressed={Number(r.g) === g} onClick={() => setRows(rows.map((x, k) => (k === i ? { ...x, g: String(g) } : x)))} className={`h-8 px-3 rounded-full text-[12px] font-bold border ${Number(r.g) === g ? 'bg-acc text-acc-ink border-acc' : 'bg-surface border-line text-ink-2'}`}>{l} · {g}</button>
+                      return <button key={l} type="button" aria-pressed={Number(r.g) === g} onClick={() => setRows(rows.map((x, k) => (k === i ? { ...x, g: String(g) } : x)))} className={`h-9 px-3 rounded-full text-[12px] font-bold border ${Number(r.g) === g ? 'bg-acc text-acc-ink border-acc' : 'bg-surface border-line text-ink-2'}`}>{l} · {g}</button>
                     })}
                   </div>
                   {r.drink ? <label className="flex items-center gap-2 text-[12px] text-ink-2"><input type="checkbox" checked={r.water} onChange={(e) => setRows(rows.map((x, k) => (k === i ? { ...x, water: e.target.checked } : x)))} className="w-4 h-4 accent-[var(--color-water)]" />Su takibine de ekle</label> : null}

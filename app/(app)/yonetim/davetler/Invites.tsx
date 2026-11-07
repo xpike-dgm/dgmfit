@@ -52,7 +52,7 @@ export default function Invites({ list, origin }: { list: Inv[]; origin: string 
         {list.length ? list.map((i) => (
           <article key={i.code} className={`card p-4 flex flex-col gap-2 ${i.usable ? '' : 'opacity-70'}`} data-testid="invite-row">
             <div className="flex items-center justify-between gap-2">
-              <b className="num text-[17px] tracking-[0.1em] truncate">{i.code}</b>
+              <b className="num text-[17px] tracking-[0.06em] break-all">{i.code}</b>
               <span className={`text-[11.5px] font-bold px-2 py-0.5 rounded-full shrink-0 ${i.usable ? 'bg-good/15 text-good' : 'bg-surface-3 text-mute'}`}>{i.usable ? 'Etkin' : i.disabled ? 'Kapalı' : 'Bitti'}</span>
             </div>
             <span className="text-[13px] text-ink-2 truncate">{i.label || 'Etiketsiz'}</span>

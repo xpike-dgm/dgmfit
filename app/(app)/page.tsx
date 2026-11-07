@@ -85,7 +85,7 @@ export default async function Today() {
           <div className="grid grid-cols-3 gap-3">
             {macros.map((m) => (
               <Link href="/yemek" key={m.name} className="flex flex-col gap-1 min-w-0">
-                <div className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-2 min-w-0"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} /><span className="truncate">{m.name}</span></div>
+                <div className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-2 min-w-0"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.color }} /><span className="truncate">{m.name === 'Karbonhidrat' ? <><span className="max-[350px]:hidden">Karbonhidrat</span><span className="min-[351px]:hidden" aria-hidden>Karb.</span></> : m.name}</span></div>
                 <span className="text-[13px] text-mute"><b className="num text-ink font-semibold">{fmtNum(m.val)}</b> / {fmtNum(m.goal)} g</span>
                 <Bar value={m.goal ? m.val / m.goal : 0} color={m.color} height={5} />
               </Link>

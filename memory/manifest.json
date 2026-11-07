@@ -263,7 +263,17 @@
     "lib/push-endpoint.ts",
     "lib/body-comp.ts",
     "lib/goal-phase.ts",
-    "lib/sim/run.ts"
+    "lib/sim/run.ts",
+    "lib/habits.ts",
+    "lib/achievements.ts",
+    "lib/achievements-data.ts",
+    "lib/progress-compare.ts",
+    "lib/recipe-import.ts",
+    "lib/recipe-fetch.ts",
+    "lib/food-import.ts",
+    "scripts/food-import.mjs",
+    "docs/yemek-verisi/SABLON.json",
+    "docs/yemek-verisi/TALIMAT.md"
   ],
   "tables": [
     "users",
@@ -453,7 +463,8 @@
     "/fitness/rekor",
     "/yonetim/barkodlar",
     "/profil/vucut",
-    "/api/today/state"
+    "/api/today/state",
+    "/profil/basarilar"
   ],
   "events": [
     "profile.onboarded",
@@ -469,7 +480,9 @@
     "report.pushed",
     "goal.reached",
     "goal.choice",
-    "bodyfat.updated"
+    "bodyfat.updated",
+    "meal.usual",
+    "reminder.meal"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -899,6 +912,27 @@
     ],
     "lib/push-endpoint.ts": [
       "isAllowedPushEndpoint"
+    ],
+    "lib/habits.ts": [
+      "usualMeal",
+      "habitMinute",
+      "decideMealReminder"
+    ],
+    "lib/achievements.ts": [
+      "computeAchievements",
+      "foodStreak",
+      "trainingWeekStreak"
+    ],
+    "lib/recipe-import.ts": [
+      "extractRecipe",
+      "parseIngredient",
+      "isPrivateAddress",
+      "recipeUrlOk"
+    ],
+    "lib/food-import.ts": [
+      "validateImport",
+      "slug",
+      "kcalRange"
     ]
   },
   "dependencies": {
@@ -938,6 +972,7 @@
     "0019_supersets.sql",
     "0020_ui_mode.sql",
     "0021_barcode_misses.sql",
-    "0022_goal_intelligence.sql"
+    "0022_goal_intelligence.sql",
+    "0023_meal_reminders.sql"
   ]
 }

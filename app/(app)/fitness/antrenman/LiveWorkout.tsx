@@ -273,7 +273,7 @@ export default function LiveWorkout(p: Props) {
             <button type="button" className={btn.icon} aria-label={`${e.name} seçenekleri`} onClick={() => setSheet({ kind: 'menu', ex: ei })}><Dots size={20} /></button>
           </div>
           {ssNo.get(ei) ? (() => { const m = supersetMembers(d.exercises, ei), nx = m[(m.indexOf(ei) + 1) % m.length]; return (
-            <button type="button" onClick={() => { setSel(nx); setRirAt(null) }} className="self-start h-8 px-3 rounded-full bg-[#E53935]/12 text-[#E53935] text-[12.5px] font-bold flex items-center gap-1.5" data-testid="superset-chip">
+            <button type="button" onClick={() => { setSel(nx); setRirAt(null) }} className="self-start h-9 px-3 rounded-full bg-[#E53935]/12 text-[#E53935] text-[12.5px] font-bold flex items-center gap-1.5" data-testid="superset-chip">
               Süperset {ssNo.get(ei)} · {m.indexOf(ei) + 1}/{m.length} · sonra: {d.exercises[nx].name}
             </button>) })() : null}
           {e.note ? <p className="text-[13px] text-ink-2" data-testid="ex-note">Not: {e.note}</p> : null}

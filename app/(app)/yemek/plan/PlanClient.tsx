@@ -37,7 +37,7 @@ export default function PlanClient({ plan, aiOn, today }: { plan: Plan | null; a
           <Seg label="Süre" value={String(v.days)} opts={[['1', '1 gün'], ['7', '7 gün']]} onChange={(x) => setV({ ...v, days: Number(x) as 1 | 7 })} />
           <Seg label="Başlangıç" value={v.start} opts={[['today', 'Bugün'], ['tomorrow', 'Yarın']]} onChange={(x) => setV({ ...v, start: x as 'today' })} />
           <Seg label="Bütçe" value={v.budget} opts={BUDGET} onChange={(x) => setV({ ...v, budget: x })} />
-          <label className="flex items-center justify-between gap-3 text-[14px] font-semibold">Toplu hazırlık planı (meal prep)
+          <label className="flex items-center justify-between gap-3 min-h-11 text-[14px] font-semibold">Toplu hazırlık planı (meal prep)
             <input type="checkbox" checked={v.prep} onChange={(e) => setV({ ...v, prep: e.target.checked })} className="w-5 h-5" /></label>
           <label htmlFor="menu-note" className="flex flex-col gap-1 text-[13px] font-semibold">Not (isteğe bağlı)
             <input id="menu-note" maxLength={200} value={v.note} onChange={(e) => setV({ ...v, note: e.target.value })} placeholder="Ör: balık sevmem, öğle yemekleri pratik olsun" className="h-12 rounded-xl bg-surface-2 border border-line px-3 font-normal" /></label>

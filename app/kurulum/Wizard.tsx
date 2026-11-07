@@ -410,7 +410,7 @@ function Big({ value, unit, label, min, max, decimal, onSet }: { value: string; 
 }
 
 function Chip({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
-  return <span className={`h-8 px-3 rounded-full flex items-center text-[13px] font-bold ${accent ? 'bg-coach border border-coach-line text-acc' : 'bg-surface-2 text-ink'}`}>{children}</span>
+  return <span className={`h-9 px-3 rounded-full flex items-center text-[13px] font-bold ${accent ? 'bg-coach border border-coach-line text-acc' : 'bg-surface-2 text-ink'}`}>{children}</span>
 }
 
 function Steppers({ onMinus, onPlus }: { onMinus: () => void; onPlus: () => void }) {

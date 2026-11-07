@@ -44,7 +44,7 @@ export default async function Page(props: { searchParams: Promise<{ aralik?: str
       </nav>
 
       {s.activeDays === 0 ? (
-        <section className="card p-5 text-sm text-ink-2">Bu aralıkta henüz su kaydı yok. İlk kayıtlarından sonra günlük grafik, saatlik dağılım, takvim ve koç analizi burada oluşur. <a href="/su" className="text-acc font-bold">Su ekle</a></section>
+        <section className="card p-5 text-sm text-ink-2">Bu aralıkta henüz su kaydı yok. İlk kayıtlarından sonra günlük grafik, saatlik dağılım, takvim ve koç analizi burada oluşur. <a href="/su" className="hit text-acc font-bold">Su ekle</a></section>
       ) : null}
 
       {s.activeDays === 0 ? null : (<>

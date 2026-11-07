@@ -26,7 +26,7 @@ export function TopBar({ title, sub, back, right }: { title?: ReactNode; sub?: R
         ) : null}
         <div className="flex-1 min-w-0">
           {title ? <h1 className="text-[18px] font-extrabold leading-tight truncate">{title}</h1> : null}
-          {sub ? <p className="text-[12.5px] font-semibold opacity-85 leading-snug truncate">{sub}</p> : null}
+          {sub ? <p className="text-[12.5px] font-semibold opacity-85 leading-snug line-clamp-2">{sub}</p> : null}
         </div>
         {right ?? null}
       </div>

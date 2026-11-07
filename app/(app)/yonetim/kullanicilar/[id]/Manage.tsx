@@ -52,8 +52,8 @@ export default function Manage({ u, stats, defaultDaily }: { u: U; stats: { sess
           <button type="button" disabled={pending} className={btn.secondary + ' h-12 shrink-0'} onClick={() => run('ai', () => setAiDailyAction(u.id, daily))}>Kaydet</button>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {[0, 5, 20, 50, 100].map((n) => <button key={n} type="button" className="h-8 px-3 rounded-full border border-line-2 text-[12.5px] font-bold num" onClick={() => setDaily(String(n))}>{n === 0 ? 'Kapat (0)' : n}</button>)}
-          <button type="button" className="h-8 px-3 rounded-full border border-line-2 text-[12.5px] font-bold" onClick={() => setDaily('')}>Genel ayar</button>
+          {[0, 5, 20, 50, 100].map((n) => <button key={n} type="button" className="h-9 px-3 rounded-full border border-line-2 text-[12.5px] font-bold num" onClick={() => setDaily(String(n))}>{n === 0 ? 'Kapat (0)' : n}</button>)}
+          <button type="button" className="h-9 px-3 rounded-full border border-line-2 text-[12.5px] font-bold" onClick={() => setDaily('')}>Genel ayar</button>
         </div>
         <Msg k="ai" />
       </Section>

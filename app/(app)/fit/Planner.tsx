@@ -59,7 +59,7 @@ export function CarbCycle(p: { enabled: boolean; weekdays: number[]; shiftG: num
     <section aria-label="Karb döngüsü" className="card p-5 flex flex-col gap-3" data-testid="carb-cycle">
       <label className="flex items-center justify-between gap-3">
         <span className="text-[13px] font-bold tracking-[0.08em] uppercase text-mute">Karb döngüsü</span>
-        <input type="checkbox" checked={v.enabled} onChange={(e) => setV({ ...v, enabled: e.target.checked })} className="w-5 h-5" aria-label="Karb döngüsünü aç" />
+        <input type="checkbox" checked={v.enabled} onChange={(e) => setV({ ...v, enabled: e.target.checked })} className="w-5 h-5 my-[11px]" aria-label="Karb döngüsünü aç" />
       </label>
       <p className="text-[12px] text-mute">Antrenman günlerinde karbonhidrat artar, dinlenme günlerinde azalır; haftalık toplam ve protein aynı kalır.</p>
       {v.enabled ? (

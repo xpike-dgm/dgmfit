@@ -134,3 +134,7 @@ input[type="checkbox"]:not(.sr-only):checked { background: var(--color-acc); bor
 input[type="checkbox"]:not(.sr-only):checked::after { transform: scale(1); }
 input[type="checkbox"]:not(.sr-only):focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }
 input[type="checkbox"]:not(.sr-only):disabled { opacity: .45; cursor: not-allowed; }
+
+/* P-5: küçük simge ve satır içi bağlantılarda dokunma alanı ≥ 44 px (görünüm değişmeden, görünmez genişletme) */
+.hit { position: relative; }
+.hit::after { content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }

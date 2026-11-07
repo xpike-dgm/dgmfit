@@ -28,7 +28,7 @@ export default async function ProgramsPage() {
                 <span className="text-[12px] text-mute">{p.dayCount} gün</span>
               </Link>
               <ProgramActions id={p.id} active={p.active} />
-              <Link href={`/fitness/programlar/${p.id}`} aria-label={`${p.name} düzenle`} className="text-mute"><Next size={18} /></Link>
+              <Link href={`/fitness/programlar/${p.id}`} aria-label={`${p.name} düzenle`} className="hit text-mute"><Next size={18} /></Link>
             </div>
           ))}
         </section>

@@ -24,7 +24,7 @@ export default async function StatsPage() {
     <div className="flex flex-col gap-3 px-4">
       <TopBar back="/fitness" title="İstatistik" sub="Son 12 hafta" />
       {s.calendar.length === 0 ? (
-        <section className="card p-5 text-[14px] text-ink-2 leading-relaxed">Henüz kayıtlı antrenman yok. İlk antrenmanından sonra haftalık hacim, takvim, kas grupları ve set dağılımı burada oluşur. <a href="/fitness" className="text-acc font-bold">Antrenmana başla</a></section>
+        <section className="card p-5 text-[14px] text-ink-2 leading-relaxed">Henüz kayıtlı antrenman yok. İlk antrenmanından sonra haftalık hacim, takvim, kas grupları ve set dağılımı burada oluşur. <a href="/fitness" className="hit text-acc font-bold">Antrenmana başla</a></section>
       ) : <>
 
       <section className="card p-5 flex flex-col gap-2" aria-label="Haftalık hacim">

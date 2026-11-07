@@ -170,7 +170,7 @@ export default function WaterScreen({ data }: { data: Data }) {
       <section aria-label="Kapların" className="flex flex-col gap-2">
         <div className="flex justify-between items-baseline px-1">
           <h2 className="font-extrabold">Kapların</h2>
-          <Link href="/su/ayarlar/kaplar" className="text-sm text-acc font-bold">Düzenle</Link>
+          <Link href="/su/ayarlar/kaplar" className="hit text-sm text-acc font-bold">Düzenle</Link>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {data.containers.map((c) => {

@@ -26,7 +26,7 @@ export default function InfoTip({ children, label = 'Açıklama', className = ''
   return (
     <span className={`inline-flex align-middle ${className}`}>
       <button ref={btn} type="button" aria-label={label} aria-expanded={!!pos} aria-controls={id} onClick={toggle} data-testid="info-tip"
-        className="w-[18px] h-[18px] rounded-full border border-current text-mute text-[11px] font-extrabold leading-none inline-flex items-center justify-center normal-case tracking-normal shrink-0">i</button>
+        className="hit w-[18px] h-[18px] rounded-full border border-current text-mute text-[11px] font-extrabold leading-none inline-flex items-center justify-center normal-case tracking-normal shrink-0">i</button>
       {pos ? (
         <span ref={box} id={id} role="note" style={{ position: 'fixed', left: pos.left, top: pos.top, bottom: pos.bottom, width: pos.width }}
           className="z-50 rounded-2xl bg-surface-3 border border-line-2 shadow-lg px-3.5 py-3 text-[13px] font-normal normal-case tracking-normal text-ink-2 leading-relaxed text-left">

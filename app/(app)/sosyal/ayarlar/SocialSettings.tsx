@@ -42,7 +42,7 @@ export default function SocialSettings({ initial, mediaOn, invite, qr, exercises
           </div>
           <label htmlFor="sp-bio" className="flex flex-col gap-1 text-[13px] font-semibold">Biyografi<textarea id="sp-bio" rows={2} maxLength={200} value={v.bio} onChange={(e) => setV({ ...v, bio: e.target.value })} className="rounded-xl bg-surface-2 border border-line px-3 py-2 font-normal" /></label>
           <label htmlFor="sp-gym" className="flex flex-col gap-1 text-[13px] font-semibold">Spor salonu (isteğe bağlı)<input id="sp-gym" maxLength={60} value={v.gym} onChange={(e) => setV({ ...v, gym: e.target.value })} className="h-11 rounded-xl bg-surface-2 border border-line px-3 font-normal" /></label>
-          <label className="flex items-center justify-between text-[14px] font-semibold">Hedef rozetini göster<input type="checkbox" checked={v.showGoal} onChange={(e) => setV({ ...v, showGoal: e.target.checked })} className="w-5 h-5" /></label>
+          <label className="flex items-center justify-between min-h-11 text-[14px] font-semibold">Hedef rozetini göster<input type="checkbox" checked={v.showGoal} onChange={(e) => setV({ ...v, showGoal: e.target.checked })} className="w-5 h-5" /></label>
         </section>
       ) : null}
       {part === 'privacy' ? (

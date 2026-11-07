@@ -82,7 +82,7 @@ export default async function FitPage() {
       </section>
       {s.quality ? (
         <section aria-label="Kazanım kalitesi" className="card p-4 flex flex-col gap-2" data-testid="quality-card" data-verdict={s.quality.verdict}>
-          <div className="flex items-center justify-between"><Eyebrow>{type === 'lose' ? 'Kayıp kalitesi' : 'Kazanım kalitesi'}</Eyebrow><Link href="/profil/vucut" className="text-[12px] text-acc font-bold">Yağ oranı</Link></div>
+          <div className="flex items-center justify-between"><Eyebrow>{type === 'lose' ? 'Kayıp kalitesi' : 'Kazanım kalitesi'}</Eyebrow><Link href="/profil/vucut" className="hit text-[12px] text-acc font-bold">Yağ oranı</Link></div>
           <p className="text-[14px] leading-snug">{s.quality.text}</p>
           {s.quality.waistDeltaCm === null ? <Link href="/fitness/olcumler" className="text-[12.5px] text-mute">2 haftada bir bel ölçünü girersen yağ mı kas mı ayırt ederiz ›</Link> : null}
         </section>

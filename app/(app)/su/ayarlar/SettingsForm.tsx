@@ -57,7 +57,7 @@ export default function SettingsForm(props: {
             <input id="base" inputMode="numeric" value={base} onChange={(e) => setBase(e.target.value.replace(/\D/g, ''))} className={input + ' w-28 text-right'} />
             <span className="text-sm text-mute">ml</span>
           </div>
-          <p className="text-[13px] text-mute -mt-2">Kilona göre önerilen: <button type="button" className="text-water font-bold num" onClick={() => setBase(String(props.suggested))}>{fmtNum(props.suggested)} ml</button></p>
+          <p className="text-[13px] text-mute -mt-2">Kilona göre önerilen: <button type="button" className="hit text-water font-bold num" onClick={() => setBase(String(props.suggested))}>{fmtNum(props.suggested)} ml</button></p>
           <details className="group">
             <summary className="cursor-pointer text-sm font-bold text-ink-2 list-none flex items-center justify-between min-h-11">Haftanın günlerine farklı hedef <span className="text-mute group-open:rotate-90 transition">›</span></summary>
             <div className="flex flex-col gap-2 mt-2">

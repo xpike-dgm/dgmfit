@@ -25,7 +25,7 @@ export default async function Page() {
       <Sec title="Takipçiler" n={o.followers.length}>{o.followers.map((f) => <Row key={f.id} username={f.username} />)}</Sec>
       <Sec title="Sessize alınanlar" n={o.muted.length}>{o.muted.map((f) => <Row key={f.id} username={f.username}><RelButton op="unmute" id={f.id} label="Sesi aç" /></Row>)}</Sec>
       <Sec title="Engellenenler" n={o.blocked.length} testid="blocked">{o.blocked.map((f) => <Row key={f.id} username={f.username}><RelButton op="unblock" id={f.id} label="Engeli kaldır" /></Row>)}</Sec>
-      {!o.friends.length && !o.incoming.length ? <p className="card p-5 text-[14px] text-mute">Henüz arkadaşın yok. <Link href="/sosyal/ara" className="text-acc font-bold">Kişi ara</Link> ya da <Link href="/sosyal/ayarlar" className="text-acc font-bold">davet linkini</Link> paylaş.</p> : null}
+      {!o.friends.length && !o.incoming.length ? <p className="card p-5 text-[14px] text-mute">Henüz arkadaşın yok. <Link href="/sosyal/ara" className="hit text-acc font-bold">Kişi ara</Link> ya da <Link href="/sosyal/ayarlar" className="hit text-acc font-bold">davet linkini</Link> paylaş.</p> : null}
     </div>
   )
 }

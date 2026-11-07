@@ -67,7 +67,7 @@ export default async function Page(props: { searchParams: Promise<{ durum?: stri
                 <ActionButton action={setStatusAction} args={[r.id, 'approved']} className="w-10 h-10 rounded-full bg-acc text-acc-ink flex items-center justify-center" testId="quick-approve"><Check size={18} /><span className="sr-only">Onayla</span></ActionButton>
               </span>
             ) : (
-              <Link href={`/yonetim/kullanicilar/${r.id}`} className="flex items-center gap-1 shrink-0" aria-label={`@${r.username} ayrıntı`}><StatusPill status={r.status} /><Next size={16} className="text-mute" /></Link>
+              <Link href={`/yonetim/kullanicilar/${r.id}`} className="hit flex items-center gap-1 shrink-0" aria-label={`@${r.username} ayrıntı`}><StatusPill status={r.status} /><Next size={16} className="text-mute" /></Link>
             )}
           </div>
         )) : <p className="text-[14px] text-mute p-4 text-center">{status === 'pending' ? 'Onay bekleyen kayıt yok.' : 'Eşleşen kullanıcı yok.'}</p>}

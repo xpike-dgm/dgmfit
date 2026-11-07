@@ -73,9 +73,9 @@ export default function SuppForm({ id, init }: { id: number | null; init?: FormI
         ))}
         <div className="flex flex-wrap gap-1.5">
           {COMMON_EXTRAS.filter((c) => !extras.some((e) => e.name === c.name)).slice(0, 8).map((c) => (
-            <button key={c.name} type="button" className="h-8 px-3 rounded-full border border-line-2 text-[12.5px] font-bold inline-flex items-center gap-1" onClick={() => setExtras([...extras, { name: c.name, amount: '', unit: c.unit }])}><Plus size={13} />{c.name}</button>
+            <button key={c.name} type="button" className="h-9 px-3 rounded-full border border-line-2 text-[12.5px] font-bold inline-flex items-center gap-1" onClick={() => setExtras([...extras, { name: c.name, amount: '', unit: c.unit }])}><Plus size={13} />{c.name}</button>
           ))}
-          <button type="button" className="h-8 px-3 rounded-full border border-dashed border-line-2 text-[12.5px] font-bold" onClick={() => setExtras([...extras, { name: '', amount: '', unit: 'mg' }])}>Başka</button>
+          <button type="button" className="h-9 px-3 rounded-full border border-dashed border-line-2 text-[12.5px] font-bold" onClick={() => setExtras([...extras, { name: '', amount: '', unit: 'mg' }])}>Başka</button>
         </div>
       </section>
 
