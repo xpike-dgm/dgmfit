@@ -18,6 +18,7 @@ import QuickWaterButton from '@/components/QuickWaterButton'
 import InsightCard from '@/components/InsightCard'
 import CardBoard from '@/components/cards/CardBoard'
 import { screenLayout, userStyle } from '@/lib/cards/design-data'
+import { userNodes } from '@/lib/cards/user-nodes'
 import { fmtEnergyNum, volumeNum, weightOut } from '@/lib/units'
 
 export const metadata: Metadata = { title: 'Panom' }
@@ -46,6 +47,7 @@ export default async function Panom(props: { searchParams: Promise<{ duzenle?: s
   const un = (await userStyle(user.id)).units
   const eL = un.energy === 'kJ' ? 'kJ' : 'kcal'
 
+  const ucNodes = await userNodes(user.id, layout, editing)
   const nodes: Record<string, ReactNode> = {
     'mine.header': (
       <Band title="Panom" sub={<span className="capitalize">{longDate(t.day)}</span>}
@@ -120,7 +122,7 @@ export default async function Panom(props: { searchParams: Promise<{ duzenle?: s
   }
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="panom">
-      <CardBoard screen="mine" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={nodes}
+      <CardBoard screen="mine" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={{ ...nodes, ...ucNodes }} titles={layout.titles}
         drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} colors={layout.colors} />
     </div>
   )

@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
-  "verifiedAt": "2026-11-05",
-  "phase": "5h",
+  "verifiedAt": "2026-11-07",
+  "phase": "Ö5a",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -315,7 +315,18 @@
     "components/cards/usage-tracker.ts",
     "tests/cards-usage.test.ts",
     "tests/cards-compat.test.ts",
-    "tests/e2e/custom10.e2e.cjs"
+    "tests/e2e/custom10.e2e.cjs",
+    "lib/cards/custom.ts",
+    "lib/cards/custom-data.ts",
+    "lib/cards/user-nodes.tsx",
+    "components/cards/UserCardView.tsx",
+    "app/(app)/profil/ozellestirme/kartlarim/page.tsx",
+    "app/(app)/profil/ozellestirme/kartlarim/Builder.tsx",
+    "app/(app)/profil/ozellestirme/takip/page.tsx",
+    "app/(app)/profil/ozellestirme/takip/Trackers.tsx",
+    "tests/cards-custom.test.ts",
+    "tests/e2e/custom11.e2e.cjs",
+    "drizzle/0030_trackers.sql"
   ],
   "tables": [
     "users",
@@ -393,7 +404,9 @@
     "announcement_dismissals",
     "app_defaults",
     "designer_follows",
-    "card_usage"
+    "card_usage",
+    "trackers",
+    "tracker_logs"
   ],
   "routes": [
     "/",
@@ -534,7 +547,9 @@
     "/t/[id]",
     "/yonetim/tasarim",
     "/profil/ozellestirme/kullanim",
-    "/api/cards/usage"
+    "/api/cards/usage",
+    "/profil/ozellestirme/kartlarim",
+    "/profil/ozellestirme/takip"
   ],
   "events": [
     "profile.onboarded",
@@ -570,7 +585,10 @@
     "contest.set",
     "contest.entered",
     "announcement.created",
-    "layout.default"
+    "layout.default",
+    "tracker.created",
+    "tracker.logged",
+    "usercard.created"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -1143,6 +1161,36 @@
       "canHideToday",
       "NAV_MAX_VISIBLE",
       "NAV_DEFAULT_HIDDEN"
+    ],
+    "lib/cards/custom.ts": [
+      "USER_CARD_RE",
+      "isUserCard",
+      "userCardScreen",
+      "newUserCardId",
+      "USER_CARDS_MAX",
+      "METRICS",
+      "PERIODS",
+      "normalizeUserCard",
+      "TRACKER_KINDS",
+      "normalizeTracker",
+      "dayValue",
+      "summarize",
+      "goalProgress",
+      "daysUntil"
+    ],
+    "lib/cards/custom-data.ts": [
+      "TRACKERS_MAX",
+      "listTrackers",
+      "createTracker",
+      "archiveTracker",
+      "logTracker",
+      "userCardData",
+      "listUserCards",
+      "saveUserCard",
+      "deleteUserCard"
+    ],
+    "lib/cards/user-nodes.tsx": [
+      "userNodes"
     ]
   },
   "dependencies": {
@@ -1189,6 +1237,7 @@
     "0026_design_templates.sql",
     "0027_community.sql",
     "0028_designer_follows.sql",
-    "0029_card_usage.sql"
+    "0029_card_usage.sql",
+    "0030_trackers.sql"
   ]
 }

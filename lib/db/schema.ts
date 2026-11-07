@@ -695,6 +695,28 @@ export const cardUsage = pgTable('card_usage', {
   views: integer('views').notNull().default(0),
   taps: integer('taps').notNull().default(0),
 }, (t) => [primaryKey({ columns: [t.userId, t.day, t.card] })])
+/** Ö5a: kendi takip alanlarım (kind: count | number | scale | yesno). */
+export const trackers = pgTable('trackers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  unit: text('unit').notNull().default(''),
+  kind: text('kind').notNull().default('count'),
+  goal: real('goal'),
+  goalDir: text('goal_dir').notNull().default('min'),
+  step: real('step').notNull().default(1),
+  emoji: text('emoji').notNull().default(''),
+  archived: boolean('archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('trackers_user_idx').on(t.userId)])
+export const trackerLogs = pgTable('tracker_logs', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  trackerId: uuid('tracker_id').notNull().references(() => trackers.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  value: real('value').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('tracker_logs_idx').on(t.trackerId, t.day)])
 /** Ö3c: uygulama geneli varsayılanlar (anahtar → veri), ör. 'layout' = yönetimden varsayılan ekran düzenleri. */
 export const appDefaults = pgTable('app_defaults', {
   key: text('key').primaryKey(),

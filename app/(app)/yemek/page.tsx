@@ -15,6 +15,7 @@ import NutritionDetail from '@/components/NutritionDetail'
 import { macroPlan, microTargets, proteinPerMeal } from '@/lib/body-comp'
 import type { GoalType, Sex } from '@/lib/calc'
 import { screenLayout } from '@/lib/cards/design-data'
+import { userNodes } from '@/lib/cards/user-nodes'
 
 export const metadata: Metadata = { title: 'Yemek' }
 
@@ -45,7 +46,7 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
       target={{ kcal: t?.target.kcal ?? 2000, protein: t?.target.protein ?? 120, carb: t?.target.carb ?? 200, fat: t?.target.fat ?? 65 }}
       adjust={t ? { base: t.target.base, kcal: t.target.adjustment, closed: t.target.closed } : null} burned={t?.burned ?? 0} trained={(t?.burned ?? 0) > 0} suggested={day === today ? mealForTime(minuteOfDay(new Date())) : 'lunch'} yesterdayHas={yesterdayHas}
       supplements={<SupplementCard day={day} {...supp} />} detail={detail} hasSupplements={supp.items.length > 0} adv={adv}
-      layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned, colors: l.colors }} editing={duzenle === '1'}
+      layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned, colors: l.colors, titles: l.titles, extra: await userNodes(u.id, l, duzenle === '1') }} editing={duzenle === '1'}
       usual={Object.fromEntries(Object.entries(usual).map(([k, v]) => [k, { names: v!.items.map((x) => x.name), kcal: v!.kcal }]))}
     />
   )

@@ -2,7 +2,7 @@
 // Özelleştirme (Ö1): kart panosu. Normal modda kartları düzene göre dizer; düzenleme modunda (?duzenle=1)
 // basılı tutup sürükleme, − ile kaldırma, ✎ ile kart ayarları, çekmeceden ekleme, geri alma ve kaydetme sunar.
 // Kart içerikleri sunucuda çizilir ve `nodes` ile gelir; bu bileşen yalnızca yerleşimi yönetir (yeni kart = kayıt + çizici).
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { cardDef, SCREENS, type CardSize, type ScreenId } from '@/lib/cards/registry'
 import { STACK_MAX, addItem, moveItem, removeItem, setSize, stackWithNext, unstack, type LayoutItem } from '@/lib/cards/layout'
@@ -36,14 +36,22 @@ interface Props {
   colors?: Record<string, CardColors>
   /** Ö3c: sabit başlığın hemen altına konan kart dışı içerik (duyuru) */
   afterHeader?: ReactNode
+  /** Ö5a: kendi kartlarımın adları (kayıttaki genel ad yerine) */
+  titles?: Record<string, string>
+}
+
+const TitleCtx = createContext<Record<string, string>>({})
+/** Kart tanımı; kendi kartlarımda başlık kullanıcının verdiği ad. */
+function useDefOf() {
+  const t = useContext(TitleCtx)
+  return (id: string) => { const d = cardDef(id); return d && t[id] ? { ...d, title: t[id] } : d }
 }
 
 const HOLD_MS = 350
 const SLOP = 8
 
 export default function CardBoard(p: Props) {
-  if (!p.editing) return <Board {...p} />
-  return <Editor {...p} />
+  return <TitleCtx.Provider value={p.titles ?? {}}>{p.editing ? <Editor {...p} /> : <Board {...p} />}</TitleCtx.Provider>
 }
 
 const HOLD_EDIT_MS = 600
@@ -54,11 +62,12 @@ const SW = 168 // açık kartta görünen eylem alanı genişliği
 
 /** Ö1b-4: kart yığını — kartlar aynı yerde yana kaydırılarak (scroll-snap) gezilir; noktalar hangi kartta olunduğunu gösterir. */
 function StackCard({ id, size, ids, nodes, colors }: { id: string; size: CardSize; ids: string[]; nodes: Record<string, ReactNode>; colors?: Record<string, CardColors> }) {
+  const defOf = useDefOf()
   const ref = useRef<HTMLDivElement>(null)
   const [at, setAt] = useState(0)
   const go = (i: number) => { const el = ref.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' }) }
   return (
-    <div className={`${size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col gap-1.5`} data-card={id} data-stack={ids.length} role="group" aria-roledescription="kart yığını" aria-label={`${cardDef(id)?.title} ve ${ids.length - 1} kart daha`}>
+    <div className={`${size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col gap-1.5`} data-card={id} data-stack={ids.length} role="group" aria-roledescription="kart yığını" aria-label={`${defOf(id)?.title} ve ${ids.length - 1} kart daha`}>
       <div ref={ref} onScroll={(e) => { const el = e.currentTarget; setAt(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))) }}
         className="flex overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-[24px]">
         {ids.map((cid, i) => (
@@ -67,7 +76,7 @@ function StackCard({ id, size, ids, nodes, colors }: { id: string; size: CardSiz
       </div>
       <div className="flex justify-center gap-1.5" role="tablist" aria-label="Yığındaki kartlar">
         {ids.map((cid, i) => (
-          <button key={cid} type="button" role="tab" aria-selected={i === at} aria-label={cardDef(cid)?.title} onClick={() => go(i)} data-testid="stack-dot"
+          <button key={cid} type="button" role="tab" aria-selected={i === at} aria-label={defOf(cid)?.title} onClick={() => go(i)} data-testid="stack-dot"
             className="w-6 h-6 flex items-center justify-center"><span className={`block rounded-full transition-all ${i === at ? 'w-4 h-1.5 bg-acc' : 'w-1.5 h-1.5 bg-line-2'}`} /></button>
         ))}
       </div>
@@ -162,6 +171,7 @@ function SwipeCard({ id, size, pinned, open, onOpen, onAct, colors, children }: 
 
 /** Normal görünüm: kartlar + (açıksa) kart dışı/etkileşimsiz bir yere basılı tutunca "Ekranı düzenle" balonu. */
 function Board(p: Props) {
+  const defOf = useDefOf()
   const router = useRouter()
   const { holdToEdit } = useDesignPrefs()
   const [pop, setPop] = useState<{ x: number; y: number } | null>(null)
@@ -210,7 +220,7 @@ function Board(p: Props) {
   useEffect(() => { setGone([]) }, [p.items])
   const act = (id: string, kind: 'hide' | 'pin') => {
     setOpenId(null)
-    const title = cardDef(id)?.title ?? 'Kart'
+    const title = defOf(id)?.title ?? 'Kart'
     if (kind === 'hide') {
       setGone((g) => [...g, id])
       void hideTodayAction(id, true).then((r) => {
@@ -265,6 +275,7 @@ function Board(p: Props) {
 }
 
 function Editor(p: Props) {
+  const defOf = useDefOf()
   const router = useRouter()
   const left = useDesignPrefs().hand === 'left'
   const [items, setItems] = useState<Item[]>(p.items)
@@ -368,7 +379,7 @@ function Editor(p: Props) {
 
   const startHold = (e: React.PointerEvent, id: string, fromDrawer = false) => {
     if (e.button !== 0 || (e.target as HTMLElement).closest('[data-card-btn]')) return
-    if (!fromDrawer && cardDef(id)?.locked === 'top') return
+    if (!fromDrawer && defOf(id)?.locked === 'top') return
     const el = e.currentTarget as HTMLElement
     const x = e.clientX, y = e.clientY
     const timer = window.setTimeout(() => {
@@ -395,7 +406,7 @@ function Editor(p: Props) {
   const endHold = () => { if (hold.current) { clearTimeout(hold.current.timer); hold.current = null } }
 
   const undo = () => setHistory((h) => { if (!h.length) return h; setItems(h[h.length - 1]); return h.slice(0, -1) })
-  const remove = (id: string) => { commit(removeItem(items, id)); setMsg(`${cardDef(id)?.title} kaldırıldı · çekmeceden geri ekleyebilirsin`) }
+  const remove = (id: string) => { commit(removeItem(items, id)); setMsg(`${defOf(id)?.title} kaldırıldı · çekmeceden geri ekleyebilirsin`) }
   const add = (id: string) => {
     commit(addItem(items, id) as Item[])
     setDrawerOpen(false); setFlash(id)
@@ -427,7 +438,7 @@ function Editor(p: Props) {
   const inDrawer = p.drawer.filter((d) => !items.some((i) => i.id === d.id))
     .concat(p.items.filter((i) => !items.some((x) => x.id === i.id)).map((i) => ({ id: i.id, reason: 'removed' as const })))
     .filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i)
-  const sheetDef = sheet ? cardDef(sheet) : null
+  const sheetDef = sheet ? defOf(sheet) : null
   const sheetIdx = sheet ? items.findIndex((i) => i.id === sheet) : -1
 
   return (
@@ -450,7 +461,7 @@ function Editor(p: Props) {
 
       <div className="grid grid-cols-2 gap-3 select-none [-webkit-touch-callout:none]">
         {items.map((it, idx) => {
-          const def = cardDef(it.id)!
+          const def = defOf(it.id)!
           const dragging = drag?.id === it.id
           const node = p.nodes[it.id]
           return (
@@ -489,7 +500,7 @@ function Editor(p: Props) {
       {drag ? (
         <div className="fixed z-50 pointer-events-none" aria-hidden
           style={{ left: drag.x - drag.dx, top: drag.y - drag.dy, width: drag.w, transform: 'rotate(-2deg) scale(1.04)', filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.45))' }}>
-          <div className="flex flex-col [&>*]:flex-1">{p.nodes[drag.id] ?? <div className="card p-4"><b>{cardDef(drag.id)?.title}</b></div>}</div>
+          <div className="flex flex-col [&>*]:flex-1">{p.nodes[drag.id] ?? <div className="card p-4"><b>{defOf(drag.id)?.title}</b></div>}</div>
         </div>
       ) : null}
 
@@ -498,7 +509,7 @@ function Editor(p: Props) {
           <div className="flex flex-col gap-2 pb-4" data-testid="card-drawer">
             {!inDrawer.length ? <p className="text-[14px] text-mute py-6 text-center">Bu ekrandaki bütün kartlar zaten yerinde.</p> : null}
             {inDrawer.map((d) => {
-              const def = cardDef(d.id)!
+              const def = defOf(d.id)!
               return (
                 <div key={d.id} data-mod={def.module} onPointerDown={(e) => startHold(e, d.id, true)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-surface-2 select-none touch-pan-y" data-drawer-card={d.id}>
@@ -540,18 +551,18 @@ function Editor(p: Props) {
             ) : <p className="text-[13px] text-mute">Bu kart ekranın en üstünde sabit.</p>}
             {sheetDef.locked !== 'top' && sheetIdx >= 0 ? (() => {
               const cur = items[sheetIdx], nxt = items[sheetIdx + 1]
-              const canStack = !!nxt && !cardDef(nxt.id)?.locked && (cur.stack?.length ?? 0) + 1 + (nxt.stack?.length ?? 0) + 1 <= STACK_MAX
+              const canStack = !!nxt && !defOf(nxt.id)?.locked && (cur.stack?.length ?? 0) + 1 + (nxt.stack?.length ?? 0) + 1 <= STACK_MAX
               return (
                 <div className="flex flex-col gap-2" data-testid="stack-controls">
                   <span className="text-[13px] font-bold">Yığın <span className="text-[12px] text-mute font-normal">· kartlar aynı yerde yana kaydırılarak gezilir</span></span>
                   {cur.stack?.map((sid) => (
                     <div key={sid} className="flex items-center justify-between gap-2 min-h-11 rounded-xl bg-surface-2 px-3" data-stack-child={sid}>
-                      <span className="text-[13.5px] font-bold">{cardDef(sid)?.title}</span>
+                      <span className="text-[13.5px] font-bold">{defOf(sid)?.title}</span>
                       <button type="button" onClick={() => commit(unstack(items, cur.id, sid))} className="h-9 px-3 rounded-full border border-line-2 text-[12.5px] font-bold" data-testid="card-unstack">Ayır</button>
                     </div>
                   ))}
                   {nxt ? <button type="button" disabled={!canStack} onClick={() => commit(stackWithNext(items, cur.id))} data-testid="card-stack"
-                    className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40">Alttaki kartla yığ ({cardDef(nxt.id)?.title})</button> : null}
+                    className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40">Alttaki kartla yığ ({defOf(nxt.id)?.title})</button> : null}
                 </div>
               )
             })() : null}
@@ -586,8 +597,8 @@ function Editor(p: Props) {
           </div>
         ) : null}
       </Sheet>
-      <Sheet open={!!colorFor} onClose={() => setColorFor(null)} title={colorFor ? `${cardDef(colorFor)?.title} · renkler` : 'Renkler'}>
-        {colorFor ? <ColorEditor title={cardDef(colorFor)?.title ?? ''} node={p.nodes[colorFor] ?? <div className="card p-4"><b>{cardDef(colorFor)?.title}</b><p className="text-mute">Örnek metin</p></div>}
+      <Sheet open={!!colorFor} onClose={() => setColorFor(null)} title={colorFor ? `${defOf(colorFor)?.title} · renkler` : 'Renkler'}>
+        {colorFor ? <ColorEditor title={defOf(colorFor)?.title ?? ''} node={p.nodes[colorFor] ?? <div className="card p-4"><b>{defOf(colorFor)?.title}</b><p className="text-mute">Örnek metin</p></div>}
           value={colors[colorFor] ?? {}} onChange={(c) => setColors((m) => { const n = { ...m }; if (Object.keys(c).length) n[colorFor] = c; else delete n[colorFor]; return n })}
           onDone={() => setColorFor(null)} /> : null}
       </Sheet>

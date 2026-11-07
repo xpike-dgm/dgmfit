@@ -13,7 +13,6 @@ export const metadata = { title: 'Özelleştirme' }
 
 const SOON: [string, string][] = [
   ['Modlar', 'Odak, Ramazan, tatil'],
-  ['Kendi kartlarım', 'Kart oluştur, takip ekle'],
 ]
 
 /** Özelleştirme stüdyosu (Ö1): mevcut düzenin önizlemesi + ekran düzenleme. Diğer bölümler sonraki aşamalarda. */
@@ -68,7 +67,13 @@ export default async function Page() {
       </section>
 
       <section aria-label="Gezinme ve kurallar" className="card px-4 py-1 flex flex-col">
-        <Link href="/profil/ozellestirme/alt-bar" className={row} data-testid="studio-nav">
+        <Link href="/profil/ozellestirme/kartlarim" className={row} data-testid="studio-builder">
+          <span className="flex flex-col"><b className="text-[15px]">Kart oluşturucu</b><span className="text-[12.5px] text-mute">{d?.userCards && Object.keys(d.userCards).length ? `${Object.keys(d.userCards).length} kendi kartın` : 'Kendi kartını yap: veri, söz, geri sayım, fotoğraf'}</span></span><span className="text-mute">›</span>
+        </Link>
+        <Link href="/profil/ozellestirme/takip" className={`${row} border-t border-line`} data-testid="studio-trackers">
+          <span className="flex flex-col"><b className="text-[15px]">Takip alanlarım</b><span className="text-[12.5px] text-mute">Kahve, uyku, ruh hali… uygulamada olmayanlar</span></span><span className="text-mute">›</span>
+        </Link>
+        <Link href="/profil/ozellestirme/alt-bar" className={`${row} border-t border-line`} data-testid="studio-nav">
           <span className="flex flex-col"><b className="text-[15px]">Alt bar</b><span className="text-[12.5px] text-mute">{nav.visible.length} sekme{nav.hidden.length ? ` · ${nav.hidden.length} gizli` : ''}</span></span><span className="text-mute">›</span>
         </Link>
         <Link href="/profil/ozellestirme/renkler" className={`${row} border-t border-line`} data-testid="studio-colors">

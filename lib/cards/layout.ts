@@ -4,6 +4,7 @@ import { CARD_MIGRATIONS, REGISTRY_VERSION, cardDef, cardsFor, type CardDef, typ
 import type { Gestures, NavLayout, Rule, UsePrefs } from './prefs.ts'
 import type { ModuleColors } from './colors.ts'
 import type { StylePrefs } from './style.ts'
+import { isUserCard, type UserCard } from './custom.ts'
 
 /** `stack`: Ö1b-4 kart yığını — aynı yerde yana kaydırılarak gezilen ek kartlar (ilk kart `id`). */
 export interface LayoutItem { id: string; size?: CardSize; stack?: string[] }
@@ -31,6 +32,8 @@ export interface Design {
   origin?: { templateId: string; name: string }
   /** Ö4: koç önerileri — "şimdi değil" denenler (kişisel) */
   insights?: { dismissed: string[] }
+  /** Ö5a: kendi kartlarım (kimlik → tanım; kişisel, şablonla paylaşılmaz) */
+  userCards?: Record<string, UserCard>
 }
 
 export interface ResolvedItem { id: string; size: CardSize; def: CardDef; stack?: string[] }
@@ -93,8 +96,17 @@ export function resolveScreen(design: Design | null | undefined, screen: ScreenI
   const raw = sl ? sl.items : defaultItems(screen, ctx)
   const seen = new Set<string>()
   let items: ResolvedItem[] = []
+  // Ö5a: kendi kartlarım — tanımı silinmiş kart sessizce düşer; başlık kullanıcının verdiği addır
+  const uc = d?.userCards ?? {}
+  const defOf = (id: string): CardDef | undefined => {
+    const def = cardDef(id)
+    if (!def || !isUserCard(id)) return def
+    const u = uc[id]
+    return u ? { ...def, title: u.title || def.title } : undefined
+  }
   for (const it of raw) {
-    const def = cardDef(it.id)
+    const def = defOf(it.id)
+    if (!def && isUserCard(it.id)) continue
     if (!def || def.screen !== screen) { if (sl) notices.push(`Bir kart artık yok (${it.id}); düzenin kalanı korundu.`); continue }
     if (seen.has(def.id)) continue
     seen.add(def.id)
@@ -103,7 +115,7 @@ export function resolveScreen(design: Design | null | undefined, screen: ScreenI
     if (it.stack?.length && def.locked !== 'top') {
       const st: string[] = []
       for (const sid of it.stack) {
-        const sd = cardDef(sid)
+        const sd = defOf(sid)
         if (!sd || sd.screen !== screen || sd.locked || seen.has(sid) || raw.some((x) => x.id === sid) || st.length >= STACK_MAX - 1) continue
         st.push(sid); seen.add(sid)
       }
@@ -126,6 +138,11 @@ export function resolveScreen(design: Design | null | undefined, screen: ScreenI
   const drawer: DrawerItem[] = all.filter((c) => !seen.has(c.id) && !c.locked).map((def) => ({
     def, reason: removedSet.has(def.id) ? 'removed' : sl && def.since > fromV ? 'new' : isDefault(def, ctx) ? 'removed' : 'available',
   }))
+  for (const id of Object.keys(uc)) {
+    if (seen.has(id) || !isUserCard(id)) continue
+    const def = defOf(id)
+    if (def?.screen === screen) drawer.push({ def, reason: 'available' })
+  }
   return { items, drawer, notices: [...new Set(notices)], customized }
 }
 
@@ -205,8 +222,9 @@ export function setSize<T extends LayoutItem>(items: T[], id: string, size: Card
  * Kaydedilecek ekran düzenini doğrular: yalnızca bu ekranın bilinen kartları, tekrar yok, kilitliler eksikse eklenir.
  * `removed` = varsayılanda olup kullanıcının kaldırdıkları (çekmecede "kaldırdıkların" için).
  */
-export function normalizeScreen(screen: ScreenId, items: LayoutItem[], ctx: LayoutCtx = {}): ScreenLayout {
-  const r = resolveScreen({ v: REGISTRY_VERSION, screens: { [screen]: { items } } }, screen, ctx)
+export function normalizeScreen(screen: ScreenId, items: LayoutItem[], ctx: LayoutCtx = {}, userCards?: Design['userCards']): ScreenLayout {
+  // Ö5a: kendi kartlarım yalnız tanımı varsa kalır (tanımlar kullanıcının tasarımından gelir)
+  const r = resolveScreen({ v: REGISTRY_VERSION, screens: { [screen]: { items } }, ...(userCards ? { userCards } : {}) }, screen, ctx)
   const kept = r.items.map((i) => ({ id: i.id, ...(i.size !== i.def.size ? { size: i.size } : {}), ...(i.stack?.length ? { stack: i.stack } : {}) }))
   const ids = new Set(kept.flatMap((i) => [i.id, ...(i.stack ?? [])]))
   return { items: kept, removed: cardsFor(screen).filter((c) => isDefault(c, ctx) && !ids.has(c.id)).map((c) => c.id) }

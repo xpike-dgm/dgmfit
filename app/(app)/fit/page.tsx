@@ -11,6 +11,7 @@ import { DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
 import InfoTip from '@/components/InfoTip'
 import { isAdvanced } from '@/lib/ui-mode'
 import { screenLayout, userStyle } from '@/lib/cards/design-data'
+import { userNodes } from '@/lib/cards/user-nodes'
 import { weightOut } from '@/lib/units'
 import CardBoard from '@/components/cards/CardBoard'
 import type { ReactNode } from 'react'
@@ -46,6 +47,7 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
             : <>Tahmin için en az 5 günlük tartı gerekiyor. Her sabah aynı koşulda tartılmak trendi netleştirir.</>
   const exceptionable = s.closures.find((c) => c.kind === 'over' && c.remaining < 0 && type === 'lose')
 
+  const ucNodes = await userNodes(user.id, layout, editing)
   const nodes: Record<string, ReactNode> = {
     'fit.header': <div className="flex flex-col gap-3">
       <Band title="Plan" sub={`${GOALS[type]?.label ?? 'Hedef'} · Gün ${dayIndex} / ${totalDays}`}
@@ -168,7 +170,7 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
 
   return (
     <div className="flex flex-col gap-3 px-4">
-      <CardBoard screen="fit" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={nodes}
+      <CardBoard screen="fit" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={{ ...nodes, ...ucNodes }} titles={layout.titles}
         drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} colors={layout.colors} />
     </div>
   )

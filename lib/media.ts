@@ -29,7 +29,7 @@ export function sniff(b: Buffer): string | null {
   return null
 }
 
-export type MediaKind = 'progress' | 'exercise' | 'social' | 'avatar' | 'feedback' | 'band'
+export type MediaKind = 'progress' | 'exercise' | 'social' | 'avatar' | 'feedback' | 'band' | 'motive'
 export async function saveMedia(userId: string, i: { kind: MediaKind; day: string; pose: string | null; data: Buffer }) {
   const k = key()
   if (!k) throw new Error('Fotoğraf saklama sunucuda yapılandırılmamış')

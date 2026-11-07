@@ -275,3 +275,39 @@ export async function suggestionAction(input: unknown): Promise<R> {
   revalidatePath(SCREENS[a.screen].path); revalidatePath('/profil/ozellestirme')
   return { ok: true }
 }
+
+// ───────── Ö5a: kendi takip alanlarım ve kendi kartlarım ─────────
+export async function trackerAction(input: unknown): Promise<R & { id?: string }> {
+  const u = await requireUser()
+  const p = z.discriminatedUnion('op', [
+    z.object({ op: z.literal('create'), name: z.string().max(40), unit: z.string().max(12).optional(), kind: z.enum(['count', 'number', 'scale', 'yesno']),
+      goal: z.number().positive().max(1e6).nullable().optional(), goalDir: z.enum(['min', 'max']).optional(), step: z.number().positive().max(1000).optional(), emoji: z.string().max(8).optional() }),
+    z.object({ op: z.literal('archive'), id: Id }),
+    z.object({ op: z.literal('log'), id: Id, value: z.number().min(-1).max(1e6) }),
+  ]).safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz istek' }
+  if (!rateLimit('tracker:' + u.id, 240, 3600_000)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  const { createTracker, archiveTracker, logTracker } = await import('@/lib/cards/custom-data')
+  const x = p.data
+  if (x.op === 'create') { const r = await createTracker(u.id, x); if (!r.ok) return r; revalidatePath('/profil/ozellestirme/takip'); return { ok: true, id: r.id } }
+  if (x.op === 'archive') await archiveTracker(u.id, x.id)
+  else { const err = await logTracker(u.id, x.id, x.value); if (err) return { ok: false, error: err } }
+  everywhere()
+  return { ok: true }
+}
+
+export async function userCardAction(input: unknown): Promise<R & { id?: string }> {
+  const u = await requireUser()
+  const p = z.discriminatedUnion('op', [
+    z.object({ op: z.literal('save'), id: z.string().max(40).nullable(), card: z.record(z.string(), z.unknown()) }),
+    z.object({ op: z.literal('delete'), id: z.string().max(40) }),
+  ]).safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz istek' }
+  if (limited(u.id)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  const { saveUserCard, deleteUserCard } = await import('@/lib/cards/custom-data')
+  if (p.data.op === 'delete') { if (!(await deleteUserCard(u.id, p.data.id))) return { ok: false, error: 'Kart bulunamadı' }; everywhere(); return { ok: true } }
+  const r = await saveUserCard(u.id, p.data.id, p.data.card)
+  if (!r.ok) return r
+  everywhere()
+  return { ok: true, id: r.id }
+}

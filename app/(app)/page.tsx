@@ -20,6 +20,7 @@ import { achievementsFor } from '@/lib/achievements-data'
 import { recentFoods } from '@/lib/food-data'
 import { minuteOfDay } from '@/lib/water-data'
 import { screenLayout, userStyle } from '@/lib/cards/design-data'
+import { userNodes } from '@/lib/cards/user-nodes'
 import { fmtEnergyNum, volumeNum, weightOut } from '@/lib/units'
 import CardBoard from '@/components/cards/CardBoard'
 import AnnouncementCard from '@/components/cards/AnnouncementCard'
@@ -73,6 +74,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   const tile = 'card p-3.5 flex flex-col gap-2 border-t-4 border-acc min-w-0'
   const trained = tr.workouts || tr.cardio
 
+  const ucNodes = await userNodes(user.id, layout, editing)
   const nodes: Record<string, ReactNode> = {
     'today.header': (
       <section aria-label="Kalori" className="flex flex-col" data-testid="today-state" data-left={left} data-budget={budget} data-water-goal={t.target.water} data-protein-left={ds.left.protein}>
@@ -215,7 +217,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
 
   return (
     <div className="px-4 flex flex-col gap-3">
-      <CardBoard afterHeader={announcement ? <AnnouncementCard a={announcement} /> : null} screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={nodes}
+      <CardBoard afterHeader={announcement ? <AnnouncementCard a={announcement} /> : null} screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={{ ...nodes, ...ucNodes }} titles={layout.titles}
         drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} colors={layout.colors} />
       {/* koç kartı kaldırılsa da güvenlik destek kartı gösterilir */}
       {coachHidden && !editing ? <div data-mod="coach"><InsightCard fallback="" weeklyReady={false} compact supportOnly /></div> : null}

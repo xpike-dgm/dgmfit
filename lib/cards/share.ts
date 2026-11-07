@@ -4,14 +4,15 @@
 import type { Design } from './layout.ts'
 import { normalizeStyle, type StylePrefs } from './style.ts'
 import { REGISTRY_VERSION } from './registry.ts'
+import { isUserCard } from './custom.ts'
 
 const PERSONAL_STYLE = ['units', 'haptics', 'sound', 'warm', 'motion', 'contrast', 'bandMedia'] as const
-export interface Personal { gestures?: Design['gestures']; prefs?: Design['prefs']; style?: Partial<StylePrefs>; insights?: Design['insights'] }
+export interface Personal { gestures?: Design['gestures']; prefs?: Design['prefs']; style?: Partial<StylePrefs>; insights?: Design['insights']; userCards?: Design['userCards'] }
 
 export function personalPart(d: Design | null | undefined): Personal {
   if (!d) return {}
   const st = d.style ? Object.fromEntries(PERSONAL_STYLE.filter((k) => k in d.style!).map((k) => [k, d.style![k]])) : undefined
-  return { ...(d.gestures ? { gestures: d.gestures } : {}), ...(d.prefs ? { prefs: d.prefs } : {}), ...(d.insights ? { insights: d.insights } : {}), ...(st && Object.keys(st).length ? { style: st } : {}) }
+  return { ...(d.gestures ? { gestures: d.gestures } : {}), ...(d.prefs ? { prefs: d.prefs } : {}), ...(d.insights ? { insights: d.insights } : {}), ...(d.userCards ? { userCards: d.userCards } : {}), ...(st && Object.keys(st).length ? { style: st } : {}) }
 }
 
 /** Kişisel kısmı tasarıma uygular (kişisel alanlar `p`'den gelir; bant fotoğrafı yoksa fotoğraflı bant degradeye döner). */
@@ -19,10 +20,11 @@ export function withPersonal(d: Design, p: Personal): Design {
   const look = d.style ? Object.fromEntries(Object.entries(d.style).filter(([k]) => !(PERSONAL_STYLE as readonly string[]).includes(k))) : {}
   const style = normalizeStyle({ ...look, ...(p.style ?? {}) })
   const out: Design = { ...d, style }
-  delete out.gestures; delete out.prefs; delete out.insights
+  delete out.gestures; delete out.prefs; delete out.insights; delete out.userCards
   if (p.gestures) out.gestures = p.gestures
   if (p.prefs) out.prefs = p.prefs
   if (p.insights) out.insights = p.insights
+  if (p.userCards) out.userCards = p.userCards
   return out
 }
 
@@ -32,7 +34,9 @@ export function shareable(d: Design): Design {
   const style: Partial<StylePrefs> = { ...s.style }
   for (const k of PERSONAL_STYLE) delete style[k]
   if (style.band === 'photo') style.band = 'gradient'
-  return { v: d.v ?? REGISTRY_VERSION, screens: s.screens ?? {}, ...(s.cards ? { cards: s.cards } : {}), ...(s.nav ? { nav: s.nav } : {}), ...(s.rules ? { rules: s.rules } : {}), ...(s.modules ? { modules: s.modules } : {}), style }
+  // kendi kartlarım kişiseldir (takip alanı, fotoğraf, söz): şablonun ekranlarından çıkarılır
+  const screens = Object.fromEntries(Object.entries(s.screens ?? {}).map(([k, sl]) => [k, sl ? { ...sl, items: sl.items.filter((i) => !isUserCard(i.id)).map((i) => (i.stack ? { ...i, stack: i.stack.filter((x) => !isUserCard(x)) } : i)) } : sl]))
+  return { v: d.v ?? REGISTRY_VERSION, screens, ...(s.cards ? { cards: s.cards } : {}), ...(s.nav ? { nav: s.nav } : {}), ...(s.rules ? { rules: s.rules } : {}), ...(s.modules ? { modules: s.modules } : {}), style }
 }
 
 export type ApplyMode = 'all' | 'colors' | 'layout'

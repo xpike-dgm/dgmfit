@@ -139,6 +139,16 @@ export function quickOf(id: string, chosen?: unknown): string | null {
 }
 
 const byId = new Map(CARDS.map((c) => [c.id, c]))
-export function cardDef(id: string): CardDef | undefined { return byId.get(id) }
+// Ö5a: kullanıcı kartları (kart oluşturucu) `u.<ekran>.<kimlik>`; tanımı tasarımda, burada ortak bir kayıt üretilir
+const USER_CARD = /^u\.(today|fit|water|food|fitness|mine)\.[a-z0-9]{6,12}$/
+const SCREEN_MODULE: Record<ScreenId, ModuleId> = { today: 'today', fit: 'plan', water: 'water', food: 'food', fitness: 'fitness', mine: 'today' }
+export function cardDef(id: string): CardDef | undefined {
+  const c = byId.get(id)
+  if (c || !id) return c
+  const m = USER_CARD.exec(id)
+  if (!m) return undefined
+  const screen = m[1] as ScreenId
+  return { id, screen, module: SCREEN_MODULE[screen], title: 'Kendi kartım', desc: 'Kart oluşturucuda tasarladığın kart', sizes: ['half', 'full'], size: 'half', default: false, since: 1, colorSlots: COLORS }
+}
 export function cardsFor(screen: ScreenId): CardDef[] { return CARDS.filter((c) => c.screen === screen) }
 export function isScreen(s: string): s is ScreenId { return s in SCREENS }

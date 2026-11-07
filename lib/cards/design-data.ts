@@ -15,6 +15,7 @@ import { applyGestures, applyRules, goalFront, normalizeNav, normalizePrefs, nor
 import { mergeRules, wizardDesign, type WizardAnswers } from './wizard'
 import { normalizeCardColors, normalizeModuleColors, type CardColors, type ModuleColors } from './colors'
 import { normalizeStyle, type StylePrefs } from './style'
+import type { UserCard } from './custom'
 
 /** İstek başına bir sorgu (alt bar, düzen ve stüdyo aynı istekte okur). */
 export const activeDesign = cache(async (userId: string): Promise<Design | null> => {
@@ -76,7 +77,11 @@ export async function screenLayout(userId: string, screen: ScreenId, opts: { edi
   const colors: Record<string, CardColors> = {}
   const ids = [...r.items.flatMap((i) => [i.id, ...(i.stack ?? [])]), ...(opts.editing ? r.drawer.map((x) => x.def.id) : [])]
   for (const id of ids) { const c = normalizeCardColors(d?.cards?.[id]?.colors); if (c) colors[id] = c }
-  return { ...r, applied, pinned, hiddenToday, quick, colors }
+  // Ö5a: kendi kartlarım — ekrandaki (ve düzenlemede çekmecedeki) kullanıcı kartlarının tanımları ve adları
+  const userCards: Record<string, UserCard> = {}
+  const titles: Record<string, string> = {}
+  for (const id of ids) { const u = d?.userCards?.[id]; if (u) { userCards[id] = u; titles[id] = u.title } }
+  return { ...r, applied, pinned, hiddenToday, quick, colors, userCards, titles }
 }
 
 /** Tüm ekranların çözülmüş düzeni (stüdyo listesi için; kurallar uygulanmaz). */
@@ -138,7 +143,7 @@ export async function saveScreen(userId: string, screen: ScreenId, items: Layout
         cards[id] = c ? { ...rest, colors: c as Record<string, string> } : rest
       }
     }
-    return { ...cur, cards, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced }) } }
+    return { ...cur, cards, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced }, cur.userCards) } }
   }, `${SCREENS[screen].title} düzeni`)
   await publish(userId, 'design.saved', { screen, cards: next.screens[screen]!.items.length })
 }
@@ -184,7 +189,7 @@ export async function applyWizard(userId: string, a: WizardAnswers) {
   const advanced = await isAdvanced(userId)
   await updateDesign(userId, (cur) => ({
     ...cur,
-    screens: { ...cur.screens, today: normalizeScreen('today', w.today, { advanced }) },
+    screens: { ...cur.screens, today: normalizeScreen('today', w.today, { advanced }, cur.userCards) },
     nav: normalizeNav(w.nav),
     prefs: normalizePrefs({ ...(cur.prefs ?? {}), hand: w.hand }),
     rules: normalizeRules(mergeRules(cur.rules ?? [], w.rules)),

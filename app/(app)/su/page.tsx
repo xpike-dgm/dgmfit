@@ -4,6 +4,7 @@ import { getWaterScreen } from '@/lib/water-data'
 import { addDays, dayString } from '@/lib/time'
 import WaterScreen from './WaterScreen'
 import { screenLayout } from '@/lib/cards/design-data'
+import { userNodes } from '@/lib/cards/user-nodes'
 
 export const metadata: Metadata = { title: 'Su' }
 
@@ -13,6 +14,6 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
   const today = dayString()
   const day = gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) && gun < today && gun >= addDays(today, -365) ? gun : today
   const [data, l] = await Promise.all([getWaterScreen(u.id, day), screenLayout(u.id, 'water', { editing: duzenle === '1' })])
-  const layout = { items: l.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned, colors: l.colors }
+  const layout = { items: l.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned, colors: l.colors, titles: l.titles, extra: await userNodes(u.id, l, duzenle === '1') }
   return <WaterScreen key={day} data={data} layout={layout} editing={duzenle === '1'} />
 }
