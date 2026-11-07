@@ -23,3 +23,20 @@ test('usualMeal: aynı gün aynı besin iki kez → gramlar toplanır', () => {
   const r = usualMeal([[egg(50), egg(50)], [egg(100)], [egg(100)]])!
   assert.equal(r.items[0].grams, 100)
 })
+
+import { decideMealReminder, habitMinute } from '../lib/habits.ts'
+
+test('habitMinute: en az 5 gün, medyan', () => {
+  assert.equal(habitMinute([480, 490, 500, 470]), null)
+  assert.equal(habitMinute([480, 490, 500, 470, 900]), 490)
+})
+
+test('decideMealReminder: alışkanlık + 60 dk ile +180 dk arası, kayıt/gönderim yoksa', () => {
+  const habit = { breakfast: 480, lunch: 780, dinner: null }
+  assert.equal(decideMealReminder({ now: 530, habit, logged: new Set(), sent: new Set() }), null)
+  assert.equal(decideMealReminder({ now: 545, habit, logged: new Set(), sent: new Set() }), 'breakfast')
+  assert.equal(decideMealReminder({ now: 545, habit, logged: new Set(['breakfast']), sent: new Set() }), null)
+  assert.equal(decideMealReminder({ now: 545, habit, logged: new Set(), sent: new Set(['breakfast']) }), null)
+  assert.equal(decideMealReminder({ now: 700, habit, logged: new Set(), sent: new Set() }), null, '3 saatten geç')
+  assert.equal(decideMealReminder({ now: 845, habit, logged: new Set(['breakfast']), sent: new Set() }), 'lunch')
+})

@@ -598,6 +598,8 @@ export const coachPrefs = pgTable('coach_prefs', {
   persona: text('persona').notNull().default('supportive'), // supportive | strict | science
   insights: boolean('insights').notNull().default(true),
   weeklyPush: boolean('weekly_push').notNull().default(true),
+  /** P-7 akıllı öğün hatırlatması (alışkanlık saatinden 1 saat sonra hâlâ kayıt yoksa, öğün başına günde bir) */
+  mealReminders: boolean('meal_reminders').notNull().default(true),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

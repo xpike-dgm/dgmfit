@@ -54,6 +54,8 @@ async function tick() {
       s.reportFor = today
       try { await sendWeeklyPushes(addDays(today, -6)) } catch (e) { console.error('[dgfit] haftalık rapor bildirimi hatası', e) }
     }
+    // P-7 akıllı öğün hatırlatması: 5 dakikada bir
+    if (minuteOfDay(now) % 5 === 0) { try { await runMealReminders(now) } catch (e) { console.error('[dgfit] öğün hatırlatma hatası', e) } }
     const users = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
       .innerJoin(schema.waterSettings, eq(schema.waterSettings.userId, schema.pushSubscriptions.userId))
       .where(eq(schema.waterSettings.remindersEnabled, true))
@@ -162,3 +164,41 @@ export async function reminderStats(userId: string, days = 28) {
   return { sent: rows.length, acted: rows.filter((r) => r.actedAt).length, bestHour: best ? best[0] : null }
 }
 
+
+const MEAL_TEXT: Record<string, string> = { breakfast: 'kahvaltını', lunch: 'öğle yemeğini', dinner: 'akşam yemeğini', snack: 'ara öğününü' }
+const habitCache = new Map<string, { day: string; habit: Partial<Record<string, number | null>> }>()
+
+/** P-7: alışkanlık saatinden 1 saat sonra hâlâ kayıt olmayan öğün için günde bir hatırlatma (ayar: coach_prefs.meal_reminders). */
+export async function runMealReminders(now = new Date(), onlyUser?: string): Promise<number> {
+  const { habitMinute, decideMealReminder } = await import('./habits')
+  const today = dayString(now), minute = minuteOfDay(now)
+  const subs = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
+    .leftJoin(schema.coachPrefs, eq(schema.coachPrefs.userId, schema.pushSubscriptions.userId))
+    .where(and(sql`coalesce(${schema.coachPrefs.mealReminders}, true)`, onlyUser ? eq(schema.pushSubscriptions.userId, onlyUser) : undefined))
+  let n = 0
+  for (const { userId } of subs) {
+    let c = habitCache.get(userId)
+    if (!c || c.day !== today) {
+      const rows = await db.execute<{ meal: string; m: number }>(sql`
+        select meal, extract(hour from min(created_at) at time zone ${TZ})::int * 60 + extract(minute from min(created_at) at time zone ${TZ})::int as m
+        from meal_items where user_id = ${userId} and deleted_at is null and meal in ('breakfast', 'lunch', 'dinner')
+          and day >= ${addDays(today, -14)} and day < ${today} and created_at::date - day between 0 and 1
+        group by day, meal`)
+      const by: Record<string, number[]> = {}
+      for (const r of rows) (by[r.meal] ??= []).push(Number(r.m))
+      c = { day: today, habit: Object.fromEntries(Object.entries(by).map(([k, v]) => [k, habitMinute(v)])) }
+      habitCache.set(userId, c)
+    }
+    if (!Object.values(c.habit).some((h) => h !== null)) continue
+    const [logged, sent] = await Promise.all([
+      db.execute<{ meal: string }>(sql`select distinct meal from meal_items where user_id = ${userId} and day = ${today} and deleted_at is null`),
+      db.execute<{ meal: string }>(sql`select payload->>'meal' as meal from events where user_id = ${userId} and type = 'reminder.meal' and payload->>'day' = ${today}`),
+    ])
+    const meal = decideMealReminder({ now: minute, habit: c.habit, logged: new Set(logged.map((r) => r.meal)), sent: new Set(sent.map((r) => r.meal)) })
+    if (!meal) continue
+    await publish(userId, 'reminder.meal', { day: today, meal }) // gönderilemese de bugün tekrar denenmez
+    const ok = await sendToUser(userId, { title: 'Öğün kaydı', body: `Genelde bu saatlerde ${MEAL_TEXT[meal]} kaydediyorsun. Unutmadan ekleyelim mi?`, tag: 'meal-' + meal, url: `/yemek/ekle?ogun=${meal}` }, 'planned')
+    if (ok) n++
+  }
+  return n
+}

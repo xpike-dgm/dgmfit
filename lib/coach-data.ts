@@ -30,7 +30,7 @@ const HISTORY = 10 // modele giden önceki mesaj sayısı (spesifikasyon 10: uzu
 
 export async function coachPrefs(userId: string) {
   const [r] = await db.select().from(schema.coachPrefs).where(eq(schema.coachPrefs.userId, userId)).limit(1)
-  return r ?? { userId, persona: 'supportive', insights: true, weeklyPush: true, updatedAt: new Date() }
+  return r ?? { userId, persona: 'supportive', insights: true, weeklyPush: true, mealReminders: true, updatedAt: new Date() }
 }
 export async function saveCoachPrefs(userId: string, v: { persona: Persona; insights: boolean; weeklyPush: boolean }) {
   await db.insert(schema.coachPrefs).values({ userId, ...v }).onConflictDoUpdate({ target: schema.coachPrefs.userId, set: { ...v, updatedAt: new Date() } })

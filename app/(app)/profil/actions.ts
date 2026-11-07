@@ -44,3 +44,11 @@ export async function saveBodyFatAction(i: { pct?: number | null; neck?: number 
   revalidatePath('/profil/vucut'); revalidatePath('/'); revalidatePath('/yemek'); revalidatePath('/fit')
   return r
 }
+
+/** P-7: akıllı öğün hatırlatmalarını aç/kapat. */
+export async function setMealRemindersAction(on: boolean): Promise<{ ok: true }> {
+  const u = await requireUser()
+  const { db, schema } = await import('@/lib/db')
+  await db.insert(schema.coachPrefs).values({ userId: u.id, mealReminders: !!on }).onConflictDoUpdate({ target: schema.coachPrefs.userId, set: { mealReminders: !!on, updatedAt: new Date() } })
+  return { ok: true }
+}

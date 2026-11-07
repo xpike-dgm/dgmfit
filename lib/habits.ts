@@ -34,3 +34,24 @@ export function usualMeal(days: LoggedItem[][], opts: { minDays?: number; share?
   if (!items.length) return null
   return { items, kcal: items.reduce((a, x) => a + x.kcal, 0), days: Math.min(...items.map((x) => seen.get(x.foodId)!.grams.length)) }
 }
+
+/** Öğünün alışkanlık saati: son günlerde o öğünün ilk kaydının dakikası (medyan). En az `minDays` gün yoksa null. */
+export function habitMinute(firstLogMinutes: number[], minDays = 5): number | null {
+  if (firstLogMinutes.length < minDays) return null
+  const s = [...firstLogMinutes].sort((a, b) => a - b)
+  const m = s.length >> 1
+  return Math.round(s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2)
+}
+
+/**
+ * Akıllı öğün hatırlatması: alışkanlık saatinden `late` dk sonra hâlâ kayıt yoksa, öğün başına günde bir,
+ * en geç alışkanlık + 3 saate kadar (sonrası artık geç; hatırlatma rahatsız eder). Gönderilecek öğün ya da null.
+ */
+export function decideMealReminder(i: { now: number; habit: Partial<Record<string, number | null>>; logged: Set<string>; sent: Set<string>; late?: number }): string | null {
+  const late = i.late ?? 60
+  for (const [meal, h] of Object.entries(i.habit)) {
+    if (h === null || h === undefined || i.logged.has(meal) || i.sent.has(meal)) continue
+    if (i.now >= h + late && i.now <= h + 180) return meal
+  }
+  return null
+}
