@@ -74,14 +74,17 @@
   [data-mod="social"] { --m1: #4B4FD6; --m2: #7B5CE6; --acc-l: #4347C9; --acc-d: #A9A4FF; }
   [data-mod="coach"] { --m1: #7A3FC9; --m2: #A66BE0; --acc-l: #6E37B8; --acc-d: #C9A7FF; }
   [data-mod="profile"] { --m1: #3D4452; --m2: #5F687A; --acc-l: #3D4452; --acc-d: #B4BCCC; }
-  [data-mod] { --color-acc: var(--acc-d); --color-acc-ink: #121418; --band: linear-gradient(160deg, color-mix(in oklab, var(--m1) 70%, #14161B), color-mix(in oklab, var(--m2) 50%, #14161B)); --hdr: color-mix(in oklab, var(--m1) 45%, #14161B); --ring-hole: color-mix(in oklab, var(--m1) 38%, #14161B); }
-  :root[data-theme="light"] [data-mod] { --color-acc: var(--acc-l); --color-acc-ink: #FFFFFF; --band: linear-gradient(160deg, var(--m1), var(--m2)); --hdr: linear-gradient(160deg, var(--m1), var(--m2)); --ring-hole: color-mix(in oklab, var(--m1) 85%, #000); }
+  [data-mod] { --band-box: rgb(255 255 255 / 0.18); --color-acc: var(--acc-d); --color-acc-ink: #121418; --band: linear-gradient(160deg, color-mix(in oklab, var(--m1) 70%, #14161B), color-mix(in oklab, var(--m2) 50%, #14161B)); --hdr: color-mix(in oklab, var(--m1) 45%, #14161B); --ring-hole: color-mix(in oklab, var(--m1) 38%, #14161B); }
+  :root[data-theme="light"] [data-mod] { --color-acc: var(--acc-l); --color-acc-ink: #FFFFFF; --band: linear-gradient(160deg, var(--m1), color-mix(in oklab, var(--m2) 72%, #000)); --hdr: linear-gradient(160deg, var(--m1), color-mix(in oklab, var(--m2) 72%, #000)); --band-box: rgb(0 0 0 / 0.16); --ring-hole: color-mix(in oklab, var(--m1) 85%, #000); }
   @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) [data-mod] { --color-acc: var(--acc-l); --color-acc-ink: #FFFFFF; --band: linear-gradient(160deg, var(--m1), var(--m2)); --hdr: linear-gradient(160deg, var(--m1), var(--m2)); --ring-hole: color-mix(in oklab, var(--m1) 85%, #000); }
+    :root:not([data-theme="dark"]) [data-mod] { --color-acc: var(--acc-l); --color-acc-ink: #FFFFFF; --band: linear-gradient(160deg, var(--m1), color-mix(in oklab, var(--m2) 72%, #000)); --hdr: linear-gradient(160deg, var(--m1), color-mix(in oklab, var(--m2) 72%, #000)); --band-box: rgb(0 0 0 / 0.16); --ring-hole: color-mix(in oklab, var(--m1) 85%, #000); }
   }
 
   /* Aşağı çekip yenileme ve sıçrama kapalı (kök kaydırıcı), parmakla yakınlaştırma kapalı (pan serbest). */
   html { background: var(--color-bg); color-scheme: dark; -webkit-text-size-adjust: 100%; overscroll-behavior: none; touch-action: pan-x pan-y; }
+  /* P-5 büyük yazı: arayüz px ölçülerle yazıldığından tüm gövde orantılı büyütülür */
+  html[data-text="lg"] body { zoom: 1.1; }
+  html[data-text="xl"] body { zoom: 1.2; }
   body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
   button, a, input, select, textarea { touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }
@@ -113,3 +116,21 @@
 .rir-range::-moz-range-track { height: 16px; border-radius: 99px; background: linear-gradient(90deg, #E53935 0%, #B3261E 55%, #4A1A18 100%); }
 .rir-range::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; margin-top: -9px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
 .rir-range::-moz-range-thumb { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+
+/* P-5: tutarlı onay kutuları (katmansız: tek tek verilmiş w-4/w-5/w-6 ve accent-* sınıflarının önüne geçer).
+   Boyut 22 px; dokunma alanı kutuyu saran etiket satırından gelir. Seçiliyken bulunulan modülün vurgu rengi. */
+input[type="checkbox"]:not(.sr-only) {
+  appearance: none; -webkit-appearance: none; margin: 0;
+  width: 22px; height: 22px; flex-shrink: 0; border-radius: 7px;
+  border: 2px solid var(--color-line-2); background: var(--color-surface-2);
+  display: inline-grid; place-content: center; cursor: pointer; transition: background-color .12s, border-color .12s;
+}
+input[type="checkbox"]:not(.sr-only)::after {
+  content: ''; width: 12px; height: 12px; background: var(--color-acc-ink); transform: scale(0); transition: transform .12s;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6.5' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6.5' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+input[type="checkbox"]:not(.sr-only):checked { background: var(--color-acc); border-color: var(--color-acc); }
+input[type="checkbox"]:not(.sr-only):checked::after { transform: scale(1); }
+input[type="checkbox"]:not(.sr-only):focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }
+input[type="checkbox"]:not(.sr-only):disabled { opacity: .45; cursor: not-allowed; }

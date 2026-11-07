@@ -11,6 +11,18 @@ export function parseTheme(v: string | undefined | null): ThemePref {
   return v === 'light' || v === 'dark' ? v : 'auto'
 }
 
+/** Yazı boyutu (P-5): uygulama yakınlaştırmayı kapattığı için erişilebilirlik ayarı. Tüm arayüz orantılı büyür. */
+export const TEXT_COOKIE = 'dgfit_text'
+export type TextPref = 'normal' | 'lg' | 'xl'
+export const TEXT_SIZES: { id: TextPref; label: string; hint: string }[] = [
+  { id: 'normal', label: 'Normal', hint: 'Varsayılan boyut' },
+  { id: 'lg', label: 'Büyük', hint: 'Yazılar ve düğmeler %10 büyük' },
+  { id: 'xl', label: 'Çok büyük', hint: 'Yazılar ve düğmeler %20 büyük' },
+]
+export function parseTextSize(v: string | undefined | null): TextPref {
+  return v === 'lg' || v === 'xl' ? v : 'normal'
+}
+
 export type ModuleId = 'today' | 'plan' | 'water' | 'food' | 'fitness' | 'social' | 'coach' | 'profile'
 
 /** Bulunulan adresin renk modülü. */

@@ -3,9 +3,19 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { setAdvanced } from '@/lib/ui-mode'
 import { getUser, requireUser } from '@/lib/auth'
-import { THEME_COOKIE, parseTheme } from '@/lib/theme'
+import { TEXT_COOKIE, THEME_COOKIE, parseTextSize, parseTheme } from '@/lib/theme'
 
 /** Tema tercihi cihaz başına çerezde saklanır (sunucu ilk çizimde doğru temayı basar). */
+export async function setTextSizeAction(v: string): Promise<{ ok: true }> {
+  await requireUser()
+  const t = parseTextSize(v)
+  const jar = await cookies()
+  if (t === 'normal') jar.delete(TEXT_COOKIE)
+  else jar.set(TEXT_COOKIE, t, { path: '/', maxAge: 60 * 60 * 24 * 400, sameSite: 'lax', httpOnly: true, secure: process.env.NODE_ENV === 'production' && !process.env.DGFIT_TEST_HOOKS })
+  revalidatePath('/', 'layout')
+  return { ok: true }
+}
+
 export async function setThemeAction(v: string): Promise<{ ok: true }> {
   await requireUser()
   const t = parseTheme(v)

@@ -35,8 +35,8 @@ export function TopBar({ title, sub, back, right }: { title?: ReactNode; sub?: R
 }
 
 /** Renkli başlık/bant üzerindeki düğmeler (yazı beyaz). */
-export const hdrBtn = 'h-9 px-3.5 rounded-full bg-white/20 text-white text-[13px] font-bold inline-flex items-center gap-1.5 shrink-0 active:scale-[0.97] transition'
-export const hdrIcon = 'inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/20 text-white shrink-0'
+export const hdrBtn = 'h-9 px-3.5 rounded-full bg-[var(--band-box)] text-white text-[13px] font-bold inline-flex items-center gap-1.5 shrink-0 active:scale-[0.97] transition'
+export const hdrIcon = 'inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--band-box)] text-white shrink-0'
 
 /** Sekme ana sayfasının renkli özet bandı: başlık, alt başlık, halka ve üç değer. Sonraki kart bandın üstüne biner. */
 export function Band({ title, sub, right, ring, ringHref, visual, pills, children }: {
@@ -76,7 +76,7 @@ export function Band({ title, sub, right, ring, ringHref, visual, pills, childre
           {pills ? (
             <div className="flex flex-col gap-1.5">
               {pills.map(([k, v, href, tid], i) => {
-                const cls = 'flex justify-between items-center gap-2 rounded-xl bg-white/[0.18] px-3 py-[7px] text-[12.5px] font-semibold'
+                const cls = 'flex justify-between items-center gap-2 rounded-xl bg-[var(--band-box)] px-3 py-[7px] text-[12.5px] font-semibold'
                 const inner = <><span className="opacity-95">{k}</span><b className="num font-bold whitespace-nowrap flex items-center gap-1">{v}{href ? <Next size={14} className="opacity-80" /> : null}</b></>
                 return href ? <Link key={i} href={href} data-testid={tid} className={cls + ' active:scale-[0.98] transition'}>{inner}</Link> : <div key={i} className={cls}>{inner}</div>
               })}

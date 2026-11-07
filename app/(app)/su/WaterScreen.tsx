@@ -111,7 +111,7 @@ export default function WaterScreen({ data }: { data: Data }) {
       >
         <div className="flex items-center justify-between mt-3 -mx-1 text-[13px] font-bold">
           {data.day > maxPast ? <Link href={`/su?gun=${prev}`} aria-label="Önceki gün" className="h-9 px-2 inline-flex items-center gap-1 rounded-full opacity-90"><Back size={16} />Önceki gün</Link> : <span />}
-          {data.isToday && data.streak.current >= 2 ? <Link href="/sosyal/yeni?tur=streak" className="h-9 px-3 inline-flex items-center gap-1 rounded-full bg-white/20"><Flame size={14} />Seriyi paylaş</Link> : <span className="opacity-85">{data.streak.freezesLeft} dondurma hakkı</span>}
+          {data.isToday && data.streak.current >= 2 ? <Link href="/sosyal/yeni?tur=streak" className="h-9 px-3 inline-flex items-center gap-1 rounded-full bg-[var(--band-box)]"><Flame size={14} />Seriyi paylaş</Link> : <span className="opacity-85">{data.streak.freezesLeft} dondurma hakkı</span>}
           {!data.isToday ? <Link href={next >= todayStr() ? '/su' : `/su?gun=${next}`} aria-label="Sonraki gün" className="h-9 px-2 inline-flex items-center gap-1 rounded-full opacity-90">Sonraki gün<Next size={16} /></Link> : <span className="w-[86px]" />}
         </div>
       </Band>

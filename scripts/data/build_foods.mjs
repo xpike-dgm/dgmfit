@@ -8,6 +8,8 @@ import { computeRecipe, atwaterKcal, normalizeSearch, NUTRIENT_KEYS } from '../.
 const usda = JSON.parse(zlib.gunzipSync(fs.readFileSync('data/usda-sr.json.gz')).toString())
 const tr = JSON.parse(fs.readFileSync('data/tr-foods.json', 'utf8')).foods
 const dishes = JSON.parse(fs.readFileSync('data/tr-dishes.json', 'utf8')).dishes
+// P-6: içe aktarılan paketli ürünler (etiket değerleri; scripts/food-import.mjs ile doğrulanmış)
+const products = fs.existsSync('data/tr-products.json') ? JSON.parse(fs.readFileSync('data/tr-products.json', 'utf8')).products : []
 const byDesc = new Map(usda.foods.map((f) => [f.en, f]))
 const errors = []
 
@@ -32,6 +34,12 @@ for (const t of tr) {
   // aynı USDA besinine bağlanan ikinci Türkçe ad (ör. şehriye = makarna) kendi kimliğini alır; ilk eşleme eski kimliğini korur
   const row = { source: 'usda', sourceId: usedIds.has(f.id) ? `${f.id}:${t.k}` : String(f.id), key: t.k, nameTr: t.tr, nameEn: f.en, category: t.c, n: f.n, portions: dedupe(portions), approx: !!t.approx, aliases: t.a ?? [] }
   curated.set(t.k, row); usedIds.add(f.id); rows.push(row)
+}
+
+for (const p of products) {
+  const row = { source: 'dgfit-label', sourceId: p.k, key: p.k, nameTr: p.tr, nameEn: null, brand: p.brand, barcode: p.barcode, category: p.c, n: { ...p.n },
+    portions: dedupe([...p.p.map(([label, g]) => ({ label, g })), { label: '100 g', g: 100 }]), approx: false, aliases: p.a ?? [] }
+  curated.set(p.k, row); rows.push(row) // tariflerde malzeme olarak da kullanılabilir
 }
 
 for (const d of dishes) {
@@ -60,7 +68,7 @@ for (const f of usda.foods) {
 }
 
 for (const r of rows) {
-  r.search = normalizeSearch([r.nameTr, ...(r.aliases ?? []), r.nameEn].filter(Boolean).join(' '))
+  r.search = normalizeSearch([r.nameTr, r.brand, ...(r.aliases ?? []), r.nameEn].filter(Boolean).join(' '))
   for (const k of Object.keys(r.n)) if (!NUTRIENT_KEYS.includes(k)) delete r.n[k]
 }
 
@@ -70,5 +78,5 @@ if (errors.length) { console.error('DERLEME HATALARI:\n  ' + errors.join('\n  ')
 const body = JSON.stringify(rows)
 const version = crypto.createHash('sha256').update(body).digest('hex').slice(0, 12)
 fs.writeFileSync('data/foods-seed.json.gz', zlib.gzipSync(JSON.stringify({ version, generatedFrom: usda.source, count: rows.length, rows })))
-console.log(`foods-seed: ${rows.length} satır (küratörlü ${curated.size}, yemek ${dishes.length}), sürüm ${version}`)
+console.log(`foods-seed: ${rows.length} satır (küratörlü ${curated.size - products.length}, ürün ${products.length}, yemek ${dishes.length}), sürüm ${version}`)
 for (const d of rows.filter((r) => r.source === 'dgfit').slice(0, 40)) console.log(`  ${d.nameTr.padEnd(30)} ${String(d.n.kcal).padStart(4)} kcal  P ${d.n.protein}  K ${d.n.carb}  Y ${d.n.fat}  /100 g`)

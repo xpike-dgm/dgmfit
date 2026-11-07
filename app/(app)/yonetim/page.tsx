@@ -18,7 +18,7 @@ export default async function Page() {
   const mod = d.moderation.posts + d.moderation.comments + d.moderation.reports + d.moderation.proofs
   const usable = ai.providers.filter((p) => !p.skipped)
   const tile = (label: string, value: number, sub: string, hot = false) => (
-    <div className={`rounded-2xl px-3 py-2.5 flex flex-col min-w-0 ${hot ? 'bg-white text-[#14161B]' : 'bg-white/[0.18]'}`}>
+    <div className={`rounded-2xl px-3 py-2.5 flex flex-col min-w-0 ${hot ? 'bg-white text-[#14161B]' : 'bg-[var(--band-box)]'}`}>
       <span className="text-[11.5px] font-semibold opacity-90 truncate">{label}</span>
       <b className="num text-[24px] font-bold leading-tight">{value}</b>
       <span className="text-[11px] font-semibold opacity-80 truncate">{sub}</span>

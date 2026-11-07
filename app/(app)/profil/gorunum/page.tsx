@@ -1,8 +1,9 @@
 import { cookies } from 'next/headers'
 import { requireUser } from '@/lib/auth'
-import { THEME_COOKIE, parseTheme } from '@/lib/theme'
+import { TEXT_COOKIE, THEME_COOKIE, parseTextSize, parseTheme } from '@/lib/theme'
 import { TopBar } from '@/components/ui'
 import ThemePicker from './ThemePicker'
+import TextSizePicker from './TextSizePicker'
 import AdvancedToggle from './AdvancedToggle'
 import { isAdvanced } from '@/lib/ui-mode'
 
@@ -11,11 +12,13 @@ const MODS: [string, string][] = [['today', 'Bugün'], ['plan', 'Fit'], ['water'
 
 export default async function Page() {
   const u = await requireUser()
-  const current = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
+  const jar = await cookies()
+  const current = parseTheme(jar.get(THEME_COOKIE)?.value)
   return (
     <div className="px-4 flex flex-col gap-3">
-      <TopBar back="/profil" title="Görünüm" sub="Tema bu cihazda saklanır" />
+      <TopBar back="/profil" title="Görünüm" sub="Tema ve yazı boyutu bu cihazda saklanır" />
       <ThemePicker current={current} />
+      <TextSizePicker current={parseTextSize(jar.get(TEXT_COOKIE)?.value)} />
       <AdvancedToggle on={await isAdvanced(u.id)} />
       <section className="card p-4 flex flex-col gap-3" aria-label="Modül renkleri">
         <h2 className="text-[15px] font-extrabold">Modül renkleri</h2>

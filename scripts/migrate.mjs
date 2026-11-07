@@ -42,10 +42,10 @@ async function seedFoods(sql) {
   const rows = seed.rows.map((r) => ({
     source: r.source, source_id: r.sourceId, key: r.key, name_tr: r.nameTr, name_en: r.nameEn, category: r.category,
     per100: r.n, kcal: r.n.kcal ?? 0, protein: r.n.protein ?? 0, carb: r.n.carb ?? 0, fat: r.n.fat ?? 0,
-    portions: r.portions, approx: r.approx, aliases: r.aliases ?? [], recipe: r.recipe ?? null, search: r.search,
-    attribution: r.source === 'usda' ? 'USDA FoodData Central' : r.source === 'dgfit' ? 'DgFit tarifi (USDA malzemelerinden hesaplanmış)' : null,
+    portions: r.portions, approx: r.approx, aliases: r.aliases ?? [], recipe: r.recipe ?? null, search: r.search, brand: r.brand ?? null, barcode: r.barcode ?? null,
+    attribution: r.source === 'usda' ? 'USDA FoodData Central' : r.source === 'dgfit' ? 'DgFit tarifi (USDA malzemelerinden hesaplanmış)' : r.source === 'dgfit-label' ? 'Ürün etiketi' : null,
   }))
-  const cols = ['source', 'source_id', 'key', 'name_tr', 'name_en', 'category', 'per100', 'kcal', 'protein', 'carb', 'fat', 'portions', 'approx', 'aliases', 'recipe', 'search', 'attribution']
+  const cols = ['source', 'source_id', 'key', 'name_tr', 'name_en', 'category', 'per100', 'kcal', 'protein', 'carb', 'fat', 'portions', 'approx', 'aliases', 'recipe', 'search', 'attribution', 'brand', 'barcode']
   await sql.begin(async (tx) => {
     for (let i = 0; i < rows.length; i += 500) {
       const batch = rows.slice(i, i + 500).map((r) => ({ ...r, per100: tx.json(r.per100), portions: tx.json(r.portions), aliases: tx.json(r.aliases), recipe: r.recipe ? tx.json(r.recipe) : null }))
@@ -53,10 +53,10 @@ async function seedFoods(sql) {
         key = excluded.key, name_tr = excluded.name_tr, name_en = excluded.name_en, category = excluded.category, per100 = excluded.per100,
         kcal = excluded.kcal, protein = excluded.protein, carb = excluded.carb, fat = excluded.fat, portions = excluded.portions,
         approx = excluded.approx, aliases = excluded.aliases, recipe = excluded.recipe, search = excluded.search,
-        attribution = excluded.attribution, updated_at = now(), deleted_at = null`
+        attribution = excluded.attribution, brand = excluded.brand, barcode = excluded.barcode, updated_at = now(), deleted_at = null`
     }
     const ids = rows.map((r) => r.source + ':' + r.source_id)
-    await tx`update foods set deleted_at = now() where source in ('usda', 'dgfit') and deleted_at is null and (source || ':' || source_id) <> all(${ids})`
+    await tx`update foods set deleted_at = now() where source in ('usda', 'dgfit', 'dgfit-label') and deleted_at is null and (source || ':' || source_id) <> all(${ids})`
     await tx`insert into app_config (key, value) values ('foods_seed', ${tx.json({ version: seed.version, count: rows.length })})
       on conflict (key) do update set value = excluded.value`
   })

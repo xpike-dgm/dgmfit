@@ -1,0 +1,36 @@
+{
+  "$sablon": "Bu satırı ve aşağıdaki ÖRNEK kayıtları sil; kendi verinle doldur. Ayrıntılar: TALIMAT.md",
+  "format": "dgfit-yemek/1",
+  "kaynak": "Verinin nereden derlendiği (kısa açıklama)",
+  "besinler": [
+    {
+      "ad": "Kıvırcık lahana (kale)",
+      "kategori": "Sebzeler",
+      "usda": 168421,
+      "porsiyonlar": [["1 su bardağı doğranmış", 21], ["1 avuç", 15]],
+      "esanlamlar": ["kale", "kale lahanası"],
+      "anahtar": "kale"
+    }
+  ],
+  "yemekler": [
+    {
+      "ad": "Kinoalı kale salatası",
+      "kategori": "Salatalar",
+      "malzemeler": { "kale": 100, "kinoa": 80, "sogan": 20, "zeytinyagi": 10 },
+      "pismis_agirlik": 210,
+      "porsiyonlar": [["1 kase", 210]],
+      "esanlamlar": ["kale salatası"]
+    }
+  ],
+  "urunler": [
+    {
+      "ad": "Örnek tam buğdaylı bisküvi",
+      "marka": "Örnek Marka",
+      "barkod": "8690000000012",
+      "kategori": "Atıştırmalık",
+      "100g": { "kcal": 452, "protein": 8.1, "karbonhidrat": 64, "yag": 17.5, "lif": 6.2, "seker": 18, "doymus_yag": 8.4, "tuz_g": 0.9 },
+      "porsiyonlar": [["1 adet", 9], ["1 paket", 150]],
+      "kaynak": "Ürün etiketi fotoğrafı, 2026-11"
+    }
+  ]
+}

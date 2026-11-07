@@ -8,7 +8,7 @@ export default function ActivityBars({ days }: { days: { day: string; active: nu
   const fmt = (d: string) => new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'short' }).format(new Date(d + 'T12:00:00Z'))
   const s = days[sel]
   return (
-    <div className="rounded-2xl bg-white/[0.14] p-3 mt-3" data-testid="activity-chart">
+    <div className="rounded-2xl bg-[var(--band-box)] p-3 mt-3" data-testid="activity-chart">
       <div className="flex items-baseline justify-between gap-2 text-[12.5px] font-semibold">
         <span className="opacity-90">Takip kaydı giren · 14 gün</span>
         <span className="num whitespace-nowrap"><b className="text-[15px]">{s.active}</b> kişi · {fmt(s.day)}{s.signups ? ` · ${s.signups} yeni üye` : ''}</span>

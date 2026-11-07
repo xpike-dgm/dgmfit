@@ -59,7 +59,7 @@ export default async function Today() {
           sub={<span className="capitalize">{longDate(t.day)}</span>}
           right={
             <div className="flex gap-2 items-center">
-              <Link href="/su/istatistik" className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-white/20 text-sm font-bold" aria-label={`Su serisi: ${t.streak} gün`}>
+              <Link href="/su/istatistik" className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-[var(--band-box)] text-sm font-bold" aria-label={`Su serisi: ${t.streak} gün`}>
                 <Flame size={16} />{t.streak}
               </Link>
               <Link href="/profil" aria-label="Profil" className={hdrIcon}><User size={20} /></Link>
@@ -70,7 +70,7 @@ export default async function Today() {
         >
           <nav aria-label="Bu hafta" className="grid grid-cols-7 gap-1 mt-3">
             {t.week.map((d) => (
-              <div key={d.day} className={`flex flex-col items-center gap-0.5 py-1 rounded-xl ${d.today ? 'bg-white/20' : ''}`} aria-current={d.today ? 'date' : undefined}>
+              <div key={d.day} className={`flex flex-col items-center gap-0.5 py-1 rounded-xl ${d.today ? 'bg-[var(--band-box)]' : ''}`} aria-current={d.today ? 'date' : undefined}>
                 <span className="text-[10.5px] font-bold opacity-90">{d.label}</span>
                 <Ring size={24} stroke={2.5} value={d.frac} color="#fff" track="rgba(255,255,255,0.3)">
                   <span className={`num text-[10px] font-semibold ${d.future ? 'opacity-60' : ''}`}>{d.num}</span>
