@@ -65,7 +65,7 @@ export function wizardDesign(a: WizardAnswers): WizardResult {
   const hand = a.hand === 'both' ? null : a.hand
   const summary = [
     `Bugün ekranı: ${front.map((id) => cardDef(id)!.title).join(', ') || 'varsayılan sıra'} üstte${a.detail === 'simple' ? '; az kullanılan kartlar çekmecede' : '; Seriler kartı eklendi'}`,
-    `Alt bar: ${order.slice(0, 4).map((t) => ({ today: 'Bugün', plan: 'Fit', water: 'Su', food: 'Yemek', fitness: 'Fitness', social: 'Sosyal' })[t]).join(', ')}…`,
+    `Alt bar: ${order.slice(0, 4).map((t) => ({ today: 'Bugün', plan: 'Fit', water: 'Su', food: 'Yemek', fitness: 'Fitness', social: 'Sosyal', mine: 'Panom' })[t]).join(', ')}…`,
     hand ? `Tek el modu: ${hand === 'left' ? 'sol' : 'sağ'} el` : 'Tek el modu kapalı',
     rules.length ? `Kurallar: ${rules.map((r) => r.name).join(', ')}` : 'Kural eklenmedi',
   ]

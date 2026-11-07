@@ -79,3 +79,36 @@ test('göç sabitleri ve bugünlük gizlenenleri de eşler', async () => {
     assert.deepEqual(m.design.gestures!.daily!.hidden, ['today.fit'])
   } finally { reg.CARD_MIGRATIONS.splice(0, reg.CARD_MIGRATIONS.length, ...saved) }
 })
+
+test('yığın: birleştir, ayır, kaldır; doğrulama başka ekran/kilitli/tekrar kartı yığına almaz; kurallar yığındakini gizler', async () => {
+  const { stackWithNext, unstack, removeItem, resolveScreen, normalizeScreen } = await import('../lib/cards/layout.ts')
+  const { applyRules } = await import('../lib/cards/prefs.ts')
+  let it = defaultItems('today')
+  const iFit = it.findIndex((x) => x.id === 'today.fit')
+  it = stackWithNext(it, 'today.fit')
+  const fit = it.find((x) => x.id === 'today.fit')!
+  assert.deepEqual(fit.stack, ['today.water'])
+  assert.equal(fit.size, 'full', 'iki yarım kart yığılınca tam genişlik')
+  assert.ok(!it.some((x) => x.id === 'today.water'))
+  assert.equal(it.findIndex((x) => x.id === 'today.fit'), iFit)
+  assert.equal(stackWithNext(it, 'today.header'), it, 'başlık yığılamaz')
+  // kaydet → çöz: yığın korunur, çekmecede yığındaki kart yok
+  const n = normalizeScreen('today', it)
+  const r = resolveScreen({ v: 1, screens: { today: n } }, 'today')
+  assert.deepEqual(r.items.find((x) => x.id === 'today.fit')!.stack, ['today.water'])
+  assert.ok(!r.drawer.some((d) => d.def.id === 'today.water'))
+  assert.ok(!(n.removed ?? []).includes('today.water'), 'yığındaki kart kaldırılmış sayılmaz')
+  // ayır → hemen arkasına gelir
+  const u = unstack(it, 'today.fit', 'today.water')
+  assert.deepEqual(ids(u).slice(iFit, iFit + 2), ['today.fit', 'today.water'])
+  // yığının ilk kartını kaldırınca yığındaki kart yerine geçer
+  assert.equal(removeItem(it, 'today.fit')[iFit].id, 'today.water')
+  // doğrulama: başka ekranın, kilitli ya da zaten görünen kart yığına girmez
+  const bad = resolveScreen({ v: 1, screens: { today: { items: [{ id: 'today.header' }, { id: 'today.fit', stack: ['water.logs', 'today.goal-choice', 'today.macros', 'today.coach'] }, { id: 'today.macros' }] } } }, 'today')
+  assert.deepEqual(bad.items.find((x) => x.id === 'today.fit')!.stack, ['today.coach'])
+  // kural: yığındaki kartı gizler, göster yığındakini çoğaltmaz
+  const rr = applyRules('today', it, [{ id: 'a', name: 'A', on: true, when: [{ kind: 'rest' }], then: [{ kind: 'hide', card: 'today.water' }] }], { minute: 600, weekday: 3, training: false }, (id): { id: string; stack?: string[] } => ({ id }))
+  assert.equal(rr.items.find((x) => x.id === 'today.fit')!.stack?.length, 0)
+  const rs = applyRules('today', it, [{ id: 'a', name: 'A', on: true, when: [{ kind: 'rest' }], then: [{ kind: 'show', card: 'today.water' }] }], { minute: 600, weekday: 3, training: false }, (id): { id: string; stack?: string[] } => ({ id }))
+  assert.ok(!rs.items.some((x) => x.id === 'today.water'))
+})

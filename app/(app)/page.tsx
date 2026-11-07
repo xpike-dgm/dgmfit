@@ -33,7 +33,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   const editing = sp.duzenle === '1'
   const layout = await screenLayout(user.id, 'today', { editing })
   const qt = layout.quick['today.training']
-  const want = (id: string) => editing || layout.items.some((i) => i.id === id)
+  const want = (id: string) => editing || layout.items.some((i) => i.id === id || i.stack?.includes(id))
   const [tr, gs, partners, brief, streaks] = await Promise.all([
     todayTraining(user.id, t.day), goalStatus(user.id),
     want('today.partner') ? partnersTrainedToday(user.id, t.day).catch(() => [] as string[]) : Promise.resolve([] as string[]),
@@ -205,11 +205,11 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
       </Link>
     ) : null,
   }
-  const coachHidden = !layout.items.some((i) => i.id === 'today.coach')
+  const coachHidden = !layout.items.some((i) => i.id === 'today.coach' || i.stack?.includes('today.coach'))
 
   return (
     <div className="px-4 flex flex-col gap-3">
-      <CardBoard screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
+      <CardBoard screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={nodes}
         drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} />
       {/* koç kartı kaldırılsa da güvenlik destek kartı gösterilir */}
       {coachHidden && !editing ? <div data-mod="coach"><InsightCard fallback="" weeklyReady={false} compact supportOnly /></div> : null}

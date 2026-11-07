@@ -4,7 +4,7 @@ import { SCREENS, cardDef, type ScreenId } from './registry.ts'
 import type { LayoutItem } from './layout.ts'
 
 // ───────── alt bar ─────────
-export type NavTab = 'today' | 'plan' | 'water' | 'food' | 'fitness' | 'social'
+export type NavTab = 'today' | 'plan' | 'water' | 'food' | 'fitness' | 'social' | 'mine'
 export const NAV_TABS: { id: NavTab; label: string; href: string }[] = [
   { id: 'today', label: 'Bugün', href: '/' },
   { id: 'plan', label: 'Fit', href: '/fit' },
@@ -12,10 +12,15 @@ export const NAV_TABS: { id: NavTab; label: string; href: string }[] = [
   { id: 'food', label: 'Yemek', href: '/yemek' },
   { id: 'fitness', label: 'Fitness', href: '/fitness' },
   { id: 'social', label: 'Sosyal', href: '/sosyal' },
+  { id: 'mine', label: 'Panom', href: '/panom' },
 ]
 export interface NavLayout { order?: NavTab[]; hidden?: NavTab[] }
 /** Bugün gizlenemez (ana sayfa); en az bu kadar sekme görünür kalır. */
 export const NAV_MIN_VISIBLE = 3
+/** Alt barda + ile birlikte en çok 7 yuva (320 px'te okunur kalsın). */
+export const NAV_MAX_VISIBLE = 6
+/** Kullanıcı açmadıkça gizli sekmeler (Ö1b-4: Kendi panom). */
+export const NAV_DEFAULT_HIDDEN: NavTab[] = ['mine']
 
 /** Alt bar: sıralı görünen sekmeler. Bilinmeyen/tekrarlanan atılır, eksikler sona eklenir, kurallar uygulanır. */
 export function resolveNav(nav: NavLayout | null | undefined): { visible: NavTab[]; hidden: NavTab[] } {
@@ -23,8 +28,14 @@ export function resolveNav(nav: NavLayout | null | undefined): { visible: NavTab
   const order: NavTab[] = []
   for (const id of nav?.order ?? []) if (all.includes(id) && !order.includes(id)) order.push(id)
   for (const id of all) if (!order.includes(id)) order.push(id)
-  let hidden = order.filter((id) => (nav?.hidden ?? []).includes(id) && id !== 'today')
+  // kayıtta bilinmeyen (sonradan eklenmiş) sekmeler varsayılan görünürlükte gelir
+  const known = new Set([...(nav?.order ?? []), ...(nav?.hidden ?? [])])
+  const wantHidden = (id: NavTab) => (nav?.hidden ?? []).includes(id) || (!known.has(id) && NAV_DEFAULT_HIDDEN.includes(id))
+  let hidden = order.filter((id) => wantHidden(id) && id !== 'today')
   while (order.length - hidden.length < NAV_MIN_VISIBLE) hidden = hidden.slice(0, -1)
+  // en çok NAV_MAX_VISIBLE görünür: fazlası sondan gizlenir
+  const vis = order.filter((id) => !hidden.includes(id))
+  if (vis.length > NAV_MAX_VISIBLE) hidden = [...hidden, ...vis.slice(NAV_MAX_VISIBLE)]
   return { visible: order.filter((id) => !hidden.includes(id)), hidden }
 }
 export function normalizeNav(nav: NavLayout): NavLayout {
@@ -78,8 +89,9 @@ export function applyRules<T extends LayoutItem>(screen: ScreenId, items: T[], r
     if (hit) applied.push(r.name)
   }
   if (!state.size) return { items, applied }
-  let out = items.filter((i) => state.get(i.id) !== 'hide')
-  for (const [id, k] of state) if ((k === 'show' || k === 'top') && !out.some((i) => i.id === id)) { const it = make(id); if (it) out.push(it) }
+  let out = items.filter((i) => state.get(i.id) !== 'hide').map((i) => (i.stack?.some((x) => state.get(x) === 'hide') ? { ...i, stack: i.stack.filter((x) => state.get(x) !== 'hide') } : i))
+  const stacked = new Set(out.flatMap((i) => i.stack ?? []))
+  for (const [id, k] of state) if ((k === 'show' || k === 'top') && !stacked.has(id) && !out.some((i) => i.id === id)) { const it = make(id); if (it) out.push(it) }
   const topIds = tops.filter((id) => state.get(id) === 'top')
   if (topIds.length) {
     const head = out.filter((i) => cardDef(i.id)?.locked === 'top')
@@ -154,7 +166,7 @@ export const canPin = (id: string) => { const d = cardDef(id); return !!d && d.l
 export function applyGestures<T extends LayoutItem>(screen: ScreenId, items: T[], g: Gestures | undefined, today: string): { items: T[]; hiddenToday: string[]; pinned: string[] } {
   const hidden = g?.daily?.day === today ? g.daily.hidden.filter((id) => cardDef(id)?.screen === screen && canHideToday(id)) : []
   const pins = (g?.pins?.[screen] ?? []).filter((id) => canPin(id) && !hidden.includes(id))
-  let out = hidden.length ? items.filter((i) => !hidden.includes(i.id)) : items
+  let out = hidden.length ? items.filter((i) => !hidden.includes(i.id)).map((i) => (i.stack?.some((x) => hidden.includes(x)) ? { ...i, stack: i.stack.filter((x) => !hidden.includes(x)) } : i)) : items
   const lifted = pins.map((id) => out.find((i) => i.id === id)).filter(Boolean) as T[]
   if (lifted.length) {
     const head = out.filter((i) => cardDef(i.id)?.locked === 'top')

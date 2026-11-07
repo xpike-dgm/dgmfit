@@ -284,7 +284,9 @@
     "tests/e2e/custom2.e2e.cjs",
     "lib/cards/wizard.ts",
     "tests/cards-wizard.test.ts",
-    "tests/e2e/custom3.e2e.cjs"
+    "tests/e2e/custom3.e2e.cjs",
+    "app/(app)/panom/page.tsx",
+    "tests/e2e/custom4.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -480,7 +482,8 @@
     "/profil/ozellestirme",
     "/profil/ozellestirme/alt-bar",
     "/profil/ozellestirme/kurallar",
-    "/profil/ozellestirme/sihirbaz"
+    "/profil/ozellestirme/sihirbaz",
+    "/panom"
   ],
   "events": [
     "profile.onboarded",
@@ -965,7 +968,11 @@
       "addItem",
       "setSize",
       "normalizeScreen",
-      "defaultItems"
+      "defaultItems",
+      "stackWithNext",
+      "unstack",
+      "stackedIds",
+      "STACK_MAX"
     ],
     "lib/cards/registry.ts": [
       "CARDS",
@@ -1013,7 +1020,9 @@
       "setPin",
       "setHiddenToday",
       "canPin",
-      "canHideToday"
+      "canHideToday",
+      "NAV_MAX_VISIBLE",
+      "NAV_DEFAULT_HIDDEN"
     ]
   },
   "dependencies": {

@@ -40,8 +40,10 @@ export function moduleFor(path: string): ModuleId {
 }
 
 /** Alt bar sekmesi: Bugün sekmesi profil, koç ve raporu da kapsar. */
-export type TabId = 'today' | 'plan' | 'water' | 'food' | 'fitness' | 'social'
+export type TabId = 'today' | 'plan' | 'water' | 'food' | 'fitness' | 'social' | 'mine'
 export function tabFor(path: string): TabId {
+  const p = path.split('?')[0]
+  if (p === '/panom' || p.startsWith('/panom/')) return 'mine'
   const m = moduleFor(path)
   return m === 'coach' || m === 'profile' ? 'today' : m
 }

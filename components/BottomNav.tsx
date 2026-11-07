@@ -3,12 +3,12 @@ import Link, { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { hidesNav, tabFor, type TabId } from '@/lib/theme'
-import { Drop, Dumbbell, Fork, Home, Plus, Target, Users } from './icons'
+import { Drop, Dumbbell, Fork, Grid, Home, Plus, Target, Users } from './icons'
 import QuickAdd from './QuickAdd'
 
 import { NAV_TABS, type NavTab } from '@/lib/cards/prefs'
 
-const ICON: Record<NavTab, typeof Home> = { today: Home, plan: Target, water: Drop, food: Fork, fitness: Dumbbell, social: Users }
+const ICON: Record<NavTab, typeof Home> = { today: Home, plan: Target, water: Drop, food: Fork, fitness: Dumbbell, social: Users, mine: Grid }
 /** Sekmeler + hızlı ekle düğmesi: tek el modunda düğme o elin kenarına, yoksa ortaya. */
 function slots(tabs: NavTab[], hand: 'left' | 'right' | null) {
   const list: ({ id: TabId; href: string; label: string; Icon: typeof Home } | null)[] = tabs.map((id) => { const t = NAV_TABS.find((x) => x.id === id)!; return { id, href: t.href, label: t.label, Icon: ICON[id] } })
@@ -20,7 +20,7 @@ function Pending() {
   const { pending } = useLinkStatus()
   return pending ? <span aria-hidden className="absolute inset-0 rounded-2xl bg-current opacity-10 animate-pulse" /> : null
 }
-const TAB_MOD: Record<TabId, string> = { today: 'today', plan: 'plan', water: 'water', food: 'food', fitness: 'fitness', social: 'social' }
+const TAB_MOD: Record<TabId, string> = { today: 'today', plan: 'plan', water: 'water', food: 'food', fitness: 'fitness', social: 'social', mine: 'today' }
 
 export default function BottomNav({ tabs = NAV_TABS.map((t) => t.id), hand = null }: { tabs?: NavTab[]; hand?: 'left' | 'right' | null }) {
   const path = usePathname()

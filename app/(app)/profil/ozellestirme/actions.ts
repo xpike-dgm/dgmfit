@@ -8,7 +8,7 @@ import { cardDef } from '@/lib/cards/registry'
 import { RULES_MAX } from '@/lib/cards/prefs'
 
 type R = { ok: true } | { ok: false; error: string }
-const Items = z.array(z.object({ id: z.string().min(1).max(60), size: z.enum(['half', 'full']).optional() })).max(60)
+const Items = z.array(z.object({ id: z.string().min(1).max(60), size: z.enum(['half', 'full']).optional(), stack: z.array(z.string().min(1).max(60)).max(4).optional() })).max(60)
 
 /** Özelleştirme: ekran düzenini kaydet (sunucu kart kaydına göre yeniden doğrular). */
 const Settings = z.record(z.string().max(60), z.object({ quick: z.string().max(20).optional() })).optional()
@@ -33,8 +33,8 @@ export async function resetLayoutAction(screen: string): Promise<R> {
 }
 
 // ───────── Ö1b-2: alt bar, kurallar, kullanım tercihleri ─────────
-const Tab = z.enum(['today', 'plan', 'water', 'food', 'fitness', 'social'])
-const Nav = z.object({ order: z.array(Tab).max(6), hidden: z.array(Tab).max(6) }).nullable()
+const Tab = z.enum(['today', 'plan', 'water', 'food', 'fitness', 'social', 'mine'])
+const Nav = z.object({ order: z.array(Tab).max(7), hidden: z.array(Tab).max(7) }).nullable()
 const Min = z.number().int().min(0).max(1439)
 const Cond = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('time'), from: Min, to: Min }),

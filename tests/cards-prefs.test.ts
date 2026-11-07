@@ -12,11 +12,16 @@ test('alt bar: varsayılan sıra; Bugün gizlenemez; en az 3 sekme; bilinmeyen/t
   assert.deepEqual(resolveNav(null).visible, ['today', 'plan', 'water', 'food', 'fitness', 'social'])
   const r = resolveNav({ order: ['social', 'today', 'social', 'yok' as never, 'food'], hidden: ['today', 'plan'] })
   assert.deepEqual(r.visible, ['social', 'today', 'food', 'water', 'fitness'])
-  assert.deepEqual(r.hidden, ['plan'])
+  assert.deepEqual(r.hidden, ['plan', 'mine'], 'Panom açılmadıkça gizli')
   const few = resolveNav({ hidden: ['plan', 'water', 'food', 'fitness', 'social'] })
   assert.equal(few.visible.length, 3)
   assert.ok(few.visible.includes('today'))
-  assert.deepEqual(normalizeNav({ hidden: ['water'] }).order!.slice(-1), ['water'])
+  assert.ok(normalizeNav({ hidden: ['water'] }).hidden!.includes('water'))
+  // Panom açılırsa ve 6'dan fazla sekme görünürse fazlası gizlenir
+  const all = resolveNav({ order: ['today', 'mine', 'plan', 'water', 'food', 'fitness', 'social'], hidden: [] })
+  assert.equal(all.visible.length, 6)
+  assert.deepEqual(all.visible.slice(0, 2), ['today', 'mine'])
+  assert.deepEqual(all.hidden, ['social'])
 })
 
 test('koşullar: saat aralığı (gece yarısını aşan dahil), gün, antrenman/dinlenme, hedef', () => {

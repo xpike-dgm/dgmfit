@@ -4,7 +4,7 @@
 import type { ModuleId } from '../theme.ts'
 
 /** Özelleştirilebilir ekranlar. Yeni ekran eklemek için buraya ve SCREENS'e ekle. */
-export type ScreenId = 'today' | 'fit' | 'water' | 'food' | 'fitness'
+export type ScreenId = 'today' | 'fit' | 'water' | 'food' | 'fitness' | 'mine'
 export type CardSize = 'half' | 'full'
 
 export interface CardDef {
@@ -45,6 +45,7 @@ export const SCREENS: Record<ScreenId, { title: string; path: string }> = {
   water: { title: 'Su', path: '/su' },
   food: { title: 'Yemek', path: '/yemek' },
   fitness: { title: 'Fitness', path: '/fitness' },
+  mine: { title: 'Panom', path: '/panom' },
 }
 
 const COLORS = ['bg', 'title', 'text', 'accent']
@@ -102,6 +103,17 @@ export const CARDS: CardDef[] = [
   { id: 'food.supplements', screen: 'food', module: 'food', title: 'Takviyeler', desc: 'Kendi takviyelerini işaretle', sizes: ['full'], size: 'full', default: true, conditional: 'Takviye tanımlayınca görünür', since: 1 },
   { id: 'food.micro', screen: 'food', module: 'food', title: 'Besin detayları', desc: 'Lif, şeker, sodyum, vitamin ve mineraller', sizes: ['full'], size: 'full', default: true, conditional: 'Mikro besin bilgisi olan kayıt eklenince görünür', since: 1 },
   { id: 'food.tip', screen: 'food', module: 'food', title: 'Koç notu', desc: 'Günün durumuna göre kısa öneri', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  // Ö1b-4: Kendi panom — modüller arası karışık ekran
+  { id: 'mine.header', screen: 'mine', module: 'today', title: 'Pano bandı', desc: 'Panonun başlığı ve günün özeti', sizes: ['full'], size: 'full', default: true, locked: 'top', since: 1, colorSlots: COLORS },
+  { id: 'mine.kcal', screen: 'mine', module: 'today', title: 'Kalan kalori', desc: 'Bugünkü kalori bütçesinden kalan', sizes: ['half', 'full'], size: 'half', default: false, since: 1, colorSlots: COLORS },
+  { id: 'mine.water', screen: 'mine', module: 'water', title: 'Su', desc: 'Bugünkü su ve hızlı ekleme', sizes: ['half', 'full'], size: 'half', default: true, since: 1, colorSlots: COLORS },
+  { id: 'mine.weight', screen: 'mine', module: 'plan', title: 'Kilo trendi', desc: 'Trend kilo ve hedefe kalan', sizes: ['half', 'full'], size: 'half', default: true, since: 1, colorSlots: COLORS },
+  { id: 'mine.macros', screen: 'mine', module: 'food', title: 'Makrolar', desc: 'Protein, karbonhidrat, yağ', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'mine.training', screen: 'mine', module: 'fitness', title: 'Antrenman', desc: 'Bugünkü antrenman ya da sıradaki gün', sizes: ['half', 'full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'mine.recovery', screen: 'mine', module: 'fitness', title: 'Toparlanma', desc: 'Bugünkü toparlanma durumu', sizes: ['half', 'full'], size: 'full', default: true, conditional: 'Antrenman kaydı olunca görünür', since: 1, colorSlots: COLORS },
+  { id: 'mine.meals', screen: 'mine', module: 'food', title: 'Bugünkü öğünler', desc: 'Öğün başına kalori', sizes: ['full'], size: 'full', default: false, since: 1, colorSlots: COLORS },
+  { id: 'mine.coach', screen: 'mine', module: 'coach', title: 'Koç', desc: 'Günün notu', sizes: ['full'], size: 'full', default: false, since: 1, colorSlots: COLORS },
+  { id: 'mine.streaks', screen: 'mine', module: 'today', title: 'Seriler', desc: 'Su, kayıt ve antrenman serilerin', sizes: ['full'], size: 'full', default: false, since: 1 },
 ]
 
 /**
@@ -116,6 +128,7 @@ const QUICK: Record<string, CardDef['quick']> = {
   'today.training': [{ id: 'start', label: 'Antrenmanı başlat' }, { id: 'cardio', label: 'Kardiyo ekle' }, { id: 'stats', label: 'İstatistikler' }],
   'today.fit': [{ id: 'plan', label: 'Plana git' }, { id: 'weigh', label: 'Tartıl' }],
   'today.macros': [{ id: 'none', label: 'Düğme yok' }, { id: 'add', label: 'Besin ekle' }],
+  'mine.water': [{ id: '250', label: '+250 ml' }, { id: '330', label: '+330 ml (kutu)' }, { id: '500', label: '+500 ml (şişe)' }, { id: 'none', label: 'Düğme yok' }],
 }
 for (const c of CARDS) if (QUICK[c.id]) c.quick = QUICK[c.id]
 /** Kartın geçerli hızlı eylemi (bilinmeyen seçim → varsayılan). */

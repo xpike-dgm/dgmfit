@@ -5,14 +5,14 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { cardDef, SCREENS, type CardSize, type ScreenId } from '@/lib/cards/registry'
-import { addItem, moveItem, removeItem, setSize, type LayoutItem } from '@/lib/cards/layout'
+import { STACK_MAX, addItem, moveItem, removeItem, setSize, stackWithNext, unstack, type LayoutItem } from '@/lib/cards/layout'
 import { hideTodayAction, pinCardAction, resetLayoutAction, saveLayoutAction } from '@/app/(app)/profil/ozellestirme/actions'
 import { canHideToday, canPin } from '@/lib/cards/prefs'
 import Sheet from '@/components/Sheet'
 import Link from 'next/link'
 import { useDesignPrefs } from './DesignPrefs'
 
-type Item = { id: string; size: CardSize }
+type Item = { id: string; size: CardSize; stack?: string[] }
 interface Props {
   screen: ScreenId
   items: Item[]
@@ -41,6 +41,29 @@ const HOLD_EDIT_MS = 600
 const INTERACTIVE = 'a,button,input,select,textarea,label,summary,details,[role=button],[role=slider],[role=dialog],[contenteditable],[data-no-hold]'
 
 const SW = 168 // açık kartta görünen eylem alanı genişliği
+
+/** Ö1b-4: kart yığını — kartlar aynı yerde yana kaydırılarak (scroll-snap) gezilir; noktalar hangi kartta olunduğunu gösterir. */
+function StackCard({ id, size, ids, nodes }: { id: string; size: CardSize; ids: string[]; nodes: Record<string, ReactNode> }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [at, setAt] = useState(0)
+  const go = (i: number) => { const el = ref.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' }) }
+  return (
+    <div className={`${size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col gap-1.5`} data-card={id} data-stack={ids.length} role="group" aria-roledescription="kart yığını" aria-label={`${cardDef(id)?.title} ve ${ids.length - 1} kart daha`}>
+      <div ref={ref} onScroll={(e) => { const el = e.currentTarget; setAt(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))) }}
+        className="flex overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-[24px]">
+        {ids.map((cid, i) => (
+          <div key={cid} className="w-full shrink-0 snap-start flex flex-col [&>*]:flex-1" data-stack-card={cid} aria-hidden={i !== at} inert={i !== at ? true : undefined}>{nodes[cid]}</div>
+        ))}
+      </div>
+      <div className="flex justify-center gap-1.5" role="tablist" aria-label="Yığındaki kartlar">
+        {ids.map((cid, i) => (
+          <button key={cid} type="button" role="tab" aria-selected={i === at} aria-label={cardDef(cid)?.title} onClick={() => go(i)} data-testid="stack-dot"
+            className="w-6 h-6 flex items-center justify-center"><span className={`block rounded-full transition-all ${i === at ? 'w-4 h-1.5 bg-acc' : 'w-1.5 h-1.5 bg-line-2'}`} /></button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 /** Bir öğenin atası yatay kaydırılabiliyor mu (içerikteki yatay şeritlerde kart kaydırması devreye girmesin). */
 function inHScroll(el: HTMLElement | null, stop: HTMLElement) {
@@ -187,7 +210,9 @@ function Board(p: Props) {
       onContextMenu={(e) => { if (pop || t.current) e.preventDefault() }}>
       <div className="grid grid-cols-2 gap-3" data-testid="card-board">
         {p.items.map((it) => p.nodes[it.id] && !gone.includes(it.id) ? (
-          canHideToday(it.id) || canPin(it.id) ? (
+          it.stack?.some((sid) => p.nodes[sid]) ? (
+            <StackCard key={it.id} id={it.id} size={it.size} ids={[it.id, ...it.stack.filter((sid) => p.nodes[sid])]} nodes={p.nodes} />
+          ) : canHideToday(it.id) || canPin(it.id) ? (
             <SwipeCard key={it.id} id={it.id} size={it.size} pinned={(p.pinned ?? []).includes(it.id)} open={openId === it.id}
               onOpen={(o) => setOpenId(o ? it.id : null)} onAct={(k) => act(it.id, k)}>{p.nodes[it.id]}</SwipeCard>
           ) : <div key={it.id} className={`${it.size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col [&>*]:flex-1`} data-card={it.id}>{p.nodes[it.id]}</div>
@@ -358,7 +383,7 @@ function Editor(p: Props) {
   const done = async () => {
     setBusy(true)
     const settings = Object.fromEntries(Object.entries(quick).filter(([id, q]) => (p.quick ?? {})[id] !== q).map(([id, q]) => [id, { quick: q }]))
-    const r = await saveLayoutAction(p.screen, items.map((i): LayoutItem => ({ id: i.id, size: i.size })), settings)
+    const r = await saveLayoutAction(p.screen, items.map((i): LayoutItem => ({ id: i.id, size: i.size, ...(i.stack?.length ? { stack: i.stack } : {}) })), settings)
     setBusy(false)
     if (!r.ok) { setMsg(r.error); return }
     router.replace(path); router.refresh()
@@ -405,7 +430,7 @@ function Editor(p: Props) {
               onPointerDown={(e) => startHold(e, it.id)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
               className={`relative min-w-0 rounded-[24px] touch-pan-y ${it.size === 'full' ? 'col-span-2' : ''} ${flash === it.id ? 'ring-2 ring-acc ring-offset-2 ring-offset-bg' : ''}`}>
               <div className={`h-full rounded-[24px] flex flex-col ${dragging ? 'opacity-0' : def.locked === 'top' ? '' : 'card-wiggle'}`} style={{ animationDelay: `${(idx % 3) * 90}ms` }}>
-                {def.locked !== 'top' ? <div className={`h-9 flex items-center gap-2 min-w-0 ${left ? 'pl-[76px] pr-1.5 justify-end' : 'pl-1.5 pr-[76px]'}`} aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b>{pins.includes(def.id) ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-surface-3 text-ink-2 shrink-0">SABİT</span> : null}</div> : null}
+                {def.locked !== 'top' ? <div className={`h-9 flex items-center gap-2 min-w-0 ${left ? 'pl-[76px] pr-1.5 justify-end' : 'pl-1.5 pr-[76px]'}`} aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b>{pins.includes(def.id) ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-surface-3 text-ink-2 shrink-0">SABİT</span> : null}{it.stack?.length ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-acc text-acc-ink shrink-0" data-testid="stack-badge">+{it.stack.length} YIĞIN</span> : null}</div> : null}
                 <div className="pointer-events-none flex-1 flex flex-col [&>*]:flex-1" aria-hidden>
                   {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-2.5 flex items-center min-h-[52px]" data-testid="card-placeholder"><span className="text-[12.5px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
                 </div>
@@ -484,6 +509,23 @@ function Editor(p: Props) {
                 <button type="button" onClick={() => step(sheetDef.id, 1)} disabled={sheetIdx >= items.length - 1} className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40" data-testid="card-down">Aşağı taşı</button>
               </div>
             ) : <p className="text-[13px] text-mute">Bu kart ekranın en üstünde sabit.</p>}
+            {sheetDef.locked !== 'top' && sheetIdx >= 0 ? (() => {
+              const cur = items[sheetIdx], nxt = items[sheetIdx + 1]
+              const canStack = !!nxt && !cardDef(nxt.id)?.locked && (cur.stack?.length ?? 0) + 1 + (nxt.stack?.length ?? 0) + 1 <= STACK_MAX
+              return (
+                <div className="flex flex-col gap-2" data-testid="stack-controls">
+                  <span className="text-[13px] font-bold">Yığın <span className="text-[12px] text-mute font-normal">· kartlar aynı yerde yana kaydırılarak gezilir</span></span>
+                  {cur.stack?.map((sid) => (
+                    <div key={sid} className="flex items-center justify-between gap-2 min-h-11 rounded-xl bg-surface-2 px-3" data-stack-child={sid}>
+                      <span className="text-[13.5px] font-bold">{cardDef(sid)?.title}</span>
+                      <button type="button" onClick={() => commit(unstack(items, cur.id, sid))} className="h-9 px-3 rounded-full border border-line-2 text-[12.5px] font-bold" data-testid="card-unstack">Ayır</button>
+                    </div>
+                  ))}
+                  {nxt ? <button type="button" disabled={!canStack} onClick={() => commit(stackWithNext(items, cur.id))} data-testid="card-stack"
+                    className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40">Alttaki kartla yığ ({cardDef(nxt.id)?.title})</button> : null}
+                </div>
+              )
+            })() : null}
             {sheetDef.quick ? (
               <div className="flex flex-col gap-2">
                 <span className="text-[13px] font-bold">Hızlı eylem</span>

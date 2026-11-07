@@ -1,11 +1,11 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { NAV_MIN_VISIBLE, NAV_TABS, resolveNav, type NavTab } from '@/lib/cards/prefs'
-import { Drop, Dumbbell, Fork, Home, Plus, Target, Users } from '@/components/icons'
+import { NAV_MAX_VISIBLE, NAV_MIN_VISIBLE, NAV_TABS, resolveNav, type NavTab } from '@/lib/cards/prefs'
+import { Drop, Dumbbell, Fork, Grid, Home, Plus, Target, Users } from '@/components/icons'
 import { saveNavAction } from '../actions'
 
-const ICON: Record<NavTab, typeof Home> = { today: Home, plan: Target, water: Drop, food: Fork, fitness: Dumbbell, social: Users }
+const ICON: Record<NavTab, typeof Home> = { today: Home, plan: Target, water: Drop, food: Fork, fitness: Dumbbell, social: Users, mine: Grid }
 const label = (id: NavTab) => NAV_TABS.find((t) => t.id === id)!.label
 
 export default function NavEditor({ order: initOrder, hidden: initHidden, custom }: { order: NavTab[]; hidden: NavTab[]; custom: boolean }) {
@@ -20,6 +20,7 @@ export default function NavEditor({ order: initOrder, hidden: initHidden, custom
   const toggle = (id: NavTab) => {
     if (id === 'today') return
     if (!hidden.includes(id) && order.length - hidden.length <= NAV_MIN_VISIBLE) { setMsg(`En az ${NAV_MIN_VISIBLE} sekme görünür kalmalı`); return }
+    if (hidden.includes(id) && order.length - hidden.length >= NAV_MAX_VISIBLE) { setMsg(`Alt barda en çok ${NAV_MAX_VISIBLE} sekme olabilir; önce birini gizle`); return }
     setHidden(hidden.includes(id) ? hidden.filter((x) => x !== id) : [...hidden, id]); setMsg(null)
   }
   const save = (nav: { order: NavTab[]; hidden: NavTab[] } | null) => start(async () => {

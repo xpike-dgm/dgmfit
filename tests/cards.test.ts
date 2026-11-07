@@ -76,7 +76,7 @@ test('güncelleme uyumluluğu: değiştirilen, bölünen ve kaldırılan kartlar
 
 test('her ekran: tek sabit başlık, boş olmayan varsayılan; her kayıtlı kartın bir çizicisi var', async () => {
   const { readFileSync } = await import('node:fs')
-  const src = ['app/(app)/page.tsx', 'app/(app)/fit/page.tsx', 'app/(app)/fitness/page.tsx', 'app/(app)/su/WaterScreen.tsx', 'app/(app)/yemek/FoodDiary.tsx']
+  const src = ['app/(app)/page.tsx', 'app/(app)/fit/page.tsx', 'app/(app)/fitness/page.tsx', 'app/(app)/su/WaterScreen.tsx', 'app/(app)/yemek/FoodDiary.tsx', 'app/(app)/panom/page.tsx']
     .map((f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n')
   for (const s of Object.keys(SCREENS) as (keyof typeof SCREENS)[]) {
     const tops = CARDS.filter((c) => c.screen === s && c.locked === 'top')

@@ -33,7 +33,7 @@ export default function FoodDiary(p: {
   /** P-7 hızlı kayıt: öğün alışkanlıkları ("her zamanki kahvaltın") */
   usual?: Partial<Record<MealId, { names: string[]; kcal: number }>>
   /** Özelleştirme: ekranın kart düzeni (sunucuda çözülür) */
-  layout: { items: { id: string; size: 'half' | 'full' }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[]; applied?: string[]; quick?: Record<string, string>; pinned?: string[] }
+  layout: { items: { id: string; size: 'half' | 'full'; stack?: string[] }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[]; applied?: string[]; quick?: Record<string, string>; pinned?: string[] }
   editing?: boolean
 }) {
   const router = useRouter()

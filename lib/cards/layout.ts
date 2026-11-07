@@ -3,7 +3,8 @@
 import { CARD_MIGRATIONS, REGISTRY_VERSION, cardDef, cardsFor, type CardDef, type CardSize, type ScreenId } from './registry.ts'
 import type { Gestures, NavLayout, Rule, UsePrefs } from './prefs.ts'
 
-export interface LayoutItem { id: string; size?: CardSize }
+/** `stack`: Ö1b-4 kart yığını — aynı yerde yana kaydırılarak gezilen ek kartlar (ilk kart `id`). */
+export interface LayoutItem { id: string; size?: CardSize; stack?: string[] }
 export interface ScreenLayout { items: LayoutItem[]; /** kullanıcının bilerek kaldırdıkları (çekmecede "kaldırdıkların") */ removed?: string[] }
 /** Kart başına ayar (Ö2: renkler; ileride görünüm türü, içerik seçenekleri). Bilinmeyen alanlar korunur. */
 export interface CardSettings { colors?: Record<string, string>; [k: string]: unknown }
@@ -22,7 +23,8 @@ export interface Design {
   gestures?: Gestures
 }
 
-export interface ResolvedItem { id: string; size: CardSize; def: CardDef }
+export interface ResolvedItem { id: string; size: CardSize; def: CardDef; stack?: string[] }
+export const STACK_MAX = 4
 export interface DrawerItem { def: CardDef; reason: 'removed' | 'new' | 'available' }
 export interface ResolvedScreen { items: ResolvedItem[]; drawer: DrawerItem[]; notices: string[]; customized: boolean }
 
@@ -42,6 +44,7 @@ export function migrateDesign(d: Design): { design: Design; notices: string[] } 
         if (m.note?.[it.id]) notices.push(m.note[it.id])
         for (const nid of to) items.push({ id: nid, size: it.size })
       }
+      for (const it of items) if (it.stack) it.stack = it.stack.flatMap((id) => m.map[id] ?? [id])
       const removed = (sl.removed ?? []).flatMap((id) => m.map[id] ?? [id])
       screens[sid] = { items, removed }
     }
@@ -85,7 +88,18 @@ export function resolveScreen(design: Design | null | undefined, screen: ScreenI
     if (!def || def.screen !== screen) { if (sl) notices.push(`Bir kart artık yok (${it.id}); düzenin kalanı korundu.`); continue }
     if (seen.has(def.id)) continue
     seen.add(def.id)
-    items.push({ id: def.id, size: it.size && def.sizes.includes(it.size) ? it.size : def.size, def })
+    const r: ResolvedItem = { id: def.id, size: it.size && def.sizes.includes(it.size) ? it.size : def.size, def }
+    // yığın: yalnız bu ekranın, kilitsiz, başka yerde olmayan kartları; sabit başlık yığılamaz
+    if (it.stack?.length && def.locked !== 'top') {
+      const st: string[] = []
+      for (const sid of it.stack) {
+        const sd = cardDef(sid)
+        if (!sd || sd.screen !== screen || sd.locked || seen.has(sid) || raw.some((x) => x.id === sid) || st.length >= STACK_MAX - 1) continue
+        st.push(sid); seen.add(sid)
+      }
+      if (st.length) r.stack = st
+    }
+    items.push(r)
   }
   // kilitli kartlar: 'top' her zaman başta; 'keep' eksikse varsayılan sıradaki yerine
   const all = cardsFor(screen)
@@ -121,14 +135,49 @@ export function moveItem<T extends LayoutItem>(items: T[], from: number, to: num
   return next
 }
 
+/** Kaldırır; yığının ilk kartı kaldırılırsa yığındaki kartlar onun yerine tek tek geçer. Yığındaki bir kart da kaldırılabilir. */
 export function removeItem<T extends LayoutItem>(items: T[], id: string): T[] {
   if (cardDef(id)?.locked) return items
-  return items.filter((i) => i.id !== id)
+  const out: T[] = []
+  for (const i of items) {
+    if (i.id === id) { for (const sid of i.stack ?? []) out.push({ ...i, id: sid, size: cardDef(sid)?.size, stack: undefined }); continue }
+    out.push(i.stack?.includes(id) ? { ...i, stack: i.stack.filter((x) => x !== id) } : i)
+  }
+  return out
+}
+
+export const stackedIds = (items: LayoutItem[]) => new Set(items.flatMap((i) => i.stack ?? []))
+
+/** Kartı hemen altındaki kartla (ve onun yığınıyla) aynı yığında birleştirir. */
+export function stackWithNext<T extends LayoutItem>(items: T[], id: string): T[] {
+  const i = items.findIndex((x) => x.id === id)
+  const a = items[i], b = items[i + 1]
+  if (!a || !b || cardDef(a.id)?.locked === 'top' || cardDef(b.id)?.locked) return items
+  const stack = [...(a.stack ?? []), b.id, ...(b.stack ?? [])]
+  if (stack.length + 1 > STACK_MAX) return items
+  // yan yana duran iki yarım kart yığılınca yığın tam genişliğe geçer (boşluk kalmasın)
+  const da = cardDef(a.id)!
+  const half = (x: LayoutItem) => (x.size ?? cardDef(x.id)?.size) === 'half'
+  const size = half(a) && half(b) && da.sizes.includes('full') ? 'full' : a.size
+  const next = items.slice()
+  next.splice(i, 2, { ...a, size, stack })
+  return next
+}
+
+/** Yığındaki kartı ayırır: yığının hemen arkasına tek kart olarak gelir. */
+export function unstack<T extends LayoutItem>(items: T[], parent: string, child: string): T[] {
+  const i = items.findIndex((x) => x.id === parent)
+  const a = items[i]
+  if (!a?.stack?.includes(child)) return items
+  const next = items.slice()
+  const rest = a.stack.filter((x) => x !== child)
+  next.splice(i, 1, { ...a, stack: rest.length ? rest : undefined }, { id: child, size: cardDef(child)?.size } as T)
+  return next
 }
 
 export function addItem(items: LayoutItem[], id: string, at?: number): LayoutItem[] {
   const def = cardDef(id)
-  if (!def || items.some((i) => i.id === id)) return items
+  if (!def || items.some((i) => i.id === id) || stackedIds(items).has(id)) return items
   const floor = items.findIndex((_, i) => !locked(items, i))
   const pos = at === undefined ? items.length : Math.max(floor < 0 ? items.length : floor, Math.min(items.length, at))
   const next = items.slice()
@@ -148,7 +197,7 @@ export function setSize<T extends LayoutItem>(items: T[], id: string, size: Card
  */
 export function normalizeScreen(screen: ScreenId, items: LayoutItem[], ctx: LayoutCtx = {}): ScreenLayout {
   const r = resolveScreen({ v: REGISTRY_VERSION, screens: { [screen]: { items } } }, screen, ctx)
-  const kept = r.items.map((i) => ({ id: i.id, ...(i.size !== i.def.size ? { size: i.size } : {}) }))
-  const ids = new Set(kept.map((i) => i.id))
+  const kept = r.items.map((i) => ({ id: i.id, ...(i.size !== i.def.size ? { size: i.size } : {}), ...(i.stack?.length ? { stack: i.stack } : {}) }))
+  const ids = new Set(kept.flatMap((i) => [i.id, ...(i.stack ?? [])]))
   return { items: kept, removed: cardsFor(screen).filter((c) => isDefault(c, ctx) && !ids.has(c.id)).map((c) => c.id) }
 }
