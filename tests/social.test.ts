@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { feedScore, itemVisible, longestWeekStreak, milestoneText, postVisible, profileAccess, suggestionScore } from '../lib/social.ts'
-import { combine, moderateText } from '../lib/moderation.ts'
+import { cleanTextError, combine, moderateText } from '../lib/moderation.ts'
 
 test('profil erişimi: görünürlük × ilişki', () => {
   assert.deepEqual(profileAccess('none', 'private'), { basic: false, detail: false, canRequest: false, canFollow: false })
@@ -59,4 +59,11 @@ test('moderasyon kuralları', () => {
   assert.equal(ed.verdict, 'review')
   assert.equal(combine(moderateText('selam'), { verdict: 'block', reasons: ['uygunsuz görsel'] }).verdict, 'block')
   assert.equal(combine(moderateText('selam'), null).verdict, 'ok')
+})
+
+test('cleanTextError: temiz metin null, uygunsuz metin Türkçe hata', () => {
+  assert.equal(cleanTextError('Biyografi', null), null)
+  assert.equal(cleanTextError('Biyografi', '  '), null)
+  assert.equal(cleanTextError('Biyografi', 'Squat sever'), null)
+  assert.match(cleanTextError('Grup adı', 'aptal grup') ?? '', /^Grup adı uygunsuz/)
 })

@@ -35,3 +35,9 @@ export function combine(rule: ModResult, ai: { verdict: ModVerdict; reasons: str
   const verdict = order[Math.max(order.indexOf(rule.verdict), order.indexOf(ai.verdict))]
   return { verdict, reasons: [...new Set([...rule.reasons, ...ai.reasons])], support: rule.support }
 }
+
+/** Profil/grup/meydan okuma gibi kısa herkese açık metinler için: kural katmanı uygunsuz bulursa Türkçe hata metni, yoksa null. */
+export function cleanTextError(label: string, text: string | null | undefined): string | null {
+  if (!text || !text.trim()) return null
+  return moderateText(text).verdict === 'ok' ? null : `${label} uygunsuz içerik barındırıyor; lütfen düzenle`
+}

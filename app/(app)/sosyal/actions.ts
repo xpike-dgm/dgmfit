@@ -41,7 +41,7 @@ export async function commentAction(postId: string, body: string): Promise<R<{ p
   if (!rateLimit('comment:' + me, 60, 3600_000)) return { ok: false, error: 'Çok fazla yorum; biraz bekle' }
   return run(() => comment(me, postId, body), [`/sosyal/p/${postId}`])
 }
-export async function deleteCommentAction(id: string, postId: string): Promise<R> { const me = await uid(); return run(async () => { await deleteComment(me, id); return {} }, [`/sosyal/p/${postId}`]) }
+export async function deleteCommentAction(id: string, postId: string): Promise<R> { if (!Uuid.safeParse(id).success || !Uuid.safeParse(postId).success) return { ok: false, error: 'Geçersiz' }; const me = await uid(); return run(async () => { await deleteComment(me, id); return {} }, [`/sosyal/p/${postId}`]) }
 export async function saveAction(postId: string, on: boolean): Promise<R> { const me = await uid(); return run(async () => { await toggleSave(me, postId, on); return {} }, []) }
 export async function copyWorkoutAction(postId: string): Promise<R<{ id: string }>> { const me = await uid(); return run(async () => ({ id: await copyWorkout(me, postId) }), ['/fitness']) }
 export async function saveProgramAction(postId: string): Promise<R<{ id: string }>> { const me = await uid(); return run(async () => ({ id: await saveProgramCopy(me, postId) })) }
@@ -93,7 +93,7 @@ export async function saveProfileAction(input: z.input<typeof ProfIn>): Promise<
 }
 
 export async function reportAction(input: { targetType: 'post' | 'comment' | 'user'; targetId: string; reason: string; note?: string }): Promise<R> {
-  const p = z.object({ targetType: z.enum(['post', 'comment', 'user']), targetId: z.string().max(60), reason: z.enum(['taciz', 'uygunsuz', 'zararlı diyet', 'spam', 'diğer']), note: z.string().max(300).optional() }).safeParse(input)
+  const p = z.object({ targetType: z.enum(['post', 'comment', 'user']), targetId: Uuid, reason: z.enum(['taciz', 'uygunsuz', 'zararlı diyet', 'spam', 'diğer']), note: z.string().max(300).optional() }).safeParse(input)
   if (!p.success) return { ok: false, error: 'Şikayet nedeni seç' }
   const me = await uid()
   if (!rateLimit('report:' + me, 20, 3600_000)) return { ok: false, error: 'Çok fazla şikayet' }
@@ -185,6 +185,7 @@ export async function storyAction(input: { op: 'create' | 'delete'; body?: strin
 export async function prVerifyAction(input: { op: 'witness' | 'proof'; prId: number; mediaId?: string }): Promise<R<{ verified?: boolean; witnesses?: number }>> {
   if (!Number.isInteger(input.prId)) return { ok: false, error: 'Geçersiz' }
   const me = await uid()
+  if (!rateLimit('prverify:' + me, 30, 3600_000)) return { ok: false, error: 'Çok fazla işlem; biraz bekle' }
   return run(async () => {
     if (input.op === 'witness') return await witnessPR(me, input.prId)
     if (!input.mediaId || !Uuid.safeParse(input.mediaId).success) throw new Error('Fotoğraf seç')
