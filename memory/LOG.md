@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö1a tamamlandı
+- Kart kaydı + düzen modeli (saf, 6 test), 0024 ui_designs, Bugün 11 karta bölündü (yeni 'Seriler' çekmecede), düzenleme modu (basılı tut-sürükle, FLIP, kenarda kaydırma, −, ✎ boyut + yukarı/aşağı, çekmece: dokun/sürükle, geri al, Vazgeç/Bitti), stüdyo `/profil/ozellestirme`, gizli kartın verisi hesaplanmaz, koç kartı gizlense de güvenlik kartı.
+- Görsel kontrol (ekran görüntüleri): yarım boyutta antrenman kartı sıkışıyordu → düğme alt satıra kayar; düzenlemede boş koşullu kartlar çok yer kaplıyordu → küçük yer tutucu.
+- Test: planlama e2e makroları eski 'Kalori' bölümünde arıyordu (makrolar artık ayrı kart) → `[data-card="today.macros"]`.
+- Doğrulama: commit `d5cf19d`; verify.sh VERIFY OK (223 birim, 27 e2e); release `2026-11-07T03-25-38-663Z` RELEASE OK; canlıda özelleştirme e2e OK; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö1a başladı
 - Kullanıcı prototipi onayladı ve genişletilebilir kodlama istedi. Faz başı: memory-check geçti; son commit `5e3c364` STATE ile uyumlu.
 - Mimari: kart kaydı (sabit kimlik + sürüm + göç eşlemesi) ↔ kullanıcının tasarımı (yalnızca kimlik, boyut, ileride ayarlar) ↔ ekran çizicileri; tasarım kişisel veri içermez (şablon olarak paylaşılabilir).
