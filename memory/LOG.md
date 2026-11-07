@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Ö6 tamamlandı: özelleştirme ekranları gösterilen tasarıma uyduruldu
+- 7 ekran yeniden yapıldı: Stüdyo (6 kutu), Düzenleme modu (araç çubuğu, köşe rozetleri), Çekmece, Kart düzenleyici tam ekran (Renk | Boyut ve görünüm), Renkler ve stil tek sayfa, Modlar (2×2 + Ramazan kartı + liste), Şablon kütüphanesi (haftanın şablonu, Kullan'a basınca). Yeni sayfalar `/duzen`, `/stil/daha`; `/renkler` → `/stil`.
+- Yerel testte e2e davet kodunun 50 kullanım sınırı doldu (uygulama hatası değil); yalnız yerel kodun sayacı sıfırlandı. custom10 bir kez kararsız geçti, iki tekrar OK.
+- Doğrulama: commit `80b956b`; verify.sh VERIFY OK (275 birim); release `2026-11-07T13-52-07-647Z` RELEASE OK; canlıda 23 e2e OK; 27 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Ö6 başladı: özelleştirme ekranları gösterilen tasarıma uydurulacak
 - Kullanıcı: "Bana gösterdiğin özelleştirme tasarımıyla alakası yok". Doğrulandı: tasarımın 7 ekranı ile canlı ekranlar yan yana görüntülendi (scratchpad `cmp/yan-*.png`); işlevler var ama görünüm ve yerleşim tasarımdan ayrılıyor (stüdyo uzun liste, ✎ ayrı sayfa, renk ekranı alt pencere, çekmece düz liste, stil/renk ayrı sayfalar, modlar dikey liste, kütüphanede haftanın şablonu yok).
 - Süreç hatası: Ö1–Ö5 boyunca ekranlar tasarım dosyasıyla karşılaştırılmadı; kabul kriterlerinde "tasarımla eşleşme" yoktu. Bundan sonra arayüz aşamasında tasarım varsa yan yana görüntü kabul kriteridir (DECISIONS).
