@@ -45,7 +45,7 @@ Bir yemeğin kalorisini internetten bulup yazma: tarifini yaz, DgFit hesaplar.
 
 ## Denetimler (dosya bunlardan geçmezse eklenmez)
 - USDA karşılığı bulunmalı (bulunamazsa araç yakın kayıtları önerir)
-- Ürünlerde: 100 g'da en fazla 900 kcal, makrolar toplamı en fazla 100 g, kalori makrolarla uyumlu (4/4/9), şeker ≤ karbonhidrat, doymuş yağ ≤ yağ
+- Ürünlerde: 100 g'da en fazla 900 kcal, makrolar toplamı en fazla 105 g (etiket yuvarlaması payı), kalori makrolarla uyumlu (4/4/9), şeker ≤ karbonhidrat, doymuş yağ ≤ yağ
 - Tariflerde: tüm malzemeler bulunmalı; pişmiş ağırlık çiğ toplamla tutarlı olmalı
 - Porsiyon gramı 1–3000
 - Aynı ad, anahtar ya da barkod zaten varsa kayıt **atlanır** (tekrar eklenmez)
