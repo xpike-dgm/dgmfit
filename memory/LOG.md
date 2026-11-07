@@ -2,6 +2,15 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö2a başladı
+- Kullanıcı: "Devam et tüm hepsi bitene kadar durma". Kalan sıra: Ö2a → Ö2b → Ö3 (3 yayın) → Ö4 → Ö5 (2 yayın).
+- Saf renk modülü `lib/cards/colors.ts` + 6 test yazıldı (kontrast, iki tema türetme, modül paleti, paletler, fotoğraf nicemleme).
+
+## 2026-11-07 — Özelleştirme Ö1b-4 tamamlandı
+- Kart yığını (`LayoutItem.stack`, `StackCard`) ve Kendi panom (`/panom`, `mine.*`, alt bar sekmesi).
+- Hatalar: (1) alt bar kaydı 'mine' sekmesini zod şemasında tanımıyordu; (2) kaydetme şeması `stack` alanını atıyordu (zod nesnesi bilinmeyen alanı siler) → ikisi de şemaya eklendi; (3) iki yarım kart yığılınca yanında boşluk kalıyordu → yığın tam genişlik.
+- Doğrulama: commit `9490270`; verify.sh VERIFY OK (240 birim); release `2026-11-07T06-13-27-917Z` RELEASE OK; canlıda 15 e2e OK; 17 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö1b-3 tamamlandı
 - Sihirbaz (`lib/cards/wizard.ts`, 6 test), kaydırma hareketleri (`Design.gestures`, `SwipeCard`), hızlı eylem (`CardDef.quick`).
 - Hatalar: (1) farede bağlantılı kartı sürüklemek yerel bağlantı sürüklemesini başlatıp işaretçi olaylarını kesiyordu → `onDragStart` engellendi + pointercancel; (2) kaydırma sonundaki tıklama açılan kartı hemen kapatıyordu → tıklama yutma ve kapatma ayrıldı; (3) sihirbaz özeti "Su üstte" derken Fit/Su eşleştirmesi Su'yu 7. sıraya itiyordu → önce gelen yerinde kalır (+ test).
