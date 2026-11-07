@@ -85,6 +85,7 @@ function Body({ p, onMsg }: { p: PostView; onMsg: (m: string) => void }) {
     return <div className="rounded-2xl bg-surface-2 px-3.5 py-3 flex flex-col gap-1 text-[13px]" data-testid="post-meal"><b>{m.label} · <span className="num">{fmtNum(m.kcal)} kcal, {fmtNum(m.protein)} g protein</span></b>{m.items.map((x, i) => <span key={i} className="text-ink-2">{x.name} · {fmtNum(x.grams)} g</span>)}</div>
   }
   if (p.kind === 'streak') return <div className="rounded-2xl bg-surface-2 px-3.5 py-3 text-[15px]" data-testid="post-streak">💧 <b className="num">{String(d.streak)}</b> {String(d.label)}</div>
+  if (p.kind === 'badge') return <div className="rounded-2xl bg-coach border border-coach-line px-3.5 py-3 flex flex-col gap-0.5" data-testid="post-badge"><b className="text-[15px]">🏅 {String(d.title)}</b><span className="text-[13px] text-mute">{String(d.desc)}</span></div>
   if (p.kind === 'milestone') return <div className="rounded-2xl bg-coach border border-coach-line px-3.5 py-3 text-[15px]" data-testid="post-milestone">🎯 <b>{String(d.text)}</b></div>
   return null
 }

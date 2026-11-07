@@ -11,7 +11,7 @@ import { createPostAction } from '../actions'
 type Opt = { id: string; label: string }
 const AUD = [['friends', 'Arkadaşlar'], ['public', 'Herkese açık'], ['selected', 'Seçilenler']] as const
 
-export default function Composer(p: { initialKind: string; initialRef: string | null; today: string; mediaOn: boolean; workouts: Opt[]; prs: Opt[]; recipes: Opt[]; programs: Opt[]; friends: { id: string; username: string }[]; progress: Opt[] }) {
+export default function Composer(p: { initialKind: string; initialRef: string | null; today: string; mediaOn: boolean; workouts: Opt[]; prs: Opt[]; recipes: Opt[]; programs: Opt[]; friends: { id: string; username: string }[]; progress: Opt[]; badges?: Opt[] }) {
   const [kind, setKind] = useState<PostKind>(p.initialKind as PostKind)
   const [ref, setRef] = useState<string | null>(p.initialRef)
   const [meal, setMeal] = useState<MealId>('lunch')
@@ -23,7 +23,7 @@ export default function Composer(p: { initialKind: string; initialRef: string | 
   const [err, setErr] = useState<string | null>(null)
   const [support, setSupport] = useState<'ed' | 'crisis' | null>(null)
   const router = useRouter()
-  const options: Record<string, Opt[]> = { workout: p.workouts, pr: p.prs, recipe: p.recipes, program: p.programs, progress: p.progress }
+  const options: Record<string, Opt[]> = { workout: p.workouts, pr: p.prs, recipe: p.recipes, program: p.programs, progress: p.progress, badge: p.badges ?? [] }
   const list = options[kind]
   const upload = async (f: File) => {
     setErr(null)
@@ -53,7 +53,7 @@ export default function Composer(p: { initialKind: string; initialRef: string | 
   return (
     <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); void submit() }} data-testid="composer">
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Gönderi türü">
-        {(Object.keys(POST_KINDS) as PostKind[]).map((k) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => { setKind(k); setRef(null); if (k === 'progress') setAudience('selected') }} className={`h-9 px-3 rounded-full text-[13px] font-bold ${kind === k ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{POST_KINDS[k]}</button>)}
+        {(Object.keys(POST_KINDS) as PostKind[]).filter((k) => k !== 'badge' || (p.badges?.length ?? 0) > 0).map((k) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => { setKind(k); setRef(null); if (k === 'progress') setAudience('selected') }} className={`h-9 px-3 rounded-full text-[13px] font-bold ${kind === k ? 'bg-acc text-acc-ink' : 'bg-surface-2'}`}>{POST_KINDS[k]}</button>)}
       </div>
       {list ? (
         <label className="flex flex-col gap-1 text-[13px] font-semibold">{kind === 'progress' ? 'İlerleme fotoğrafı' : 'Paylaşılacak kayıt'}

@@ -322,6 +322,15 @@ async function snapshot(userId: string, kind: PostKind, ref: string | null | und
     if (!t || t.streak < 2) throw new Error('Paylaşılacak bir seri yok (en az 2 gün)')
     return { streak: t.streak, label: 'günlük su serisi' }
   }
+  if (kind === 'badge') {
+    // P-7: kazanılmış rozet (yemek/antrenman/plan rozetleri ve su rozetleri); kazanılmamış rozet paylaşılamaz
+    const { achievementsFor } = await import('./achievements-data')
+    const { getWaterInsights } = await import('./water-data')
+    const [a, w] = await Promise.all([achievementsFor(userId), getWaterInsights(userId)])
+    const b = [...a.list, ...w.badges].find((x) => x.id === ref && x.earnedDay)
+    if (!b) throw new Error('Bu rozet henüz kazanılmadı')
+    return { id: b.id, title: b.title, desc: b.desc, day: b.earnedDay }
+  }
   if (kind === 'milestone') {
     const g = await activeGoal(userId)
     if (!g) throw new Error('Aktif hedef yok')

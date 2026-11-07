@@ -12,7 +12,7 @@ export const DEFAULT_ITEMS: Record<Item, ItemVis> = { prs: 'none', stats: 'none'
 export const REACTIONS = { guc: '💪', ates: '🔥', alkis: '👏', kupa: '🏆' } as const
 export type Reaction = keyof typeof REACTIONS
 
-export const POST_KINDS = { text: 'Gönderi', workout: 'Antrenman', pr: 'Rekor', recipe: 'Tarif', program: 'Program', meal: 'Öğün', streak: 'Seri', milestone: 'Kilometre taşı', progress: 'İlerleme fotoğrafı' } as const
+export const POST_KINDS = { text: 'Gönderi', workout: 'Antrenman', pr: 'Rekor', recipe: 'Tarif', program: 'Program', meal: 'Öğün', streak: 'Seri', milestone: 'Kilometre taşı', progress: 'İlerleme fotoğrafı', badge: 'Rozet' } as const
 export type PostKind = keyof typeof POST_KINDS
 
 export const GOAL_BADGE: Record<string, string> = { lose: 'Kilo veriyor', gain: 'Bulk', recomp: 'Rekompozisyon' }

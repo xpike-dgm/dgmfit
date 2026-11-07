@@ -2,6 +2,7 @@ import { requireUser } from '@/lib/auth'
 import { achievementsFor } from '@/lib/achievements-data'
 import { getWaterInsights, getWaterStats } from '@/lib/water-data'
 import { shortDate } from '@/lib/time'
+import Link from 'next/link'
 import { TopBar } from '@/components/ui'
 
 export const metadata = { title: 'Başarılar' }
@@ -34,6 +35,7 @@ export default async function Page() {
                   <span className={`text-sm font-extrabold ${b.earnedDay ? 'text-acc' : 'text-ink-2'}`}>{b.title}</span>
                   <span className="text-xs text-mute leading-snug">{b.desc}</span>
                   <span className="text-[11px] text-ink-2 mt-1">{b.earnedDay ? `Kazanıldı · ${shortDate(b.earnedDay)}` : 'Henüz kazanılmadı'}</span>
+                  {b.earnedDay ? <Link href={`/sosyal/yeni?tur=badge&ref=${b.id}`} className="text-[12px] font-bold text-acc mt-1 min-h-8 inline-flex items-center" data-testid="badge-share">Paylaş ›</Link> : null}
                 </li>
               ))}
             </ul>
