@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö1b-3 tamamlandı
+- Sihirbaz (`lib/cards/wizard.ts`, 6 test), kaydırma hareketleri (`Design.gestures`, `SwipeCard`), hızlı eylem (`CardDef.quick`).
+- Hatalar: (1) farede bağlantılı kartı sürüklemek yerel bağlantı sürüklemesini başlatıp işaretçi olaylarını kesiyordu → `onDragStart` engellendi + pointercancel; (2) kaydırma sonundaki tıklama açılan kartı hemen kapatıyordu → tıklama yutma ve kapatma ayrıldı; (3) sihirbaz özeti "Su üstte" derken Fit/Su eşleştirmesi Su'yu 7. sıraya itiyordu → önce gelen yerinde kalır (+ test).
+- Ortam: Postgres yeniden başlamıştı (sağlık 503) → `service postgresql start`.
+- Doğrulama: commit `de2540c`; verify.sh VERIFY OK (239 birim); release `2026-11-07T05-45-14-573Z` RELEASE OK; canlıda 14 e2e OK; 16 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö1b-3 başladı
 - Kullanıcı: "Devam et". Faz başı: memory-check geçti; son commit STATE ile uyumlu; ağaç temiz. Ö1b-3 (sihirbaz, kaydırma, hızlı eylem) ve Ö1b-4 (yığın, kendi panom) olarak bölündü.
 
