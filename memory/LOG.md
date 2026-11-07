@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Düzeltme: etiket makro toplamı + koç önerisi mesajı
+- Kullanıcı ekran görüntüsü: gainer etiketi (100 g: 404 kcal, protein 19, karbonhidrat 81,2, yağ 0,4) "100 g başına protein + karbonhidrat + yağ 100 g'ı geçemez" ile reddedildi. Toplam 100,6 g; etiketler yuvarlanır ve ±%10 analiz payı içerir → sınır 100,5 → 105 g (`MACRO_SUM_MAX`), kalori–makro uyumu aynen; test eklendi.
+- verify.sh'de custom10 iki kez aynı adımda düştü: son öneri reddedilince liste boşalıp bileşen kayboluyor, onay mesajı da gidiyordu (gerçek arayüz hatası) → liste boşken de mesaj görünür.
+- Doğrulama: commit `6aaf797`; verify.sh VERIFY OK (275 birim); release `2026-11-07T14-28-25-956Z` RELEASE OK; canlıda 23 e2e OK; 27 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Ö6 tamamlandı: özelleştirme ekranları gösterilen tasarıma uyduruldu
 - 7 ekran yeniden yapıldı: Stüdyo (6 kutu), Düzenleme modu (araç çubuğu, köşe rozetleri), Çekmece, Kart düzenleyici tam ekran (Renk | Boyut ve görünüm), Renkler ve stil tek sayfa, Modlar (2×2 + Ramazan kartı + liste), Şablon kütüphanesi (haftanın şablonu, Kullan'a basınca). Yeni sayfalar `/duzen`, `/stil/daha`; `/renkler` → `/stil`.
 - Yerel testte e2e davet kodunun 50 kullanım sınırı doldu (uygulama hatası değil); yalnız yerel kodun sayacı sıfırlandı. custom10 bir kez kararsız geçti, iki tekrar OK.
