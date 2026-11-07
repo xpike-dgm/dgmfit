@@ -266,3 +266,14 @@ export async function setFoodWater(on: boolean): Promise<R> {
   revalidatePath('/su/ayarlar')
   return { ok: true }
 }
+
+/** P-7: tarif linkinden malzemeleri getirir (kaydetmez; Yeni tarif ekranında kontrol edilip kaydedilir). */
+export async function importRecipeUrlAction(url: string): Promise<R<{ name: string; servings: number | null; ingredients: import('@/lib/recipe-fetch').ImportedIng[] }>> {
+  const userId = await uid()
+  const { rateLimit } = await import('@/lib/auth')
+  if (!rateLimit('recipeurl:' + userId, 20, 3600_000)) return { ok: false, error: 'Saatte en fazla 20 tarif linki içe aktarılabilir' }
+  try {
+    const { importRecipeFromUrl } = await import('@/lib/recipe-fetch')
+    return { ok: true, ...(await importRecipeFromUrl(userId, String(url).slice(0, 500))) }
+  } catch (e) { return { ok: false, error: e instanceof Error && !/fetch failed|aborted|timeout/i.test(e.message) ? e.message : 'Sayfaya ulaşılamadı. Adresi kontrol et ya da malzemeleri elle ekle.' } }
+}

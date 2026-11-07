@@ -5,7 +5,7 @@ import { TopBar } from '@/components/ui'
 import { Trash } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import { computeRecipe } from '@/lib/nutrition'
-import { createRecipe } from '../../actions'
+import { createRecipe, importRecipeUrlAction } from '../../actions'
 
 interface Hit { id: number; name: string; sub: string | null; per100: Record<string, number>; kcal: number }
 interface Ing extends Hit { grams: number }
@@ -21,6 +21,22 @@ export default function RecipeBuilder({ back }: { back: string }) {
   const [hits, setHits] = useState<Hit[]>([])
   const [err, setErr] = useState<string | null>(null)
   const [pending, start] = useTransition()
+  const [url, setUrl] = useState('')
+  const [unmatched, setUnmatched] = useState<string[]>([])
+  const [importMsg, setImportMsg] = useState<string | null>(null)
+  const doImport = () => {
+    setImportMsg(null)
+    start(async () => {
+      const r = await importRecipeUrlAction(url)
+      if (!r.ok) { setImportMsg(r.error); return }
+      setName(r.name); if (r.servings) setServings(String(r.servings))
+      const got = r.ingredients.filter((i) => i.food)
+      setIngs(got.map((i) => ({ ...i.food!, grams: i.grams ?? 0 })))
+      setUnmatched(r.ingredients.filter((i) => !i.food).map((i) => i.text))
+      const noG = got.filter((i) => i.grams === null).length
+      setImportMsg(`${got.length} malzeme eşleşti${noG ? `, ${noG} tanesinin gramını gir` : ''}${r.ingredients.length - got.length ? `, ${r.ingredients.length - got.length} tanesi bulunamadı (aşağıdan elle ekle)` : ''}. Eşleşmeleri kontrol et.`)
+    })
+  }
 
   useEffect(() => {
     if (q.trim().length < 2) { setHits([]); return }
@@ -53,7 +69,16 @@ export default function RecipeBuilder({ back }: { back: string }) {
   return (
     <div className="px-4 flex flex-col gap-3 pb-8">
       <TopBar back={back} title="Yeni tarif" />
-      <section className="card p-5 flex flex-col gap-3 mt-2">
+      <section className="card p-4 flex flex-col gap-2 mt-2" aria-label="Linkten içe aktar" data-testid="recipe-url">
+        <label htmlFor="rb-url" className="text-xs text-mute">Tarif linki (isteğe bağlı): malzemeler otomatik eklenir</label>
+        <div className="flex gap-2">
+          <input id="rb-url" type="url" inputMode="url" value={url} onChange={(e) => setUrl(e.target.value.slice(0, 500))} placeholder="https://…" className={input + ' flex-1 min-w-0'} />
+          <button type="button" disabled={pending || !/^https:\/\/\S+\.\S+/.test(url)} onClick={doImport} className="h-12 px-4 rounded-xl bg-acc text-acc-ink font-bold disabled:opacity-40 shrink-0">{pending ? '…' : 'Getir'}</button>
+        </div>
+        {importMsg ? <p role="status" className="text-[13px] text-ink-2">{importMsg}</p> : null}
+        {unmatched.length ? <ul className="text-[12px] text-mute list-disc pl-5" data-testid="recipe-unmatched">{unmatched.map((u) => <li key={u}>{u}</li>)}</ul> : null}
+      </section>
+      <section className="card p-5 flex flex-col gap-3">
         <div className="flex flex-col gap-1"><label htmlFor="rb-name" className="text-xs text-mute">Tarif adı</label><input id="rb-name" value={name} onChange={(e) => setName(e.target.value.slice(0, 80))} className={input + ' w-full'} placeholder="Ör. Annemin mercimek köftesi" /></div>
         <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col gap-1"><label htmlFor="rb-sv" className="text-xs text-mute">Kaç porsiyon?</label><input id="rb-sv" inputMode="numeric" value={servings} onChange={(e) => setServings(e.target.value.replace(/\D/g, '').slice(0, 2))} className={input + ' num'} /></div>
@@ -68,7 +93,7 @@ export default function RecipeBuilder({ back }: { back: string }) {
           <div key={k} className="flex items-center gap-2">
             <span className="flex-1 min-w-0 text-sm font-semibold truncate">{i.name}</span>
             <label htmlFor={`rb-g-${k}`} className="sr-only">{i.name} gram</label>
-            <input id={`rb-g-${k}`} inputMode="decimal" value={i.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(',', '.')); setIngs((x) => x.map((y, j) => (j === k ? { ...y, grams: Number.isFinite(g) ? g : 0 } : y))) }} className={input + ' w-24 num text-right'} />
+            <input id={`rb-g-${k}`} inputMode="decimal" value={i.grams || ''} onChange={(e) => { const g = Number(e.target.value.replace(',', '.')); setIngs((x) => x.map((y, j) => (j === k ? { ...y, grams: Number.isFinite(g) ? g : 0 } : y))) }} className={input + ' w-24 num text-right' + (i.grams > 0 ? '' : ' border-orange')} placeholder="gram" />
             <span className="text-xs text-mute">g</span>
             <button type="button" aria-label={`${i.name} kaldır`} onClick={() => setIngs((x) => x.filter((_, j) => j !== k))} className="w-10 h-10 flex items-center justify-center text-mute"><Trash size={16} /></button>
           </div>
