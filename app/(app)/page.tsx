@@ -101,10 +101,14 @@ export default async function Today() {
 
       {gs ? <GoalChoiceCard s={gs} /> : null}
       {partners.length && !(tr.workouts || tr.cardio) ? (
-        <Link href={tr.next ? `/fitness/antrenman?gun=${tr.next.id}` : '/fitness'} className="card px-4 py-3 flex items-center justify-between gap-3 border-l-4 border-acc" data-testid="partner-card">
+        <Link href={tr.next ? `/fitness/antrenman?gun=${tr.next.id}` : '/fitness'} className="card px-4 py-3 flex items-center justify-between gap-3 border-l-4 border-acc" data-testid="partner-card" data-done="0">
           <span className="text-[14px] leading-snug">Partnerin <b>@{partners[0]}</b>{partners.length > 1 ? ` ve ${partners.length - 1} kişi daha` : ''} bugün antrenmanını yaptı. Sıra sende!</span>
           <span className="text-acc font-bold text-[13px] shrink-0">Başla ›</span>
         </Link>
+      ) : partners.length ? (
+        <p className="card px-4 py-3 text-[14px] leading-snug border-l-4 border-acc" data-testid="partner-card" data-done="1">
+          Sen ve partnerin <b>@{partners[0]}</b>{partners.length > 1 ? ` (+${partners.length - 1})` : ''} bugün antrenmanınızı yaptınız. Birlikte istikrar böyle kazanılır.
+        </p>
       ) : null}
 
       {ds.postWorkoutProtein ? (

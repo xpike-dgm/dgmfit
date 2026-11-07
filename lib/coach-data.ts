@@ -282,11 +282,11 @@ export async function applyCoachAction(userId: string, messageId: string, index:
   if (!a || a.status !== 'pending') throw new Error('Bu eylem zaten işlendi')
   // eylemi atomik olarak sahiplen: çift dokunuş / iki sekme aynı eylemi iki kez uygulamasın
   const claim = await db.execute(sql`update ai_messages set actions = jsonb_set(actions, ${`{${index},status}`}::text[], '"processing"'::jsonb)
-    where id = ${m.id} and user_id = ${userId} and actions->${index}->>'status' = 'pending' returning id`)
+    where id = ${m.id} and user_id = ${userId} and actions->(${index}::int)->>'status' = 'pending' returning id`)
   if (!claim.length) throw new Error('Bu eylem zaten işlendi')
   try { return await runCoachAction(userId, m.id, list, index, a, decision, water) }
   catch (e) { // beklenmeyen hata: eylem yeniden denenebilsin
-    await db.execute(sql`update ai_messages set actions = jsonb_set(actions, ${`{${index},status}`}::text[], '"pending"'::jsonb) where id = ${m.id} and actions->${index}->>'status' = 'processing'`)
+    await db.execute(sql`update ai_messages set actions = jsonb_set(actions, ${`{${index},status}`}::text[], '"pending"'::jsonb) where id = ${m.id} and actions->(${index}::int)->>'status' = 'processing'`)
     throw e
   }
 }

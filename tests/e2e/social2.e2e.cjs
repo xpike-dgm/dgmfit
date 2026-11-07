@@ -59,6 +59,7 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await pa.goto(BASE + '/sosyal/bildirimler'); await pa.locator('[data-testid=notification][data-kind=partner_workout]').waitFor().catch(() => fail('partner bildirimi yok'))
   // Faz 7-3: Bugün'de "partnerin antrenman yaptı, sıra sende" kartı
   await pa.goto(BASE + '/'); await pa.getByTestId('partner-card').waitFor().catch(() => fail('Bugün partner kartı yok'))
+  if ((await pa.getByTestId('partner-card').getAttribute('data-done')) !== '1') fail('A bugün antrenman yaptı: kart "ikiniz de yaptınız" olmalı')
   await pb.goto(`${BASE}/u/${A}`); await pb.getByRole('button', { name: 'Ortak program: kopyala' }).click()
   await pb.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/); await pb.getByText(/Full Body.*\(/).first().waitFor().catch(() => fail('partner programı kopyalanmadı'))
 

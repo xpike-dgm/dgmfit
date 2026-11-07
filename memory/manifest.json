@@ -257,7 +257,13 @@
     "lib/ui-mode.ts",
     "components/InfoTip.tsx",
     "app/(app)/profil/gorunum/AdvancedToggle.tsx",
-    "scripts/ui-audit.cjs"
+    "scripts/ui-audit.cjs",
+    "lib/recovery.ts",
+    "lib/push-plan.ts",
+    "lib/push-endpoint.ts",
+    "lib/body-comp.ts",
+    "lib/goal-phase.ts",
+    "lib/sim/run.ts"
   ],
   "tables": [
     "users",
@@ -446,7 +452,8 @@
     "/fitness/kaydedilenler",
     "/fitness/rekor",
     "/yonetim/barkodlar",
-    "/profil/vucut"
+    "/profil/vucut",
+    "/api/today/state"
   ],
   "events": [
     "profile.onboarded",
@@ -575,14 +582,15 @@
       "NUTRIENT_KEYS"
     ],
     "lib/food.ts": [
-      "mealForTime",
-      "macrosFor",
-      "sumMacros",
-      "portionGrams",
+      "MEALS",
       "budgetImpact",
-      "mapOffProduct",
       "isValidBarcode",
-      "MEALS"
+      "macrosFor",
+      "mapOffProduct",
+      "mealForTime",
+      "per100Problem",
+      "portionGrams",
+      "sumMacros"
     ],
     "lib/food-data.ts": [
       "searchFoods",
@@ -881,6 +889,16 @@
       "toneFor",
       "MICRO_REF",
       "CARD_KINDS"
+    ],
+    "lib/recovery.ts": [
+      "recoveryState",
+      "recoveryText"
+    ],
+    "lib/push-plan.ts": [
+      "pushAllowed"
+    ],
+    "lib/push-endpoint.ts": [
+      "isAllowedPushEndpoint"
     ]
   },
   "dependencies": {

@@ -14,7 +14,9 @@ export async function POST(req: Request) {
   const p = Body.safeParse(await req.json().catch(() => null))
   if (!p.success) return NextResponse.json({ error: 'geçersiz abonelik' }, { status: 400 })
   const { endpoint, keys } = p.data
-  if (!isAllowedPushEndpoint(endpoint)) return NextResponse.json({ error: 'geçersiz abonelik adresi' }, { status: 400 })
+  // yerel testte sahte push servisi (https://localhost:4999, test CA); DGFIT_TEST_HOOKS canlıda hiç tanımlı değildir
+  const testLocal = process.env.DGFIT_TEST_HOOKS === '1' && /^https:\/\/localhost:4999\//.test(endpoint)
+  if (!isAllowedPushEndpoint(endpoint) && !testLocal) return NextResponse.json({ error: 'geçersiz abonelik adresi' }, { status: 400 })
   await ensureWaterSetup(u.id)
   await db.insert(schema.pushSubscriptions).values({ userId: u.id, endpoint, p256dh: keys.p256dh, auth: keys.auth, userAgent: req.headers.get('user-agent')?.slice(0, 300) })
     .onConflictDoUpdate({ target: schema.pushSubscriptions.endpoint, set: { userId: u.id, p256dh: keys.p256dh, auth: keys.auth, failures: 0 } })
