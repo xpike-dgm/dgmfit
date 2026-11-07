@@ -15,6 +15,7 @@ import { dayState } from '@/lib/day-state'
 import { goalStatus } from '@/lib/goal-phase'
 import GoalChoiceCard from '@/components/GoalChoiceCard'
 import { partnersTrainedToday } from '@/lib/social2-data'
+import { lastWeekBrief } from '@/lib/coach-data'
 import { recentFoods } from '@/lib/food-data'
 import { minuteOfDay } from '@/lib/water-data'
 
@@ -23,7 +24,7 @@ export default async function Today() {
   await closePendingDays(user.id)
   const t = await getToday(user.id)
   if (!t) redirect('/kurulum')
-  const [tr, gs, partners] = await Promise.all([todayTraining(user.id, t.day), goalStatus(user.id), partnersTrainedToday(user.id, t.day).catch(() => [] as string[])])
+  const [tr, gs, partners, brief] = await Promise.all([todayTraining(user.id, t.day), goalStatus(user.id), partnersTrainedToday(user.id, t.day).catch(() => [] as string[]), lastWeekBrief(user.id, t.day).catch(() => null)])
   // Haftalık rapor kısayolu: Pazar 18.00'den Pazartesi sonuna kadar
   const weeklyReady = latestReportWeek() === mondayOf(t.day) || latestReportWeek() === addDays(mondayOf(t.day), -7) && new Date(t.day + 'T12:00:00Z').getUTCDay() === 1
 
@@ -100,6 +101,17 @@ export default async function Today() {
       </section>
 
       {gs ? <GoalChoiceCard s={gs} /> : null}
+      {brief ? (
+        <Link href={`/rapor?hafta=${brief.weekStart}`} className="card p-4 flex flex-col gap-2" data-testid="week-brief">
+          <span className="flex items-center justify-between"><b className="text-[15px]">Geçen hafta</b><span className="text-acc font-bold text-[13px]">Rapor ›</span></span>
+          <span className="grid grid-cols-4 gap-2 text-center">
+            {[['Kayıt', `${brief.loggedDays}/7`], ['Uyum', brief.adherencePct === null ? '–' : `%${brief.adherencePct}`], ['Kilo', brief.weightChange === null ? '–' : `${brief.weightChange > 0 ? '+' : brief.weightChange < 0 ? '−' : ''}${fmtNum(Math.abs(brief.weightChange), 1)}`], ['Antrenman', String(brief.workouts)]].map(([l, v]) => (
+              <span key={l} className="flex flex-col"><b className="num text-[17px]">{v}</b><span className="text-[11px] text-mute">{l}</span></span>
+            ))}
+          </span>
+          <span className="text-[13px] text-ink-2 leading-snug">{brief.tip}</span>
+        </Link>
+      ) : null}
       {partners.length && !(tr.workouts || tr.cardio) ? (
         <Link href={tr.next ? `/fitness/antrenman?gun=${tr.next.id}` : '/fitness'} className="card px-4 py-3 flex items-center justify-between gap-3 border-l-4 border-acc" data-testid="partner-card" data-done="0">
           <span className="text-[14px] leading-snug">Partnerin <b>@{partners[0]}</b>{partners.length > 1 ? ` ve ${partners.length - 1} kişi daha` : ''} bugün antrenmanını yaptı. Sıra sende!</span>

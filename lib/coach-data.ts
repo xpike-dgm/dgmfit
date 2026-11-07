@@ -444,3 +444,19 @@ export async function pastReports(userId: string) {
   return db.select({ period: schema.aiInsights.period }).from(schema.aiInsights).where(and(eq(schema.aiInsights.userId, userId), eq(schema.aiInsights.kind, 'weekly'))).orderBy(desc(schema.aiInsights.period)).limit(12)
 }
 
+
+/** P-7 haftalık akıllı özet (Bugün kartı, pazartesi–salı): geçen haftanın 4 temel sayısı + tek cümlelik öneri. AI çağırmaz. */
+export async function lastWeekBrief(userId: string, today = dayString()) {
+  const wd = new Date(today + 'T12:00:00Z').getUTCDay()
+  if (wd !== 1 && wd !== 2) return null
+  const mon = addDays(today, -(wd - 1) - 7), sun = addDays(mon, 6)
+  const [days, series] = await Promise.all([gatherDays(userId, mon, sun), weightSeries(userId, addDays(mon, -21), sun)])
+  if (!days.some((d) => d.items > 0 || d.workouts > 0 || d.waterMl > 0)) return null
+  const s = weekStats(days, series.filter((x) => x.raw !== null).map((x) => ({ day: x.day, kg: x.raw! })))
+  const tip = s.loggedDays < 4 ? 'Bu hafta en az 5 gün kayıt hedefle; plan ancak böyle doğru ayarlanır.'
+    : s.weekendDiff !== null && s.weekendDiff > 300 ? `Hafta sonu ortalaman hafta içinden ${Math.round(s.weekendDiff)} kcal fazla; cumartesi için önceden plan yap.`
+    : s.proteinPct !== null && s.proteinPct < 80 ? 'Protein hedefinin altında kaldın; her öğüne bir protein kaynağı ekle.'
+    : s.workouts === 0 ? 'Geçen hafta antrenman yoktu; bu hafta kısa da olsa 2 antrenman planla.'
+    : 'İyi gidiyorsun; aynı ritmi koru.'
+  return { weekStart: mon, loggedDays: s.loggedDays, adherencePct: s.adherencePct, weightChange: s.weightChange, workouts: s.workouts, tip }
+}
