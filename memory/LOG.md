@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Yemek verisi: hazır 100 g değerleri doğrudan kabul, CSV toplu giriş
+- Kullanıcı: elde başka yapay zekâların topladığı 17 binden fazla 100 g değeri var, "veriler sağlam yerden geliyor, direkt (yaklaşık işareti olmadan) kabul et" (DECISIONS).
+- `urunler` kaynak isteğe bağlı; yalnız fiziksel olarak imkânsız satırlar ayrılır; geçersiz barkod → barkodsuz eklenir; CSV (`csvToImport`, `parseCsv`); `--hatalilari-atla`; tam rapor `<dosya>.rapor.txt`; kaynak metni besin ayrıntısında, marka aramada.
+- Deneme: 17 200 satırlık sahte CSV → 16 490 ürün 1,4 sn'de eklendi, seed 24 587 satır derlendi; deneme geri alındı (veri dosyaları değişmedi).
+- Doğrulama: commit `5aa4d02`; verify.sh VERIFY OK (277 birim); release `2026-11-07T19-31-43-529Z` RELEASE OK; canlıda 23 e2e OK; 27 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Düzeltme: etiket makro toplamı + koç önerisi mesajı
 - Kullanıcı ekran görüntüsü: gainer etiketi (100 g: 404 kcal, protein 19, karbonhidrat 81,2, yağ 0,4) "100 g başına protein + karbonhidrat + yağ 100 g'ı geçemez" ile reddedildi. Toplam 100,6 g; etiketler yuvarlanır ve ±%10 analiz payı içerir → sınır 100,5 → 105 g (`MACRO_SUM_MAX`), kalori–makro uyumu aynen; test eklendi.
 - verify.sh'de custom10 iki kez aynı adımda düştü: son öneri reddedilince liste boşalıp bileşen kayboluyor, onay mesajı da gidiyordu (gerçek arayüz hatası) → liste boşken de mesaj görünür.
