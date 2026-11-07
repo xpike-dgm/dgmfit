@@ -171,7 +171,7 @@ function fake(port, handler) {
 
   // 8) Karb döngüsü: Pzt/Çar/Cum → Bugün karbonhidrat hedefi değişir
   await p.goto(BASE + '/')
-  const carbGoal = async () => num((await p.locator('section[aria-label="Kalori"]').getByText(/^Karbonhidrat$/).first().locator('xpath=ancestor::a[1]').innerText()).split('/')[1])
+  const carbGoal = async () => num((await p.locator('[data-card="today.macros"]').getByText(/^Karbonhidrat$/).first().locator('xpath=ancestor::a[1]').innerText()).split('/')[1])
   const c0 = await carbGoal()
   await p.goto(BASE + '/fit/karb')
   const cc = p.getByTestId('carb-cycle')

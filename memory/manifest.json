@@ -273,7 +273,11 @@
     "lib/food-import.ts",
     "scripts/food-import.mjs",
     "docs/yemek-verisi/SABLON.json",
-    "docs/yemek-verisi/TALIMAT.md"
+    "docs/yemek-verisi/TALIMAT.md",
+    "lib/cards/registry.ts",
+    "lib/cards/layout.ts",
+    "lib/cards/design-data.ts",
+    "components/cards/CardBoard.tsx"
   ],
   "tables": [
     "users",
@@ -339,7 +343,8 @@
     "feedback",
     "invites",
     "exercise_favorites",
-    "barcode_misses"
+    "barcode_misses",
+    "ui_designs"
   ],
   "routes": [
     "/",
@@ -464,7 +469,8 @@
     "/yonetim/barkodlar",
     "/profil/vucut",
     "/api/today/state",
-    "/profil/basarilar"
+    "/profil/basarilar",
+    "/profil/ozellestirme"
   ],
   "events": [
     "profile.onboarded",
@@ -482,7 +488,9 @@
     "goal.choice",
     "bodyfat.updated",
     "meal.usual",
-    "reminder.meal"
+    "reminder.meal",
+    "design.saved",
+    "design.reset"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -933,6 +941,24 @@
       "validateImport",
       "slug",
       "kcalRange"
+    ],
+    "lib/cards/layout.ts": [
+      "resolveScreen",
+      "migrateDesign",
+      "moveItem",
+      "removeItem",
+      "addItem",
+      "setSize",
+      "normalizeScreen",
+      "defaultItems"
+    ],
+    "lib/cards/registry.ts": [
+      "CARDS",
+      "CARD_MIGRATIONS",
+      "REGISTRY_VERSION",
+      "SCREENS",
+      "cardDef",
+      "cardsFor"
     ]
   },
   "dependencies": {
@@ -973,6 +999,7 @@
     "0020_ui_mode.sql",
     "0021_barcode_misses.sql",
     "0022_goal_intelligence.sql",
-    "0023_meal_reminders.sql"
+    "0023_meal_reminders.sql",
+    "0024_ui_designs.sql"
   ]
 }

@@ -593,6 +593,18 @@ export const aiCache = pgTable('ai_cache', {
 // ───────────── AI koç (Faz 4b) ─────────────
 
 /** Koç tercihleri: kişilik, günlük içgörü, haftalık rapor bildirimi. */
+// ───────── Özelleştirme (Ö1): kullanıcının tasarımları (düzen + ileride renkler). Kişisel veri içermez. ─────────
+export const uiDesigns = pgTable('ui_designs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull().default('Benim düzenim'),
+  /** lib/cards/layout.ts Design */
+  data: jsonb('data').$type<Record<string, unknown>>().notNull(),
+  active: boolean('active').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('ui_designs_user_idx').on(t.userId, t.active)])
+
 export const coachPrefs = pgTable('coach_prefs', {
   userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
   persona: text('persona').notNull().default('supportive'), // supportive | strict | science

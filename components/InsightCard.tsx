@@ -7,7 +7,8 @@ import { dismissInsightAction } from '@/app/(app)/koc/actions'
 type Insight = { id: string; key: string; tone: 'good' | 'warn' | 'info' | 'care'; title: string; body: string; ask: string | null; provider: string | null }
 
 /** Bugün ekranındaki tek koç kartı: günün içgörüsü (günde en fazla 1) ya da güvenlik destek kartı. */
-export default function InsightCard({ fallback, weeklyReady, compact = false }: { fallback: string; weeklyReady: boolean; compact?: boolean }) {
+/** `supportOnly`: koç kartı düzenden kaldırıldıysa yalnızca güvenlik destek kartı (tone=care) gösterilir. */
+export default function InsightCard({ fallback, weeklyReady, compact = false, supportOnly = false }: { fallback: string; weeklyReady: boolean; compact?: boolean; supportOnly?: boolean }) {
   const clamp = compact ? ' line-clamp-3' : ''
   const [ins, setIns] = useState<Insight | null | undefined>(undefined)
   const [hidden, setHidden] = useState(false)
@@ -17,6 +18,7 @@ export default function InsightCard({ fallback, weeklyReady, compact = false }: 
     return () => { live = false }
   }, [])
   const care = ins?.tone === 'care'
+  if (supportOnly && !care) return null
   return (
     <section aria-label="Koç" data-testid="coach-card" className={`rounded-[24px] px-4 py-4 flex flex-col gap-3 border border-l-4 ${care ? "bg-surface border-water/40 border-l-water" : "bg-coach border-coach-line border-l-acc"}`}>
       <div className="flex items-center gap-2">

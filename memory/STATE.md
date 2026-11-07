@@ -279,7 +279,19 @@ Yerel ortam notu: `service postgresql start`; sunucu yeniden başlatma betiği s
 | A9 | P-6 yemek verisi içe aktarma aracı | tamamlandı | biçim `dgfit-yemek/1` (`docs/yemek-verisi/SABLON.json` + `TALIMAT.md`): besinler USDA eşlemesi, yemekler tarif (hesap), ürünler etiket (fiziksel tutarlılık + barkod sağlama); `scripts/food-import.mjs` rapor/`--uygula`, tekrar ayıklama, kategori uç değer uyarısı; `data/tr-products.json` → seed `dgfit-label`; 7 birim test; aynı release |
 | A10 | P-7 özellikler | tamamlandı | her zamanki öğün (tek dokunuş), fotoğraf/ölçü karşılaştırma v2 (fark özeti + kaydırarak), başarılar ve seriler (`/profil/basarilar`) + rozet paylaşımı, tarif linkinden içe aktarma (JSON-LD, SSRF korumalı), akıllı öğün hatırlatmaları (0023), haftalık akıllı özet (Bugün pzt–salı), fotoğraftan porsiyon (ölçek ipuçlu istem + Az/Tahmin/Çok), program sihirbazı v2 (öncelikli bölgeler); `p7.e2e.cjs`; aynı release |
 
-### ÖZELLEŞTİRME — planlandı, onay bekliyor (2026-11-07; başlamak için kullanıcının açık "başla" onayı gerekir)
+### ÖZELLEŞTİRME — BAŞLADI (2026-11-07, kullanıcı: "sonradan daha gelişmiş özellikler ekleyebileceğimiz tarzda kodla … başlayabilirsin")
+Prototip: https://claude.ai/artifact/52veknFiyM1NkcYrAokuuM (8 ekran, onaylandı).
+| Aşama | Kapsam | Durum | Kanıt |
+| --- | --- | --- | --- |
+| Ö1a | Kart kaydı (`lib/cards/registry.ts`, sürüm + göç eşlemesi), düzen modeli (`lib/cards/layout.ts`: çözümle/göç/taşı/kaldır/ekle/boyut/normalize), `ui_designs` (0024), Bugün kartlara bölündü, `CardBoard` (basılı tut-sürükle, −, ✎ boyut + yukarı/aşağı, çekmece: dokun ya da sürükle, geri al, Vazgeç/Bitti, varsayılana dön), `/profil/ozellestirme` stüdyo, Profil girişi, gizli kartın verisi hesaplanmaz, koç kartı kaldırılsa da güvenlik kartı | devam ediyor | kabul: birim (cards.test.ts) + `custom.e2e.cjs` + verify.sh + canlı |
+| Ö1b | Fit/Su/Yemek/Fitness ekranları kart kaydına, alt bar düzeni, kart yığını, kendi panom, hızlı eylem, kaydırma hareketleri, eğer–ise kuralları, tek el, zamana/antrenman gününe göre düzen, hedefe göre varsayılan, düzen sihirbazı, boş alana basılı tutunca "Düzenle" | sırada | |
+| Ö2 | Renk ve stil (✎ kart rengi, modül renkleri, paletler, fotoğraftan palet, köşe/yoğunluk/yazı tipi, bant arka planı, erişilebilirlik, birimler, simgeler, ses/haptik, renk sıcaklığı) | sırada | |
+| Ö3 | Kayıt ve paylaşım (tasarımlarım/sürümler, eşitleme, sosyal paylaşım, şablon kütüphanesi + önizleme + kategori/arama + beğeni/sayaç + kısmi kullanım + remix + haftanın şablonu + yarışmalar + tasarımcı profili + grup teması + link/QR, moderasyon; yönetim varsayılan düzen + duyuru kartı) | sırada | |
+| Ö4 | Koç önerisi, deney raporu, kullanım haritası, uyumluluk testleri | sırada | |
+| Ö5 | Kart oluşturucu, kendi takip alanı, motivasyon kartları, odak modları, Ramazan modu | sırada | |
+Genişletilebilirlik ilkesi: yeni kart = kayıt tanımı + ekranda çizici; kart değişimi = REGISTRY_VERSION + CARD_MIGRATIONS (test eksik eşlemeyi yakalar); Design.cards[id] kart ayarları için ayrılmış (Ö2 renkler, görünüm türü, içerik seçenekleri); ui_designs çoklu tasarım/sürüm/şablon için hazır.
+
+### ÖZELLEŞTİRME — plan ayrıntısı (2026-11-07)
 Kullanıcının istediği çekirdek (birebir):
 - **Özelleştirme modu** (kart tabanlı ana sayfalar: Bugün, Fit, Su, Yemek, Fitness): kartlar titrer; her kartın sağ üstünde **✎ düzenle** ve hemen sağında **− kaldır**.
 - **Yer değiştirme:** kartı basılı tutup sürükleyerek başka kartın yerine koyma (ör. Bugün'de Fit ↔ Su).

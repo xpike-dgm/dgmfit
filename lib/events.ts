@@ -13,6 +13,8 @@ export type EventType =
   | 'meal.logged'
   | 'meal.usual'
   | 'reminder.meal'
+  | 'design.saved'
+  | 'design.reset'
   | 'workout.finished'
   | 'pr.achieved'
   | 'water.logged'

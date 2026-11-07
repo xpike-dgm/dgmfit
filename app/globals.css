@@ -138,3 +138,10 @@ input[type="checkbox"]:not(.sr-only):disabled { opacity: .45; cursor: not-allowe
 /* P-5: küçük simge ve satır içi bağlantılarda dokunma alanı ≥ 44 px (görünüm değişmeden, görünmez genişletme) */
 .hit { position: relative; }
 .hit::after { content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+
+/* Özelleştirme (Ö1): düzenleme modu */
+html[data-editing] nav[aria-label="Ana menü"] { display: none; }
+html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; transition: opacity .15s; }
+@keyframes cardWiggle { 0%, 100% { transform: rotate(-0.35deg); } 50% { transform: rotate(0.35deg); } }
+.card-wiggle { animation: cardWiggle .5s ease-in-out infinite; transform-origin: 50% 60%; }
+@media (prefers-reduced-motion: reduce) { .card-wiggle { animation: none; } }

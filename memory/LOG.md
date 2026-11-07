@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö1a başladı
+- Kullanıcı prototipi onayladı ve genişletilebilir kodlama istedi. Faz başı: memory-check geçti; son commit `5e3c364` STATE ile uyumlu.
+- Mimari: kart kaydı (sabit kimlik + sürüm + göç eşlemesi) ↔ kullanıcının tasarımı (yalnızca kimlik, boyut, ileride ayarlar) ↔ ekran çizicileri; tasarım kişisel veri içermez (şablon olarak paylaşılabilir).
+
 ## 2026-11-07 — Otonom A8+A9+A10: görsel kalanlar, yemek verisi içe aktarma, özellikler
 - A8 (P-5): büyük yazı ayarı (yakınlaştırma kapalı olduğu için; zoom 1,1/1,2), onay kutuları tek tip, açık temada bant kontrastı hesaplanarak ≥4,5:1 (koyulaştırılmış degrade + siyah tonlu kutular), 320 px taraması (yeni tarayıcı betiği '…' kesilmelerini ve <40 px dokunma alanlarını da sayar) → bant alt başlıkları, yönetim kutuları, davet kodları, makro etiketi, küçük bağlantı/simgeler (`.hit`), 32 px düğmeler.
 - A9 (P-6): kullanıcının başka AI ile topladığı yemek verisi için biçim + talimat + doğrulayıcı/içe aktarıcı. İlke korunur: değerler elle yazılmaz (USDA eşlemesi / tariften hesap / etiket + tutarlılık denetimi).
