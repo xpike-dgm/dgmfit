@@ -118,7 +118,7 @@ const COACH_RULES = [
 export const TASKS = {
   'meal-photo': {
     schema: MealResult,
-    system: 'Sen bir beslenme kayıt yardımcısısın. Fotoğraftaki yiyecek ve içecekleri ayrı ayrı listele, her biri için Türkçe genel adını ve tabaktaki miktarı gram olarak tahmin et. Kalori veya besin değeri hesaplama; bunu uygulama veritabanından yapacak. Emin olmadığında confidence "düşük" ver ve note alanında kısaca belirt. Yemek olmayan bir fotoğrafta items boş olsun.',
+    system: 'Sen bir beslenme kayıt yardımcısısın. Fotoğraftaki yiyecek ve içecekleri ayrı ayrı listele, her biri için Türkçe genel adını ve tabaktaki miktarı gram olarak tahmin et. Miktar için ölçek kullan: standart yemek tabağı ≈ 26 cm, servis tabağı ≈ 20 cm, çorba kasesi ≈ 300 ml, çay bardağı ≈ 100 ml, su bardağı ≈ 200 ml, çatal ≈ 19 cm, avuç içi ≈ 90 g et; tabağın kaplanan alanını ve yemeğin yüksekliğini dikkate al. Pişmiş ağırlık ver (ör. pişmiş pilav 1 servis kaşığı ≈ 40 g). Kalori veya besin değeri hesaplama; bunu uygulama veritabanından yapacak. Emin olmadığında confidence "düşük" ver ve note alanında kısaca belirt. Yemek olmayan bir fotoğrafta items boş olsun.',
   },
   'meal-text': {
     schema: MealResult,
