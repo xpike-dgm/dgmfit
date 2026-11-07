@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö3a + Ö3b tamamlandı (tek yayın)
+- Ö3a Tasarımlarım + sürümler (0025, `designs-data`, `share`), Ö3b şablon kütüphanesi + paylaşım (0026, `templates`, `templates-data`, 'design' gönderisi, bildirimler).
+- Süreç hatası yakalandı: Ö3a için arka planda verify→commit→release zinciri çalışırken Ö3b dosyaları yazılıyordu; zincir `git add -A` ile yarım Ö3b'yi alıp yayınlayacaktı → zincir commit'ten önce durduruldu (hiçbir şey yayınlanmadı), Ö3b tamamlanıp ikisi birlikte test edildi. Kural DECISIONS'a yazıldı.
+- Hatalar: tasarım listesinde tarih biçimi sunucu (UTC) / tarayıcı (İstanbul) farkı → hidrasyon #418 → `timeZone` sabit; e2e silme kontrolü yenilemeden önce koşuyordu → `detached` bekleme.
+- Doğrulama: commit `57cd63f`; verify.sh VERIFY OK (256 birim); release `2026-11-07T07-34-49-412Z` RELEASE OK; canlıda 19 e2e OK; test kullanıcıları silindi; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö2b tamamlandı
 - Stil (kabuk öznitelikleri + katmansız CSS), bant fotoğrafı (`band` medya türü), birimler (ana özetler + tartı), titreşim/ses, akşam katmanı.
 - Süreç: release.sh 16 canlı e2e ile 10 dakikayı aşıyor; arka plan komutu varsayılan 10 dk sınırında durduruldu (deploy tamamdı, 12 test geçmişti) → kalan testler canlıya doğrudan çalıştırıldı (6/6 OK). Bundan sonra release 30 dk sınırla çalıştırılır.
