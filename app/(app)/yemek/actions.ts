@@ -10,7 +10,7 @@ import { isValidBarcode, macrosFor, per100Problem } from '@/lib/food'
 import { computeRecipe, normalizeSearch, NUTRIENT_KEYS, type Nutrients } from '@/lib/nutrition'
 import { ensureWaterSetup } from '@/lib/water-data'
 import { refreshClosedDay } from '@/lib/fit-data'
-import { resolveBarcodeMiss } from '@/lib/food-data'
+import { resolveBarcodeMiss, usualMeals } from '@/lib/food-data'
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string }
 const Meal = z.enum(['breakfast', 'lunch', 'dinner', 'snack'])
@@ -147,6 +147,29 @@ export async function saveMealAsTemplate(day: string, meal: string, name: string
   await db.insert(schema.savedMeals).values({ userId, name: pn.data, items: list })
   revalidatePath('/yemek/ekle')
   return { ok: true }
+}
+
+const usualBusy = new Set<string>()
+/** P-7 hızlı kayıt: "her zamanki" öğünü tek dokunuşla ekler (öğün boşsa; sunucu alışkanlığı yeniden hesaplar). */
+export async function addUsualMeal(meal: string, day?: string): Promise<R<{ count: number; kcal: number }>> {
+  const userId = await uid()
+  const pm = Meal.safeParse(meal)
+  if (!pm.success) return { ok: false, error: 'Geçersiz öğün' }
+  let d: string
+  try { d = checkDay(day) } catch (e) { return { ok: false, error: (e as Error).message } }
+  const lock = `${userId}:${d}:${pm.data}`
+  if (usualBusy.has(lock)) return { ok: false, error: 'Ekleniyor…' }
+  usualBusy.add(lock)
+  try {
+    const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.mealItems).where(and(eq(schema.mealItems.userId, userId), eq(schema.mealItems.day, d), eq(schema.mealItems.meal, pm.data), isNull(schema.mealItems.deletedAt)))
+    if (Number(n) > 0) return { ok: false, error: 'Bu öğüne zaten kayıt var' }
+    const u = (await usualMeals(userId, d))[pm.data]
+    if (!u) return { ok: false, error: 'Bu öğün için henüz alışkanlık yok' }
+    let count = 0, kcal = 0
+    for (const it of u.items) { const r = await addMealItem({ foodId: it.foodId, grams: it.grams, meal: pm.data, day: d, source: 'recent' }); if (r.ok) { count++; kcal += r.kcal } }
+    await publish(userId, 'meal.usual', { meal: pm.data, day: d, count })
+    return { ok: true, count, kcal }
+  } finally { usualBusy.delete(lock) }
 }
 
 export async function addSavedMeal(savedId: string, meal: string, day?: string): Promise<R<{ count: number }>> {

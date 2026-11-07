@@ -8,7 +8,7 @@ import { Back, Dots, Next, Plus, Spark, Trash } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import { MEALS, MEAL_LABEL, type MealId } from '@/lib/food'
 import { NUTRIENT_INFO, type NutrientKey } from '@/lib/nutrition'
-import { addQuickCalories, copyMeal, deleteMealItem, saveMealAsTemplate, updateMealItem } from './actions'
+import { addQuickCalories, addUsualMeal, copyMeal, deleteMealItem, saveMealAsTemplate, updateMealItem } from './actions'
 import DayCardSheet from './DayCardSheet'
 import InfoTip from '@/components/InfoTip'
 
@@ -29,6 +29,8 @@ export default function FoodDiary(p: {
   hasSupplements?: boolean
   /** Gelişmiş mod (sadeleştirme 2026-11-06) */
   adv?: boolean
+  /** P-7 hızlı kayıt: öğün alışkanlıkları ("her zamanki kahvaltın") */
+  usual?: Partial<Record<MealId, { names: string[]; kcal: number }>>
 }) {
   const router = useRouter()
   const [pending, start] = useTransition()
@@ -129,6 +131,17 @@ export default function FoodDiary(p: {
               <Link href={`/yemek/ekle?ogun=${m.id}&${q}`} aria-label={`${m.label} öğününe ekle`} className="w-10 h-10 rounded-full border border-line-2 flex items-center justify-center"><Plus size={16} /></Link>
             </div>
           </div>
+          {!m.items.length && p.usual?.[m.id] ? (
+            <button type="button" disabled={pending} data-testid="usual-meal" data-meal={m.id}
+              onClick={() => run(() => addUsualMeal(m.id, p.day), `Her zamanki ${m.label.toLocaleLowerCase('tr-TR')} eklendi`)}
+              className="flex items-center justify-between gap-3 py-2.5 border-t border-surface-2 text-left">
+              <span className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold">Her zamanki {m.label.toLocaleLowerCase('tr-TR')}</span>
+                <span className="text-xs text-mute line-clamp-2">{p.usual[m.id]!.names.join(', ')} · {fmtNum(p.usual[m.id]!.kcal)} kcal</span>
+              </span>
+              <span className="shrink-0 h-9 px-3 rounded-full bg-acc text-acc-ink text-[13px] font-bold inline-flex items-center gap-1"><Plus size={14} /> Ekle</span>
+            </button>
+          ) : null}
           {m.items.map((it) => (
             <button key={it.id} type="button" onClick={() => setEdit(it)} className="flex items-center justify-between gap-3 py-2.5 border-t border-surface-2 text-left">
               <span className="flex flex-col min-w-0">

@@ -5,9 +5,12 @@ import { btn, Eyebrow } from '@/components/ui'
 import { Trash } from '@/components/icons'
 import { addMeasurementAction, deleteMeasurementAction, deleteMediaAction } from '../actions'
 import { shrinkImage } from '@/lib/client-image'
+import { fmtNum } from '@/lib/calc'
+import { compareDays, type Snap } from '@/lib/progress-compare'
 
 const FIELDS = [['waistCm', 'Bel'], ['chestCm', 'Göğüs'], ['hipsCm', 'Kalça'], ['armCm', 'Kol'], ['thighCm', 'Uyluk'], ['calfCm', 'Baldır'], ['neckCm', 'Boyun'], ['bodyFatPct', 'Yağ']] as const
 type Key = (typeof FIELDS)[number][0]
+const LABEL: Record<string, string> = Object.fromEntries(FIELDS)
 const num = (s: string) => (s.trim() ? Number(s.replace(',', '.')) : null)
 const short = (d: string) => new Intl.DateTimeFormat('tr-TR', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d + 'T12:00:00Z'))
 
@@ -59,7 +62,9 @@ export async function uploadPhoto(file: File, fields: Record<string, string>): P
   return r.ok ? { id: j.id } : { error: j.error ?? 'Yükleme başarısız' }
 }
 
-export function Photos({ enabled, today, photos }: { enabled: boolean; today: string; photos: { id: string; day: string; pose: string | null }[] }) {
+export function Photos({ enabled, today, photos, measures = [], weights = [] }: { enabled: boolean; today: string; photos: { id: string; day: string; pose: string | null }[]; measures?: Snap[]; weights?: { day: string; kg: number }[] }) {
+  const [split, setSplit] = useState(50)
+  const [mode, setMode] = useState<'side' | 'slide'>('side')
   const [pose, setPose] = useState('ön')
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null)
   const [sel, setSel] = useState<string[]>([])
@@ -90,11 +95,39 @@ export function Photos({ enabled, today, photos }: { enabled: boolean; today: st
         </div>
       )}
       {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-acc' : 'text-danger'}`}>{msg.t}</p> : null}
-      {cmp.length === 2 ? (
-        <div className="grid grid-cols-2 gap-2" data-testid="compare">
-          {cmp.map((p) => <figure key={p.id} className="flex flex-col gap-1"><img src={`/api/media/${p.id}`} alt={`${short(p.day)} ${p.pose ?? ''}`} className="w-full aspect-[3/4] object-cover rounded-xl bg-surface-2" /><figcaption className="text-[12px] text-mute text-center">{short(p.day)}{p.pose ? ` · ${p.pose}` : ''}</figcaption></figure>)}
-        </div>
-      ) : photos.length >= 2 ? <p className="text-[12px] text-mute">Yan yana kıyaslamak için iki fotoğraf seç.</p> : null}
+      {cmp.length === 2 ? (() => {
+        const c = compareDays(cmp[0].day, cmp[1].day, measures, weights)
+        const sign = (v: number) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmtNum(Math.abs(v), 1)
+        return (
+          <div className="flex flex-col gap-2" data-testid="compare">
+            <div className="flex gap-1.5" role="group" aria-label="Karşılaştırma görünümü">
+              {(['side', 'slide'] as const).map((m) => <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={`h-9 px-3 rounded-full text-[13px] font-bold border ${mode === m ? 'bg-acc text-acc-ink border-acc' : 'bg-surface-2 text-ink-2 border-line'}`}>{m === 'side' ? 'Yan yana' : 'Kaydırarak'}</button>)}
+            </div>
+            {mode === 'side' ? (
+              <div className="grid grid-cols-2 gap-2">
+                {cmp.map((p) => <figure key={p.id} className="flex flex-col gap-1"><img src={`/api/media/${p.id}`} alt={`${short(p.day)} ${p.pose ?? ''}`} className="w-full aspect-[3/4] object-cover rounded-xl bg-surface-2" /><figcaption className="text-[12px] text-mute text-center">{short(p.day)}{p.pose ? ` · ${p.pose}` : ''}</figcaption></figure>)}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-surface-2 select-none" data-testid="compare-slide">
+                  <img src={`/api/media/${cmp[1].id}`} alt={`${short(cmp[1].day)} (sonra)`} className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={`/api/media/${cmp[0].id}`} alt={`${short(cmp[0].day)} (önce)`} className="absolute inset-0 w-full h-full object-cover" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }} />
+                  <span aria-hidden className="absolute top-0 bottom-0 w-0.5 bg-white/90 shadow" style={{ left: `${split}%` }} />
+                  <span className="absolute left-2 top-2 text-[11px] font-bold px-2 py-0.5 rounded-full bg-black/60 text-white">{short(cmp[0].day)}</span>
+                  <span className="absolute right-2 top-2 text-[11px] font-bold px-2 py-0.5 rounded-full bg-black/60 text-white">{short(cmp[1].day)}</span>
+                </div>
+                <label className="flex items-center gap-3 text-[12px] text-mute"><span className="sr-only">Önce / sonra oranı</span>
+                  <input type="range" min={0} max={100} value={split} onChange={(e) => setSplit(Number(e.target.value))} className="flex-1 h-11" aria-label="Önce / sonra kaydırıcısı" />
+                </label>
+              </div>
+            )}
+            <p className="text-[13px] text-ink-2 leading-relaxed" data-testid="compare-summary">
+              {c.days} gün arayla{c.weight !== null ? ` · kilo ${sign(c.weight)} kg` : ''}{c.deltas.length ? ` · ${c.deltas.map((d) => `${LABEL[d.key] ?? d.key} ${sign(d.delta)}${d.key === 'bodyFatPct' ? ' puan' : ' cm'}`).join(' · ')}` : ''}
+              {c.weight === null && !c.deltas.length ? ' · bu tarihlerin yakınında (±7 gün) tartı ya da ölçü yok' : ''}
+            </p>
+          </div>
+        )
+      })() : photos.length >= 2 ? <p className="text-[12px] text-mute">Yan yana kıyaslamak için iki fotoğraf seç.</p> : null}
       <ul className="grid grid-cols-3 gap-2">
         {photos.map((p) => (
           <li key={p.id} className="relative">

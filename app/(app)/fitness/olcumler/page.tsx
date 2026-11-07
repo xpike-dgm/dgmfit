@@ -1,4 +1,6 @@
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { requireUser } from '@/lib/auth'
+import { db, schema } from '@/lib/db'
 import { listMeasurements, MEASURES, MEASURE_LABEL } from '@/lib/fitness-stats'
 import { listProgressPhotos, mediaEnabled } from '@/lib/media'
 import { dayString, shortDate } from '@/lib/time'
@@ -10,7 +12,8 @@ export const metadata = { title: 'Ölçüler ve fotoğraflar · DgFit' }
 
 export default async function MeasurePage() {
   const u = await requireUser()
-  const [rows, photos] = await Promise.all([listMeasurements(u.id), listProgressPhotos(u.id)])
+  const [rows, photos, wl] = await Promise.all([listMeasurements(u.id), listProgressPhotos(u.id),
+    db.select({ at: schema.weightLogs.loggedAt, kg: schema.weightLogs.kg }).from(schema.weightLogs).where(and(eq(schema.weightLogs.userId, u.id), isNull(schema.weightLogs.deletedAt))).orderBy(desc(schema.weightLogs.loggedAt)).limit(400)])
   const first = rows.at(-1), last = rows[0]
   const used = MEASURES.filter((k) => rows.some((r) => r[k] !== null))
   return (
@@ -48,7 +51,8 @@ export default async function MeasurePage() {
           <span className="text-[11px] text-mute">cm; yağ oranı %.</span>
         </section>
       ) : null}
-      <Photos enabled={mediaEnabled()} today={dayString()} photos={photos.map((p) => ({ id: p.id, day: p.day, pose: p.pose }))} />
+      <Photos enabled={mediaEnabled()} today={dayString()} photos={photos.map((p) => ({ id: p.id, day: p.day, pose: p.pose }))}
+        measures={rows.map((r) => ({ day: r.day, values: Object.fromEntries(MEASURES.map((k) => [k, r[k]])) }))} weights={wl.map((w) => ({ day: dayString(w.at), kg: w.kg }))} />
     </div>
   )
 }

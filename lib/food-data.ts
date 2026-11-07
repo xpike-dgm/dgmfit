@@ -3,6 +3,7 @@ import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { normalizeSearch, searchStems } from './nutrition'
 import { mapOffProduct, sumMacros, type MealId, type Macros, MEALS } from './food'
+import { usualMeal, type UsualMeal } from './habits'
 
 export interface FoodHit {
   id: number
@@ -206,4 +207,21 @@ async function offLookup(code: string): Promise<{ hit: FoodHit | null; from: 'of
   } catch {
     return { hit: null, from: 'none', error: 'Open Food Facts\'e ulaşılamadı. Ürünü elle ekleyebilirsin.' }
   }
+}
+
+/** P-7 hızlı kayıt: son 21 gündeki kayıtlardan öğün alışkanlıkları ("her zamanki kahvaltın"). Yalnızca besin bazlı kalemler. */
+export async function usualMeals(userId: string, before: string): Promise<Partial<Record<MealId, UsualMeal>>> {
+  const rows = await db.execute<{ day: string; meal: MealId; food_id: number; name: string; grams: number; kcal: number }>(sql`
+    select mi.day::text as day, mi.meal, mi.food_id, mi.name, mi.grams::float as grams, mi.kcal::float as kcal
+    from meal_items mi join foods f on f.id = mi.food_id and f.deleted_at is null
+    where mi.user_id = ${userId} and mi.deleted_at is null and mi.food_id is not null and mi.meal <> 'supplement'
+      and mi.day >= (${before}::date - 21) and mi.day < ${before}::date`)
+  const out: Partial<Record<MealId, UsualMeal>> = {}
+  for (const m of MEALS) {
+    const byDay = new Map<string, { foodId: number; name: string; grams: number; kcal: number }[]>()
+    for (const r of rows) if (r.meal === m.id) { const l = byDay.get(r.day) ?? []; l.push({ foodId: Number(r.food_id), name: r.name, grams: Number(r.grams), kcal: Number(r.kcal) }); byDay.set(r.day, l) }
+    const u = usualMeal([...byDay.values()])
+    if (u) out[m.id] = u
+  }
+  return out
 }

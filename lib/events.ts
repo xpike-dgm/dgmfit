@@ -11,6 +11,7 @@ export type EventType =
   | 'profile.updated'
   | 'weight.logged'
   | 'meal.logged'
+  | 'meal.usual'
   | 'workout.finished'
   | 'pr.achieved'
   | 'water.logged'
