@@ -4,7 +4,7 @@
 import type { ModuleId } from '../theme.ts'
 
 /** Özelleştirilebilir ekranlar. Yeni ekran eklemek için buraya ve SCREENS'e ekle. */
-export type ScreenId = 'today'
+export type ScreenId = 'today' | 'fit' | 'water' | 'food' | 'fitness'
 export type CardSize = 'half' | 'full'
 
 export interface CardDef {
@@ -20,6 +20,8 @@ export interface CardDef {
   size: CardSize
   /** varsayılan düzende var mı (yoksa yalnızca çekmecede) */
   default: boolean
+  /** yalnızca Gelişmiş modun varsayılan düzeninde; Sade modda çekmecede bekler */
+  advanced?: boolean
   /**
    * kilit: 'top' = ekranın en üstünde sabit, taşınmaz/kaldırılamaz; 'keep' = taşınabilir ama kaldırılamaz
    * (güvenlik ve hedef seçimi gibi kullanıcının kaçırmaması gereken kartlar)
@@ -37,6 +39,10 @@ export const REGISTRY_VERSION = 1
 
 export const SCREENS: Record<ScreenId, { title: string; path: string }> = {
   today: { title: 'Bugün', path: '/' },
+  fit: { title: 'Fit', path: '/fit' },
+  water: { title: 'Su', path: '/su' },
+  food: { title: 'Yemek', path: '/yemek' },
+  fitness: { title: 'Fitness', path: '/fitness' },
 }
 
 const COLORS = ['bg', 'title', 'text', 'accent']
@@ -53,6 +59,47 @@ export const CARDS: CardDef[] = [
   { id: 'today.training', screen: 'today', module: 'fitness', title: 'Antrenman', desc: 'Sıradaki antrenman ya da bugün yapılan', sizes: ['half', 'full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
   { id: 'today.coach', screen: 'today', module: 'coach', title: 'Koç', desc: 'Günün içgörüsü ve koça soru', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
   { id: 'today.streaks', screen: 'today', module: 'today', title: 'Seriler', desc: 'Yemek kaydı, su ve antrenman serilerin', sizes: ['half', 'full'], size: 'full', default: false, since: 1, colorSlots: COLORS },
+  // Fit
+  { id: 'fit.header', screen: 'fit', module: 'plan', title: 'Plan bandı', desc: 'Trend kilo halkası, hedef, tahmini varış', sizes: ['full'], size: 'full', default: true, locked: 'top', since: 1, colorSlots: COLORS },
+  { id: 'fit.goal', screen: 'fit', module: 'plan', title: 'Kilo grafiği', desc: 'Trend, plan ve tahmin çizgisi', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fit.quality', screen: 'fit', module: 'plan', title: 'Kayıp/kazanım kalitesi', desc: 'Yağ mı kas mı: bel ve kuvvet değişimi', sizes: ['full'], size: 'full', default: true, conditional: 'Yeterli ölçü olunca görünür', since: 1, colorSlots: COLORS },
+  { id: 'fit.trend', screen: 'fit', module: 'plan', title: 'Trend kilo', desc: 'Trend ve son tartı', sizes: ['half', 'full'], size: 'half', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fit.change', screen: 'fit', module: 'plan', title: 'Değişim', desc: 'Başlangıçtan bu yana', sizes: ['half', 'full'], size: 'half', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fit.tdee', screen: 'fit', module: 'plan', title: 'Ölçülen harcama', desc: 'Kayıt ve tartıdan hesaplanan günlük harcama', sizes: ['half', 'full'], size: 'half', default: true, advanced: true, since: 1, colorSlots: COLORS },
+  { id: 'fit.plan-kcal', screen: 'fit', module: 'plan', title: 'Plan kalorisi', desc: 'Planın günlük kalorisi ve tahmini harcama', sizes: ['half', 'full'], size: 'half', default: true, advanced: true, since: 1, colorSlots: COLORS },
+  { id: 'fit.today', screen: 'fit', module: 'plan', title: 'Bugün', desc: 'Bugünkü hedef ve gün kapatma', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fit.balance', screen: 'fit', module: 'plan', title: 'Akıllı dengeleme', desc: 'Son günlerin farkı ve dağıtımı', sizes: ['full'], size: 'full', default: true, advanced: true, conditional: 'Kapanmış gün olunca görünür', since: 1, colorSlots: COLORS },
+  { id: 'fit.milestone', screen: 'fit', module: 'social', title: 'Kilometre taşı paylaş', desc: 'En az 1 kg değişimde paylaşım kısayolu', sizes: ['full'], size: 'full', default: true, conditional: 'En az 1 kg değişimde görünür', since: 1, colorSlots: COLORS },
+  { id: 'fit.tools', screen: 'fit', module: 'plan', title: 'Plan araçları', desc: '7 gün, kalori bankası, check-in, senaryo, karb döngüsü', sizes: ['full'], size: 'full', default: true, advanced: true, since: 1, colorSlots: COLORS },
+  { id: 'fit.weigh', screen: 'fit', module: 'plan', title: 'Tartı', desc: 'Kilo girişi', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  // Fitness
+  { id: 'fitness.header', screen: 'fitness', module: 'fitness', title: 'Fitness bandı', desc: 'Haftalık antrenman halkası, hacim, süre, kardiyo', sizes: ['full'], size: 'full', default: true, locked: 'top', since: 1, colorSlots: COLORS },
+  { id: 'fitness.recovery', screen: 'fitness', module: 'fitness', title: 'Toparlanma', desc: 'Yorgunluk yüksekse hafif gün önerisi', sizes: ['full'], size: 'full', default: true, conditional: 'Toparlanma düşükse görünür', since: 1, colorSlots: COLORS },
+  { id: 'fitness.next', screen: 'fitness', module: 'fitness', title: 'Sıradaki antrenman', desc: 'Programın sıradaki günü ve başlat', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fitness.tools', screen: 'fitness', module: 'fitness', title: 'Fitness araçları', desc: 'Kas haritası, serbest antrenman, kardiyo, hareketler…', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fitness.week', screen: 'fitness', module: 'fitness', title: 'Bu hafta', desc: 'Haftanın antrenman günleri', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fitness.prs', screen: 'fitness', module: 'fitness', title: 'Son rekorlar', desc: 'Son kişisel rekorların', sizes: ['full'], size: 'full', default: true, conditional: 'Rekor olunca görünür', since: 1, colorSlots: COLORS },
+  { id: 'fitness.recent', screen: 'fitness', module: 'fitness', title: 'Son antrenmanlar', desc: 'Son antrenman ve kardiyo kayıtların', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'fitness.programs', screen: 'fitness', module: 'fitness', title: 'Programlarım', desc: 'Programlar sayfasına kısayol (Sade mod)', sizes: ['half', 'full'], size: 'full', default: true, conditional: 'Gelişmiş modda araçlar kartında', since: 1, colorSlots: COLORS },
+  // Su
+  { id: 'water.header', screen: 'water', module: 'water', title: 'Su bandı', desc: 'Bugünkü su, hedef, kalan ve ideal tempo', sizes: ['full'], size: 'full', default: true, locked: 'top', since: 1, colorSlots: COLORS },
+  { id: 'water.prediction', screen: 'water', module: 'water', title: 'Tahmin', desc: 'Bu tempoyla gün sonunda nereye varırsın', sizes: ['full'], size: 'full', default: true, conditional: 'Kayıt olunca görünür', since: 1, colorSlots: COLORS },
+  { id: 'water.drinks', screen: 'water', module: 'water', title: 'İçecek türü', desc: 'Su, çay, kahve, maden suyu…', sizes: ['full'], size: 'full', default: true, since: 1 },
+  { id: 'water.buttons', screen: 'water', module: 'water', title: 'Hızlı ekle', desc: 'Miktar düğmeleri ve sık kullandıkların', sizes: ['full'], size: 'full', default: true, since: 1 },
+  { id: 'water.tools', screen: 'water', module: 'water', title: 'Söyle · Yudum · Özel', desc: 'Sesle, yudumla ya da özel miktarla ekleme', sizes: ['full'], size: 'full', default: true, since: 1 },
+  { id: 'water.containers', screen: 'water', module: 'water', title: 'Kapların', desc: 'Bardak, şişe, termos', sizes: ['full'], size: 'full', default: true, since: 1 },
+  { id: 'water.hourly', screen: 'water', module: 'water', title: 'Saatlik dağılım', desc: 'Gün içinde ne zaman içtin', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'water.logs', screen: 'water', module: 'water', title: 'Kayıtlar', desc: 'Bugünkü kayıtlar, düzenleme ve birleştirme', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'water.links', screen: 'water', module: 'water', title: 'İstatistik kısayolları', desc: 'İstatistikler ve önceki günler', sizes: ['full'], size: 'full', default: true, since: 1 },
+  { id: 'food.header', screen: 'food', module: 'food', title: 'Yemek bandı', desc: 'Kalan kalori halkası ve makro hapları', sizes: ['full'], size: 'full', default: true, locked: 'top', since: 1, colorSlots: COLORS },
+  { id: 'food.summary', screen: 'food', module: 'food', title: 'Günlük özet', desc: 'Gün değiştirme, kalori bütçesi ve makro çubukları', sizes: ['full'], size: 'full', default: true, locked: 'keep', since: 1, colorSlots: COLORS },
+  { id: 'food.add', screen: 'food', module: 'food', title: 'Ekle', desc: 'Besin ekle, barkod, hızlı kalori', sizes: ['full'], size: 'full', default: true, since: 1 },
+  { id: 'food.ai', screen: 'food', module: 'food', title: 'AI planlama', desc: 'AI menü, elimdekiler, restoran modu', sizes: ['full'], size: 'full', default: true, advanced: true, conditional: 'Bugünün günlüğünde görünür', since: 1 },
+  { id: 'food.meals', screen: 'food', module: 'food', title: 'Öğünler', desc: 'Kahvaltı, öğle, akşam ve ara öğün kayıtları', sizes: ['full'], size: 'full', default: true, locked: 'keep', since: 1, colorSlots: COLORS },
+  { id: 'food.detail', screen: 'food', module: 'food', title: 'Besin hedefleri', desc: 'Protein dağılımı, lif, mikro besin hedefleri', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
+  { id: 'food.supplements', screen: 'food', module: 'food', title: 'Takviyeler', desc: 'Kendi takviyelerini işaretle', sizes: ['full'], size: 'full', default: true, conditional: 'Takviye tanımlayınca görünür', since: 1 },
+  { id: 'food.micro', screen: 'food', module: 'food', title: 'Besin detayları', desc: 'Lif, şeker, sodyum, vitamin ve mineraller', sizes: ['full'], size: 'full', default: true, conditional: 'Mikro besin bilgisi olan kayıt eklenince görünür', since: 1 },
+  { id: 'food.tip', screen: 'food', module: 'food', title: 'Koç notu', desc: 'Günün durumuna göre kısa öneri', sizes: ['full'], size: 'full', default: true, since: 1, colorSlots: COLORS },
 ]
 
 /**

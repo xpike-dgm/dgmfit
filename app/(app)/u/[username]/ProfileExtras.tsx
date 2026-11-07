@@ -37,7 +37,8 @@ export function FriendTools({ userId, username, partner }: { userId: string; use
 export function PendingPRs({ prs, self, canWitness }: { prs: PR[]; self: boolean; canWitness: boolean }) {
   const [msg, setMsg] = useState<string | null>(null)
   const router = useRouter()
-  if (!prs.length) return null
+  // son tanıklık rekoru doğrulayınca liste boşalır; onay mesajı görünsün diye kart mesajla kalır
+  if (!prs.length && !msg) return null
   const proof = async (id: number, f: File) => {
     const fd = new FormData(); fd.set('file', await shrinkImage(f, 1280, 0.82), 'kanit.jpg'); fd.set('kind', 'social')
     const r = await fetch('/api/media', { method: 'POST', body: fd }); const j = await r.json().catch(() => ({}))

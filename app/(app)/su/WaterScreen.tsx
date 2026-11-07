@@ -1,4 +1,5 @@
 'use client'
+import CardBoard from '@/components/cards/CardBoard'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
@@ -23,7 +24,8 @@ const SOURCE_LABEL: Record<string, string> = {
 function isoAt(day: string, hm: string) { return new Date(`${day}T${hm}:00+03:00`).toISOString() }
 function hmFromMin(min: number) { const h = Math.floor(min / 60) % 24, m = min % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` }
 
-export default function WaterScreen({ data }: { data: Data }) {
+type Layout = { items: { id: string; size: 'half' | 'full' }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[] }
+export default function WaterScreen({ data, layout, editing }: { data: Data; layout: Layout; editing?: boolean }) {
   const router = useRouter()
   const [logs, setLogs] = useState<WaterLogView[]>(data.logs)
   const [drink, setDrink] = useState<DrinkId>('water')
@@ -101,6 +103,8 @@ export default function WaterScreen({ data }: { data: Data }) {
 
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="water-state" data-goal={data.goal} data-total={total}>
+      <CardBoard screen="water" editing={!!editing} items={layout.items} drawer={layout.drawer} notices={layout.notices} nodes={{
+        'water.header': (
       <Band
         title={data.isToday ? 'Su' : dayLabel(data.day)}
         sub={<>{data.bonus > 0 ? <span data-testid="water-bonus">Antrenman nedeniyle +{fmtNum(data.bonus)} ml · </span> : null}{data.isToday ? (!logs.length ? 'Günün ilk suyunu ekle' : ahead >= 0 ? `Tempondasın · ${fmtNum(ahead)} ml öndesin` : `İdeale ${fmtNum(-ahead)} ml kaldı`) : 'Geçmiş gün'} · seri {data.streak.current} gün</>}
@@ -115,17 +119,9 @@ export default function WaterScreen({ data }: { data: Data }) {
           {!data.isToday ? <Link href={next >= todayStr() ? '/su' : `/su?gun=${next}`} aria-label="Sonraki gün" className="h-9 px-2 inline-flex items-center gap-1 rounded-full opacity-90">Sonraki gün<Next size={16} /></Link> : <span className="w-[86px]" />}
         </div>
       </Band>
-
-      {data.prediction && logs.length ? <PredictionCard p={data.prediction} goal={data.goal} total={total} /> : null}
-
-      {!data.isToday ? (
-        <div className="card px-4 py-3 flex items-center gap-3">
-          <Clock size={18} className="text-mute" />
-          <label htmlFor="past-time" className="text-sm font-bold flex-1">Bu güne eklenecek saat</label>
-          <input id="past-time" type="time" value={pastTime} onChange={(e) => setPastTime(e.target.value)} className="h-11 rounded-xl bg-surface-2 border border-line px-3 num text-ink" />
-        </div>
-      ) : null}
-
+        ),
+        'water.prediction': data.prediction && logs.length ? <PredictionCard p={data.prediction} goal={data.goal} total={total} /> : null,
+        'water.drinks': (
       <section aria-label="İçecek türü" className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4">
         {(Object.keys(DRINKS) as DrinkId[]).map((d) => (
           <button key={d} type="button" aria-pressed={drink === d} onClick={() => setDrink(d)}
@@ -134,7 +130,16 @@ export default function WaterScreen({ data }: { data: Data }) {
           </button>
         ))}
       </section>
-
+        ),
+        'water.buttons': (
+          <div className="flex flex-col gap-2">
+      {!data.isToday ? (
+        <div className="card px-4 py-3 flex items-center gap-3">
+          <Clock size={18} className="text-mute" />
+          <label htmlFor="past-time" className="text-sm font-bold flex-1">Bu güne eklenecek saat</label>
+          <input id="past-time" type="time" value={pastTime} onChange={(e) => setPastTime(e.target.value)} className="h-11 rounded-xl bg-surface-2 border border-line px-3 num text-ink" />
+        </div>
+      ) : null}
       <section aria-label="Hızlı ekle" className="grid grid-cols-3 gap-2">
         {data.buttons.map((ml) => {
           const freq = data.frequent.includes(ml)
@@ -154,7 +159,9 @@ export default function WaterScreen({ data }: { data: Data }) {
           ))}
         </div>
       ) : null}
-
+          </div>
+        ),
+        'water.tools': (
       <div className="grid grid-cols-3 gap-2">
         <button type="button" onClick={() => setSheet('voice')} className="h-[52px] rounded-[18px] bg-water-bg border border-water-line font-bold text-sm flex items-center justify-center gap-2">
           <Mic size={18} className="text-water" /> Söyle
@@ -166,7 +173,8 @@ export default function WaterScreen({ data }: { data: Data }) {
           <Clock size={18} className="text-water" /> Özel
         </button>
       </div>
-
+        ),
+        'water.containers': (
       <section aria-label="Kapların" className="flex flex-col gap-2">
         <div className="flex justify-between items-baseline px-1">
           <h2 className="font-extrabold">Kapların</h2>
@@ -185,7 +193,8 @@ export default function WaterScreen({ data }: { data: Data }) {
           })}
         </div>
       </section>
-
+        ),
+        'water.hourly': (
       <section aria-label="Saatlik dağılım" className="card p-4 flex flex-col gap-2.5">
         <div className="flex justify-between items-baseline">
           <h2 className="font-extrabold text-[15px]">Saatlik dağılım</h2>
@@ -196,7 +205,8 @@ export default function WaterScreen({ data }: { data: Data }) {
           <p className="text-[13px] text-ink-2">En uzun ara bugün: <b className="num">{fmtHm(data.gap.from)}–{fmtHm(data.gap.to)}</b> ({Math.floor(data.gap.minutes / 60)} sa {data.gap.minutes % 60} dk)</p>
         ) : null}
       </section>
-
+        ),
+        'water.logs': (
       <section aria-label="Zaman çizelgesi" className="card px-4 py-3 flex flex-col">
         <div className="flex justify-between items-center min-h-11">
           <h2 className="font-extrabold text-[15px]">Kayıtlar <span className="text-mute font-semibold num">({logs.length})</span></h2>
@@ -232,11 +242,14 @@ export default function WaterScreen({ data }: { data: Data }) {
           ))}
         </ul>
       </section>
-
+        ),
+        'water.links': (
       <div className="grid grid-cols-2 gap-2">
         <Link href="/su/istatistik" className="card h-14 flex items-center justify-center gap-2 font-bold text-sm"><Chart size={18} className="text-water" /> İstatistikler</Link>
         <Link href={`/su?gun=${prev}`} className="card h-14 flex items-center justify-center gap-2 font-bold text-sm"><Clock size={18} className="text-water" /> Önceki günler</Link>
       </div>
+        ),
+      }} />
 
       {/* Alt sayfalar */}
       <Sheet open={sheet === 'voice'} onClose={() => setSheet(null)} title="Söyle veya yaz">

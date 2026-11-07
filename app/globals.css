@@ -141,6 +141,8 @@ input[type="checkbox"]:not(.sr-only):disabled { opacity: .45; cursor: not-allowe
 
 /* Özelleştirme (Ö1): düzenleme modu */
 html[data-editing] nav[aria-label="Ana menü"] { display: none; }
+/* düzenlemede bant alttaki karta taşmaz (kart başlık şeritleri bandın üstüne binmesin) */
+html[data-editing] [data-edit-card] .band { margin-bottom: 0; padding-bottom: 1rem; }
 html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; transition: opacity .15s; }
 @keyframes cardWiggle { 0%, 100% { transform: rotate(-0.35deg); } 50% { transform: rotate(0.35deg); } }
 .card-wiggle { animation: cardWiggle .5s ease-in-out infinite; transform-origin: 50% 60%; }

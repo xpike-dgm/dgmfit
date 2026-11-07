@@ -14,16 +14,17 @@ import { isAdvanced } from '@/lib/ui-mode'
 import NutritionDetail from '@/components/NutritionDetail'
 import { macroPlan, microTargets, proteinPerMeal } from '@/lib/body-comp'
 import type { GoalType, Sex } from '@/lib/calc'
+import { screenLayout } from '@/lib/cards/design-data'
 
 export const metadata: Metadata = { title: 'Yemek' }
 
-export default async function Page(props: { searchParams: Promise<{ gun?: string }> }) {
+export default async function Page(props: { searchParams: Promise<{ gun?: string; duzenle?: string }> }) {
   const u = await requireUser()
-  const { gun } = await props.searchParams
+  const { gun, duzenle } = await props.searchParams
   const today = dayString()
   const day = gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) && gun <= today && gun >= addDays(today, -365) ? gun : today
   const prevDay = addDays(day, -1)
-  const [diary, t, prev, supp, adv, usual] = await Promise.all([
+  const [diary, t, prev, supp, adv, usual, l] = await Promise.all([
     getDiary(u.id, day),
     getToday(u.id, day),
     db.select({ meal: schema.mealItems.meal, n: sql<number>`count(*)::int` }).from(schema.mealItems)
@@ -31,6 +32,7 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
     listSupplements(u.id, day),
     isAdvanced(u.id),
     usualMeals(u.id, day),
+    screenLayout(u.id, 'food'),
   ])
   const kcal = t?.target.kcal ?? 2000
   const mp = t ? macroPlan({ goal: (t.goal?.type ?? 'recomp') as GoalType, sex: t.profile.sex as Sex, age: t.age, weightKg: t.weight.trend || t.profile.weightKg, heightCm: t.profile.heightCm, bfPct: t.profile.bodyFatPct ?? null, kcal }) : null
@@ -43,6 +45,7 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
       target={{ kcal: t?.target.kcal ?? 2000, protein: t?.target.protein ?? 120, carb: t?.target.carb ?? 200, fat: t?.target.fat ?? 65 }}
       adjust={t ? { base: t.target.base, kcal: t.target.adjustment, closed: t.target.closed } : null} burned={t?.burned ?? 0} trained={(t?.burned ?? 0) > 0} suggested={day === today ? mealForTime(minuteOfDay(new Date())) : 'lunch'} yesterdayHas={yesterdayHas}
       supplements={<SupplementCard day={day} {...supp} />} detail={detail} hasSupplements={supp.items.length > 0} adv={adv}
+      layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices }} editing={duzenle === '1'}
       usual={Object.fromEntries(Object.entries(usual).map(([k, v]) => [k, { names: v!.items.map((x) => x.name), kcal: v!.kcal }]))}
     />
   )

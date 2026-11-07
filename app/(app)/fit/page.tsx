@@ -10,6 +10,9 @@ import { Calendar, Pulse, Scale, Spark, Trend } from '@/components/icons'
 import { DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
 import InfoTip from '@/components/InfoTip'
 import { isAdvanced } from '@/lib/ui-mode'
+import { screenLayout } from '@/lib/cards/design-data'
+import CardBoard from '@/components/cards/CardBoard'
+import type { ReactNode } from 'react'
 
 export const metadata = { title: 'Plan · DgFit' }
 
@@ -19,12 +22,13 @@ const KIND: Record<string, string> = {
 const WD = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt']
 const wd = (d: string) => WD[new Date(d + 'T12:00:00Z').getUTCDay()]
 
-export default async function FitPage() {
+export default async function FitPage(props: { searchParams: Promise<{ duzenle?: string }> }) {
   const user = await requireUser()
   const s = await getFitScreen(user.id)
   if (!s) redirect('/kurulum')
   const { goal, today, checkin } = s
-  const [cc, adv] = await Promise.all([carbCycleFor(user.id), isAdvanced(user.id)])
+  const [cc, adv, layout, sp] = await Promise.all([carbCycleFor(user.id), isAdvanced(user.id), screenLayout(user.id, 'fit'), props.searchParams])
+  const editing = sp.duzenle === '1'
   const type = goal.type as GoalType
   const totalDays = diffDays(goal.startDate, goal.endDate) + 1
   const dayIndex = Math.min(totalDays, diffDays(goal.startDate, today) + 1)
@@ -39,13 +43,14 @@ export default async function FitPage() {
             : <>Tahmin için en az 5 günlük tartı gerekiyor. Her sabah aynı koşulda tartılmak trendi netleştirir.</>
   const exceptionable = s.closures.find((c) => c.kind === 'over' && c.remaining < 0 && type === 'lose')
 
-  return (
-    <div className="flex flex-col gap-3 px-4">
+  const nodes: Record<string, ReactNode> = {
+    'fit.header': <div className="flex flex-col gap-3">
       <Band title="Plan" sub={`${GOALS[type]?.label ?? 'Hedef'} · Gün ${dayIndex} / ${totalDays}`}
         ring={{ value: progress, big: fmtNum(trendNow, 1), small: 'trend kg', label: `Hedefin yüzde ${Math.round(progress * 100)}'i` }}
         pills={[['Hedef', type === 'recomp' ? 'Koru' : `${fmtNum(goal.targetWeightKg, 1)} kg`], [checkin?.forecast.day ? 'Tahmini varış' : 'Hedef tarih', shortDate(checkin?.forecast.day ?? goal.endDate)], ['Bugün', `${fmtNum(s.targets[0].kcal)} kcal`]]} />
       <FitFlash />
-
+    </div>,
+    'fit.goal': (
       <section aria-label="Hedef" className="card p-5 flex flex-col gap-3">
         {adv ? <div className="flex justify-between items-start gap-3">
           <div className="flex flex-col gap-0.5">
@@ -80,21 +85,19 @@ export default async function FitPage() {
         </p>
         </> : null}
       </section>
-      {s.quality ? (
+    ),
+    'fit.quality': s.quality ? (
         <section aria-label="Kazanım kalitesi" className="card p-4 flex flex-col gap-2" data-testid="quality-card" data-verdict={s.quality.verdict}>
           <div className="flex items-center justify-between"><Eyebrow>{type === 'lose' ? 'Kayıp kalitesi' : 'Kazanım kalitesi'}</Eyebrow><Link href="/profil/vucut" className="hit text-[12px] text-acc font-bold">Yağ oranı</Link></div>
           <p className="text-[14px] leading-snug">{s.quality.text}</p>
           {s.quality.waistDeltaCm === null ? <Link href="/fitness/olcumler" className="text-[12.5px] text-mute">2 haftada bir bel ölçünü girersen yağ mı kas mı ayırt ederiz ›</Link> : null}
         </section>
-      ) : null}
-
-      <div className="grid grid-cols-2 gap-3">
-        <Stat label="Trend kilo" value={`${fmtNum(trendNow, 1)} kg`} sub={lastWeigh ? `Son tartı ${fmtNum(lastWeigh.raw!, 1)} kg` : 'Tartı yok'} />
-        <Stat label="Değişim" value={`${change > 0 ? '+' : change < 0 ? '−' : ''}${fmtNum(Math.abs(change), 1)} kg`} sub={`Başlangıç ${fmtNum(goal.startWeightKg, 1)} kg`} />
-        {adv ? <><Stat label="Ölçülen harcama" value={checkin?.tdee.tdee ? `${fmtNum(checkin.tdee.tdee)}` : '—'} sub={checkin?.tdee.tdee ? `kcal · güven ${checkin.tdee.confidence}` : `Veri toplanıyor · ${checkin?.tdee.loggedDays ?? 0}/10 tam gün`} />
-        <Stat label="Plan kalorisi" value={fmtNum(goal.dailyKcal)} sub={`kcal · tahmini harcama ${fmtNum(goal.tdee)}`} /></> : null}
-      </div>
-
+      ) : null,
+    'fit.trend': <Stat label="Trend kilo" value={`${fmtNum(trendNow, 1)} kg`} sub={lastWeigh ? `Son tartı ${fmtNum(lastWeigh.raw!, 1)} kg` : 'Tartı yok'} />,
+    'fit.change': <Stat label="Değişim" value={`${change > 0 ? '+' : change < 0 ? '−' : ''}${fmtNum(Math.abs(change), 1)} kg`} sub={`Başlangıç ${fmtNum(goal.startWeightKg, 1)} kg`} />,
+    'fit.tdee': <Stat label="Ölçülen harcama" value={checkin?.tdee.tdee ? `${fmtNum(checkin.tdee.tdee)}` : '—'} sub={checkin?.tdee.tdee ? `kcal · güven ${checkin.tdee.confidence}` : `Veri toplanıyor · ${checkin?.tdee.loggedDays ?? 0}/10 tam gün`} />,
+    'fit.plan-kcal': <Stat label="Plan kalorisi" value={fmtNum(goal.dailyKcal)} sub={`kcal · tahmini harcama ${fmtNum(goal.tdee)}`} />,
+    'fit.today': (
       <section aria-label="Bugün" className="card p-5 flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <span className="flex items-center gap-2"><Eyebrow>Bugün</Eyebrow><InfoTip label="Gün kapatma">Günü kapatınca hedefle arasındaki fark sonraki günlere dağıtılır. Kapatmazsan gün gece 03.00'te kendiliğinden kapanır; kapandıktan sonra öğün değiştirirsen hesap yenilenir.</InfoTip></span>
@@ -110,8 +113,8 @@ export default async function FitPage() {
         <DayClose day={today} closed={s.todayState.closed} items={s.todayState.items}
           result={s.todayState.closure ? { kind: s.todayState.closure.closureKind ?? '', diff: s.todayState.closure.diffKcal ?? 0 } : null} />
       </section>
-
-      {last && adv ? (
+    ),
+    'fit.balance': last ? (
         <section aria-label="Dengeleme" className="card p-5 flex flex-col gap-3" data-testid="balance-card">
           <div className="flex items-center gap-2"><Pulse size={18} className="text-acc" /><Eyebrow>Akıllı dengeleme</Eyebrow></div>
           <p className="text-[15px] leading-relaxed text-ink-2">{closureText(last)}</p>
@@ -135,14 +138,9 @@ export default async function FitPage() {
             ))}
           </ol>
         </section>
-      ) : null}
-
-
-
-
-      {Math.abs(change) >= 1 ? <Link href="/sosyal/yeni?tur=milestone" className="card px-5 py-4 flex items-center justify-between" data-testid="share-milestone"><span className="text-[14px]">Kilometre taşını paylaş <span className="text-mute">(yalnızca değişim, kilo görünmez)</span></span><span className="text-acc font-bold">Paylaş</span></Link> : null}
-
-      {adv ? <nav aria-label="Plan araçları" className="grid grid-cols-2 gap-2">
+    ) : null,
+    'fit.milestone': Math.abs(change) >= 1 ?  <Link href="/sosyal/yeni?tur=milestone" className="card px-5 py-4 flex items-center justify-between" data-testid="share-milestone"><span className="text-[14px]">Kilometre taşını paylaş <span className="text-mute">(yalnızca değişim, kilo görünmez)</span></span><span className="text-acc font-bold">Paylaş</span></Link>  : null,
+    'fit.tools':  <nav aria-label="Plan araçları" className="grid grid-cols-2 gap-2">
         {([
           ['/fit/gunler', 'Önümüzdeki 7 gün', `Bugün ${fmtNum(s.targets[0].kcal)} kcal`, Calendar],
           ['/fit/banka', 'Kalori bankası', s.banks.length ? `${s.banks.length} aktif` : 'Özel gün için biriktir', Spark],
@@ -155,13 +153,20 @@ export default async function FitPage() {
             <span className="flex flex-col min-w-0"><b className="text-[14px] leading-tight">{label}</b><span className="text-[12px] text-mute truncate">{sub}</span></span>
           </Link>
         ))}
-      </nav> : null}
-
+      </nav> ,
+    'fit.weigh': (
       <section aria-label="Tartı" className="card p-5 flex flex-col gap-3">
         <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow><InfoTip label="Tartı ipucu">Sabah, tuvaletten sonra ve kahvaltıdan önce tartılmak en tutarlı sonucu verir.</InfoTip></div>
         <WeighIn last={lastWeigh?.raw ?? goal.startWeightKg} />
         <Link href="/profil/hedef" className="text-[13px] text-mute underline underline-offset-4">Hedef ve plan</Link>
       </section>
+    ),
+  }
+
+  return (
+    <div className="flex flex-col gap-3 px-4">
+      <CardBoard screen="fit" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} />
     </div>
   )
 }

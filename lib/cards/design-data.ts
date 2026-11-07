@@ -4,7 +4,8 @@ import 'server-only'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '../db'
 import { publish } from '../events'
-import { REGISTRY_VERSION, type ScreenId } from './registry'
+import { isAdvanced } from '../ui-mode'
+import { REGISTRY_VERSION, SCREENS, type ScreenId } from './registry'
 import { emptyDesign, normalizeScreen, resolveScreen, type Design, type LayoutItem } from './layout'
 
 export async function activeDesign(userId: string): Promise<Design | null> {
@@ -15,7 +16,14 @@ export async function activeDesign(userId: string): Promise<Design | null> {
 
 /** Ekranın çözülmüş düzeni (göç + doğrulama). Tasarımı olmayan kullanıcı varsayılanı alır. */
 export async function screenLayout(userId: string, screen: ScreenId) {
-  return resolveScreen(await activeDesign(userId), screen)
+  const [d, advanced] = await Promise.all([activeDesign(userId), isAdvanced(userId)])
+  return resolveScreen(d, screen, { advanced })
+}
+
+/** Tüm ekranların çözülmüş düzeni (stüdyo listesi için tek sorgu). */
+export async function allScreenLayouts(userId: string) {
+  const [d, advanced] = await Promise.all([activeDesign(userId), isAdvanced(userId)])
+  return Object.fromEntries((Object.keys(SCREENS) as ScreenId[]).map((s) => [s, resolveScreen(d, s, { advanced })])) as Record<ScreenId, ReturnType<typeof resolveScreen>>
 }
 
 async function writeDesign(userId: string, d: Design) {
@@ -28,7 +36,7 @@ async function writeDesign(userId: string, d: Design) {
 /** Ekran düzenini kaydeder (sunucuda yeniden doğrulanır: bilinmeyen kart, tekrar, kilitli kart). */
 export async function saveScreen(userId: string, screen: ScreenId, items: LayoutItem[]) {
   const cur = (await activeDesign(userId)) ?? emptyDesign()
-  const next: Design = { ...cur, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items) } }
+  const next: Design = { ...cur, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced: await isAdvanced(userId) }) } }
   await writeDesign(userId, next)
   await publish(userId, 'design.saved', { screen, cards: next.screens[screen]!.items.length })
 }

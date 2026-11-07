@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
-import { screenLayout } from '@/lib/cards/design-data'
-import { SCREENS } from '@/lib/cards/registry'
+import { allScreenLayouts } from '@/lib/cards/design-data'
+import { SCREENS, type ScreenId } from '@/lib/cards/registry'
 import { TopBar } from '@/components/ui'
 import ResetButton from './ResetButton'
 
@@ -18,7 +18,8 @@ const SOON: [string, string][] = [
 /** Özelleştirme stüdyosu (Ö1): mevcut düzenin önizlemesi + ekran düzenleme. Diğer bölümler sonraki aşamalarda. */
 export default async function Page() {
   const u = await requireUser()
-  const today = await screenLayout(u.id, 'today')
+  const all = await allScreenLayouts(u.id)
+  const today = all.today
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="studio">
       <TopBar back="/profil" title="Özelleştirme" sub="Kartları taşı, kaldır, ekle" />
@@ -30,7 +31,7 @@ export default async function Page() {
         </div>
         <div className="flex flex-col gap-2.5 flex-1 min-w-0">
           <span className="text-[12px] font-bold text-mute tracking-[0.06em] uppercase">Kullandığın düzen</span>
-          <b className="text-[16px]">{today.customized ? 'Benim düzenim' : 'Varsayılan düzen'}</b>
+          <b className="text-[16px]">{Object.values(all).some((x) => x.customized) ? 'Benim düzenim' : 'Varsayılan düzen'}</b>
           <span className="text-[12.5px] text-mute">{today.items.length} kart · {today.drawer.length} kart çekmecede</span>
           <Link href="/?duzenle=1" className="h-11 rounded-full bg-acc text-acc-ink font-extrabold text-[14px] inline-flex items-center justify-center" data-testid="studio-edit">Düzenlemeye başla</Link>
         </div>
@@ -38,15 +39,15 @@ export default async function Page() {
 
       <section aria-label="Ekranlar" className="card px-4 py-1 flex flex-col">
         {Object.entries(SCREENS).map(([id, s]) => (
-          <div key={id} className="min-h-[60px] flex items-center justify-between gap-3">
-            <span className="flex flex-col"><b className="text-[15px]">{s.title}</b><span className="text-[12.5px] text-mute">{today.customized ? 'Özelleştirildi' : 'Varsayılan'}</span></span>
+          <div key={id} data-studio-screen={id} className="min-h-[60px] flex items-center justify-between gap-3">
+            <span className="flex flex-col"><b className="text-[15px]">{s.title}</b><span className="text-[12.5px] text-mute">{all[id as ScreenId].customized ? 'Özelleştirildi' : 'Varsayılan'} · {all[id as ScreenId].items.length} kart</span></span>
             <span className="flex items-center gap-2">
-              {today.customized ? <ResetButton screen={id} /> : null}
+              {all[id as ScreenId].customized ? <ResetButton screen={id} /> : null}
               <Link href={`${s.path}?duzenle=1`} className="h-10 px-4 rounded-full bg-surface-2 border border-line-2 text-[13px] font-bold inline-flex items-center">Düzenle</Link>
             </span>
           </div>
         ))}
-        <p className="text-[12px] text-mute pb-3 leading-relaxed">Fit, Su, Yemek ve Fitness ekranları da sıradaki güncellemede düzenlenebilir olacak.</p>
+        <p className="text-[12px] text-mute pb-3 leading-relaxed">Kartı basılı tutup sürükleyerek taşı, − ile kaldır, “+ Kart ekle” ile geri getir. Her ekranın düzeni ayrı kaydedilir.</p>
       </section>
 
       <div className="grid grid-cols-2 gap-2.5" aria-label="Yakında">

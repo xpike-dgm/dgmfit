@@ -11,6 +11,7 @@ import { NUTRIENT_INFO, type NutrientKey } from '@/lib/nutrition'
 import { addQuickCalories, addUsualMeal, copyMeal, deleteMealItem, saveMealAsTemplate, updateMealItem } from './actions'
 import DayCardSheet from './DayCardSheet'
 import InfoTip from '@/components/InfoTip'
+import CardBoard from '@/components/cards/CardBoard'
 
 interface Item { id: number; meal: MealId; name: string; grams: number; portionLabel: string | null; portionQty: number | null; kcal: number; protein: number; carb: number; fat: number; source: string }
 interface MealBlock { id: MealId; label: string; share: number; items: Item[]; totals: { kcal: number; protein: number; carb: number; fat: number } }
@@ -31,6 +32,9 @@ export default function FoodDiary(p: {
   adv?: boolean
   /** P-7 hızlı kayıt: öğün alışkanlıkları ("her zamanki kahvaltın") */
   usual?: Partial<Record<MealId, { names: string[]; kcal: number }>>
+  /** Özelleştirme: ekranın kart düzeni (sunucuda çözülür) */
+  layout: { items: { id: string; size: 'half' | 'full' }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[] }
+  editing?: boolean
 }) {
   const router = useRouter()
   const [pending, start] = useTransition()
@@ -72,11 +76,14 @@ export default function FoodDiary(p: {
 
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="diary-state" data-left={left} data-budget={budget}>
+      <CardBoard screen="food" editing={!!p.editing} items={p.layout.items} drawer={p.layout.drawer} notices={p.layout.notices} nodes={{
+        'food.header': (
       <Band title="Yemek" sub={<span className="capitalize">{p.isToday ? `Bugün · ${p.dayLabel}` : p.dayLabel}</span>}
         right={<div className="flex items-center gap-2 shrink-0">{!p.isToday ? <Link href="/yemek" className={hdrBtn}>Bugüne dön</Link> : null}<DayCardSheet day={p.day} /></div>}
         ring={{ value: budget > 0 ? Math.min(1, totals.kcal / budget) : 0, big: fmtNum(Math.abs(left)), small: left >= 0 ? 'kalan kcal' : 'kcal aşım', label: `Bütçenin yüzde ${budget > 0 ? Math.round((totals.kcal / budget) * 100) : 0}'i` }}
         pills={macro.map((m) => [m.name, `${fmtNum(m.v)} / ${fmtNum(m.g)} g`] as [string, string])} />
-
+        ),
+        'food.summary': (
       <section aria-label="Günlük özet" className="card px-2 py-2 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <Link href={`/yemek?gun=${p.prevDay}`} aria-label="Önceki gün" className="w-11 h-11 rounded-full flex items-center justify-center text-mute"><Back size={20} /></Link>
@@ -97,7 +104,9 @@ export default function FoodDiary(p: {
           {macro.map((m) => <Bar key={m.k} value={m.g ? m.v / m.g : 0} color={m.c} height={5} />)}
         </div>
       </section>
-
+        ),
+        'food.add': (
+      <div className="flex flex-col gap-3">
       <div className="grid grid-cols-3 gap-2">
         <Link href={`/yemek/ekle?ogun=${p.suggested}&${q}`} className="h-[72px] rounded-[20px] bg-acc text-acc-ink font-extrabold text-sm flex flex-col items-center justify-center gap-1"><Plus size={20} />Besin ekle</Link>
         <Link href={`/yemek/ekle?ogun=${p.suggested}&${q}&barkod=1`} className="h-[72px] rounded-[20px] bg-surface font-bold text-sm flex flex-col items-center justify-center gap-1">
@@ -107,17 +116,18 @@ export default function FoodDiary(p: {
           <span className="num text-acc font-bold">kcal</span>Hızlı kalori
         </button>
       </div>
-
-      {p.isToday && p.adv ? (
+      {msg ? <p role="status" className="text-sm text-ink-2 px-1">{msg}</p> : null}
+      </div>
+        ),
+        'food.ai': p.isToday ? (
         <nav aria-label="AI planlama" className="grid grid-cols-3 gap-2" data-testid="ai-plan-links">
           <Link href="/yemek/plan" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">AI menü</Link>
           <Link href="/yemek/elimdeki" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">Elimde bunlar var</Link>
           <Link href="/yemek/restoran" className="h-14 rounded-[18px] bg-coach border border-coach-line text-[13px] font-bold flex items-center justify-center text-center px-2">Restoran modu</Link>
         </nav>
-      ) : null}
-
-      {msg ? <p role="status" className="text-sm text-ink-2 px-1">{msg}</p> : null}
-
+      ) : null,
+        'food.meals': (
+      <div className="flex flex-col gap-3">
       {meals.map((m) => (
         <section key={m.id} aria-label={m.label} className="card px-4 py-3 flex flex-col">
           <div className="flex items-center justify-between min-h-11">
@@ -153,11 +163,11 @@ export default function FoodDiary(p: {
           ))}
         </section>
       ))}
-
-      {p.detail ?? null}
-      {p.adv || p.hasSupplements ? p.supplements : null}
-
-      {Object.keys(p.micro).length ? (
+      </div>
+        ),
+        'food.detail': p.detail ?? null,
+        'food.supplements': p.adv || p.hasSupplements || p.editing ? p.supplements : null,
+        'food.micro': Object.keys(p.micro).length ? (
         <details className="card px-4 py-3">
           <summary className="font-extrabold cursor-pointer list-none flex justify-between items-center min-h-11">Besin detayları <span className="text-mute text-sm">›</span></summary>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2 text-sm">
@@ -170,8 +180,8 @@ export default function FoodDiary(p: {
           </dl>
           <p className="text-[11px] text-mute mt-2">Bazı besinlerde (paketli ürünler, hızlı kalori) mikro besin bilgisi olmadığından toplamlar eksik olabilir.</p>
         </details>
-      ) : null}
-
+      ) : null,
+        'food.tip': (
       <section className="rounded-[24px] p-4 flex gap-3 bg-coach border border-coach-line">
         <Spark size={18} className="text-acc shrink-0 mt-0.5" />
         <p className="text-sm leading-relaxed text-ink">
@@ -182,6 +192,8 @@ export default function FoodDiary(p: {
                 : 'Makroların dengeli gidiyor. Akşam öğününü kalan bütçeye göre planlayabilirsin.')}
         </p>
       </section>
+        ),
+      }} />
 
       <Sheet open={!!edit} onClose={() => setEdit(null)} title={edit?.name ?? ''}>
         {edit ? <EditItem item={edit} onSave={(v) => { setEdit(null); run(() => updateMealItem({ id: edit.id, ...v }), 'Kayıt güncellendi', { type: 'upd', id: edit.id, grams: v.grams, meal: v.meal }) }} onDelete={() => { setEdit(null); run(() => deleteMealItem(edit.id), 'Kayıt silindi', { type: 'del', id: edit.id }) }} /> : null}

@@ -73,3 +73,29 @@ test('güncelleme uyumluluğu: değiştirilen, bölünen ve kaldırılan kartlar
     assert.deepEqual(m.notices, ['Partner kartı kaldırıldı'])
   } finally { CARD_MIGRATIONS.splice(0, CARD_MIGRATIONS.length, ...saved) }
 })
+
+test('her ekran: tek sabit başlık, boş olmayan varsayılan; her kayıtlı kartın bir çizicisi var', async () => {
+  const { readFileSync } = await import('node:fs')
+  const src = ['app/(app)/page.tsx', 'app/(app)/fit/page.tsx', 'app/(app)/fitness/page.tsx', 'app/(app)/su/WaterScreen.tsx', 'app/(app)/yemek/FoodDiary.tsx']
+    .map((f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n')
+  for (const s of Object.keys(SCREENS) as (keyof typeof SCREENS)[]) {
+    const tops = CARDS.filter((c) => c.screen === s && c.locked === 'top')
+    assert.equal(tops.length, 1, 'ekranın tek sabit başlığı olmalı: ' + s)
+    for (const adv of [false, true]) {
+      const r = resolveScreen(null, s, { advanced: adv })
+      assert.equal(r.items[0].id, tops[0].id, s)
+      assert.ok(r.items.length >= 3, s)
+    }
+  }
+  for (const c of CARDS) assert.ok(src.includes(`'${c.id}'`), 'kayıtlı kartın çizicisi yok: ' + c.id)
+})
+
+test('Gelişmiş kartlar: Sade modda çekmecede bekler, Gelişmiş modda varsayılandadır', () => {
+  const sade = resolveScreen(null, 'fit', { advanced: false }), adv = resolveScreen(null, 'fit', { advanced: true })
+  assert.ok(!ids(sade).includes('fit.tdee') && ids(adv).includes('fit.tdee'))
+  assert.equal(sade.drawer.find((d) => d.def.id === 'fit.tdee')?.reason, 'available')
+  // Sade kullanıcı gelişmiş kartı ekleyip kaydederse korunur; "kaldırılan" listesine gelişmiş kartlar girmez
+  const n = normalizeScreen('fit', [...defaultItems('fit'), { id: 'fit.tdee' }], { advanced: false })
+  assert.ok(n.items.some((i) => i.id === 'fit.tdee'))
+  assert.ok(!(n.removed ?? []).includes('fit.balance'))
+})

@@ -217,13 +217,14 @@ function Editor(p: Props) {
               role="group" aria-label={def.title} data-edit-card={it.id} data-index={idx}
               onPointerDown={(e) => startHold(e, it.id)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
               className={`relative min-w-0 rounded-[24px] touch-pan-y ${it.size === 'full' ? 'col-span-2' : ''} ${flash === it.id ? 'ring-2 ring-acc ring-offset-2 ring-offset-bg' : ''}`}>
-              <div className={`h-full rounded-[24px] ${dragging ? 'opacity-0' : def.locked === 'top' ? '' : 'card-wiggle'}`} style={{ animationDelay: `${(idx % 3) * 90}ms` }}>
-                <div className="pointer-events-none h-full flex flex-col [&>*]:flex-1" aria-hidden>
-                  {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-2.5 flex flex-col justify-center min-h-[56px]" data-testid="card-placeholder"><b className="text-[13.5px] leading-tight">{def.title}</b><span className="text-[11.5px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
+              <div className={`h-full rounded-[24px] flex flex-col ${dragging ? 'opacity-0' : def.locked === 'top' ? '' : 'card-wiggle'}`} style={{ animationDelay: `${(idx % 3) * 90}ms` }}>
+                {def.locked !== 'top' ? <div className="h-9 flex items-center gap-2 pl-1.5 pr-[76px] min-w-0" aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b></div> : null}
+                <div className="pointer-events-none flex-1 flex flex-col [&>*]:flex-1" aria-hidden>
+                  {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-2.5 flex items-center min-h-[52px]" data-testid="card-placeholder"><span className="text-[12.5px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
                 </div>
               </div>
               {dragging ? <div className="absolute inset-0 rounded-[24px] border-2 border-dashed border-acc bg-acc/5" aria-hidden /> : null}
-              <div className="absolute -top-2.5 -right-1.5 flex gap-1.5 z-10">
+              <div className={`absolute flex gap-1.5 z-10 ${def.locked === 'top' ? '-top-2.5 -right-1.5' : 'top-0.5 right-0'}`}>
                 <button type="button" data-card-btn aria-label={`${def.title} kartını düzenle`} onClick={() => setSheet(it.id)}
                   className="w-8 h-8 rounded-full bg-ink text-bg shadow-md flex items-center justify-center hit">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>

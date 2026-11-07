@@ -9,28 +9,32 @@ import { Band, btn, Eyebrow, hdrIcon } from '@/components/ui'
 import { Calendar, Chart, Clock, Dumbbell, Flame, Gear, Heart, Next, Pulse, Scale, Spark, Target } from '@/components/icons'
 import PendingSync from './PendingSync'
 import { isAdvanced } from '@/lib/ui-mode'
+import { screenLayout } from '@/lib/cards/design-data'
+import CardBoard from '@/components/cards/CardBoard'
+import type { ReactNode } from 'react'
 
 export const metadata = { title: 'Fitness · DgFit' }
 const WD = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct']
 
-export default async function FitnessPage(props: { searchParams: Promise<{ gun?: string }> }) {
+export default async function FitnessPage(props: { searchParams: Promise<{ gun?: string; duzenle?: string }> }) {
   const u = await requireUser()
-  const [h, adv, sp, rec] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id), props.searchParams, recoveryFor(u.id).catch(() => null)])
+  const [h, adv, sp, rec, layout] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id), props.searchParams, recoveryFor(u.id).catch(() => null), screenLayout(u.id, 'fitness')])
+  const editing = sp.duzenle === '1'
   // gün sekmesi yalnızca önizlemeyi değiştirir; antrenman "Antrenmana başla" ile başlar
   const day = (sp.gun && h.program?.days.find((d) => d.id === sp.gun)) || h.next
   const shown = adv ? 6 : 3 // sade modda sıradaki antrenmanın ilk 3 hareketi
   const weekDone = h.week.reduce((a, w) => a + w.n, 0)
   const target = h.trainingDays ?? h.program?.days.length ?? 3
-  return (
-    <div className="flex flex-col gap-3 px-4">
+  const nodes: Record<string, ReactNode> = {
+    'fitness.header': <div className="flex flex-col gap-3">
       <Band title="Fitness" sub={h.program ? h.program.name : 'Henüz program yok'}
         right={<Link href="/fitness/ayarlar" className={hdrIcon} aria-label="Salon ayarları"><Gear size={20} /></Link>}
         ring={{ value: target ? Math.min(1, weekDone / target) : 0, big: `${weekDone}/${target}`, small: 'bu hafta', label: `Bu hafta ${weekDone} / ${target} antrenman` }}
         pills={[['Hacim', `${fmtNum(h.week.reduce((a, w) => a + w.vol, 0))} kg`], ['Süre', `${fmtNum(h.week.reduce((a, w) => a + w.min, 0))} dk`], ['Kardiyo', `${fmtNum(h.cardioWeekMin)} dk`]]} />
       <PendingSync />
-      {rec && rec.level !== 'ok' ? <p className="card px-4 py-3 text-[13.5px] leading-snug border-l-4 border-orange" data-testid="recovery-card" data-level={rec.level}>{recoveryText(rec)}</p> : null}
-
-      {day && h.program ? (
+    </div>,
+    'fitness.recovery': rec && rec.level !== 'ok' ? <p className="card px-4 py-3 text-[13.5px] leading-snug border-l-4 border-orange" data-testid="recovery-card" data-level={rec.level}>{recoveryText(rec)}</p> : null,
+    'fitness.next': day && h.program ? (
         <section aria-label="Sıradaki antrenman" className="card p-5 flex flex-col gap-3" data-testid="next-workout" data-day={day.id} data-selected={day.id !== h.next?.id ? 'true' : undefined}>
           <div className="flex items-center justify-between">
             <Eyebrow>{day.id === h.next?.id ? 'Sıradaki antrenman' : 'Seçili gün'}</Eyebrow>
@@ -66,8 +70,8 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
           <p className="text-[15px] text-ink-2 leading-relaxed">Bir program seç ya da gün sayına ve ekipmanına göre otomatik oluştur. Her antrenmandan sonra DgFit bir sonraki ağırlığı önerir.</p>
           <Link href="/fitness/programlar" className={btn.primary}>Program oluştur</Link>
         </section>
-      )}
-
+      ),
+    'fitness.tools': (
       <nav aria-label="Fitness araçları" className="grid grid-cols-3 gap-2">
         <Link href="/fitness/anatomi" className="card px-2 py-3 flex flex-col items-center gap-1.5 text-[12.5px] font-bold text-center min-h-[76px] justify-center" data-testid="anatomy-link"><Target size={20} className="text-acc" />Kas haritası</Link>
         <Link href="/fitness/antrenman" className="card px-2 py-3 flex flex-col items-center gap-1.5 text-[12.5px] font-bold text-center min-h-[76px] justify-center"><Spark size={20} className="text-acc" />Serbest antrenman</Link>
@@ -81,7 +85,8 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
           <Link href="/fitness/programlar" className="card px-2 py-3 flex flex-col items-center gap-1.5 text-[12.5px] font-bold text-center min-h-[76px] justify-center"><Calendar size={20} className="text-acc" />Programlar</Link>
         </> : null}
       </nav>
-
+    ),
+    'fitness.week': (
       <section aria-label="Bu hafta" className="card p-5 flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <Eyebrow>Bu hafta</Eyebrow>
@@ -100,8 +105,8 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
           })}
         </div>
       </section>
-
-      {h.prs.length ? (
+    ),
+    'fitness.prs': h.prs.length ? (
         <section aria-label="Son rekorlar" className="card p-5 flex flex-col gap-2">
           <div className="flex items-center gap-2"><Flame size={18} className="text-orange" /><Eyebrow>Son rekorlar</Eyebrow></div>
           {h.prs.map((p) => (
@@ -111,8 +116,8 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
             </div>
           ))}
         </section>
-      ) : null}
-
+      ) : null,
+    'fitness.recent': (
       <section aria-label="Son antrenmanlar" className="card p-5 flex flex-col gap-1">
         <div className="flex items-center gap-2 mb-1"><Clock size={18} className="text-mute" /><Eyebrow>Son antrenmanlar</Eyebrow></div>
         {h.recent.length ? h.recent.slice(0, adv ? 10 : 3).map((w) => (
@@ -131,8 +136,13 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
           </div>
         ))}
       </section>
-
-      {adv ? null : <Link href="/fitness/programlar" className={btn.secondary}>Programlarım ({h.programs.length})</Link>}
+    ),
+    'fitness.programs': adv ? null : <Link href="/fitness/programlar" className={btn.secondary}>Programlarım ({h.programs.length})</Link>,
+  }
+  return (
+    <div className="flex flex-col gap-3 px-4">
+      <CardBoard screen="fitness" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} />
     </div>
   )
 }

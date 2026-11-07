@@ -43,20 +43,24 @@ export function migrateDesign(d: Design): { design: Design; notices: string[] } 
   return { design: { ...cur, v: REGISTRY_VERSION }, notices }
 }
 
-/** Varsayılan düzen: kayıttaki sırayla `default` kartlar. */
-export function defaultItems(screen: ScreenId): LayoutItem[] {
-  return cardsFor(screen).filter((c) => c.default).map((c) => ({ id: c.id }))
+/** Ekranı çözerken bilinen kullanıcı bağlamı (varsayılan düzen buna göre değişir). */
+export interface LayoutCtx { advanced?: boolean }
+const isDefault = (c: CardDef, ctx: LayoutCtx) => c.default && (!c.advanced || !!ctx.advanced)
+
+/** Varsayılan düzen: kayıttaki sırayla `default` kartlar (Gelişmiş kartlar yalnız Gelişmiş modda). */
+export function defaultItems(screen: ScreenId, ctx: LayoutCtx = {}): LayoutItem[] {
+  return cardsFor(screen).filter((c) => isDefault(c, ctx)).map((c) => ({ id: c.id }))
 }
 
 /**
  * Ekranın gösterilecek düzeni: göç → bilinmeyenleri at → kilitli kartları yerine koy → tekrarları ayıkla → boyutları doğrula.
  * Tasarımı olmayan (hiç özelleştirmemiş) kullanıcı her zaman güncel varsayılanı alır.
  */
-export function resolveScreen(design: Design | null | undefined, screen: ScreenId): ResolvedScreen {
+export function resolveScreen(design: Design | null | undefined, screen: ScreenId, ctx: LayoutCtx = {}): ResolvedScreen {
   const { design: d, notices } = design ? migrateDesign(design) : { design: null, notices: [] as string[] }
   const sl = d?.screens[screen]
   const customized = !!sl
-  const raw = sl ? sl.items : defaultItems(screen)
+  const raw = sl ? sl.items : defaultItems(screen, ctx)
   const seen = new Set<string>()
   let items: ResolvedItem[] = []
   for (const it of raw) {
@@ -70,7 +74,7 @@ export function resolveScreen(design: Design | null | undefined, screen: ScreenI
   const all = cardsFor(screen)
   for (const def of all.filter((c) => c.locked)) {
     if (seen.has(def.id)) continue
-    const at = def.locked === 'top' ? 0 : Math.min(items.length, all.filter((c) => c.default).findIndex((c) => c.id === def.id))
+    const at = def.locked === 'top' ? 0 : Math.min(items.length, all.filter((c) => isDefault(c, ctx)).findIndex((c) => c.id === def.id))
     items.splice(Math.max(0, at), 0, { id: def.id, size: def.size, def })
     seen.add(def.id)
   }
@@ -79,7 +83,7 @@ export function resolveScreen(design: Design | null | undefined, screen: ScreenI
   const removedSet = new Set(sl?.removed ?? [])
   const fromV = design?.v ?? REGISTRY_VERSION
   const drawer: DrawerItem[] = all.filter((c) => !seen.has(c.id) && !c.locked).map((def) => ({
-    def, reason: removedSet.has(def.id) ? 'removed' : sl && def.since > fromV ? 'new' : def.default ? 'removed' : 'available',
+    def, reason: removedSet.has(def.id) ? 'removed' : sl && def.since > fromV ? 'new' : isDefault(def, ctx) ? 'removed' : 'available',
   }))
   return { items, drawer, notices: [...new Set(notices)], customized }
 }
@@ -125,9 +129,9 @@ export function setSize<T extends LayoutItem>(items: T[], id: string, size: Card
  * Kaydedilecek ekran düzenini doğrular: yalnızca bu ekranın bilinen kartları, tekrar yok, kilitliler eksikse eklenir.
  * `removed` = varsayılanda olup kullanıcının kaldırdıkları (çekmecede "kaldırdıkların" için).
  */
-export function normalizeScreen(screen: ScreenId, items: LayoutItem[]): ScreenLayout {
-  const r = resolveScreen({ v: REGISTRY_VERSION, screens: { [screen]: { items } } }, screen)
+export function normalizeScreen(screen: ScreenId, items: LayoutItem[], ctx: LayoutCtx = {}): ScreenLayout {
+  const r = resolveScreen({ v: REGISTRY_VERSION, screens: { [screen]: { items } } }, screen, ctx)
   const kept = r.items.map((i) => ({ id: i.id, ...(i.size !== i.def.size ? { size: i.size } : {}) }))
   const ids = new Set(kept.map((i) => i.id))
-  return { items: kept, removed: cardsFor(screen).filter((c) => c.default && !ids.has(c.id)).map((c) => c.id) }
+  return { items: kept, removed: cardsFor(screen).filter((c) => isDefault(c, ctx) && !ids.has(c.id)).map((c) => c.id) }
 }
