@@ -168,3 +168,21 @@ html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; t
 :root:not([data-theme="dark"]) [data-cc~="acc"], :root:not([data-theme="dark"]) [data-cc~="acc"] [data-mod] { --color-acc: var(--ccl-acc); --color-acc-ink: var(--ccl-acc-ink); }
 }
 [data-cc~="bg"] .band { color: var(--color-ink); }
+
+/* Ö2b stil: kabuktaki (ModShell) özniteliklerle; katmansız, temanın ve araçların önüne geçer */
+[data-radius="sharp"] { --radius-card: 10px; }
+[data-radius="sharp"] :is(.rounded-\[24px\], .rounded-\[22px\], .rounded-\[20px\], .rounded-\[18px\], .rounded-\[16px\]) { border-radius: 10px; }
+[data-radius="round"] { --radius-card: 32px; }
+[data-radius="round"] :is(.rounded-\[24px\], .rounded-\[22px\], .rounded-\[20px\]) { border-radius: 30px; }
+[data-density="compact"] { --spacing: 0.225rem; }
+[data-density="airy"] { --spacing: 0.285rem; }
+[data-font="rounded"] { font-family: ui-rounded, "SF Pro Rounded", "Nunito", var(--font-manrope), system-ui, sans-serif; }
+[data-font="serif"] { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+[data-font="system"] { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+[data-icons="thin"] svg[viewBox="0 0 24 24"][stroke] { stroke-width: 1.5; }
+[data-icons="bold"] svg[viewBox="0 0 24 24"][stroke] { stroke-width: 2.7; }
+[data-band="flat"], [data-band="flat"] [data-mod] { --band: color-mix(in oklab, var(--m1) 88%, #000); }
+[data-band="photo"] .band { background: linear-gradient(rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.58)), var(--band-photo) center / cover no-repeat; color: #fff; }
+[data-motion="reduce"] *, [data-motion="reduce"] *::before, [data-motion="reduce"] *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+[data-contrast="high"] { --color-ink-2: var(--color-ink); --color-mute: color-mix(in oklab, var(--color-ink) 82%, transparent); --color-line: var(--color-line-2); }
+[data-contrast="high"] .card { outline: 1.5px solid var(--color-line-2); outline-offset: -1.5px; }

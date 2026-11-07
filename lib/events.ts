@@ -21,6 +21,7 @@ export type EventType =
   | 'design.gesture'
   | 'design.wizard'
   | 'design.colors'
+  | 'design.style'
   | 'workout.finished'
   | 'pr.achieved'
   | 'water.logged'

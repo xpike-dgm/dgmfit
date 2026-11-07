@@ -1,4 +1,5 @@
 'use client'
+import { weightIn, weightOut } from '@/lib/units'
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
@@ -138,17 +139,18 @@ export function CheckinApply() {
   )
 }
 
-export function WeighIn({ last }: { last: number }) {
+export function WeighIn({ last, unit = 'kg' }: { last: number; unit?: 'kg' | 'lb' }) {
   const [kg, setKg] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [pending, start] = useTransition()
   const router = useRouter()
   const save = () => {
-    const v = Number(kg.replace(',', '.'))
-    if (!(v >= 30 && v <= 250)) { setErr('30 ile 250 kg arasında bir değer gir'); return }
+    // Ö2b: lb seçiliyse girilen değer kg'ye çevrilip kaydedilir (veri her zaman kg)
+    const v = weightIn(Number(kg.replace(',', '.')), unit)
+    if (!(v >= 30 && v <= 250)) { setErr(unit === 'lb' ? '66 ile 551 lb arasında bir değer gir' : '30 ile 250 kg arasında bir değer gir'); return }
     start(async () => {
-      const r = await logWeight(v)
+      const r = await logWeight(Math.round(v * 10) / 10)
       if (r?.error) { setErr(r.error); return }
       setErr(null); setKg(''); setDone(true); router.refresh()
     })
@@ -156,8 +158,8 @@ export function WeighIn({ last }: { last: number }) {
   return (
     <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); save() }}>
       <div className="flex gap-2">
-        <label htmlFor="fit-kg" className="sr-only">Kilo (kg)</label>
-        <input id="fit-kg" inputMode="decimal" value={kg} onChange={(e) => { setKg(e.target.value); setDone(false) }} placeholder={String(last).replace('.', ',')}
+        <label htmlFor="fit-kg" className="sr-only">Kilo ({unit})</label>
+        <input id="fit-kg" inputMode="decimal" value={kg} onChange={(e) => { setKg(e.target.value); setDone(false) }} placeholder={`${(Math.round(weightOut(last, unit) * 10) / 10).toString().replace('.', ',')} ${unit}`}
           className="flex-1 h-12 rounded-xl bg-surface-2 border border-line px-3 num text-lg text-ink" />
         <button type="submit" className={`${btn.primary} h-12 text-[15px] px-5`} disabled={pending}>Kaydet</button>
       </div>

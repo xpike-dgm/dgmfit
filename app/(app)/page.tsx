@@ -19,7 +19,8 @@ import { lastWeekBrief } from '@/lib/coach-data'
 import { achievementsFor } from '@/lib/achievements-data'
 import { recentFoods } from '@/lib/food-data'
 import { minuteOfDay } from '@/lib/water-data'
-import { screenLayout } from '@/lib/cards/design-data'
+import { screenLayout, userStyle } from '@/lib/cards/design-data'
+import { fmtEnergyNum, volumeNum, weightOut } from '@/lib/units'
 import CardBoard from '@/components/cards/CardBoard'
 import type { ReactNode } from 'react'
 
@@ -33,6 +34,8 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   const editing = sp.duzenle === '1'
   const layout = await screenLayout(user.id, 'today', { editing })
   const qt = layout.quick['today.training']
+  const un = (await userStyle(user.id)).units
+  const eu = un.energy, eL = un.energy === 'kJ' ? 'kJ' : 'kcal'
   const want = (id: string) => editing || layout.items.some((i) => i.id === id || i.stack?.includes(id))
   const [tr, gs, partners, brief, streaks] = await Promise.all([
     todayTraining(user.id, t.day), goalStatus(user.id),
@@ -81,8 +84,8 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
               <Link href="/profil" aria-label="Profil" className={hdrIcon}><User size={20} /></Link>
             </div>
           }
-          ring={{ value: usedFrac, big: fmtNum(Math.abs(left)), small: left < 0 ? 'kcal fazla' : 'kalan kcal', label: `Kalorinin yüzde ${Math.round(usedFrac * 100)}'i tüketildi` }}
-          pills={[['Hedef', `${fmtNum(t.target.kcal)} kcal`], ['Yenen', t.eaten.kcal ? fmtNum(t.eaten.kcal) : '0'], ['Egzersiz', '+' + fmtNum(t.burned)]]}
+          ring={{ value: usedFrac, big: fmtEnergyNum(Math.abs(left), eu), small: left < 0 ? `${eL} fazla` : `kalan ${eL}`, label: `Kalorinin yüzde ${Math.round(usedFrac * 100)}'i tüketildi` }}
+          pills={[['Hedef', `${fmtEnergyNum(t.target.kcal, eu)} ${eL}`], ['Yenen', t.eaten.kcal ? fmtEnergyNum(t.eaten.kcal, eu) : '0'], ['Egzersiz', '+' + fmtEnergyNum(t.burned, eu)]]}
         >
           <nav aria-label="Bu hafta" className="grid grid-cols-7 gap-1 mt-3">
             {t.week.map((d) => (
@@ -154,7 +157,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
     'today.fit': (
       <Link href={layout.quick['today.fit'] === 'weigh' ? '/fit#tarti' : '/fit'} data-mod="plan" aria-label={layout.quick['today.fit'] === 'weigh' ? 'Tartıl' : 'Kilo hedefi ve plan'} className={tile}>
         <span className="flex items-center justify-between text-[13px] font-extrabold"><span className="flex items-center gap-1.5"><Target size={16} className="text-acc" />Fit</span><span className="text-acc text-[12px]">›</span></span>
-        <span className="num text-[22px] font-bold leading-none">{fmtNum(w.trend, 1)} <span className="text-[13px] text-mute">kg</span></span>
+        <span className="num text-[22px] font-bold leading-none">{fmtNum(weightOut(w.trend, un.weight), 1)} <span className="text-[13px] text-mute">{un.weight}</span></span>
         {!recomp ? (
           <>
             <div className="relative h-2 rounded-full bg-surface-3">
@@ -173,12 +176,12 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
         <Link href="/su" className="flex flex-col gap-2">
           <span className="flex items-center justify-between text-[13px] font-extrabold"><span className="flex items-center gap-1.5"><Drop size={16} className="text-acc" />Su</span><span className="text-acc text-[12px]">%{Math.round(waterFrac * 100)}</span></span>
           <span className="flex items-baseline gap-1 flex-wrap">
-            <span className="num text-[22px] font-bold leading-none">{fmtNum(t.waterMl)}</span>
-            <span className="text-[12px] text-mute">/ {fmtNum(t.target.water)} ml</span>
+            <span className="num text-[22px] font-bold leading-none">{volumeNum(t.waterMl, un.volume)}</span>
+            <span className="text-[12px] text-mute">/ {volumeNum(t.target.water, un.volume)} {un.volume}</span>
           </span>
           <Bar value={waterFrac} color="var(--color-acc)" height={6} />
         </Link>
-        {layout.quick['today.water'] !== 'none' ? <QuickWaterButton compact ml={Number(layout.quick['today.water'] ?? 250)} /> : null}
+        {layout.quick['today.water'] !== 'none' ? <QuickWaterButton compact ml={Number(layout.quick['today.water'] ?? 250)} unit={un.volume} /> : null}
       </section>
     ),
     'today.training': (

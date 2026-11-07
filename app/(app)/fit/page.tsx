@@ -10,7 +10,8 @@ import { Calendar, Pulse, Scale, Spark, Trend } from '@/components/icons'
 import { DayClose, ExceptionButton, FitFlash, WeighIn } from './FitClient'
 import InfoTip from '@/components/InfoTip'
 import { isAdvanced } from '@/lib/ui-mode'
-import { screenLayout } from '@/lib/cards/design-data'
+import { screenLayout, userStyle } from '@/lib/cards/design-data'
+import { weightOut } from '@/lib/units'
 import CardBoard from '@/components/cards/CardBoard'
 import type { ReactNode } from 'react'
 
@@ -29,7 +30,8 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
   const { goal, today, checkin } = s
   const sp = await props.searchParams
   const editing = sp.duzenle === '1'
-  const [cc, adv, layout] = await Promise.all([carbCycleFor(user.id), isAdvanced(user.id), screenLayout(user.id, 'fit', { editing })])
+  const [cc, adv, layout, sty] = await Promise.all([carbCycleFor(user.id), isAdvanced(user.id), screenLayout(user.id, 'fit', { editing }), userStyle(user.id)])
+  const wu = sty.units.weight
   const type = goal.type as GoalType
   const totalDays = diffDays(goal.startDate, goal.endDate) + 1
   const dayIndex = Math.min(totalDays, diffDays(goal.startDate, today) + 1)
@@ -47,8 +49,8 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
   const nodes: Record<string, ReactNode> = {
     'fit.header': <div className="flex flex-col gap-3">
       <Band title="Plan" sub={`${GOALS[type]?.label ?? 'Hedef'} · Gün ${dayIndex} / ${totalDays}`}
-        ring={{ value: progress, big: fmtNum(trendNow, 1), small: 'trend kg', label: `Hedefin yüzde ${Math.round(progress * 100)}'i` }}
-        pills={[['Hedef', type === 'recomp' ? 'Koru' : `${fmtNum(goal.targetWeightKg, 1)} kg`], [checkin?.forecast.day ? 'Tahmini varış' : 'Hedef tarih', shortDate(checkin?.forecast.day ?? goal.endDate)], ['Bugün', `${fmtNum(s.targets[0].kcal)} kcal`]]} />
+        ring={{ value: progress, big: fmtNum(weightOut(trendNow, wu), 1), small: `trend ${wu}`, label: `Hedefin yüzde ${Math.round(progress * 100)}'i` }}
+        pills={[['Hedef', type === 'recomp' ? 'Koru' : `${fmtNum(weightOut(goal.targetWeightKg, wu), 1)} ${wu}`], [checkin?.forecast.day ? 'Tahmini varış' : 'Hedef tarih', shortDate(checkin?.forecast.day ?? goal.endDate)], ['Bugün', `${fmtNum(s.targets[0].kcal)} kcal`]]} />
       <FitFlash />
     </div>,
     'fit.goal': (
@@ -158,7 +160,7 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
     'fit.weigh': (
       <section id="tarti" aria-label="Tartı" className="card p-5 flex flex-col gap-3 scroll-mt-4">
         <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow><InfoTip label="Tartı ipucu">Sabah, tuvaletten sonra ve kahvaltıdan önce tartılmak en tutarlı sonucu verir.</InfoTip></div>
-        <WeighIn last={lastWeigh?.raw ?? goal.startWeightKg} />
+        <WeighIn last={lastWeigh?.raw ?? goal.startWeightKg} unit={wu} />
         <Link href="/profil/hedef" className="text-[13px] text-mute underline underline-offset-4">Hedef ve plan</Link>
       </section>
     ),

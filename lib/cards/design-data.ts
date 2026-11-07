@@ -14,6 +14,7 @@ import { emptyDesign, normalizeScreen, resolveScreen, type Design, type LayoutIt
 import { applyGestures, applyRules, goalFront, normalizeNav, normalizePrefs, normalizeRules, setHiddenToday, setPin, type NavLayout, type Rule, type RuleCtx, type UsePrefs } from './prefs'
 import { mergeRules, wizardDesign, type WizardAnswers } from './wizard'
 import { normalizeCardColors, normalizeModuleColors, type CardColors, type ModuleColors } from './colors'
+import { normalizeStyle, type StylePrefs } from './style'
 
 /** İstek başına bir sorgu (alt bar, düzen ve stüdyo aynı istekte okur). */
 export const activeDesign = cache(async (userId: string): Promise<Design | null> => {
@@ -177,4 +178,15 @@ export async function saveModules(userId: string, mc: ModuleColors | null) {
   const n = mc ? normalizeModuleColors(mc) : undefined
   await updateDesign(userId, (cur) => { const d = { ...cur }; if (n) d.modules = n; else delete d.modules; return d })
   await publish(userId, 'design.colors', { modules: n ? Object.keys(n).length : 0 })
+}
+
+// ───────── Ö2b: stil ─────────
+/** Kullanıcının stil tercihleri (birimler dahil); istek başına tasarım önbelleğinden. */
+export async function userStyle(userId: string): Promise<StylePrefs> { return normalizeStyle((await activeDesign(userId))?.style) }
+
+export async function saveStyle(userId: string, patch: Partial<StylePrefs>) {
+  let out: StylePrefs | null = null
+  await updateDesign(userId, (cur) => { out = normalizeStyle({ ...normalizeStyle(cur.style), ...patch, units: { ...normalizeStyle(cur.style).units, ...(patch.units ?? {}) } }); return { ...cur, style: out } })
+  await publish(userId, 'design.style', { keys: Object.keys(patch).join(',') })
+  return out!
 }

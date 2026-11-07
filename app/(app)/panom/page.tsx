@@ -17,7 +17,8 @@ import { Drop, Dumbbell, Flame, Fork, Gear, Pulse, Target } from '@/components/i
 import QuickWaterButton from '@/components/QuickWaterButton'
 import InsightCard from '@/components/InsightCard'
 import CardBoard from '@/components/cards/CardBoard'
-import { screenLayout } from '@/lib/cards/design-data'
+import { screenLayout, userStyle } from '@/lib/cards/design-data'
+import { fmtEnergyNum, volumeNum, weightOut } from '@/lib/units'
 
 export const metadata: Metadata = { title: 'Panom' }
 
@@ -42,13 +43,15 @@ export default async function Panom(props: { searchParams: Promise<{ duzenle?: s
   const w = t.weight
   const trained = !!(tr && (tr.workouts || tr.cardio))
   const q = layout.quick
+  const un = (await userStyle(user.id)).units
+  const eL = un.energy === 'kJ' ? 'kJ' : 'kcal'
 
   const nodes: Record<string, ReactNode> = {
     'mine.header': (
       <Band title="Panom" sub={<span className="capitalize">{longDate(t.day)}</span>}
         right={<Link href="/panom?duzenle=1" aria-label="Panoyu düzenle" className={hdrIcon}><Gear size={20} /></Link>}
-        ring={{ value: Math.min(1, ds.pct.kcal), big: fmtNum(Math.abs(ds.left.kcal)), small: ds.left.kcal >= 0 ? 'kalan kcal' : 'kcal aşım', label: 'Kalan kalori' }} ringHref="/yemek"
-        pills={[['Su', `${fmtNum(t.waterMl)} / ${fmtNum(t.target.water)} ml`, '/su'], ['Protein', `${fmtNum(t.eaten.protein)} / ${fmtNum(t.target.protein)} g`, '/yemek'], ['Kilo', `${fmtNum(w.trend, 1)} kg`, '/fit']]} />
+        ring={{ value: Math.min(1, ds.pct.kcal), big: fmtEnergyNum(Math.abs(ds.left.kcal), un.energy), small: ds.left.kcal >= 0 ? `kalan ${eL}` : `${eL} aşım`, label: 'Kalan kalori' }} ringHref="/yemek"
+        pills={[['Su', `${volumeNum(t.waterMl, un.volume)} / ${volumeNum(t.target.water, un.volume)} ${un.volume}`, '/su'], ['Protein', `${fmtNum(t.eaten.protein)} / ${fmtNum(t.target.protein)} g`, '/yemek'], ['Kilo', `${fmtNum(weightOut(w.trend, un.weight), 1)} ${un.weight}`, '/fit']]} />
     ),
     'mine.kcal': (
       <Link href="/yemek" data-mod="today" className={`${tile} items-center`} aria-label="Kalan kalori">
@@ -60,10 +63,10 @@ export default async function Panom(props: { searchParams: Promise<{ duzenle?: s
       <section aria-label="Su" data-mod="water" className={tile}>
         <Link href="/su" className="flex flex-col gap-2">
           <span className="flex items-center justify-between text-[13px] font-extrabold"><span className="flex items-center gap-1.5"><Drop size={16} className="text-acc" />Su</span><span className="text-acc text-[12px]">%{Math.round(waterFrac * 100)}</span></span>
-          <span className="flex items-baseline gap-1 flex-wrap"><span className="num text-[22px] font-bold leading-none">{fmtNum(t.waterMl)}</span><span className="text-[12px] text-mute">/ {fmtNum(t.target.water)} ml</span></span>
+          <span className="flex items-baseline gap-1 flex-wrap"><span className="num text-[22px] font-bold leading-none">{volumeNum(t.waterMl, un.volume)}</span><span className="text-[12px] text-mute">/ {volumeNum(t.target.water, un.volume)} {un.volume}</span></span>
           <Bar value={waterFrac} color="var(--color-acc)" height={6} />
         </Link>
-        {q['mine.water'] !== 'none' ? <QuickWaterButton compact ml={Number(q['mine.water'] ?? 250)} /> : null}
+        {q['mine.water'] !== 'none' ? <QuickWaterButton compact ml={Number(q['mine.water'] ?? 250)} unit={un.volume} /> : null}
       </section>
     ),
     'mine.macros': (
@@ -87,8 +90,8 @@ export default async function Panom(props: { searchParams: Promise<{ duzenle?: s
     'mine.weight': (
       <Link href="/fit" data-mod="plan" className={tile} aria-label="Kilo trendi">
         <span className="flex items-center gap-1.5 text-[13px] font-extrabold"><Target size={16} className="text-acc" />Kilo</span>
-        <span className="num text-[22px] font-bold leading-none">{fmtNum(w.trend, 1)} <span className="text-[13px] text-mute">kg</span></span>
-        <span className="text-[12px] text-mute">Hedef {fmtNum(w.target, 1)} kg · kalan {fmtNum(Math.abs(w.target - w.trend), 1)} kg</span>
+        <span className="num text-[22px] font-bold leading-none">{fmtNum(weightOut(w.trend, un.weight), 1)} <span className="text-[13px] text-mute">{un.weight}</span></span>
+        <span className="text-[12px] text-mute">Hedef {fmtNum(weightOut(w.target, un.weight), 1)} {un.weight} · kalan {fmtNum(weightOut(Math.abs(w.target - w.trend), un.weight), 1)} {un.weight}</span>
       </Link>
     ),
     'mine.recovery': rec ? (

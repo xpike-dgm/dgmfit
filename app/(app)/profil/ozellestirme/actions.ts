@@ -3,7 +3,8 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser, rateLimit } from '@/lib/auth'
 import { SCREENS, isScreen } from '@/lib/cards/registry'
-import { applyWizard, hideCardToday, pinCard, resetScreen, saveModules, saveNav, savePrefs, saveRules, saveScreen } from '@/lib/cards/design-data'
+import { applyWizard, hideCardToday, pinCard, resetScreen, saveModules, saveNav, savePrefs, saveRules, saveScreen, saveStyle } from '@/lib/cards/design-data'
+import { readMedia } from '@/lib/media'
 import { cardDef } from '@/lib/cards/registry'
 import { RULES_MAX } from '@/lib/cards/prefs'
 
@@ -131,6 +132,25 @@ export async function saveModulesAction(mc: unknown): Promise<R> {
   if (!p.success) return { ok: false, error: 'Geçersiz renk' }
   if (limited(u.id)) return { ok: false, error: 'Çok sık kaydedildi; biraz sonra dene' }
   await saveModules(u.id, p.data)
+  everywhere()
+  return { ok: true }
+}
+
+// ───────── Ö2b: stil ─────────
+const StyleZ = z.object({
+  radius: z.enum(['sharp', 'normal', 'round']), density: z.enum(['compact', 'normal', 'airy']), font: z.enum(['default', 'rounded', 'serif', 'system']),
+  icons: z.enum(['thin', 'normal', 'bold']), band: z.enum(['gradient', 'flat', 'photo']), bandMedia: z.string().regex(/^[0-9a-f-]{36}$/).nullable(),
+  motion: z.enum(['normal', 'reduce']), contrast: z.enum(['normal', 'high']), haptics: z.enum(['off', 'light', 'normal', 'strong']), sound: z.boolean(), warm: z.boolean(),
+  units: z.object({ weight: z.enum(['kg', 'lb']), volume: z.enum(['ml', 'oz']), energy: z.enum(['kcal', 'kJ']), length: z.enum(['cm', 'in']) }).partial(),
+}).partial()
+export async function saveStyleAction(patch: unknown): Promise<R> {
+  const u = await requireUser()
+  const p = StyleZ.safeParse(patch)
+  if (!p.success) return { ok: false, error: 'Geçersiz ayar' }
+  if (limited(u.id)) return { ok: false, error: 'Çok sık kaydedildi; biraz sonra dene' }
+  // bant fotoğrafı yalnız kullanıcının kendi 'band' fotoğrafı olabilir
+  if (p.data.bandMedia) { const m = await readMedia(u.id, p.data.bandMedia).catch(() => null); if (!m) return { ok: false, error: 'Fotoğraf bulunamadı' } }
+  await saveStyle(u.id, p.data as never)
   everywhere()
   return { ok: true }
 }

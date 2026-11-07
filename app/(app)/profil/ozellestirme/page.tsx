@@ -10,7 +10,6 @@ import ResetButton from './ResetButton'
 export const metadata = { title: 'Özelleştirme' }
 
 const SOON: [string, string][] = [
-  ['Stil', 'Köşe, yoğunluk, yazı tipi, birimler'],
   ['Modlar', 'Odak, Ramazan, tatil'],
   ['Kendi kartlarım', 'Kart oluştur, takip ekle'],
   ['Tasarımlarım', 'Sürümler, geri al'],
@@ -71,6 +70,9 @@ export default async function Page() {
         </Link>
         <Link href="/profil/ozellestirme/renkler" className={`${row} border-t border-line`} data-testid="studio-colors">
           <span className="flex flex-col"><b className="text-[15px]">Renkler</b><span className="text-[12.5px] text-mute">{d?.modules ? `${Object.keys(d.modules).length} modül rengi değişti` : 'Modül renkleri, paletler, fotoğraftan palet'}</span></span><span className="text-mute">›</span>
+        </Link>
+        <Link href="/profil/ozellestirme/stil" className={`${row} border-t border-line`} data-testid="studio-style">
+          <span className="flex flex-col"><b className="text-[15px]">Stil</b><span className="text-[12.5px] text-mute">Köşeler, yazı tipi, bant, birimler, erişilebilirlik</span></span><span className="text-mute">›</span>
         </Link>
         <Link href="/profil/ozellestirme/kurallar" className={`${row} border-t border-line`} data-testid="studio-rules">
           <span className="flex flex-col"><b className="text-[15px]">Kurallar</b><span className="text-[12.5px] text-mute">{rulesOn ? `${rulesOn} kural açık` : 'Sabah, antrenman günü, akşam düzeni…'}</span></span><span className="text-mute">›</span>

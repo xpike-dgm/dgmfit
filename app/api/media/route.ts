@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const file = form?.get('file')
   if (!form || !(file instanceof Blob)) return NextResponse.json({ error: 'Dosya yok' }, { status: 400 })
   const k = String(form.get('kind') ?? '')
-  const kind = (['exercise', 'social', 'avatar', 'feedback'].includes(k) ? k : 'progress') as MediaKind
+  const kind = (['exercise', 'social', 'avatar', 'feedback', 'band'].includes(k) ? k : 'progress') as MediaKind
   const today = dayString()
   const dayIn = String(form.get('day') ?? today)
   const day = /^\d{4}-\d{2}-\d{2}$/.test(dayIn) && dayIn <= today && dayIn >= addDays(today, -3650) ? dayIn : today

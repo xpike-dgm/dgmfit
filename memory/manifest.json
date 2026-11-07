@@ -290,7 +290,12 @@
     "lib/cards/colors.ts",
     "components/cards/ColorEditor.tsx",
     "tests/cards-colors.test.ts",
-    "tests/e2e/custom5.e2e.cjs"
+    "tests/e2e/custom5.e2e.cjs",
+    "lib/cards/style.ts",
+    "lib/units.ts",
+    "components/cards/StyleEffects.tsx",
+    "tests/cards-style.test.ts",
+    "tests/e2e/custom6.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -488,7 +493,8 @@
     "/profil/ozellestirme/kurallar",
     "/profil/ozellestirme/sihirbaz",
     "/panom",
-    "/profil/ozellestirme/renkler"
+    "/profil/ozellestirme/renkler",
+    "/profil/ozellestirme/stil"
   ],
   "events": [
     "profile.onboarded",
@@ -514,7 +520,8 @@
     "design.prefs",
     "design.gesture",
     "design.wizard",
-    "design.colors"
+    "design.colors",
+    "design.style"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -1003,6 +1010,22 @@
       "pinCard",
       "hideCardToday",
       "applyWizard"
+    ],
+    "lib/cards/style.ts": [
+      "normalizeStyle",
+      "styleAttrs",
+      "isWarmHour",
+      "hapticScale",
+      "DEFAULT_STYLE"
+    ],
+    "lib/units.ts": [
+      "fmtWeight",
+      "weightIn",
+      "weightOut",
+      "fmtVolume",
+      "volumeNum",
+      "fmtEnergyNum",
+      "fmtLength"
     ],
     "lib/cards/colors.ts": [
       "contrast",
