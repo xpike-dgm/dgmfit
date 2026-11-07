@@ -2,6 +2,13 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Otonom A8+A9+A10: görsel kalanlar, yemek verisi içe aktarma, özellikler
+- A8 (P-5): büyük yazı ayarı (yakınlaştırma kapalı olduğu için; zoom 1,1/1,2), onay kutuları tek tip, açık temada bant kontrastı hesaplanarak ≥4,5:1 (koyulaştırılmış degrade + siyah tonlu kutular), 320 px taraması (yeni tarayıcı betiği '…' kesilmelerini ve <40 px dokunma alanlarını da sayar) → bant alt başlıkları, yönetim kutuları, davet kodları, makro etiketi, küçük bağlantı/simgeler (`.hit`), 32 px düğmeler.
+- A9 (P-6): kullanıcının başka AI ile topladığı yemek verisi için biçim + talimat + doğrulayıcı/içe aktarıcı. İlke korunur: değerler elle yazılmaz (USDA eşlemesi / tariften hesap / etiket + tutarlılık denetimi).
+- A10 (P-7): 9 özelliğin hepsi (bkz. STATE A10). Tarif linki: yalnızca https, özel/yerel IP yok (DNS denetimi, yönlendirmeler yeniden denetlenir), 8 sn / 2 MB.
+- Hatalar: JS `\b` Türkçe harfte çalışmıyor (ölçü ayrıştırıcı 'su bardağı'nı kaçırıyordu) → ileri bakış; kesir '1/2' sayıdan önce eşlenmeli; planlama e2e iki seçici değişikliğe takıldı (öncelik çipleri ortak bölüme taşındı; 'Karb.' kısaltması üst öğe yolunu değiştirdi) → test sağlamlaştırıldı; canlı p7 e2e'de yazı boyutu çerezi yarışı → test aksiyonun bitmesini bekler.
+- Doğrulama: verify.sh VERIFY OK (217 birim, 26 e2e); commit `e4c3696` (+ test `23bf5c6`); release `2026-11-07T01-08-57-818Z` DEPLOY OK, canlı e2e 11/12 OK + p7 düzeltilmiş testle canlıda 2/2 OK; 0023 canlıda; logda hata 0; 15 test kullanıcısı silindi.
+
 ## 2026-11-07 — Otonom A5+A6+A7: entegrasyon 7-2/7-3, kalite/hız, 3 inceleme ajanı
 - A5: toparlanma motoru (ağrı, MSS yükü, uyku, düşük kalori → hafif gün/deload), kilo eğilimi ↔ plan önerisi, tek bildirim planlayıcısı (günde 8, acil/planlı/normal), kayıt sonrası kalan satırı. A6: koç bağlamı genişledi, Bugün partner kartı, hedef paylaşımı.
 - A7: yemek günlüğü anında güncelleme (useOptimistic), hareket kütüphanesi sayfalama, ilk hafta sim kuralı, yedekten geri yükleme denemesi (ağsız geçici container, 2 sn, canlıya dokunulmadı; yedek izinleri 600 + umask 077).

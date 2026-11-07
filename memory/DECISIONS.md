@@ -175,3 +175,7 @@ Biçim: `tarih · karar · neden · kaynak`. Kaynak = kullanıcı ya da teknik g
 | 2026-11-07 | Push abonelik adresi yalnızca bilinen push servisleri (FCM, Mozilla, Apple, Windows) — kör SSRF koruması; yerel testte sahte servis yalnızca DGFIT_TEST_HOOKS=1 iken | Güvenlik incelemesi | Ortak |
 | 2026-11-07 | Güvenlik başlıkları: X-Frame-Options DENY, frame-ancestors 'none', nosniff, strict-origin-when-cross-origin (script-src CSP yok) | Güvenlik incelemesi | Ortak |
 | 2026-11-07 | Bugün partner kartı iki durumlu: partner antrenman yaptı ve sen yapmadıysan "Sıra sende", ikiniz de yaptıysanız "ikiniz de yaptınız" | Faz 7-3 e2e | Sosyal |
+| 2026-11-07 | Büyük yazı ayarı CSS zoom ile (arayüz px ölçülerle yazıldığı için rem ölçeği işe yaramaz); çerez cihaz başına | P-5; uygulama yakınlaştırmayı kapatıyor | Ortak |
+| 2026-11-07 | Yemek verisi dışarıdan `dgfit-yemek/1` biçiminde gelir; besin değeri yalnızca paketli ürün etiketinde yazılır, diğerleri USDA eşlemesi ya da tariften hesaplanır; içe aktarma repo verisine yazar ve normal yayınla canlıya gider (yönetim panelinden yükleme yok) | P-6; CLAUDE.md kural 6 | Yemek |
+| 2026-11-07 | Akıllı öğün hatırlatması varsayılan açık, öğün başına günde en fazla bir, alışkanlık ≥5 günle belirlenir; push planlayıcısında 'planlı' öncelik | P-7 | Yemek |
+| 2026-11-07 | Tarif linki içe aktarma kural tabanlı (JSON-LD + Türkçe ölçü tablosu), AI kullanmaz; eşleşmeyen malzemeler kullanıcıya listelenir | P-7; AI anahtarı yokken de çalışsın | Yemek |
