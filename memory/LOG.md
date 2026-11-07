@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö2a tamamlandı, Ö2b başladı
+- Ö2a: kart renkleri (CSS değişkeni katmanı, ✎ → Renkler), modül renkleri, paletler, fotoğraftan palet.
+- Hata: zod 4 enum anahtarlı `z.record` kısmi modül renklerini reddetti → `z.partialRecord`.
+- Doğrulama: commit `2daec0c`; verify.sh VERIFY OK (246 birim); release `2026-11-07T06-38-23-709Z` RELEASE OK; canlıda 15 e2e OK; 18 test kullanıcısı silindi; logda hata 0.
+- Ö2b başladı: saf `lib/cards/style.ts` + `lib/units.ts` + 4 test.
+
 ## 2026-11-07 — Özelleştirme Ö2a başladı
 - Kullanıcı: "Devam et tüm hepsi bitene kadar durma". Kalan sıra: Ö2a → Ö2b → Ö3 (3 yayın) → Ö4 → Ö5 (2 yayın).
 - Saf renk modülü `lib/cards/colors.ts` + 6 test yazıldı (kontrast, iki tema türetme, modül paleti, paletler, fotoğraf nicemleme).
