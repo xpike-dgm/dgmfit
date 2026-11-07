@@ -13,6 +13,7 @@ import { REGISTRY_VERSION, SCREENS, cardDef, quickOf, type ScreenId } from './re
 import { emptyDesign, normalizeScreen, resolveScreen, type Design, type LayoutItem, type ResolvedItem } from './layout'
 import { applyGestures, applyRules, goalFront, normalizeNav, normalizePrefs, normalizeRules, setHiddenToday, setPin, type NavLayout, type Rule, type RuleCtx, type UsePrefs } from './prefs'
 import { mergeRules, wizardDesign, type WizardAnswers } from './wizard'
+import { normalizeCardColors, normalizeModuleColors, type CardColors, type ModuleColors } from './colors'
 
 /** İstek başına bir sorgu (alt bar, düzen ve stüdyo aynı istekte okur). */
 export const activeDesign = cache(async (userId: string): Promise<Design | null> => {
@@ -70,7 +71,11 @@ export async function screenLayout(userId: string, screen: ScreenId, opts: { edi
   // Ö1b-3: kart ayarları (hızlı eylem); kart çizicileri `quick[id]` ile okur
   const quick: Record<string, string> = {}
   for (const c of r.items) { const q = quickOf(c.id, d?.cards?.[c.id]?.quick); if (q) quick[c.id] = q }
-  return { ...r, applied, pinned, hiddenToday, quick }
+  // Ö2a: kart renkleri (yığındakiler dahil; düzenlemede çekmecedekiler de, eklenince renkleriyle gelsin)
+  const colors: Record<string, CardColors> = {}
+  const ids = [...r.items.flatMap((i) => [i.id, ...(i.stack ?? [])]), ...(opts.editing ? r.drawer.map((x) => x.def.id) : [])]
+  for (const id of ids) { const c = normalizeCardColors(d?.cards?.[id]?.colors); if (c) colors[id] = c }
+  return { ...r, applied, pinned, hiddenToday, quick, colors }
 }
 
 /** Tüm ekranların çözülmüş düzeni (stüdyo listesi için; kurallar uygulanmaz). */
@@ -99,14 +104,18 @@ async function updateDesign(userId: string, f: (d: Design) => Design) {
 }
 
 /** Ekran düzenini kaydeder (sunucuda yeniden doğrulanır: bilinmeyen kart, tekrar, kilitli kart). */
-export async function saveScreen(userId: string, screen: ScreenId, items: LayoutItem[], settings: Record<string, { quick?: string }> = {}) {
+export async function saveScreen(userId: string, screen: ScreenId, items: LayoutItem[], settings: Record<string, { quick?: string; colors?: CardColors | null }> = {}) {
   const advanced = await isAdvanced(userId)
   const next = await updateDesign(userId, (cur) => {
     const cards = { ...(cur.cards ?? {}) }
     for (const [id, st] of Object.entries(settings)) {
-      if (cardDef(id)?.screen !== screen || st.quick === undefined) continue
-      const q = quickOf(id, st.quick)
-      if (q) cards[id] = { ...cards[id], quick: q }
+      if (cardDef(id)?.screen !== screen) continue
+      if (st.quick !== undefined) { const q = quickOf(id, st.quick); if (q) cards[id] = { ...cards[id], quick: q } }
+      if (st.colors !== undefined && cardDef(id)?.colorSlots) {
+        const c = st.colors ? normalizeCardColors(st.colors) : undefined
+        const { colors: _old, ...rest } = cards[id] ?? {}
+        cards[id] = c ? { ...rest, colors: c as Record<string, string> } : rest
+      }
     }
     return { ...cur, cards, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced }) } }
   })
@@ -161,4 +170,11 @@ export async function applyWizard(userId: string, a: WizardAnswers) {
   }))
   await publish(userId, 'design.wizard', { focus: a.focus, detail: a.detail, hand: a.hand, time: a.time, logs: a.logs.join(',') })
   return w
+}
+
+// ───────── Ö2a: modül renkleri ─────────
+export async function saveModules(userId: string, mc: ModuleColors | null) {
+  const n = mc ? normalizeModuleColors(mc) : undefined
+  await updateDesign(userId, (cur) => { const d = { ...cur }; if (n) d.modules = n; else delete d.modules; return d })
+  await publish(userId, 'design.colors', { modules: n ? Object.keys(n).length : 0 })
 }

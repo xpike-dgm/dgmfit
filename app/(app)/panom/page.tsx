@@ -118,7 +118,7 @@ export default async function Panom(props: { searchParams: Promise<{ duzenle?: s
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="panom">
       <CardBoard screen="mine" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={nodes}
-        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} />
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} colors={layout.colors} />
     </div>
   )
 }

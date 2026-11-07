@@ -2,6 +2,7 @@
 // Tasarım verisi kişisel veri içermez (yalnızca kart kimlikleri, boyutlar, ileride renkler) → şablon olarak paylaşılabilir.
 import { CARD_MIGRATIONS, REGISTRY_VERSION, cardDef, cardsFor, type CardDef, type CardSize, type ScreenId } from './registry.ts'
 import type { Gestures, NavLayout, Rule, UsePrefs } from './prefs.ts'
+import type { ModuleColors } from './colors.ts'
 
 /** `stack`: Ö1b-4 kart yığını — aynı yerde yana kaydırılarak gezilen ek kartlar (ilk kart `id`). */
 export interface LayoutItem { id: string; size?: CardSize; stack?: string[] }
@@ -21,6 +22,8 @@ export interface Design {
   prefs?: UsePrefs
   /** Ö1b-3: kaydırma hareketleri (sabitlenen kartlar, bugünlük gizlenenler). Şablon paylaşımında taşınmaz. */
   gestures?: Gestures
+  /** Ö2a: modül renkleri (tek renk; bant ve vurgu iki tema için türetilir) */
+  modules?: ModuleColors
 }
 
 export interface ResolvedItem { id: string; size: CardSize; def: CardDef; stack?: string[] }

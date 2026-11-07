@@ -13,6 +13,6 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
   const today = dayString()
   const day = gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) && gun < today && gun >= addDays(today, -365) ? gun : today
   const [data, l] = await Promise.all([getWaterScreen(u.id, day), screenLayout(u.id, 'water', { editing: duzenle === '1' })])
-  const layout = { items: l.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned }
+  const layout = { items: l.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned, colors: l.colors }
   return <WaterScreen key={day} data={data} layout={layout} editing={duzenle === '1'} />
 }

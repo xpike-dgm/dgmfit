@@ -8,6 +8,11 @@ import { cardDef, SCREENS, type CardSize, type ScreenId } from '@/lib/cards/regi
 import { STACK_MAX, addItem, moveItem, removeItem, setSize, stackWithNext, unstack, type LayoutItem } from '@/lib/cards/layout'
 import { hideTodayAction, pinCardAction, resetLayoutAction, saveLayoutAction } from '@/app/(app)/profil/ozellestirme/actions'
 import { canHideToday, canPin } from '@/lib/cards/prefs'
+import { cardVars, type CardColors } from '@/lib/cards/colors'
+import ColorEditor from './ColorEditor'
+
+/** Ö2a: kartın renk değişkenleri (sarmalayıcıya yayılır). */
+const ccAttrs = (c: CardColors | undefined): { style?: Record<string, string>; 'data-cc'?: string } => { const v = cardVars(c); return v ? { style: v.style, 'data-cc': v.slots } : {} }
 import Sheet from '@/components/Sheet'
 import Link from 'next/link'
 import { useDesignPrefs } from './DesignPrefs'
@@ -26,6 +31,8 @@ interface Props {
   quick?: Record<string, string>
   /** Ö1b-3: üste sabitlenen kartlar */
   pinned?: string[]
+  /** Ö2a: kart renkleri */
+  colors?: Record<string, CardColors>
 }
 
 const HOLD_MS = 350
@@ -43,7 +50,7 @@ const INTERACTIVE = 'a,button,input,select,textarea,label,summary,details,[role=
 const SW = 168 // açık kartta görünen eylem alanı genişliği
 
 /** Ö1b-4: kart yığını — kartlar aynı yerde yana kaydırılarak (scroll-snap) gezilir; noktalar hangi kartta olunduğunu gösterir. */
-function StackCard({ id, size, ids, nodes }: { id: string; size: CardSize; ids: string[]; nodes: Record<string, ReactNode> }) {
+function StackCard({ id, size, ids, nodes, colors }: { id: string; size: CardSize; ids: string[]; nodes: Record<string, ReactNode>; colors?: Record<string, CardColors> }) {
   const ref = useRef<HTMLDivElement>(null)
   const [at, setAt] = useState(0)
   const go = (i: number) => { const el = ref.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' }) }
@@ -52,7 +59,7 @@ function StackCard({ id, size, ids, nodes }: { id: string; size: CardSize; ids: 
       <div ref={ref} onScroll={(e) => { const el = e.currentTarget; setAt(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))) }}
         className="flex overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-[24px]">
         {ids.map((cid, i) => (
-          <div key={cid} className="w-full shrink-0 snap-start flex flex-col [&>*]:flex-1" data-stack-card={cid} aria-hidden={i !== at} inert={i !== at ? true : undefined}>{nodes[cid]}</div>
+          <div key={cid} className="w-full shrink-0 snap-start flex flex-col [&>*]:flex-1" data-stack-card={cid} aria-hidden={i !== at} inert={i !== at ? true : undefined} {...ccAttrs(colors?.[cid])}>{nodes[cid]}</div>
         ))}
       </div>
       <div className="flex justify-center gap-1.5" role="tablist" aria-label="Yığındaki kartlar">
@@ -78,7 +85,7 @@ function inHScroll(el: HTMLElement | null, stop: HTMLElement) {
  * Ö1b-3: sola kaydırılınca "Bugünlük gizle" ve "Üste sabitle" eylemlerini açan kart sarmalayıcı. Dokunmatikte
  * touch olayları (dikey kaydırma tarayıcıda kalır, yatay kilitlenince sayfa kaymaz), farede işaretçi olayları kullanılır.
  */
-function SwipeCard({ id, size, pinned, open, onOpen, onAct, children }: { id: string; size: CardSize; pinned: boolean; open: boolean; onOpen: (o: boolean) => void; onAct: (k: 'hide' | 'pin') => void; children: ReactNode }) {
+function SwipeCard({ id, size, pinned, open, onOpen, onAct, colors, children }: { id: string; size: CardSize; pinned: boolean; open: boolean; onOpen: (o: boolean) => void; onAct: (k: 'hide' | 'pin') => void; colors?: CardColors; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const [dx, setDx] = useState(0)
   const [drag, setDrag] = useState(false)
@@ -145,7 +152,7 @@ function SwipeCard({ id, size, pinned, open, onOpen, onAct, children }: { id: st
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z" /></svg>{pinned ? 'Sabiti kaldır' : 'Üste sabitle'}</button> : null}
         </div>
       ) : null}
-      <div className={`relative flex-1 flex flex-col [&>*]:flex-1 ${drag ? '' : 'transition-transform duration-200'}`} style={dx ? { transform: `translateX(${dx}px)` } : undefined}>{children}</div>
+      {(() => { const cc = ccAttrs(colors); return <div className={`relative flex-1 flex flex-col [&>*]:flex-1 ${drag ? '' : 'transition-transform duration-200'}`} data-cc={cc['data-cc']} style={{ ...cc.style, ...(dx ? { transform: `translateX(${dx}px)` } : {}) }}>{children}</div> })()}
     </div>
   )
 }
@@ -211,11 +218,11 @@ function Board(p: Props) {
       <div className="grid grid-cols-2 gap-3" data-testid="card-board">
         {p.items.map((it) => p.nodes[it.id] && !gone.includes(it.id) ? (
           it.stack?.some((sid) => p.nodes[sid]) ? (
-            <StackCard key={it.id} id={it.id} size={it.size} ids={[it.id, ...it.stack.filter((sid) => p.nodes[sid])]} nodes={p.nodes} />
+            <StackCard key={it.id} id={it.id} size={it.size} ids={[it.id, ...it.stack.filter((sid) => p.nodes[sid])]} nodes={p.nodes} colors={p.colors} />
           ) : canHideToday(it.id) || canPin(it.id) ? (
             <SwipeCard key={it.id} id={it.id} size={it.size} pinned={(p.pinned ?? []).includes(it.id)} open={openId === it.id}
-              onOpen={(o) => setOpenId(o ? it.id : null)} onAct={(k) => act(it.id, k)}>{p.nodes[it.id]}</SwipeCard>
-          ) : <div key={it.id} className={`${it.size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col [&>*]:flex-1`} data-card={it.id}>{p.nodes[it.id]}</div>
+              onOpen={(o) => setOpenId(o ? it.id : null)} onAct={(k) => act(it.id, k)} colors={p.colors?.[it.id]}>{p.nodes[it.id]}</SwipeCard>
+          ) : <div key={it.id} className={`${it.size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col [&>*]:flex-1`} data-card={it.id} {...ccAttrs(p.colors?.[it.id])}>{p.nodes[it.id]}</div>
         ) : null)}
       </div>
       {toast ? (
@@ -263,7 +270,10 @@ function Editor(p: Props) {
   dragRef.current = drag
   const [quick, setQuick] = useState<Record<string, string>>(p.quick ?? {})
   const [pins, setPins] = useState<string[]>(p.pinned ?? [])
-  const changed = JSON.stringify(items) !== JSON.stringify(p.items) || JSON.stringify(quick) !== JSON.stringify(p.quick ?? {})
+  const [colors, setColors] = useState<Record<string, CardColors>>(p.colors ?? {})
+  const [colorFor, setColorFor] = useState<string | null>(null)
+  const colorsChanged = JSON.stringify(colors) !== JSON.stringify(p.colors ?? {})
+  const changed = JSON.stringify(items) !== JSON.stringify(p.items) || JSON.stringify(quick) !== JSON.stringify(p.quick ?? {}) || colorsChanged
   const path = SCREENS[p.screen].path
 
   const commit = useCallback((next: Item[]) => {
@@ -382,7 +392,12 @@ function Editor(p: Props) {
 
   const done = async () => {
     setBusy(true)
-    const settings = Object.fromEntries(Object.entries(quick).filter(([id, q]) => (p.quick ?? {})[id] !== q).map(([id, q]) => [id, { quick: q }]))
+    const settings: Record<string, { quick?: string; colors?: CardColors | null }> = Object.fromEntries(Object.entries(quick).filter(([id, q]) => (p.quick ?? {})[id] !== q).map(([id, q]) => [id, { quick: q }]))
+    // renk değişen kartlar (temizlenen = null)
+    for (const id of new Set([...Object.keys(colors), ...Object.keys(p.colors ?? {})])) {
+      if (JSON.stringify(colors[id] ?? {}) === JSON.stringify(p.colors?.[id] ?? {})) continue
+      settings[id] = { ...settings[id], colors: colors[id] && Object.keys(colors[id]).length ? colors[id] : null }
+    }
     const r = await saveLayoutAction(p.screen, items.map((i): LayoutItem => ({ id: i.id, size: i.size, ...(i.stack?.length ? { stack: i.stack } : {}) })), settings)
     setBusy(false)
     if (!r.ok) { setMsg(r.error); return }
@@ -431,7 +446,7 @@ function Editor(p: Props) {
               className={`relative min-w-0 rounded-[24px] touch-pan-y ${it.size === 'full' ? 'col-span-2' : ''} ${flash === it.id ? 'ring-2 ring-acc ring-offset-2 ring-offset-bg' : ''}`}>
               <div className={`h-full rounded-[24px] flex flex-col ${dragging ? 'opacity-0' : def.locked === 'top' ? '' : 'card-wiggle'}`} style={{ animationDelay: `${(idx % 3) * 90}ms` }}>
                 {def.locked !== 'top' ? <div className={`h-9 flex items-center gap-2 min-w-0 ${left ? 'pl-[76px] pr-1.5 justify-end' : 'pl-1.5 pr-[76px]'}`} aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b>{pins.includes(def.id) ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-surface-3 text-ink-2 shrink-0">SABİT</span> : null}{it.stack?.length ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-acc text-acc-ink shrink-0" data-testid="stack-badge">+{it.stack.length} YIĞIN</span> : null}</div> : null}
-                <div className="pointer-events-none flex-1 flex flex-col [&>*]:flex-1" aria-hidden>
+                <div className="pointer-events-none flex-1 flex flex-col [&>*]:flex-1" aria-hidden {...ccAttrs(colors[it.id])}>
                   {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-2.5 flex items-center min-h-[52px]" data-testid="card-placeholder"><span className="text-[12.5px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
                 </div>
               </div>
@@ -546,10 +561,21 @@ function Editor(p: Props) {
                   className="appearance-none w-12 h-7 rounded-full bg-surface-3 relative shrink-0 transition checked:bg-acc before:content-[''] before:absolute before:top-1 before:left-1 before:w-5 before:h-5 before:rounded-full before:bg-white before:transition checked:before:translate-x-5" />
               </label>
             ) : null}
-            <p className="text-[12px] text-mute">Kart renkleri bir sonraki güncellemede bu ekrana eklenecek.</p>
+            {sheetDef.colorSlots ? (
+              <button type="button" onClick={() => { const id = sheetDef.id; setSheet(null); setColorFor(id) }} data-testid="card-colors"
+                className="h-12 rounded-xl bg-surface-2 border border-line text-[14px] font-bold flex items-center justify-between px-4">
+                <span>Renkler</span>
+                <span className="flex items-center gap-1">{Object.values(colors[sheetDef.id] ?? {}).map((c) => <span key={c} className="w-4 h-4 rounded-full border border-line-2" style={{ background: c }} />)}<span className="text-mute ml-1">›</span></span>
+              </button>
+            ) : null}
             <button type="button" onClick={() => setSheet(null)} className="h-12 rounded-full bg-acc text-acc-ink font-extrabold">Tamam</button>
           </div>
         ) : null}
+      </Sheet>
+      <Sheet open={!!colorFor} onClose={() => setColorFor(null)} title={colorFor ? `${cardDef(colorFor)?.title} · renkler` : 'Renkler'}>
+        {colorFor ? <ColorEditor title={cardDef(colorFor)?.title ?? ''} node={p.nodes[colorFor] ?? <div className="card p-4"><b>{cardDef(colorFor)?.title}</b><p className="text-mute">Örnek metin</p></div>}
+          value={colors[colorFor] ?? {}} onChange={(c) => setColors((m) => { const n = { ...m }; if (Object.keys(c).length) n[colorFor] = c; else delete n[colorFor]; return n })}
+          onDone={() => setColorFor(null)} /> : null}
       </Sheet>
     </div>
   )

@@ -151,3 +151,20 @@ html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; t
 @keyframes cardWiggle { 0%, 100% { transform: rotate(-0.35deg); } 50% { transform: rotate(0.35deg); } }
 .card-wiggle { animation: cardWiggle .5s ease-in-out infinite; transform-origin: 50% 60%; }
 @media (prefers-reduced-motion: reduce) { .card-wiggle { animation: none; } }
+
+/* Ö2a kart renkleri: kart sarmalayıcısındaki --ccd-* (koyu) / --ccl-* (açık) değişkenleri temanın renklerini yalnız o kartta değiştirir */
+[data-cc~="bg"] { --color-surface: var(--ccd-bg); --color-surface-2: color-mix(in oklab, var(--ccd-bg) 86%, var(--color-ink)); --color-surface-3: color-mix(in oklab, var(--ccd-bg) 76%, var(--color-ink)); --color-line: color-mix(in oklab, var(--ccd-bg) 82%, var(--color-ink)); --color-line-2: color-mix(in oklab, var(--ccd-bg) 70%, var(--color-ink)); --band: linear-gradient(160deg, var(--ccd-bg), color-mix(in oklab, var(--ccd-bg) 72%, #000)); --band-box: color-mix(in oklab, var(--color-ink) 14%, transparent); }
+[data-cc~="title"] { --color-ink: var(--ccd-title); }
+[data-cc~="text"] { --color-ink-2: var(--ccd-text); --color-mute: color-mix(in oklab, var(--ccd-text) 80%, transparent); }
+[data-cc~="acc"], [data-cc~="acc"] [data-mod] { --color-acc: var(--ccd-acc); --color-acc-ink: var(--ccd-acc-ink); }
+:root[data-theme="light"] [data-cc~="bg"] { --color-surface: var(--ccl-bg); --color-surface-2: color-mix(in oklab, var(--ccl-bg) 86%, var(--color-ink)); --color-surface-3: color-mix(in oklab, var(--ccl-bg) 76%, var(--color-ink)); --color-line: color-mix(in oklab, var(--ccl-bg) 82%, var(--color-ink)); --color-line-2: color-mix(in oklab, var(--ccl-bg) 70%, var(--color-ink)); --band: linear-gradient(160deg, var(--ccl-bg), color-mix(in oklab, var(--ccl-bg) 72%, #000)); --band-box: color-mix(in oklab, var(--color-ink) 14%, transparent); }
+:root[data-theme="light"] [data-cc~="title"] { --color-ink: var(--ccl-title); }
+:root[data-theme="light"] [data-cc~="text"] { --color-ink-2: var(--ccl-text); --color-mute: color-mix(in oklab, var(--ccl-text) 80%, transparent); }
+:root[data-theme="light"] [data-cc~="acc"], :root[data-theme="light"] [data-cc~="acc"] [data-mod] { --color-acc: var(--ccl-acc); --color-acc-ink: var(--ccl-acc-ink); }
+@media (prefers-color-scheme: light) {
+:root:not([data-theme="dark"]) [data-cc~="bg"] { --color-surface: var(--ccl-bg); --color-surface-2: color-mix(in oklab, var(--ccl-bg) 86%, var(--color-ink)); --color-surface-3: color-mix(in oklab, var(--ccl-bg) 76%, var(--color-ink)); --color-line: color-mix(in oklab, var(--ccl-bg) 82%, var(--color-ink)); --color-line-2: color-mix(in oklab, var(--ccl-bg) 70%, var(--color-ink)); --band: linear-gradient(160deg, var(--ccl-bg), color-mix(in oklab, var(--ccl-bg) 72%, #000)); --band-box: color-mix(in oklab, var(--color-ink) 14%, transparent); }
+:root:not([data-theme="dark"]) [data-cc~="title"] { --color-ink: var(--ccl-title); }
+:root:not([data-theme="dark"]) [data-cc~="text"] { --color-ink-2: var(--ccl-text); --color-mute: color-mix(in oklab, var(--ccl-text) 80%, transparent); }
+:root:not([data-theme="dark"]) [data-cc~="acc"], :root:not([data-theme="dark"]) [data-cc~="acc"] [data-mod] { --color-acc: var(--ccl-acc); --color-acc-ink: var(--ccl-acc-ink); }
+}
+[data-cc~="bg"] .band { color: var(--color-ink); }

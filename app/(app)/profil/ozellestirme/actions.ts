@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser, rateLimit } from '@/lib/auth'
 import { SCREENS, isScreen } from '@/lib/cards/registry'
-import { applyWizard, hideCardToday, pinCard, resetScreen, saveNav, savePrefs, saveRules, saveScreen } from '@/lib/cards/design-data'
+import { applyWizard, hideCardToday, pinCard, resetScreen, saveModules, saveNav, savePrefs, saveRules, saveScreen } from '@/lib/cards/design-data'
 import { cardDef } from '@/lib/cards/registry'
 import { RULES_MAX } from '@/lib/cards/prefs'
 
@@ -11,7 +11,9 @@ type R = { ok: true } | { ok: false; error: string }
 const Items = z.array(z.object({ id: z.string().min(1).max(60), size: z.enum(['half', 'full']).optional(), stack: z.array(z.string().min(1).max(60)).max(4).optional() })).max(60)
 
 /** Özelleştirme: ekran düzenini kaydet (sunucu kart kaydına göre yeniden doğrular). */
-const Settings = z.record(z.string().max(60), z.object({ quick: z.string().max(20).optional() })).optional()
+const HexC = z.string().regex(/^#[0-9a-fA-F]{6}$/)
+const CardColorsZ = z.object({ bg: HexC.optional(), title: HexC.optional(), text: HexC.optional(), accent: HexC.optional() }).nullable()
+const Settings = z.record(z.string().max(60), z.object({ quick: z.string().max(20).optional(), colors: CardColorsZ.optional() })).optional()
 
 export async function saveLayoutAction(screen: string, items: unknown, settings?: unknown): Promise<R> {
   const u = await requireUser()
@@ -117,6 +119,18 @@ export async function applyWizardAction(answers: unknown): Promise<R> {
   if (!p.success) return { ok: false, error: 'Eksik cevap' }
   if (limited(u.id)) return { ok: false, error: 'Çok sık kaydedildi; biraz sonra dene' }
   await applyWizard(u.id, { ...p.data, logs: [...new Set(p.data.logs)] })
+  everywhere()
+  return { ok: true }
+}
+
+// ───────── Ö2a: modül renkleri ─────────
+const Modules = z.partialRecord(z.enum(['today', 'plan', 'water', 'food', 'fitness', 'social', 'coach', 'profile']), HexC).nullable()
+export async function saveModulesAction(mc: unknown): Promise<R> {
+  const u = await requireUser()
+  const p = Modules.safeParse(mc)
+  if (!p.success) return { ok: false, error: 'Geçersiz renk' }
+  if (limited(u.id)) return { ok: false, error: 'Çok sık kaydedildi; biraz sonra dene' }
+  await saveModules(u.id, p.data)
   everywhere()
   return { ok: true }
 }

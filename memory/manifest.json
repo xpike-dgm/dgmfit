@@ -286,7 +286,11 @@
     "tests/cards-wizard.test.ts",
     "tests/e2e/custom3.e2e.cjs",
     "app/(app)/panom/page.tsx",
-    "tests/e2e/custom4.e2e.cjs"
+    "tests/e2e/custom4.e2e.cjs",
+    "lib/cards/colors.ts",
+    "components/cards/ColorEditor.tsx",
+    "tests/cards-colors.test.ts",
+    "tests/e2e/custom5.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -483,7 +487,8 @@
     "/profil/ozellestirme/alt-bar",
     "/profil/ozellestirme/kurallar",
     "/profil/ozellestirme/sihirbaz",
-    "/panom"
+    "/panom",
+    "/profil/ozellestirme/renkler"
   ],
   "events": [
     "profile.onboarded",
@@ -508,7 +513,8 @@
     "design.rules",
     "design.prefs",
     "design.gesture",
-    "design.wizard"
+    "design.wizard",
+    "design.colors"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -997,6 +1003,21 @@
       "pinCard",
       "hideCardToday",
       "applyWizard"
+    ],
+    "lib/cards/colors.ts": [
+      "contrast",
+      "luminance",
+      "ensureContrast",
+      "autoInk",
+      "themeColors",
+      "cardVars",
+      "readabilityNotes",
+      "modulePalette",
+      "moduleCss",
+      "quantize",
+      "photoModuleColors",
+      "PALETTES",
+      "MODULES"
     ],
     "lib/cards/wizard.ts": [
       "wizardDesign",
