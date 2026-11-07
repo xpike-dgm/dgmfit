@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Ö6 başladı: özelleştirme ekranları gösterilen tasarıma uydurulacak
+- Kullanıcı: "Bana gösterdiğin özelleştirme tasarımıyla alakası yok". Doğrulandı: tasarımın 7 ekranı ile canlı ekranlar yan yana görüntülendi (scratchpad `cmp/yan-*.png`); işlevler var ama görünüm ve yerleşim tasarımdan ayrılıyor (stüdyo uzun liste, ✎ ayrı sayfa, renk ekranı alt pencere, çekmece düz liste, stil/renk ayrı sayfalar, modlar dikey liste, kütüphanede haftanın şablonu yok).
+- Süreç hatası: Ö1–Ö5 boyunca ekranlar tasarım dosyasıyla karşılaştırılmadı; kabul kriterlerinde "tasarımla eşleşme" yoktu. Bundan sonra arayüz aşamasında tasarım varsa yan yana görüntü kabul kriteridir (DECISIONS).
+
 ## 2026-11-07 — Özelleştirme Ö5b tamamlandı (Özelleştirme planı bitti)
 - Odak modları (Antrenman / Diyet / Tatil / Hastalık) ve Ramazan modu (0031 `user_modes`, `lib/modes.ts`, `lib/modes-data.ts`, `/profil/ozellestirme/modlar`, Bugün mod kartı, Yemek Sahur/İftar, zamanlayıcı ve gün kapanışı).
 - Doğrulama: commit `aa9d084`; verify.sh VERIFY OK (275 birim); release `2026-11-07T09-18-09-474Z` RELEASE OK; canlıda 23 e2e OK (custom12 kısmi: dengeleme kancası yalnız yerelde); 27 test kullanıcısı silindi; logda hata 0.

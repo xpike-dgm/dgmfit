@@ -5,7 +5,7 @@ import { getTemplate } from '@/lib/cards/templates-data'
 import { CATEGORIES } from '@/lib/cards/templates'
 import { MODULES, modulePalette } from '@/lib/cards/colors'
 import { SCREENS, type ScreenId } from '@/lib/cards/registry'
-import { TopBar } from '@/components/ui'
+import StudioHeader from '@/components/cards/StudioHeader'
 import MiniPreview from '@/components/cards/MiniPreview'
 import TemplateActions from './TemplateActions'
 import QRCode from 'qrcode'
@@ -30,7 +30,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const groups = t.status === 'public' ? await ownedGroups(u.id) : []
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="template-detail">
-      <TopBar back="/profil/ozellestirme/sablonlar" title={t.name} sub={`@${t.owner} · ${CATEGORIES.find((c) => c.id === t.category)?.label ?? 'Diğer'}`} />
+      <StudioHeader back="/profil/ozellestirme/sablonlar" title={t.name} />
+      <p className="text-[12.5px] text-mute -mt-2 px-1">{`@${t.owner} · ${CATEGORIES.find((c) => c.id === t.category)?.label ?? 'Diğer'}`}</p>
       <section aria-label="Önizleme" className="card p-3 flex gap-3 overflow-x-auto">
         {screens.map((s) => <figure key={s} className="flex flex-col items-center gap-1 shrink-0"><MiniPreview design={t.data} screen={s} width={92} label={`${SCREENS[s].title} önizlemesi`} /><figcaption className="text-[11.5px] font-bold text-mute">{SCREENS[s].title}</figcaption></figure>)}
       </section>

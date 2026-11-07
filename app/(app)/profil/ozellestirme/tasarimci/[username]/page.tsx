@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { designerProfile } from '@/lib/cards/community-data'
-import { TopBar } from '@/components/ui'
+import StudioHeader from '@/components/cards/StudioHeader'
 import MiniPreview from '@/components/cards/MiniPreview'
 import CommunityButton from '../../CommunityButton'
 
@@ -15,7 +15,8 @@ export default async function Page(props: { params: Promise<{ username: string }
   if (!d) notFound()
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="designer">
-      <TopBar back="/profil/ozellestirme/sablonlar" title={`@${d.username}`} sub="Tasarımcı" />
+      <StudioHeader back="/profil/ozellestirme/sablonlar" title={`@${d.username}`} />
+      <p className="text-[12.5px] text-mute -mt-2 px-1">Tasarımcı</p>
       <section className="card p-4 flex items-center gap-3">
         <span aria-hidden className="w-14 h-14 rounded-full bg-acc text-acc-ink flex items-center justify-center text-[22px] font-extrabold">{d.username.slice(0, 1).toLocaleUpperCase('tr-TR')}</span>
         <span className="flex-1 flex flex-col">

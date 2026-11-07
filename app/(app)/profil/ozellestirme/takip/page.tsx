@@ -1,5 +1,5 @@
 import { requireUser } from '@/lib/auth'
-import { TopBar } from '@/components/ui'
+import StudioHeader from '@/components/cards/StudioHeader'
 import { TRACKERS_MAX, listTrackers } from '@/lib/cards/custom-data'
 import Trackers from './Trackers'
 
@@ -11,7 +11,8 @@ export default async function Page() {
   const list = await listTrackers(u.id)
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="trackers">
-      <TopBar back="/profil/ozellestirme" title="Takip alanlarım" sub={`${list.length} / ${TRACKERS_MAX} · kendi ölçtüğün şeyler`} />
+      <StudioHeader back="/profil/ozellestirme/kartlarim" title="Takip alanlarım" />
+      <p className="text-[12.5px] text-mute -mt-2 px-1">{`${list.length} / ${TRACKERS_MAX} · kendi ölçtüğün şeyler`}</p>
       <Trackers list={list} />
     </div>
   )

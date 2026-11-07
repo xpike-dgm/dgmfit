@@ -28,7 +28,7 @@ const fail = (m) => { throw new Error(m) }
   const o0 = await order()
   if (o0[1] !== 'today.training') fail('kilo alma hedefinde antrenman kartı öne alınmadı: ' + o0)
   if (JSON.stringify(await tabs()) !== JSON.stringify(['today', 'plan', 'water', '+', 'food', 'fitness', 'social'])) fail('varsayılan alt bar beklenmedik: ' + (await tabs()))
-  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('goal-note').waitFor().catch(() => fail('stüdyoda hedef notu yok'))
+  await p.goto(BASE + '/profil/ozellestirme/duzen'); await p.getByTestId('goal-note').waitFor().catch(() => fail('stüdyoda hedef notu yok'))
   await p.screenshot({ path: `${OUT}/custom2-00-studyo.png`, fullPage: true })
 
   // 2) Alt bar: Sosyal'i gizle, Yemek'i iki yukarı taşı → kaydet → alt bar değişir
@@ -43,13 +43,13 @@ const fail = (m) => { throw new Error(m) }
   if (JSON.stringify(t1) !== JSON.stringify(['today', 'food', '+', 'plan', 'water', 'fitness'])) fail('alt bar kaydedilmedi: ' + t1)
 
   // 3) Tek el (sol): + başa geçer, bant düğmeleri sola
-  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('use-prefs').getByRole('radio', { name: 'Sol el' }).click()
+  await p.goto(BASE + '/profil/ozellestirme/duzen'); await p.getByTestId('use-prefs').getByRole('radio', { name: 'Sol el' }).click()
   await p.waitForTimeout(900); await p.goto(BASE + '/')
   if ((await tabs())[0] !== '+') fail('sol el modunda + başta değil: ' + (await tabs()))
   const dir = await p.locator('[data-card="today.header"] .band-head').evaluate((e) => getComputedStyle(e).flexDirection)
   if (dir !== 'row-reverse') fail('sol elde bant başlığı ters değil: ' + dir)
   await p.screenshot({ path: `${OUT}/custom2-02-sol-el.png` })
-  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('use-prefs').getByRole('radio', { name: 'Kapalı' }).click(); await p.waitForTimeout(900)
+  await p.goto(BASE + '/profil/ozellestirme/duzen'); await p.getByTestId('use-prefs').getByRole('radio', { name: 'Kapalı' }).click(); await p.waitForTimeout(900)
 
   // 4) Kural: her gün → Seriler göster + Su gizle
   await p.getByTestId('studio-rules').click(); await p.getByTestId('rules').waitFor()
@@ -83,7 +83,7 @@ const fail = (m) => { throw new Error(m) }
   await p.getByTestId('card-editor').waitFor()
   await p.getByRole('button', { name: 'Vazgeç' }).click(); await p.waitForURL(BASE + '/')
   // kapatılınca çıkmaz
-  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('hold-edit-toggle').click(); await p.waitForTimeout(900); await p.goto(BASE + '/')
+  await p.goto(BASE + '/profil/ozellestirme/duzen'); await p.getByTestId('hold-edit-toggle').click(); await p.waitForTimeout(900); await p.goto(BASE + '/')
   const h2 = await p.locator('[data-card="today.header"] h1').boundingBox()
   await p.mouse.move(h2.x + 20, h2.y + h2.height / 2); await p.mouse.down(); await p.waitForTimeout(800); await p.mouse.up()
   if (await p.getByTestId('hold-edit').count()) fail('kapalıyken basılı tutunca balon çıktı')

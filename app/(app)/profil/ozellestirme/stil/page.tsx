@@ -1,17 +1,19 @@
 import { requireUser } from '@/lib/auth'
-import { userStyle } from '@/lib/cards/design-data'
-import { TopBar } from '@/components/ui'
-import StyleForm from './StyleForm'
+import { activeDesign, userStyle } from '@/lib/cards/design-data'
+import { normalizeModuleColors } from '@/lib/cards/colors'
+import StudioHeader from '@/components/cards/StudioHeader'
+import ColorsStyle from './ColorsStyle'
 
-export const metadata = { title: 'Stil' }
+export const metadata = { title: 'Renkler ve stil' }
 
-/** Ö2b: stil — köşe, yoğunluk, yazı tipi, simgeler, bant, erişilebilirlik, birimler, dokunuş, akşam renkleri. */
+/** Ö6: Renkler ve stil (gösterilen tasarım) — paletler, modül renkleri, köşe/yazı tipi/yoğunluk; ayrıntılar "Daha fazla"da. */
 export default async function Page() {
   const u = await requireUser()
+  const [d, st] = await Promise.all([activeDesign(u.id), userStyle(u.id)])
   return (
-    <div className="px-4 flex flex-col gap-3">
-      <TopBar back="/profil/ozellestirme" title="Stil" sub="Görünüm, birimler, dokunuş" />
-      <StyleForm initial={await userStyle(u.id)} />
+    <div className="px-4 flex flex-col gap-3 pb-6">
+      <StudioHeader back="/profil/ozellestirme" title="Renkler ve stil" />
+      <ColorsStyle initial={normalizeModuleColors(d?.modules) ?? {}} style={st} />
     </div>
   )
 }

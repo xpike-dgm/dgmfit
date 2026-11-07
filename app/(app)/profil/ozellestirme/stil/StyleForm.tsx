@@ -32,7 +32,7 @@ const Box = ({ title, children }: { title: string; children: ReactNode }) => (
   <section aria-label={title} className="card px-4 py-1 flex flex-col"><h2 className="text-[13px] font-extrabold text-mute tracking-[0.06em] uppercase pt-3">{title}</h2>{children}</section>
 )
 
-export default function StyleForm({ initial }: { initial: StylePrefs }) {
+export default function StyleForm({ initial, more = false }: { initial: StylePrefs; more?: boolean }) {
   const [s, setS] = useState(initial)
   const [msg, setMsg] = useState<string | null>(null)
   const [, start] = useTransition()
@@ -56,9 +56,11 @@ export default function StyleForm({ initial }: { initial: StylePrefs }) {
   return (
     <div className="flex flex-col gap-3" data-testid="style-form">
       <Box title="Görünüm">
+        {more ? null : <>
         <Seg testId="st-radius" label="Köşeler" value={s.radius} opts={[['sharp', 'Keskin'], ['normal', 'Normal'], ['round', 'Yuvarlak']]} onPick={(v) => save({ radius: v })} />
         <Seg testId="st-density" label="Yoğunluk" hint="Sıkı: ekrana daha çok şey sığar. Ferah: daha çok boşluk." value={s.density} opts={[['compact', 'Sıkı'], ['normal', 'Normal'], ['airy', 'Ferah']]} onPick={(v) => save({ density: v })} />
-        <Seg testId="st-font" label="Yazı tipi" value={s.font} opts={[['default', 'DgFit'], ['rounded', 'Yuvarlak'], ['serif', 'Klasik'], ['system', 'Telefon']]} onPick={(v) => save({ font: v })} />
+        </>}
+        <Seg testId={more ? 'st-font-more' : 'st-font'} label={more ? 'Diğer yazı tipleri' : 'Yazı tipi'} value={s.font} opts={[['default', 'Manrope'], ['grotesk', 'Grotesk'], ['rounded', 'Yuvarlak'], ['serif', 'Klasik'], ['system', 'Telefon']]} onPick={(v) => save({ font: v })} />
         <Seg testId="st-icons" label="Simgeler" value={s.icons} opts={[['thin', 'İnce'], ['normal', 'Normal'], ['bold', 'Kalın']]} onPick={(v) => save({ icons: v })} />
         <Seg testId="st-band" label="Bant arka planı" hint="Ekranların üstündeki renkli bant." value={s.band} opts={[['gradient', 'Degrade'], ['flat', 'Düz'], ['photo', 'Fotoğraf']]}
           onPick={(v) => (v === 'photo' && !s.bandMedia ? file.current?.click() : save({ band: v }))} />

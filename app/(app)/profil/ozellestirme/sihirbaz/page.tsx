@@ -1,5 +1,5 @@
 import { requireUser } from '@/lib/auth'
-import { TopBar } from '@/components/ui'
+import StudioHeader from '@/components/cards/StudioHeader'
 import Wizard from './Wizard'
 
 export const metadata = { title: 'Düzen sihirbazı' }
@@ -9,7 +9,7 @@ export default async function Page() {
   await requireUser()
   return (
     <div className="px-4 flex flex-col gap-3">
-      <TopBar back="/profil/ozellestirme" title="Düzen sihirbazı" sub="5 soruda sana göre düzen" />
+      <StudioHeader back="/profil/ozellestirme" title="Düzen sihirbazı" />
       <Wizard />
     </div>
   )

@@ -9,7 +9,8 @@ import { STACK_MAX, addItem, moveItem, removeItem, setSize, stackWithNext, unsta
 import { hideTodayAction, pinCardAction, resetLayoutAction, saveLayoutAction } from '@/app/(app)/profil/ozellestirme/actions'
 import { canHideToday, canPin } from '@/lib/cards/prefs'
 import { cardVars, type CardColors } from '@/lib/cards/colors'
-import ColorEditor from './ColorEditor'
+import CardStudio from './CardStudio'
+import { isUserCard as isUserCardId } from '@/lib/cards/custom'
 import { trackTap, trackView } from './usage-tracker'
 
 /** Ö2a: kartın renk değişkenleri (sarmalayıcıya yayılır). */
@@ -277,6 +278,19 @@ function Board(p: Props) {
   )
 }
 
+const MODULE_NAME: Record<string, string> = { today: 'Bugün', plan: 'Fit', water: 'Su', food: 'Yemek', fitness: 'Fitness', social: 'Sosyal', coach: 'Koç', profile: 'Profil' }
+/** Çekmecedeki küçük görsel (tasarım: modül renginde soyut kart çizimi). */
+function Thumb({ id }: { id: string }) {
+  const n = [...id].reduce((a, c) => a + c.charCodeAt(0), 0) % 3
+  return (
+    <span className="w-[72px] h-[52px] shrink-0 rounded-[12px] border border-[color-mix(in_oklab,var(--color-acc)_25%,var(--color-line))] bg-[color-mix(in_oklab,var(--color-acc)_12%,var(--color-surface))] flex items-center justify-center p-2" aria-hidden>
+      {n === 0 ? <span className="w-full flex flex-col gap-1"><span className="h-1.5 w-2/3 rounded-full bg-acc" /><span className="h-1 w-full rounded-full bg-acc/40" /><span className="h-1 w-4/5 rounded-full bg-acc/40" /></span>
+        : n === 1 ? <span className="w-full h-full flex items-end gap-1">{[45, 70, 55, 90].map((h, i) => <span key={i} className="flex-1 rounded-t-[3px] bg-acc" style={{ height: `${h}%` }} />)}</span>
+        : <span className="w-7 h-7 rounded-full" style={{ background: 'conic-gradient(var(--color-acc) 0 70%, color-mix(in oklab, var(--color-acc) 25%, transparent) 70% 100%)', WebkitMask: 'radial-gradient(circle, transparent 52%, #000 53%)', mask: 'radial-gradient(circle, transparent 52%, #000 53%)' }} />}
+    </span>
+  )
+}
+
 function Editor(p: Props) {
   const defOf = useDefOf()
   const router = useRouter()
@@ -284,7 +298,10 @@ function Editor(p: Props) {
   const [items, setItems] = useState<Item[]>(p.items)
   const [history, setHistory] = useState<Item[][]>([])
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; dx: number; dy: number; w: number; h: number } | null>(null)
-  const [sheet, setSheet] = useState<string | null>(null)
+  const [studio, setStudio] = useState<{ id: string; tab: 'color' | 'layout' } | null>(null)
+  const [pickColor, setPickColor] = useState(false)
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'removed' | 'all' | 'mine'>('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(p.notices?.length ? p.notices.join(' ') : null)
@@ -299,7 +316,6 @@ function Editor(p: Props) {
   const [quick, setQuick] = useState<Record<string, string>>(p.quick ?? {})
   const [pins, setPins] = useState<string[]>(p.pinned ?? [])
   const [colors, setColors] = useState<Record<string, CardColors>>(p.colors ?? {})
-  const [colorFor, setColorFor] = useState<string | null>(null)
   const colorsChanged = JSON.stringify(colors) !== JSON.stringify(p.colors ?? {})
   const changed = JSON.stringify(items) !== JSON.stringify(p.items) || JSON.stringify(quick) !== JSON.stringify(p.quick ?? {}) || colorsChanged
   const path = SCREENS[p.screen].path
@@ -441,28 +457,57 @@ function Editor(p: Props) {
   const inDrawer = p.drawer.filter((d) => !items.some((i) => i.id === d.id))
     .concat(p.items.filter((i) => !items.some((x) => x.id === i.id)).map((i) => ({ id: i.id, reason: 'removed' as const })))
     .filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i)
-  const sheetDef = sheet ? defOf(sheet) : null
-  const sheetIdx = sheet ? items.findIndex((i) => i.id === sheet) : -1
+
+  const studioDef = studio ? defOf(studio.id) : null
+  const studioIdx = studio ? items.findIndex((i) => i.id === studio.id) : -1
+  const openStudio = (id: string, tab: 'color' | 'layout') => { setPickColor(false); setStudio({ id, tab }) }
+  const q = search.trim().toLocaleLowerCase('tr')
+  const match = (id: string) => { const d = defOf(id); return !q || `${d?.title} ${d?.desc}`.toLocaleLowerCase('tr').includes(q) }
+  const removedList = inDrawer.filter((d) => d.reason === 'removed' && match(d.id))
+  const otherList = inDrawer.filter((d) => d.reason !== 'removed' && match(d.id))
+  const shownRemoved = filter === 'mine' ? removedList.filter((d) => isUserCardId(d.id)) : filter === 'all' || filter === 'removed' ? removedList : []
+  const shownOther = filter === 'mine' ? otherList.filter((d) => isUserCardId(d.id)) : filter === 'all' ? otherList : []
+  const drawerRow = (d: { id: string; reason: 'removed' | 'new' | 'available' }) => {
+    const def = defOf(d.id)!
+    return (
+      <div key={d.id} role="button" tabIndex={0} aria-label={`${def.title} ekle`} data-mod={def.module}
+        onClick={() => add(d.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); add(d.id) } }}
+        onPointerDown={(e) => startHold(e, d.id, true)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
+        className={`flex items-center gap-3 p-2.5 rounded-[18px] bg-surface-2 select-none touch-pan-y cursor-pointer text-left ${d.reason === 'new' ? 'border border-acc' : 'border border-transparent'}`} data-drawer-card={d.id}>
+        <Thumb id={d.id} />
+        <span className="flex flex-col gap-0.5 flex-1 min-w-0">
+          <b className="text-[14.5px] font-extrabold flex items-center gap-1.5 min-w-0"><span className="truncate">{def.title}</span>{d.reason === 'new' ? <span className="text-[10.5px] font-extrabold px-1.5 rounded-full bg-acc text-acc-ink shrink-0">YENİ</span> : null}</b>
+          <span className="text-[12px] text-mute leading-snug line-clamp-2">{MODULE_NAME[def.module] ?? ''}{d.reason === 'removed' ? ' · kaldırdığın kart' : def.desc ? ` · ${def.desc}` : ''}</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-mute shrink-0" aria-hidden><circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" /><circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" /><circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" /></svg>
+      </div>
+    )
+  }
+  const tb = 'min-h-10 px-3.5 rounded-full bg-surface-2 border border-line-2 text-[13px] font-bold inline-flex items-center gap-1.5 shrink-0 disabled:opacity-40'
 
   return (
-    <div className="flex flex-col gap-3" data-testid="card-editor">
-      <div className="sticky top-0 z-40 -mx-4 px-3 pt-2 pb-2.5 bg-bg/95 backdrop-blur border-b border-line flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <button type="button" onClick={cancel} className="h-11 px-3 text-[14px] font-bold text-mute">Vazgeç</button>
-          <span className="flex flex-col items-center leading-tight"><b className="text-[15px]">{SCREENS[p.screen].title}</b><span className="text-[11.5px] font-bold text-acc">Düzenleniyor</span></span>
-          <button type="button" onClick={done} disabled={busy} className="h-11 px-5 rounded-full bg-acc text-acc-ink font-extrabold text-[14px] disabled:opacity-50" data-testid="edit-done">{busy ? '…' : 'Bitti'}</button>
+    <div className="flex flex-col gap-3" data-testid="card-editor" data-mod="today">
+      <div className="sticky top-0 z-40 -mx-4 bg-surface border-b border-line">
+        <div className="flex items-center justify-between px-3 pt-3 pb-2">
+          <button type="button" onClick={cancel} className="min-h-11 px-3 text-[14px] font-bold text-mute">Vazgeç</button>
+          <span className="flex flex-col items-center leading-tight"><b className="text-[15px] font-extrabold">{SCREENS[p.screen].title}</b><span className="text-[11.5px] font-bold text-acc">Düzenleniyor</span></span>
+          <button type="button" onClick={done} disabled={busy} className="min-h-11 px-[18px] rounded-full bg-acc text-acc-ink font-extrabold text-[14px] disabled:opacity-50" data-testid="edit-done">{busy ? '…' : 'Bitti'}</button>
         </div>
-        <div className="flex gap-2 overflow-x-auto">
-          <button type="button" onClick={undo} disabled={!history.length} className="h-10 px-3.5 rounded-full bg-surface-2 border border-line-2 text-[13px] font-bold disabled:opacity-40 shrink-0">Geri al</button>
-          <button type="button" onClick={() => setDrawerOpen(true)} className="h-10 px-3.5 rounded-full bg-surface-2 border border-line-2 text-[13px] font-bold inline-flex items-center gap-1.5 shrink-0" data-testid="open-drawer">
-            + Kart ekle {inDrawer.length ? <span className="num text-[11px] px-1.5 rounded-full bg-acc text-acc-ink">{inDrawer.length}</span> : null}
+        <div className="flex gap-2 overflow-x-auto px-3 py-2.5 border-t border-line [scrollbar-width:none]">
+          <button type="button" onClick={undo} disabled={!history.length} className={tb} data-testid="edit-undo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 14L4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 010 11H11" /></svg>Geri al
           </button>
-          <button type="button" onClick={reset} disabled={busy} className="h-10 px-3.5 rounded-full text-[13px] font-bold text-mute shrink-0">Varsayılana dön</button>
+          <button type="button" onClick={() => setDrawerOpen(true)} className={tb} data-testid="open-drawer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>Kart ekle {inDrawer.length ? <span className="num text-[11px] px-[7px] py-px rounded-full bg-acc text-acc-ink">{inDrawer.length}</span> : null}
+          </button>
+          <button type="button" onClick={() => { setPickColor((v) => !v); setMsg(null) }} aria-pressed={pickColor} className={`${tb} aria-pressed:border-acc`} data-testid="edit-color">
+            <span className="w-3.5 h-3.5 rounded-full" style={{ background: 'conic-gradient(#B6E35E, #6CC7FF, #A9A4FF, #FFA06B, #B6E35E)' }} aria-hidden />Renk
+          </button>
         </div>
       </div>
-      <p className="text-[12.5px] text-mute text-center -mt-1" role="status">{msg ?? 'Taşımak için kartı basılı tut ve sürükle'}</p>
+      <p className="text-[12.5px] text-mute text-center" role="status">{msg ?? (pickColor ? 'Rengini değiştirmek istediğin karta dokun' : 'Taşımak için kartı basılı tut ve sürükle')}</p>
 
-      <div className="grid grid-cols-2 gap-3 select-none [-webkit-touch-callout:none]">
+      <div className="grid grid-cols-2 gap-3 select-none [-webkit-touch-callout:none] pt-1">
         {items.map((it, idx) => {
           const def = defOf(it.id)!
           const dragging = drag?.id === it.id
@@ -471,140 +516,137 @@ function Editor(p: Props) {
             <div key={it.id} ref={(el) => { if (el) refs.current.set(it.id, el); else refs.current.delete(it.id) }}
               role="group" aria-label={def.title} data-edit-card={it.id} data-index={idx}
               onPointerDown={(e) => startHold(e, it.id)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
-              className={`relative min-w-0 rounded-[24px] touch-pan-y ${it.size === 'full' ? 'col-span-2' : ''} ${flash === it.id ? 'ring-2 ring-acc ring-offset-2 ring-offset-bg' : ''}`}>
+              onClick={(e) => { if (pickColor && !(e.target as HTMLElement).closest('[data-card-btn]')) openStudio(it.id, 'color') }}
+              className={`relative min-w-0 rounded-[24px] touch-pan-y ${it.size === 'full' ? 'col-span-2' : ''} ${flash === it.id ? 'ring-2 ring-acc ring-offset-2 ring-offset-bg' : ''} ${pickColor && def.colorSlots ? 'outline-2 outline-dashed outline-acc/60 outline-offset-2 cursor-pointer' : ''}`}>
               <div className={`h-full rounded-[24px] flex flex-col ${dragging ? 'opacity-0' : def.locked === 'top' ? '' : 'card-wiggle'}`} style={{ animationDelay: `${(idx % 3) * 90}ms` }}>
-                {def.locked !== 'top' ? <div className={`h-9 flex items-center gap-2 min-w-0 ${left ? 'pl-[76px] pr-1.5 justify-end' : 'pl-1.5 pr-[76px]'}`} aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b>{pins.includes(def.id) ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-surface-3 text-ink-2 shrink-0">SABİT</span> : null}{it.stack?.length ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-acc text-acc-ink shrink-0" data-testid="stack-badge">+{it.stack.length} YIĞIN</span> : null}</div> : null}
                 <div className="pointer-events-none flex-1 flex flex-col [&>*]:flex-1" aria-hidden {...ccAttrs(colors[it.id])}>
-                  {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-2.5 flex items-center min-h-[52px]" data-testid="card-placeholder"><span className="text-[12.5px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
+                  {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-3 flex flex-col justify-center gap-0.5 min-h-[64px]" data-testid="card-placeholder"><b className="text-[13px]">{def.title}</b><span className="text-[12px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
                 </div>
               </div>
-              {dragging ? <div className="absolute inset-0 rounded-[24px] border-2 border-dashed border-acc bg-acc/5" aria-hidden /> : null}
-              <div className={`absolute flex gap-1.5 z-10 ${def.locked === 'top' ? (left ? '-top-2.5 -left-1.5' : '-top-2.5 -right-1.5') : (left ? 'top-0.5 left-0' : 'top-0.5 right-0')}`} data-card-ctl>
-                <button type="button" data-card-btn aria-label={`${def.title} kartını düzenle`} onClick={() => setSheet(it.id)}
-                  className="w-8 h-8 rounded-full bg-ink text-bg shadow-md flex items-center justify-center hit">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>
-                </button>
-                {def.locked ? (
-                  <span className="w-8 h-8 rounded-full bg-surface-3 text-mute flex items-center justify-center" title="Bu kart kaldırılamaz" aria-label={`${def.title} kaldırılamaz`}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>
-                  </span>
-                ) : (
-                  <button type="button" data-card-btn aria-label={`${def.title} kartını kaldır`} onClick={() => remove(it.id)} data-testid="card-remove"
-                    className="w-8 h-8 rounded-full bg-danger text-white shadow-md flex items-center justify-center hit">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden><path d="M5 12h14" /></svg>
+              {dragging ? <div className="absolute inset-0 rounded-[20px] border-2 border-dashed border-water bg-water/5 flex items-center justify-center text-[12px] font-bold text-water" aria-hidden>Buraya bırak</div> : null}
+              {!dragging && (pins.includes(def.id) || it.stack?.length) ? (
+                <div className={`absolute -top-2 flex gap-1 z-10 ${left ? 'right-3' : 'left-3'}`} aria-hidden>
+                  {pins.includes(def.id) ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-surface-3 text-ink-2 shadow">SABİT</span> : null}
+                  {it.stack?.length ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-acc text-acc-ink shadow" data-testid="stack-badge">+{it.stack.length} YIĞIN</span> : null}
+                </div>
+              ) : null}
+              {!dragging ? (
+                <div className={`absolute -top-2.5 flex gap-1.5 z-10 ${left ? '-left-1.5' : '-right-1.5'}`} data-card-ctl>
+                  <button type="button" data-card-btn aria-label={`${def.title} kartını düzenle`} onClick={() => openStudio(it.id, def.colorSlots ? 'color' : 'layout')}
+                    className="w-8 h-8 rounded-full bg-ink text-bg shadow-[0_2px_8px_rgba(0,0,0,.4)] flex items-center justify-center hit">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>
                   </button>
-                )}
-              </div>
+                  {def.locked ? (
+                    <span className="w-8 h-8 rounded-full bg-surface-3 text-mute flex items-center justify-center shadow" title="Bu kart kaldırılamaz" aria-label={`${def.title} kaldırılamaz`}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></svg>
+                    </span>
+                  ) : (
+                    <button type="button" data-card-btn aria-label={`${def.title} kartını kaldır`} onClick={() => remove(it.id)} data-testid="card-remove"
+                      className="w-8 h-8 rounded-full bg-[#E5484D] text-white shadow-[0_2px_8px_rgba(0,0,0,.4)] flex items-center justify-center hit">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden><path d="M5 12h14" /></svg>
+                    </button>
+                  )}
+                </div>
+              ) : null}
             </div>
           )
         })}
       </div>
+      <button type="button" onClick={reset} disabled={busy} className="self-center min-h-11 px-4 text-[13px] font-bold text-mute" data-testid="edit-reset">Bu ekranı varsayılana döndür</button>
 
       {drag ? (
         <div className="fixed z-50 pointer-events-none" aria-hidden
           style={{ left: drag.x - drag.dx, top: drag.y - drag.dy, width: drag.w, transform: 'rotate(-2deg) scale(1.04)', filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.45))' }}>
-          <div className="flex flex-col [&>*]:flex-1">{p.nodes[drag.id] ?? <div className="card p-4"><b>{defOf(drag.id)?.title}</b></div>}</div>
+          <div className="flex flex-col [&>*]:flex-1 rounded-[20px] ring-1 ring-water">{p.nodes[drag.id] ?? <div className="card p-4"><b>{defOf(drag.id)?.title}</b></div>}</div>
         </div>
       ) : null}
 
       <div>
         <Sheet open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Kart ekle">
-          <div className="flex flex-col gap-2 pb-4" data-testid="card-drawer">
-            {!inDrawer.length ? <p className="text-[14px] text-mute py-6 text-center">Bu ekrandaki bütün kartlar zaten yerinde.</p> : null}
-            {inDrawer.map((d) => {
-              const def = defOf(d.id)!
-              return (
-                <div key={d.id} data-mod={def.module} onPointerDown={(e) => startHold(e, d.id, true)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-surface-2 select-none touch-pan-y" data-drawer-card={d.id}>
-                  <span className="w-1.5 self-stretch rounded-full bg-acc" aria-hidden />
-                  <span className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <b className="text-[14px] flex items-center gap-1.5">{def.title}{d.reason === 'new' ? <span className="text-[10.5px] font-extrabold px-1.5 rounded-full bg-acc text-acc-ink">YENİ</span> : null}</b>
-                    <span className="text-[12px] text-mute leading-snug">{d.reason === 'removed' ? 'Kaldırdığın kart · ' : ''}{def.desc}</span>
-                  </span>
-                  <button type="button" data-card-btn onClick={() => add(d.id)} className="h-10 px-3.5 rounded-full bg-acc text-acc-ink text-[13px] font-bold shrink-0" aria-label={`${def.title} ekle`}>Ekle</button>
-                </div>
-              )
-            })}
-            <p className="text-[12px] text-mute text-center pt-1">Dokun: en alta eklenir · basılı tutup sürükle: istediğin yere</p>
+          <div className="flex flex-col gap-2.5 pb-4" data-testid="card-drawer">
+            <label className="relative">
+              <span className="sr-only">Kart ara</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="absolute left-3.5 top-1/2 -translate-y-1/2 text-mute"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kart ara" className="w-full h-12 rounded-[14px] bg-surface-2 border border-line pl-10 pr-3 text-[15px]" data-testid="drawer-search" />
+            </label>
+            <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]" role="radiogroup" aria-label="Kartlar">
+              {([['removed', `Kaldırdıkların${removedList.length ? ` ${removedList.length}` : ''}`], ['all', 'Tüm kartlar'], ['mine', 'Kendi kartlarım']] as const).map(([k, l]) => (
+                <button key={k} type="button" role="radio" aria-checked={filter === k} onClick={() => setFilter(k)}
+                  className="h-9 px-3 rounded-full border border-line-2 text-[13px] font-bold shrink-0 aria-checked:bg-ink aria-checked:text-bg aria-checked:border-ink">{l}</button>
+              ))}
+            </div>
+            {!shownRemoved.length && !shownOther.length ? <p className="text-[14px] text-mute py-5 text-center">{filter === 'mine' ? 'Bu ekran için çekmecede kendi kartın yok. Kart oluşturucuda yapabilirsin.' : q ? 'Bu aramada kart yok.' : filter === 'removed' ? 'Kaldırdığın kart yok.' : 'Bu ekrandaki bütün kartlar zaten yerinde.'}</p> : null}
+            {shownRemoved.map(drawerRow)}
+            {shownOther.length ? <span className="text-[12px] font-bold tracking-[0.06em] uppercase text-mute pt-2">Henüz eklemediklerin</span> : null}
+            {shownOther.map(drawerRow)}
+            <p className="text-[12px] text-mute text-center pt-1">Kartı basılı tutup yukarı sürükle ya da dokun: en alta eklenir.</p>
           </div>
         </Sheet>
       </div>
 
-      <Sheet open={!!sheet} onClose={() => setSheet(null)} title={sheetDef?.title ?? 'Kart'}>
-        {sheetDef ? (
-          <div className="flex flex-col gap-4 pb-4" data-testid="card-sheet">
-            <p className="text-[13px] text-mute leading-relaxed">{sheetDef.desc}{sheetDef.conditional ? ` · ${sheetDef.conditional}` : ''}</p>
-            {sheetDef.sizes.length > 1 ? (
+      {studio && studioDef ? (
+        <CardStudio key={studio.id} def={studioDef} node={p.nodes[studio.id] ?? <div className="card p-4 flex flex-col gap-1"><b>{studioDef.title}</b><span className="text-mute text-[13px]">{studioDef.conditional ?? studioDef.desc}</span></div>}
+          size={items[studioIdx]?.size ?? studioDef.size} colors={colors[studio.id] ?? {}} tab={studio.tab} onClose={() => setStudio(null)}
+          onApply={(c) => setColors((m) => { const n = { ...m }; if (Object.keys(c).length) n[studio.id] = c; else delete n[studio.id]; return n })}
+          layout={<>
+            <p className="text-[13px] text-mute leading-relaxed">{studioDef.desc}{studioDef.conditional ? ` · ${studioDef.conditional}` : ''}</p>
+            {studioDef.sizes.length > 1 ? (
               <div className="flex flex-col gap-2">
                 <span className="text-[13px] font-bold">Boyut</span>
                 <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Boyut">
-                  {sheetDef.sizes.map((s) => {
-                    const on = items[sheetIdx]?.size === s
-                    return <button key={s} type="button" role="radio" aria-checked={on} onClick={() => commit(setSize(items, sheetDef.id, s))}
-                      className={`h-11 rounded-xl text-[14px] font-bold border ${on ? 'bg-acc text-acc-ink border-acc' : 'bg-surface-2 border-line'}`}>{s === 'half' ? 'Yarım' : 'Tam genişlik'}</button>
+                  {studioDef.sizes.map((s) => {
+                    const on = items[studioIdx]?.size === s
+                    return <button key={s} type="button" role="radio" aria-checked={on} onClick={() => commit(setSize(items, studioDef.id, s))}
+                      className={`min-h-11 rounded-[12px] text-[14px] font-bold border ${on ? 'border-2 border-acc bg-[color-mix(in_oklab,var(--color-acc)_12%,var(--color-surface-2))]' : 'bg-surface-2 border-line'}`}>{s === 'half' ? 'Yarım' : 'Tam genişlik'}</button>
                   })}
                 </div>
               </div>
             ) : null}
-            {sheetDef.locked !== 'top' ? (
+            {studioDef.locked !== 'top' ? (
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => step(sheetDef.id, -1)} disabled={sheetIdx <= 1} className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40" data-testid="card-up">Yukarı taşı</button>
-                <button type="button" onClick={() => step(sheetDef.id, 1)} disabled={sheetIdx >= items.length - 1} className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40" data-testid="card-down">Aşağı taşı</button>
+                <button type="button" onClick={() => step(studioDef.id, -1)} disabled={studioIdx <= 1} className="min-h-11 rounded-[12px] bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40" data-testid="card-up">Yukarı taşı</button>
+                <button type="button" onClick={() => step(studioDef.id, 1)} disabled={studioIdx >= items.length - 1} className="min-h-11 rounded-[12px] bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40" data-testid="card-down">Aşağı taşı</button>
               </div>
             ) : <p className="text-[13px] text-mute">Bu kart ekranın en üstünde sabit.</p>}
-            {sheetDef.locked !== 'top' && sheetIdx >= 0 ? (() => {
-              const cur = items[sheetIdx], nxt = items[sheetIdx + 1]
+            {studioDef.locked !== 'top' && studioIdx >= 0 ? (() => {
+              const cur = items[studioIdx], nxt = items[studioIdx + 1]
               const canStack = !!nxt && !defOf(nxt.id)?.locked && (cur.stack?.length ?? 0) + 1 + (nxt.stack?.length ?? 0) + 1 <= STACK_MAX
               return (
                 <div className="flex flex-col gap-2" data-testid="stack-controls">
                   <span className="text-[13px] font-bold">Yığın <span className="text-[12px] text-mute font-normal">· kartlar aynı yerde yana kaydırılarak gezilir</span></span>
                   {cur.stack?.map((sid) => (
-                    <div key={sid} className="flex items-center justify-between gap-2 min-h-11 rounded-xl bg-surface-2 px-3" data-stack-child={sid}>
+                    <div key={sid} className="flex items-center justify-between gap-2 min-h-11 rounded-[12px] bg-surface-2 px-3" data-stack-child={sid}>
                       <span className="text-[13.5px] font-bold">{defOf(sid)?.title}</span>
                       <button type="button" onClick={() => commit(unstack(items, cur.id, sid))} className="h-9 px-3 rounded-full border border-line-2 text-[12.5px] font-bold" data-testid="card-unstack">Ayır</button>
                     </div>
                   ))}
                   {nxt ? <button type="button" disabled={!canStack} onClick={() => commit(stackWithNext(items, cur.id))} data-testid="card-stack"
-                    className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40">Alttaki kartla yığ ({defOf(nxt.id)?.title})</button> : null}
+                    className="min-h-11 rounded-[12px] bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40">Alttaki kartla yığ ({defOf(nxt.id)?.title})</button> : null}
                 </div>
               )
             })() : null}
-            {sheetDef.quick ? (
+            {studioDef.quick ? (
               <div className="flex flex-col gap-2">
                 <span className="text-[13px] font-bold">Hızlı eylem</span>
                 <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Hızlı eylem" data-testid="quick-pick">
-                  {sheetDef.quick.map((q) => {
-                    const on = (quick[sheetDef.id] ?? sheetDef.quick![0].id) === q.id
-                    return <button key={q.id} type="button" role="radio" aria-checked={on} onClick={() => setQuick({ ...quick, [sheetDef.id]: q.id })}
-                      className={`min-h-11 px-2 rounded-xl text-[13.5px] font-bold border ${on ? 'bg-acc text-acc-ink border-acc' : 'bg-surface-2 border-line'}`}>{q.label}</button>
+                  {studioDef.quick.map((qq) => {
+                    const on = (quick[studioDef.id] ?? studioDef.quick![0].id) === qq.id
+                    return <button key={qq.id} type="button" role="radio" aria-checked={on} onClick={() => setQuick({ ...quick, [studioDef.id]: qq.id })}
+                      className={`min-h-11 px-2 rounded-[12px] text-[13.5px] font-bold border ${on ? 'border-2 border-acc bg-[color-mix(in_oklab,var(--color-acc)_12%,var(--color-surface-2))]' : 'bg-surface-2 border-line'}`}>{qq.label}</button>
                   })}
                 </div>
               </div>
             ) : null}
-            {canPin(sheetDef.id) ? (
+            {canPin(studioDef.id) ? (
               <label className="flex items-center justify-between gap-3 min-h-11 cursor-pointer">
                 <span className="flex flex-col"><b className="text-[14px]">Üste sabitle</b><span className="text-[12px] text-mute">Kurallardan önce, başlığın hemen altında durur</span></span>
-                <input type="checkbox" role="switch" checked={pins.includes(sheetDef.id)} data-testid="card-pin"
-                  onChange={(e) => { const on = e.target.checked, id = sheetDef.id; setPins(on ? [...pins, id] : pins.filter((x) => x !== id)); void pinCardAction(id, on).then((r) => { if (!r.ok) { setPins((ps) => (on ? ps.filter((x) => x !== id) : [...ps, id])); setMsg(r.error) } }) }}
+                <input type="checkbox" role="switch" checked={pins.includes(studioDef.id)} data-testid="card-pin"
+                  onChange={(e) => { const on = e.target.checked, id = studioDef.id; setPins(on ? [...pins, id] : pins.filter((x) => x !== id)); void pinCardAction(id, on).then((r) => { if (!r.ok) { setPins((ps) => (on ? ps.filter((x) => x !== id) : [...ps, id])); setMsg(r.error) } }) }}
                   className="appearance-none w-12 h-7 rounded-full bg-surface-3 relative shrink-0 transition checked:bg-acc before:content-[''] before:absolute before:top-1 before:left-1 before:w-5 before:h-5 before:rounded-full before:bg-white before:transition checked:before:translate-x-5" />
               </label>
             ) : null}
-            {sheetDef.colorSlots ? (
-              <button type="button" onClick={() => { const id = sheetDef.id; setSheet(null); setColorFor(id) }} data-testid="card-colors"
-                className="h-12 rounded-xl bg-surface-2 border border-line text-[14px] font-bold flex items-center justify-between px-4">
-                <span>Renkler</span>
-                <span className="flex items-center gap-1">{Object.values(colors[sheetDef.id] ?? {}).map((c) => <span key={c} className="w-4 h-4 rounded-full border border-line-2" style={{ background: c }} />)}<span className="text-mute ml-1">›</span></span>
-              </button>
-            ) : null}
-            <button type="button" onClick={() => setSheet(null)} className="h-12 rounded-full bg-acc text-acc-ink font-extrabold">Tamam</button>
-          </div>
-        ) : null}
-      </Sheet>
-      <Sheet open={!!colorFor} onClose={() => setColorFor(null)} title={colorFor ? `${defOf(colorFor)?.title} · renkler` : 'Renkler'}>
-        {colorFor ? <ColorEditor title={defOf(colorFor)?.title ?? ''} node={p.nodes[colorFor] ?? <div className="card p-4"><b>{defOf(colorFor)?.title}</b><p className="text-mute">Örnek metin</p></div>}
-          value={colors[colorFor] ?? {}} onChange={(c) => setColors((m) => { const n = { ...m }; if (Object.keys(c).length) n[colorFor] = c; else delete n[colorFor]; return n })}
-          onDone={() => setColorFor(null)} /> : null}
-      </Sheet>
+          </>} />
+      ) : null}
     </div>
   )
 }

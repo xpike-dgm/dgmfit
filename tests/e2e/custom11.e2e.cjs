@@ -35,7 +35,7 @@ function png(w, h, colorAt) {
   const card = (title) => p.locator('[data-testid=user-card]').filter({ has: p.locator('[data-testid=uc-title]', { hasText: title }) }).first()
 
   // 1) Stüdyodan takip alanı: Kahve (sayaç, fincan, en çok 3)
-  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('studio-trackers').click(); await p.getByTestId('trackers').waitFor()
+  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('studio-builder').click(); await p.getByTestId('studio-trackers').click(); await p.getByTestId('trackers').waitFor()
   await p.getByTestId('tr-name').fill('Kahve'); await p.getByTestId('tr-kind-count').click(); await p.getByTestId('tr-unit').fill('fincan'); await p.getByTestId('tr-goal').fill('3')
   await p.getByTestId('tr-create').click(); await msg('tr-msg', 'eklendi')
   await p.locator('[data-tracker="Kahve"]').waitFor()

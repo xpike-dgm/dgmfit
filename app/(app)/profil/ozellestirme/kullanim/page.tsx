@@ -4,7 +4,7 @@ import { experimentReport, usageFor } from '@/lib/cards/usage-data'
 import { tapRate } from '@/lib/cards/usage'
 import { SCREENS, cardDef, type ScreenId } from '@/lib/cards/registry'
 import { fmtNum } from '@/lib/calc'
-import { TopBar } from '@/components/ui'
+import StudioHeader from '@/components/cards/StudioHeader'
 
 export const metadata = { title: 'Kullanım haritam' }
 
@@ -16,7 +16,8 @@ export default async function Page() {
   const maxTaps = Math.max(1, ...usage.map((x) => x.taps))
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="usage">
-      <TopBar back="/profil/ozellestirme" title="Kullanım haritam" sub="Son 14 gün · yalnız sen görürsün" />
+      <StudioHeader back="/profil/ozellestirme/duzen" title="Kullanım haritam" />
+      <p className="text-[12.5px] text-mute -mt-2 px-1">{"Son 14 gün · yalnız sen görürsün"}</p>
       <section aria-label="Düzen deneyi" className="card p-4 flex flex-col gap-1.5" data-testid="experiment">
         <b className="text-[15px]">Düzen deneyin</b>
         {!exp ? <p className="text-[13px] text-mute">Bir ekranın düzenini değiştirdiğinde, değişiklikten önceki ve sonraki 7 günde kaç kayıt (öğün, su, antrenman) girdiğini burada karşılaştırırız.</p>

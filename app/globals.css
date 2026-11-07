@@ -176,6 +176,7 @@ html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; t
 [data-radius="round"] :is(.rounded-\[24px\], .rounded-\[22px\], .rounded-\[20px\]) { border-radius: 30px; }
 [data-density="compact"] { --spacing: 0.225rem; }
 [data-density="airy"] { --spacing: 0.285rem; }
+[data-font="grotesk"] { font-family: var(--font-grotesk), var(--font-manrope), system-ui, sans-serif; }
 [data-font="rounded"] { font-family: ui-rounded, "SF Pro Rounded", "Nunito", var(--font-manrope), system-ui, sans-serif; }
 [data-font="serif"] { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
 [data-font="system"] { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -186,3 +187,12 @@ html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; t
 [data-motion="reduce"] *, [data-motion="reduce"] *::before, [data-motion="reduce"] *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 [data-contrast="high"] { --color-ink-2: var(--color-ink); --color-mute: color-mix(in oklab, var(--color-ink) 82%, transparent); --color-line: var(--color-line-2); }
 [data-contrast="high"] .card { outline: 1.5px solid var(--color-line-2); outline-offset: -1.5px; }
+
+/* Ö6: Ramazan kartı (tasarım: koyu lacivert–mor degrade; açık temada açık lavanta) */
+.ramadan-card { background: linear-gradient(160deg, #1D2340, #2A1F44); border-color: #3D3157; }
+:root[data-theme="light"] .ramadan-card { background: linear-gradient(160deg, #EEF0FF, #F4ECFF); border-color: #DCD3F2; }
+:root[data-theme="light"] .ramadan-moon { stroke: #B7791F; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .ramadan-card { background: linear-gradient(160deg, #EEF0FF, #F4ECFF); border-color: #DCD3F2; }
+  :root:not([data-theme="dark"]) .ramadan-moon { stroke: #B7791F; }
+}

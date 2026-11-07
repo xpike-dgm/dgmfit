@@ -5,11 +5,11 @@ import type { ScreenId } from '@/lib/cards/registry'
 
 const base = (mod: string, d: Design) => d.modules?.[mod as keyof NonNullable<Design['modules']>] ?? MODULES.find((m) => m.id === mod)?.base ?? '#3D4452'
 
-export default function MiniPreview({ design, screen = 'today', width = 96, label }: { design: Design; screen?: ScreenId; width?: number; label?: string }) {
+export default function MiniPreview({ design, screen = 'today', width = 96, label, frame = true }: { design: Design; screen?: ScreenId; width?: number; label?: string; frame?: boolean }) {
   const r = resolveScreen(design, screen, {})
   const radius = design.style?.radius === 'sharp' ? 3 : design.style?.radius === 'round' ? 9 : 6
   return (
-    <div role="img" aria-label={label ?? 'Tasarım önizlemesi'} className="shrink-0 rounded-[16px] border-2 border-line-2 bg-bg p-1.5 grid grid-cols-2 gap-1 content-start overflow-hidden" style={{ width, minHeight: width * 1.75 }} data-mini-preview>
+    <div role="img" aria-label={label ?? 'Tasarım önizlemesi'} className={`shrink-0 grid grid-cols-2 gap-1 content-start overflow-hidden ${frame ? 'rounded-[16px] border-2 border-line-2 bg-bg p-1.5' : 'p-2'}`} style={frame ? { width, minHeight: width * 1.75 } : { width: '100%' }} data-mini-preview>
       {r.items.slice(0, 10).map((i) => {
         const pal = modulePalette(base(i.def.module, design))
         const bg = design.cards?.[i.id]?.colors?.bg

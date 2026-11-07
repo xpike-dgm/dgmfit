@@ -41,7 +41,8 @@ const fail = (m) => { throw new Error(m) }
 
   // 2) Tatil, 3 gün önce başladı → dün fazla yenen kalori dağıtılmaz (yalnız test kancası olan yerelde)
   await p.goto(BASE + '/profil/ozellestirme/modlar'); await p.getByTestId('mode-off').click(); await msg('kapatıldı')
-  await p.getByTestId('mode-from').fill(ist(-3 * 86400000).slice(0, 10)); await p.getByTestId('mode-vacation').click(); await msg('Tatil modu açıldı')
+  await p.getByTestId('mode-vacation').click(); await msg('Tatil modu açıldı')
+  await p.getByTestId('mode-from').fill(ist(-3 * 86400000).slice(0, 10)); await msg('Başlangıç kaydedildi')
   const hook = await p.evaluate(async () => (await fetch('/api/test/fit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ days: 3, yesterdayExtra: 900 }) })).status)
   let partial = false
   if (hook === 404) partial = true
@@ -58,8 +59,9 @@ const fail = (m) => { throw new Error(m) }
   const hhmm = ist(0).slice(11, 16), nowMin = Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
   const after = nowMin >= 6 * 60 + 5
   const iftar = after ? ist(-3600000).slice(11, 16) : '23:59', sahur = after ? '04:45' : '06:30'
-  await p.getByTestId('ramadan-sahur').fill(sahur); await p.getByTestId('ramadan-iftar').fill(iftar)
   await p.getByTestId('ramadan-toggle').click(); await msg('Ramazan modu açıldı')
+  await p.getByTestId('ramadan-sahur').fill(sahur); await p.getByTestId('ramadan-iftar').fill(iftar)
+  await p.getByTestId('ramadan-save').click(); await msg('Saatler kaydedildi')
   await p.goto(BASE + '/'); await p.getByTestId('ramadan-card').waitFor({ timeout: 15000 }).catch(() => fail('Ramazan kartı yok'))
   const st = await p.getByTestId('ramadan-status').innerText()
   if (!/sahura/.test(st)) fail('oruçsuz saatte durum yanlış: ' + st)

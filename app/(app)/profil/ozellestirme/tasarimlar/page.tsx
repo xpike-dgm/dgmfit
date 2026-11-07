@@ -1,6 +1,6 @@
 import { requireUser } from '@/lib/auth'
 import { listDesigns, listVersions } from '@/lib/cards/designs-data'
-import { TopBar } from '@/components/ui'
+import StudioHeader from '@/components/cards/StudioHeader'
 import MiniPreview from '@/components/cards/MiniPreview'
 import Designs from './Designs'
 
@@ -14,7 +14,7 @@ export default async function Page() {
   const versions = active ? await listVersions(u.id, active.id) : []
   return (
     <div className="px-4 flex flex-col gap-3">
-      <TopBar back="/profil/ozellestirme" title="Tasarımlarım" sub="Tasarımlar arasında geç, eski sürüme dön" />
+      <StudioHeader back="/profil/ozellestirme" title="Tasarımlarım" />
       <Designs
         designs={ds.map((d) => ({ id: d.id, name: d.name, active: d.active, updatedAt: d.updatedAt.toISOString(), summary: `${d.screens} ekran · ${d.modules} renk · ${d.rules} kural`, preview: <MiniPreview design={d.design} width={64} label={`${d.name} önizlemesi`} /> }))}
         versions={versions.map((v) => ({ id: v.id, note: v.note, at: v.createdAt.toISOString() }))} />

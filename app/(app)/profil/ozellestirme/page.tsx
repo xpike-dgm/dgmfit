@@ -1,111 +1,100 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { getModes } from '@/lib/modes-data'
 import { focusOn, ramadanOn } from '@/lib/modes'
-import { dayString } from '@/lib/time'
+import { addDays, dayString } from '@/lib/time'
 import { requireUser } from '@/lib/auth'
-import { activeDesign, allScreenLayouts, userGoal } from '@/lib/cards/design-data'
-import { GOAL_FRONT, normalizePrefs, resolveNav } from '@/lib/cards/prefs'
-import UsePrefsForm from './UsePrefsForm'
-import Suggestions from './Suggestions'
+import { activeDesign, allScreenLayouts } from '@/lib/cards/design-data'
+import { listDesigns, listVersions } from '@/lib/cards/designs-data'
 import { suggestionsFor, usageFor } from '@/lib/cards/usage-data'
-import { SCREENS, cardDef, type ScreenId } from '@/lib/cards/registry'
-import { TopBar } from '@/components/ui'
-import ResetButton from './ResetButton'
+import { SCREENS, type ScreenId } from '@/lib/cards/registry'
+import StudioHeader from '@/components/cards/StudioHeader'
+import Suggestions from './Suggestions'
 
 export const metadata = { title: 'Özelleştirme' }
 
+const I = {
+  layout: <><rect x="3" y="3" width="7" height="9" rx="2" /><rect x="14" y="3" width="7" height="5" rx="2" /><rect x="14" y="12" width="7" height="9" rx="2" /><rect x="3" y="16" width="7" height="5" rx="2" /></>,
+  palette: <><circle cx="13.5" cy="6.5" r="1.5" /><circle cx="17.5" cy="10.5" r="1.5" /><circle cx="8.5" cy="7.5" r="1.5" /><circle cx="6.5" cy="12.5" r="1.5" /><path d="M12 2a10 10 0 000 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0022 9.8C22 5.5 17.5 2 12 2z" /></>,
+  moon: <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />,
+  chart: <><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M7 15l3-3 3 2 4-5" /></>,
+  history: <><path d="M3 12a9 9 0 109-9 9.7 9.7 0 00-6.7 2.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l3 2" /></>,
+  book: <><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></>,
+}
 
-/** Özelleştirme stüdyosu (Ö1): mevcut düzenin önizlemesi + ekran düzenleme. Diğer bölümler sonraki aşamalarda. */
+/** Tasarımdaki stüdyo kutusu: simge (modül renginde) + başlık + kısa açıklama. */
+function Tile({ href, mod, icon, title, sub, testId }: { href: string; mod: string; icon: ReactNode; title: string; sub: string; testId: string }) {
+  return (
+    <Link href={href} data-testid={testId} className="card rounded-[20px] p-3.5 min-h-[104px] flex flex-col gap-2 active:scale-[0.98] transition">
+      <span data-mod={mod} className="text-acc" aria-hidden>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+      </span>
+      <b className="text-[15px] font-extrabold leading-tight">{title}</b>
+      <span className="text-[12px] text-mute leading-snug">{sub}</span>
+    </Link>
+  )
+}
+
+function ago(day: string, today: string) {
+  if (day >= today) return 'bugün'
+  if (day === addDays(today, -1)) return 'dün'
+  const n = Math.round((Date.parse(today) - Date.parse(day)) / 86_400_000)
+  return `${n} gün önce`
+}
+
+/** Özelleştirme stüdyosu (Ö6: gösterilen tasarım) — kullandığın tasarım + 6 kutu + nereden başlamak istersin. */
 export default async function Page() {
   const u = await requireUser()
-  const [all, d, goal, usage, modes] = await Promise.all([allScreenLayouts(u.id), activeDesign(u.id), userGoal(u.id), usageFor(u.id, 14), getModes(u.id)])
-  const fm = focusOn(modes, dayString())
-  const modeText = [fm ? `${fm.label} modu açık` : null, ramadanOn(modes, dayString()) ? 'Ramazan modu açık' : null].filter(Boolean).join(' · ') || 'Antrenman, diyet, tatil, hastalık, Ramazan'
+  const [all, d, usage, modes, designs] = await Promise.all([allScreenLayouts(u.id), activeDesign(u.id), usageFor(u.id, 14), getModes(u.id), listDesigns(u.id)])
+  const today = dayString()
+  const act = designs.find((x) => x.active) ?? null
+  const versions = act ? (await listVersions(u.id, act.id)).length : 0
+  const customized = Object.values(all).some((x) => x.customized) || !!d?.modules || !!d?.style
+  const fm = focusOn(modes, today)
   const suggestions = suggestionsFor((Object.keys(SCREENS) as ScreenId[]).map((s) => ({ screen: s, items: all[s].items })), usage, d?.insights?.dismissed ?? [])
-  const today = all.today
-  const nav = resolveNav(d?.nav)
-  const rulesOn = (d?.rules ?? []).filter((r) => r.on).length
-  const GOAL_NAME = { lose: 'kilo verme', gain: 'kilo alma', recomp: 'koruyup kas kazanma' }
-  const goalCards = goal ? Object.values(GOAL_FRONT[goal]).flat().map((id) => cardDef(id!)?.title).filter(Boolean) : []
-  const row = 'min-h-[60px] flex items-center justify-between gap-3'
+  const myCards = Object.keys(d?.userCards ?? {}).length
+  const changedDay = act ? act.updatedAt.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }) : null
+  const preview = all.today.items.slice(0, 7)
   return (
-    <div className="px-4 flex flex-col gap-3" data-testid="studio">
-      <TopBar back="/profil" title="Özelleştirme" sub="Kartları taşı, kaldır, ekle" />
-      <section aria-label="Mevcut tasarım" className="card p-4 flex gap-4 items-center">
-        <div aria-hidden className="w-[96px] shrink-0 rounded-[18px] border-2 border-line-2 bg-bg p-1.5 grid grid-cols-2 gap-1 content-start" style={{ minHeight: 172 }}>
-          {today.items.slice(0, 9).map((i) => (
-            <div key={i.id} data-mod={i.def.module} className={`${i.size === 'full' ? 'col-span-2' : ''} rounded-md ${i.def.locked === 'top' ? 'h-8 band' : 'h-5 bg-[color-mix(in_oklab,var(--color-acc)_28%,var(--color-surface-2))]'}`} />
-          ))}
+    <div className="px-4 flex flex-col gap-3.5 pb-6" data-testid="studio">
+      <StudioHeader back="/profil" title="Özelleştirme" />
+      <section aria-label="Mevcut tasarım" className="card rounded-[24px] p-4 flex gap-4 items-center">
+        <div aria-hidden className="w-[96px] h-[172px] shrink-0 rounded-[18px] border-2 border-line-2 bg-bg p-1.5 flex flex-col gap-1 overflow-hidden">
+          {preview.map((i) => i.def.locked === 'top'
+            ? <div key={i.id} data-mod={i.def.module} className="h-[34px] shrink-0 rounded-lg band" />
+            : <div key={i.id} data-mod={i.def.module} className={`${i.size === 'half' ? 'w-[calc(50%-2px)]' : 'w-full'} h-[26px] shrink-0 rounded-[7px] border bg-[color-mix(in_oklab,var(--color-acc)_14%,var(--color-surface))] border-[color-mix(in_oklab,var(--color-acc)_30%,var(--color-line))]`} />)}
         </div>
         <div className="flex flex-col gap-2.5 flex-1 min-w-0">
-          <span className="text-[12px] font-bold text-mute tracking-[0.06em] uppercase">Kullandığın düzen</span>
-          <b className="text-[16px]">{Object.values(all).some((x) => x.customized) ? 'Benim düzenim' : 'Varsayılan düzen'}</b>
-          <span className="text-[12.5px] text-mute">{today.items.length} kart · {today.drawer.length} kart çekmecede</span>
-          <Link href="/?duzenle=1" className="h-11 rounded-full bg-acc text-acc-ink font-extrabold text-[14px] inline-flex items-center justify-center" data-testid="studio-edit">Düzenlemeye başla</Link>
+          <span className="text-[12px] font-bold text-mute tracking-[0.06em] uppercase">Kullandığın tasarım</span>
+          <b className="text-[17px] font-extrabold leading-tight">{act?.name ?? (customized ? 'Benim düzenim' : 'Varsayılan düzen')}</b>
+          <span className="text-[12.5px] text-mute leading-snug">{changedDay && customized ? `Son değişiklik ${ago(changedDay, today)} · ${versions} kayıtlı sürüm` : 'Henüz değiştirmedin'}</span>
+          <Link href="/?duzenle=1" data-mod="today" className="min-h-11 rounded-full bg-acc text-acc-ink font-extrabold text-[14px] inline-flex items-center justify-center gap-1.5" data-testid="studio-edit">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>
+            Düzenlemeye başla
+          </Link>
         </div>
       </section>
 
       <Suggestions list={suggestions} />
 
-      <Link href="/profil/ozellestirme/sihirbaz" className="card p-4 flex items-center gap-3 border border-acc/30" data-testid="studio-wizard">
-        <span aria-hidden className="w-11 h-11 rounded-2xl bg-acc text-acc-ink flex items-center justify-center shrink-0">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 6.2l-1.4-1.4M3 21l9-9" /></svg>
-        </span>
-        <span className="flex flex-col flex-1"><b className="text-[15px]">Düzen sihirbazı</b><span className="text-[12.5px] text-mute">5 soruda sana göre düzen, alt bar ve kurallar</span></span>
-        <span className="text-mute">›</span>
-      </Link>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Tile href="/profil/ozellestirme/duzen" mod="today" icon={I.layout} title="Düzen" sub="Kartlar, boyut, alt bar" testId="studio-layout" />
+        <Tile href="/profil/ozellestirme/stil" mod="water" icon={I.palette} title="Renkler ve stil" sub={d?.modules ? `${Object.keys(d.modules).length} modül rengi değişti` : 'Palet, yazı tipi, simgeler'} testId="studio-style" />
+        <Tile href="/profil/ozellestirme/modlar" mod="coach" icon={I.moon} title="Modlar" sub={[fm ? `${fm.label} açık` : null, ramadanOn(modes, today) ? 'Ramazan açık' : null].filter(Boolean).join(' · ') || 'Odak, Ramazan, tek el'} testId="studio-modes" />
+        <Tile href="/profil/ozellestirme/kartlarim" mod="food" icon={I.chart} title="Kendi kartlarım" sub={myCards ? `${myCards} kendi kartın` : 'Kart oluştur, takip ekle'} testId="studio-builder" />
+        <Tile href="/profil/ozellestirme/tasarimlar" mod="plan" icon={I.history} title="Tasarımlarım" sub={designs.length > 1 ? `${designs.length} tasarım · sürümler` : 'Sürümler, geri al'} testId="studio-designs" />
+        <Tile href="/profil/ozellestirme/sablonlar" mod="social" icon={I.book} title="Şablon kütüphanesi" sub="Topluluğun tasarımları" testId="studio-library" />
+      </div>
 
-      <section aria-label="Ekranlar" className="card px-4 py-1 flex flex-col">
-        {Object.entries(SCREENS).map(([id, s]) => (
-          <div key={id} data-studio-screen={id} className="min-h-[60px] flex items-center justify-between gap-3">
-            <span className="flex flex-col"><b className="text-[15px]">{s.title}</b><span className="text-[12.5px] text-mute">{all[id as ScreenId].customized ? 'Özelleştirildi' : 'Varsayılan'} · {all[id as ScreenId].items.length} kart</span></span>
-            <span className="flex items-center gap-2">
-              {all[id as ScreenId].customized ? <ResetButton screen={id} /> : null}
-              <Link href={`${s.path}?duzenle=1`} className="h-10 px-4 rounded-full bg-surface-2 border border-line-2 text-[13px] font-bold inline-flex items-center">Düzenle</Link>
-            </span>
+      {!customized ? (
+        <section aria-label="İlk kez" className="rounded-[20px] p-3.5 px-4 flex flex-col gap-2.5 bg-coach border border-coach-line" data-mod="coach">
+          <b className="text-[14px] font-extrabold">Nereden başlamak istersin?</b>
+          <div className="flex gap-2">
+            <Link href="/profil/ozellestirme/sihirbaz" className="flex-1 min-h-11 rounded-[14px] bg-acc text-acc-ink font-extrabold text-[13px] inline-flex items-center justify-center" data-testid="studio-wizard">Sihirbaz · 5 soru</Link>
+            <Link href="/?duzenle=1" className="flex-1 min-h-11 rounded-[14px] border border-coach-line font-bold text-[13px] inline-flex items-center justify-center">Kendim kurarım</Link>
           </div>
-        ))}
-        <p className="text-[12px] text-mute pb-3 leading-relaxed">Kartı basılı tutup sürükleyerek taşı, − ile kaldır, “+ Kart ekle” ile geri getir. Ekranda bir kartı sola kaydırırsan “Bugünlük gizle” ve “Üste sabitle” çıkar.</p>
-      </section>
-
-      <section aria-label="Gezinme ve kurallar" className="card px-4 py-1 flex flex-col">
-        <Link href="/profil/ozellestirme/modlar" className={row} data-testid="studio-modes">
-          <span className="flex flex-col"><b className="text-[15px]">Modlar</b><span className="text-[12.5px] text-mute">{modeText}</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/kartlarim" className={`${row} border-t border-line`} data-testid="studio-builder">
-          <span className="flex flex-col"><b className="text-[15px]">Kart oluşturucu</b><span className="text-[12.5px] text-mute">{d?.userCards && Object.keys(d.userCards).length ? `${Object.keys(d.userCards).length} kendi kartın` : 'Kendi kartını yap: veri, söz, geri sayım, fotoğraf'}</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/takip" className={`${row} border-t border-line`} data-testid="studio-trackers">
-          <span className="flex flex-col"><b className="text-[15px]">Takip alanlarım</b><span className="text-[12.5px] text-mute">Kahve, uyku, ruh hali… uygulamada olmayanlar</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/alt-bar" className={`${row} border-t border-line`} data-testid="studio-nav">
-          <span className="flex flex-col"><b className="text-[15px]">Alt bar</b><span className="text-[12.5px] text-mute">{nav.visible.length} sekme{nav.hidden.length ? ` · ${nav.hidden.length} gizli` : ''}</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/renkler" className={`${row} border-t border-line`} data-testid="studio-colors">
-          <span className="flex flex-col"><b className="text-[15px]">Renkler</b><span className="text-[12.5px] text-mute">{d?.modules ? `${Object.keys(d.modules).length} modül rengi değişti` : 'Modül renkleri, paletler, fotoğraftan palet'}</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/stil" className={`${row} border-t border-line`} data-testid="studio-style">
-          <span className="flex flex-col"><b className="text-[15px]">Stil</b><span className="text-[12.5px] text-mute">Köşeler, yazı tipi, bant, birimler, erişilebilirlik</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/tasarimlar" className={`${row} border-t border-line`} data-testid="studio-designs">
-          <span className="flex flex-col"><b className="text-[15px]">Tasarımlarım</b><span className="text-[12.5px] text-mute">Birden çok tasarım, sürümler, geri yükleme</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/sablonlar" className={`${row} border-t border-line`} data-testid="studio-library">
-          <span className="flex flex-col"><b className="text-[15px]">Şablon kütüphanesi</b><span className="text-[12.5px] text-mute">Topluluğun tasarımlarını önizle ve kullan</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/yarisma" className={`${row} border-t border-line`} data-testid="studio-contest">
-          <span className="flex flex-col"><b className="text-[15px]">Tasarım yarışması</b><span className="text-[12.5px] text-mute">Haftalık tema, oy ver, rozet kazan</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/kullanim" className={`${row} border-t border-line`} data-testid="studio-usage">
-          <span className="flex flex-col"><b className="text-[15px]">Kullanım haritam</b><span className="text-[12.5px] text-mute">Hangi kartı ne kadar kullanıyorsun, düzen deneyin</span></span><span className="text-mute">›</span>
-        </Link>
-        <Link href="/profil/ozellestirme/kurallar" className={`${row} border-t border-line`} data-testid="studio-rules">
-          <span className="flex flex-col"><b className="text-[15px]">Kurallar</b><span className="text-[12.5px] text-mute">{rulesOn ? `${rulesOn} kural açık` : 'Sabah, antrenman günü, akşam düzeni…'}</span></span><span className="text-mute">›</span>
-        </Link>
-        {goal && goalCards.length ? <p className="text-[12px] text-mute pb-3 pt-1 border-t border-line leading-relaxed" data-testid="goal-note">Varsayılan düzen hedefine göre ({GOAL_NAME[goal]}): {goalCards.join(', ')} öne alındı. Özelleştirdiğin ekranlarda senin düzenin geçerli.</p> : null}
-      </section>
-
-      <UsePrefsForm prefs={normalizePrefs(d?.prefs ?? {})} />
+        </section>
+      ) : null}
     </div>
   )
 }

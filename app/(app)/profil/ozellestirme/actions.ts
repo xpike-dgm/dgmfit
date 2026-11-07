@@ -144,7 +144,7 @@ export async function saveModulesAction(mc: unknown): Promise<R> {
 
 // ───────── Ö2b: stil ─────────
 const StyleZ = z.object({
-  radius: z.enum(['sharp', 'normal', 'round']), density: z.enum(['compact', 'normal', 'airy']), font: z.enum(['default', 'rounded', 'serif', 'system']),
+  radius: z.enum(['sharp', 'normal', 'round']), density: z.enum(['compact', 'normal', 'airy']), font: z.enum(['default', 'grotesk', 'rounded', 'serif', 'system']),
   icons: z.enum(['thin', 'normal', 'bold']), band: z.enum(['gradient', 'flat', 'photo']), bandMedia: z.string().regex(/^[0-9a-f-]{36}$/).nullable(),
   motion: z.enum(['normal', 'reduce']), contrast: z.enum(['normal', 'high']), haptics: z.enum(['off', 'light', 'normal', 'strong']), sound: z.boolean(), warm: z.boolean(),
   units: z.object({ weight: z.enum(['kg', 'lb']), volume: z.enum(['ml', 'oz']), energy: z.enum(['kcal', 'kJ']), length: z.enum(['cm', 'in']) }).partial(),

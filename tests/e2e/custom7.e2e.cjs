@@ -27,7 +27,7 @@ const fail = (m) => { throw new Error(m) }
   await p.goto(BASE + '/?duzenle=1'); await p.getByTestId('card-editor').waitFor()
   await p.locator('[data-edit-card="today.water"] [data-testid=card-remove]').click()
   await p.getByTestId('edit-done').click(); await p.waitForURL(BASE + '/'); await p.getByTestId('card-board').waitFor()
-  await p.goto(BASE + '/profil/ozellestirme/stil'); await p.getByTestId('st-weight').getByRole('radio', { name: 'lb', exact: true }).click(); await status('Kaydedildi')
+  await p.goto(BASE + '/profil/ozellestirme/stil/daha'); await p.getByTestId('st-weight').getByRole('radio', { name: 'lb', exact: true }).click(); await status('Kaydedildi')
 
   // 2) Tasarımlarım: varsayılandan yeni tasarım → kullan → su geri gelir, lb korunur
   await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('studio-designs').click(); await p.getByTestId('designs').waitFor()

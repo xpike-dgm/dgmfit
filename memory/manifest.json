@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-07",
-  "phase": "Ö5b",
+  "phase": "Ö6",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -288,7 +288,6 @@
     "app/(app)/panom/page.tsx",
     "tests/e2e/custom4.e2e.cjs",
     "lib/cards/colors.ts",
-    "components/cards/ColorEditor.tsx",
     "tests/cards-colors.test.ts",
     "tests/e2e/custom5.e2e.cjs",
     "lib/cards/style.ts",
@@ -334,7 +333,13 @@
     "app/(app)/profil/ozellestirme/modlar/ModesForm.tsx",
     "tests/modes.test.ts",
     "tests/e2e/custom12.e2e.cjs",
-    "drizzle/0031_user_modes.sql"
+    "drizzle/0031_user_modes.sql",
+    "components/cards/StudioHeader.tsx",
+    "components/cards/CardStudio.tsx",
+    "app/(app)/profil/ozellestirme/duzen/page.tsx",
+    "app/(app)/profil/ozellestirme/stil/ColorsStyle.tsx",
+    "app/(app)/profil/ozellestirme/stil/daha/page.tsx",
+    "app/(app)/profil/ozellestirme/sablonlar/LibraryUse.tsx"
   ],
   "tables": [
     "users",
@@ -559,7 +564,9 @@
     "/api/cards/usage",
     "/profil/ozellestirme/kartlarim",
     "/profil/ozellestirme/takip",
-    "/profil/ozellestirme/modlar"
+    "/profil/ozellestirme/modlar",
+    "/profil/ozellestirme/duzen",
+    "/profil/ozellestirme/stil/daha"
   ],
   "events": [
     "profile.onboarded",

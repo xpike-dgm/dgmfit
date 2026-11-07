@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
 import { contestPage } from '@/lib/cards/community-data'
-import { TopBar } from '@/components/ui'
+import StudioHeader from '@/components/cards/StudioHeader'
 import MiniPreview from '@/components/cards/MiniPreview'
 import CommunityButton from '../CommunityButton'
 import EnterForm from './EnterForm'
@@ -14,7 +14,7 @@ export default async function Page() {
   const c = await contestPage(u.id)
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="contest">
-      <TopBar back="/profil/ozellestirme" title="Tasarım yarışması" sub="Haftalık tema, topluluk oyu" />
+      <StudioHeader back="/profil/ozellestirme/sablonlar" title="Tasarım yarışması" />
       {c.current ? (
         <section className="card p-4 flex flex-col gap-2" data-testid="contest-current">
           <span className="text-[12px] font-bold text-mute tracking-[0.06em] uppercase">Bu haftanın teması</span>

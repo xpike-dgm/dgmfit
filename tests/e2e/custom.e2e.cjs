@@ -55,9 +55,9 @@ const fail = (m) => { throw new Error(m) }
 
   // 4) ✎ Antrenman → yarım boyut, bir yukarı
   await p.locator('[data-edit-card="today.training"] button[aria-label$="düzenle"]').click()
-  const sh = p.getByTestId('card-sheet'); await sh.waitFor()
+  await p.getByTestId('card-studio').waitFor(); if (await p.getByTestId('card-layout-tab').count()) await p.getByTestId('card-layout-tab').click(); const sh = p.getByTestId('card-sheet'); await sh.waitFor()
   await sh.getByRole('radio', { name: 'Yarım' }).click(); await sh.getByTestId('card-up').click()
-  await sh.getByRole('button', { name: 'Tamam' }).click()
+  await p.getByTestId('color-done').click()
 
   // 5) Çekmeceden "Seriler" ekle (su da çekmecede görünmeli)
   await p.getByTestId('open-drawer').click(); const dr = p.getByTestId('card-drawer'); await dr.waitFor()
@@ -78,7 +78,7 @@ const fail = (m) => { throw new Error(m) }
   await p.screenshot({ path: `${OUT}/custom-04-yeni-duzen.png`, fullPage: true })
 
   // 7) Stüdyodan varsayılana dön
-  await p.goto(BASE + '/profil/ozellestirme'); p.once('dialog', (d) => d.accept()); await p.locator('[data-studio-screen=today] [data-testid=studio-reset]').click()
+  await p.goto(BASE + '/profil/ozellestirme/duzen'); p.once('dialog', (d) => d.accept()); await p.locator('[data-studio-screen=today] [data-testid=studio-reset]').click()
   await p.waitForTimeout(800); await p.goto(BASE + '/')
   if (JSON.stringify(await order()) !== JSON.stringify(o0)) fail('varsayılana dönmedi: ' + (await order()))
 
@@ -97,10 +97,10 @@ const fail = (m) => { throw new Error(m) }
   await p.locator('[data-edit-card="food.tip"] [data-testid=card-remove]').click()
   const before = await editOrder()
   await p.locator('[data-edit-card="food.add"] button[aria-label$="düzenle"]').click()
-  const sh2 = p.getByTestId('card-sheet'); await sh2.waitFor()
+  await p.getByTestId('card-studio').waitFor(); if (await p.getByTestId('card-layout-tab').count()) await p.getByTestId('card-layout-tab').click(); const sh2 = p.getByTestId('card-sheet'); await sh2.waitFor()
   const steps = before.indexOf('food.meals') - before.indexOf('food.add')
   for (let i = 0; i < steps; i++) await sh2.getByTestId('card-down').click()
-  await sh2.getByRole('button', { name: 'Tamam' }).click()
+  await p.getByTestId('color-done').click()
   const fo = await editOrder()
   if (fo.indexOf('food.add') < fo.indexOf('food.meals')) fail('yemek: ekle kartı taşınmadı: ' + fo)
   await p.getByTestId('edit-done').click(); await p.waitForURL(BASE + '/yemek'); await p.getByTestId('card-board').waitFor()
@@ -109,7 +109,7 @@ const fail = (m) => { throw new Error(m) }
   if (fo2.includes('food.tip')) fail('yemek: koç notu hâlâ görünüyor')
   if (fo2.indexOf('food.add') < fo2.indexOf('food.meals')) fail('yemek: sıra kalıcı değil: ' + fo2)
   await p.screenshot({ path: `${OUT}/custom-06-yemek.png`, fullPage: true })
-  await p.goto(BASE + '/profil/ozellestirme')
+  await p.goto(BASE + '/profil/ozellestirme/duzen')
   if (!(await p.locator('[data-studio-screen=food] [data-testid=studio-reset]').count())) fail('stüdyo yemek özelleştirmesini göstermiyor')
   if (await p.locator('[data-studio-screen=fit] [data-testid=studio-reset]').count()) fail('stüdyo fit ekranını yanlışlıkla özelleştirilmiş gösteriyor')
   p.once('dialog', (d) => d.accept()); await p.locator('[data-studio-screen=food] [data-testid=studio-reset]').click()

@@ -2,7 +2,7 @@
 // bant arka planı, erişilebilirlik, dokunuş geri bildirimi, akşam renkleri ve birimler. Tasarım verisinde `Design.style`.
 export type Radius = 'sharp' | 'normal' | 'round'
 export type Density = 'compact' | 'normal' | 'airy'
-export type Font = 'default' | 'rounded' | 'serif' | 'system'
+export type Font = 'default' | 'grotesk' | 'rounded' | 'serif' | 'system'
 export type IconWeight = 'thin' | 'normal' | 'bold'
 export type BandKind = 'gradient' | 'flat' | 'photo'
 export type Haptics = 'off' | 'light' | 'normal' | 'strong'
@@ -26,7 +26,7 @@ export function normalizeStyle(s: unknown): StylePrefs {
   return {
     radius: pick(o.radius, ['sharp', 'normal', 'round'] as const, 'normal'),
     density: pick(o.density, ['compact', 'normal', 'airy'] as const, 'normal'),
-    font: pick(o.font, ['default', 'rounded', 'serif', 'system'] as const, 'default'),
+    font: pick(o.font, ['default', 'grotesk', 'rounded', 'serif', 'system'] as const, 'default'),
     icons: pick(o.icons, ['thin', 'normal', 'bold'] as const, 'normal'),
     band: band === 'photo' && !media ? 'gradient' : band, bandMedia: media,
     motion: pick(o.motion, ['normal', 'reduce'] as const, 'normal'),

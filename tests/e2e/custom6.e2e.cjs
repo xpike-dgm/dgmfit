@@ -35,8 +35,10 @@ function png(w, h, colorAt) {
   const toggle = async (id) => { await p.getByTestId(id).click(); await p.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor(); await p.waitForTimeout(150) }
 
   // 1) Görünüm
-  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('studio-style').click(); await p.getByTestId('style-form').waitFor()
-  await pick('st-radius', 'Keskin'); await pick('st-density', 'Sıkı'); await pick('st-font', 'Klasik'); await pick('st-icons', 'Kalın'); await pick('st-band', 'Düz')
+  await p.goto(BASE + '/profil/ozellestirme'); await p.getByTestId('studio-style').click(); await p.getByTestId('colors-style').waitFor()
+  await pick('st-radius', 'Keskin'); await pick('st-density', 'Sıkı'); await pick('st-font', 'Klasik')
+  await p.getByTestId('style-more').click(); await p.getByTestId('style-form').waitFor()
+  await pick('st-icons', 'Kalın'); await pick('st-band', 'Düz')
   await toggle('st-motion'); await toggle('st-contrast')
   await p.goto(BASE + '/'); await p.getByTestId('card-board').waitFor()
   const attrs = await shell.evaluate((e) => ['radius', 'density', 'font', 'icons', 'band', 'motion', 'contrast'].map((k) => e.getAttribute('data-' + k)).join(','))
@@ -49,7 +51,7 @@ function png(w, h, colorAt) {
   await p.screenshot({ path: `${OUT}/custom6-01-stil.png` })
 
   // 2) Bant fotoğrafı
-  await p.goto(BASE + '/profil/ozellestirme/stil')
+  await p.goto(BASE + '/profil/ozellestirme/stil/daha')
   await p.getByTestId('band-photo-input').setInputFiles({ name: 'bant.png', mimeType: 'image/png', buffer: png(64, 32, (x) => (x < 32 ? [200, 60, 120] : [40, 90, 200])) })
   await p.getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor({ timeout: 30000 })
   await p.goto(BASE + '/')
@@ -58,7 +60,7 @@ function png(w, h, colorAt) {
   await p.screenshot({ path: `${OUT}/custom6-02-bant-foto.png` })
 
   // 3) Birimler: lb / oz / kJ
-  await p.goto(BASE + '/profil/ozellestirme/stil')
+  await p.goto(BASE + '/profil/ozellestirme/stil/daha')
   await pick('st-weight', 'lb'); await pick('st-volume', 'oz'); await pick('st-energy', 'kJ')
   await p.goto(BASE + '/')
   if (!(await p.locator('[data-card="today.fit"]').innerText()).includes('lb')) fail('Fit kartı lb değil')
@@ -67,13 +69,13 @@ function png(w, h, colorAt) {
   await p.goto(BASE + '/fit'); await p.locator('#fit-kg').waitFor()
   if (!(await p.locator('#fit-kg').getAttribute('placeholder')).endsWith('lb')) fail('tartı girişi lb değil')
   await p.fill('#fit-kg', '165'); await p.locator('#tarti').getByRole('button', { name: 'Kaydet' }).click(); await p.getByText('Tartı kaydedildi.').waitFor()
-  await p.goto(BASE + '/profil/ozellestirme/stil'); await pick('st-weight', 'kg')
+  await p.goto(BASE + '/profil/ozellestirme/stil/daha'); await pick('st-weight', 'kg')
   await p.goto(BASE + '/fit'); await p.locator('#fit-kg').waitFor()
   const ph = await p.locator('#fit-kg').getAttribute('placeholder')
   if (ph !== '74,8 kg') fail('165 lb → 74,8 kg kaydedilmedi: ' + ph)
 
   // 4) Titreşim/ses/akşam kalıcı; akşam 22.30'da sıcak katman
-  await p.goto(BASE + '/profil/ozellestirme/stil')
+  await p.goto(BASE + '/profil/ozellestirme/stil/daha')
   await pick('st-haptics', 'Kapalı'); await toggle('st-sound'); await toggle('st-warm')
   await p.reload(); await p.getByTestId('style-form').waitFor()
   if ((await p.getByTestId('st-haptics').getByRole('radio', { name: 'Kapalı' }).getAttribute('aria-checked')) !== 'true') fail('titreşim ayarı kalıcı değil')
