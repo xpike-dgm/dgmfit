@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö4 tamamlandı, Ö5a başladı
+- Ö4: kart kullanım ölçümü (0029, `POST /api/cards/usage`), kullanım haritası, koç önerisi, deney raporu, uyumluluk testleri.
+- Doğrulama: commit `525321d`; verify.sh VERIFY OK (266 birim); release `2026-11-07T08-29-50-945Z` RELEASE OK; canlıda 21 e2e OK; 25 test kullanıcısı silindi; logda hata 0.
+- Ö5 ikiye bölündü (Ö5a kendi kartı + takip + motivasyon, Ö5b odak modları + Ramazan). Ö5a başladı: saf `lib/cards/custom.ts` + 3 test, 0030 (trackers, tracker_logs).
+
 ## 2026-11-07 — Özelleştirme Ö3c tamamlandı, Ö4 başladı
 - Ö3c: yarışma, tasarımcı profili + tasarımcı takibi, grup teması, bağlantı + QR, `/t/[id]` girişsiz önizleme, yönetim (yarışma teması, duyuru kartı, varsayılan düzen).
 - Hatalar: (1) oy/takip sonrası yenilemede düğme değişince durum mesajı kayboluyordu (testte ekrandaki yeni duruma bakıldı); (2) sosyal takip gizlilik kuralı tasarımcı takibini engelledi → ayrı `designer_follows` (0028); (3) 0027'ye sonradan eklenen tablo yerelde uygulanmayacaktı (göç dosya adıyla kaydedilir) → ayrı dosya.
