@@ -12,7 +12,8 @@ import { normalizeSearch } from './nutrition'
 import { ageFromBirthDate, type Sex } from './calc'
 import { activeGoal, refreshClosedDay } from './fit-data'
 import { cardioKcal, detectPRs, e1rm, mergeRecords, sessionRecords, setVolume, strengthKcal, type CardioType, type ExKind, type Intensity, type LoggedSet, type Records, type Session, type SetType } from './training'
-import { TEMPLATES, generateProgram, instantiate, type ProgramDay } from './programs'
+import { TEMPLATES, applyPriority, generateProgram, instantiate, type ProgramDay } from './programs'
+import { MUSCLES as MUSCLE_TR } from './exercise-labels'
 import { detectPlateau, periodTarget, weekIndex, type Periodization } from './progress'
 import { gzAdvance, gzSets, type GzState, type Tier } from './schemes'
 import { prSuspicious } from './social-rank'
@@ -179,7 +180,7 @@ export async function createFromAgProgram(userId: string, id: string) {
   return insertProgram(userId, plan.program.name, id, plan.days, [], !has)
 }
 
-export async function createGenerated(userId: string, i: { days: number; minutes: number; equipment: string[] }) {
+export async function createGenerated(userId: string, i: { days: number; minutes: number; equipment: string[]; priority?: string[] }) {
   const [profile] = await db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1)
   const goal = await activeGoal(userId)
   await ensureGym(userId)
@@ -188,7 +189,16 @@ export async function createGenerated(userId: string, i: { days: number; minutes
     days: i.days, minutes: i.minutes, available: new Set(i.equipment), equipmentOf: await equipmentMap(),
     experience: (profile?.experience as 'new' | 'mid' | 'adv' | null) ?? null, goal: (goal?.type as 'lose' | 'gain' | 'recomp') ?? 'recomp',
   })
-  return insertProgram(userId, g.name, 'generated', g.days, g.notes, true)
+  // v2: öncelikli bölgeler (+1 set, sıralama, haftalık set notu)
+  const pri = (i.priority ?? []).slice(0, 4)
+  let out = g
+  if (pri.length) {
+    const keys = [...new Set(g.days.flatMap((d) => d.exercises.map((e) => e.key)))]
+    const rows = await db.select({ key: schema.exercises.key, m: schema.exercises.primary }).from(schema.exercises).where(inArray(schema.exercises.key, keys))
+    const mm = new Map(rows.map((r) => [r.key, r.m ?? []]))
+    out = applyPriority(g, pri, (k) => mm.get(k) ?? [], MUSCLE_TR)
+  }
+  return insertProgram(userId, out.name, 'generated', out.days, out.notes, true)
 }
 
 export async function createEmptyProgram(userId: string, name: string) {

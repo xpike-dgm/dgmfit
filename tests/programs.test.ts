@@ -52,3 +52,20 @@ test('Türkçe etiketler sözlükle aynı', async () => {
   assert.deepEqual(L.MUSCLES, tr.muscles); assert.deepEqual(L.EQUIPMENT, tr.equipment); assert.deepEqual(L.LEVEL, tr.level); assert.deepEqual(L.CATEGORY, tr.category)
   assert.deepEqual([...L.MUSCLE_ORDER].sort(), Object.keys(tr.muscles).sort())
 })
+
+import { applyPriority, weeklySets } from '../lib/programs.ts'
+
+test('applyPriority: öncelikli yardımcı/izolasyon +1 set, ana hareketlerden hemen sonra; haftalık set notu', () => {
+  const g = { templateId: 't', name: 'x', notes: [], days: [{ name: 'A', focus: '', exercises: [
+    { key: 'squat', role: 'ana' as const, sets: 3, repMin: 5, repMax: 8, rir: 2, rest: 180 },
+    { key: 'curl', role: 'izolasyon' as const, sets: 3, repMin: 10, repMax: 15, rir: 1, rest: 60 },
+    { key: 'calf', role: 'izolasyon' as const, sets: 3, repMin: 10, repMax: 15, rir: 1, rest: 60 },
+  ] }] }
+  const mus = (k: string) => ({ squat: ['quadriceps'], curl: ['biceps'], calf: ['calves'] } as Record<string, string[]>)[k] ?? []
+  const r = applyPriority(g, ['calves'], mus, { calves: 'Baldır' })
+  assert.deepEqual(r.days[0].exercises.map((e) => [e.key, e.sets]), [['squat', 3], ['calf', 4], ['curl', 3]])
+  assert.equal(weeklySets(r.days, mus).get('calves'), 4)
+  assert.match(r.notes.join(' '), /Baldır 4/)
+  assert.match(r.notes.join(' '), /hacim düşük/)
+  assert.equal(applyPriority(g, [], mus), g)
+})

@@ -42,7 +42,7 @@ export async function createFromTemplateAction(templateId: string): Promise<R<{ 
   return run(async () => ({ id: await createFromTemplate(userId, templateId) }))
 }
 
-const GenInput = z.object({ days: z.number().int().min(2).max(6), minutes: z.number().int().min(20).max(150), equipment: z.array(z.enum(ALL_EQUIPMENT)).min(1) })
+const GenInput = z.object({ days: z.number().int().min(2).max(6), minutes: z.number().int().min(20).max(150), equipment: z.array(z.enum(ALL_EQUIPMENT)).min(1), priority: z.array(z.enum(['chest', 'shoulders', 'lats', 'middle back', 'biceps', 'triceps', 'quadriceps', 'hamstrings', 'glutes', 'calves', 'abdominals'])).max(4).optional() })
 export async function createGeneratedAction(input: z.input<typeof GenInput>): Promise<R<{ id: string }>> {
   const userId = await uid()
   const p = GenInput.safeParse(input)

@@ -80,15 +80,19 @@ export function GenerateForm({ defaults, aiOn }: { defaults: { days: number; min
         <span className="flex justify-between">Seans süresi <b className="num">{minutes} dk</b></span>
         <input id="gen-min" type="range" min={20} max={120} step={5} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} className="h-8" />
       </label>
-      <button type="button" className={btn.primary} disabled={pending || !eq.length} onClick={() => go(() => createGeneratedAction({ days, minutes, equipment: eq as never }))}>{pending ? 'Oluşturuluyor…' : 'Programı oluştur'}</button>
+      <fieldset className="flex flex-col gap-2" data-testid="gen-priority">
+        <legend className="text-sm font-semibold mb-1">Öncelikli bölgeler <span className="text-mute font-normal">(isteğe bağlı, en fazla 4)</span></legend>
+        <div className="flex flex-wrap gap-1.5">{WEAK.map((k) => (
+          <button key={k} type="button" aria-pressed={weak.includes(k)} onClick={() => setWeak(weak.includes(k) ? weak.filter((x) => x !== k) : weak.length < 4 ? [...weak, k] : weak)}
+            className={`h-9 px-3 rounded-full text-[13px] font-semibold ${weak.includes(k) ? 'bg-acc text-acc-ink' : 'bg-surface-2 text-ink-2'}`}>{MUSCLES[k]}</button>
+        ))}</div>
+        <span className="text-[12px] text-mute">Seçtiğin bölgelere ek set verilir ve gün içinde öne alınır; haftalık set sayısı program notunda yazar.</span>
+      </fieldset>
+      <button type="button" className={btn.primary} disabled={pending || !eq.length} onClick={() => go(() => createGeneratedAction({ days, minutes, equipment: eq as never, priority: weak as never }))}>{pending ? 'Oluşturuluyor…' : 'Programı oluştur'}</button>
       {aiOn ? (
         <div className="flex flex-col gap-2 pt-3 border-t border-line" data-testid="ai-program">
           <span className="text-sm font-semibold">AI ile kişisel program</span>
-          <span className="text-[12px] text-mute">Zayıf bölgelerini seç; dil modeli kütüphaneden hareket seçer, kurallar set/tekrar ve haftalık hacmi denetler. Günlük AI hakkından 1 düşer.</span>
-          <div className="flex flex-wrap gap-1.5">{WEAK.map((k) => (
-            <button key={k} type="button" aria-pressed={weak.includes(k)} onClick={() => setWeak(weak.includes(k) ? weak.filter((x) => x !== k) : weak.length < 4 ? [...weak, k] : weak)}
-              className={`h-9 px-3 rounded-full text-[13px] font-semibold ${weak.includes(k) ? 'bg-acc text-acc-ink' : 'bg-surface-2 text-ink-2'}`}>{MUSCLES[k]}</button>
-          ))}</div>
+          <span className="text-[12px] text-mute">Dil modeli kütüphaneden hareket seçer (yukarıdaki öncelikli bölgeler dahil), kurallar set/tekrar ve haftalık hacmi denetler. Günlük AI hakkından 1 düşer.</span>
           <label htmlFor="ai-prog-note" className="sr-only">Not</label>
           <input id="ai-prog-note" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Not (ör: dizimde hassasiyet var, squat yerine leg press)" className="h-11 rounded-xl bg-surface-2 border border-line px-3 text-[14px]" />
           <button type="button" className={btn.secondary + ' h-12'} disabled={pending || aiBusy || !eq.length} onClick={() => start(async () => {

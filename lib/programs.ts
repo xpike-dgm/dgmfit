@@ -154,3 +154,33 @@ export function generateProgram(i: { days: number; experience: 'new' | 'mid' | '
   if (i.goal === 'lose') notes.push('Kalori açığında amaç kuvveti korumak: ağırlıkları düşürme, set sayısını gerekirse azalt.')
   return { templateId: t.id, name: `${t.name} · haftada ${d} gün`, days, notes }
 }
+
+/** Program sihirbazı v2: haftalık set sayısı (kas grubu → set; yalnızca ana kas, tekrarlı günler dahil). */
+export function weeklySets(days: ProgramDay[], musclesOf: (key: string) => string[]): Map<string, number> {
+  const m = new Map<string, number>()
+  for (const d of days) for (const e of d.exercises) for (const mu of musclesOf(e.key).slice(0, 1)) m.set(mu, (m.get(mu) ?? 0) + e.sets)
+  return m
+}
+
+/**
+ * Öncelikli bölgeler: o kasları çalıştıran yardımcı/izolasyon hareketlerine +1 set (en fazla 5) ve gün içinde ana
+ * hareketlerden hemen sonraya alınır (yorgunluk öncesi). Haftalık set notu eklenir (10–20 set önerilen aralık).
+ */
+export function applyPriority(g: GeneratedProgram, priority: string[], musclesOf: (key: string) => string[], labels: Record<string, string> = {}): GeneratedProgram {
+  if (!priority.length) return g
+  const pri = new Set(priority)
+  const hit = (k: string) => musclesOf(k).slice(0, 1).some((m) => pri.has(m))
+  const days = g.days.map((d) => {
+    const ex = d.exercises.map((e) => (hit(e.key) && e.role !== 'ana' ? { ...e, sets: Math.min(5, e.sets + 1) } : e))
+    const main = ex.filter((e) => e.role === 'ana'), rest = ex.filter((e) => e.role !== 'ana')
+    rest.sort((a, b) => Number(hit(b.key)) - Number(hit(a.key))) // kararlı sıralama: öncelikliler öne
+    return { ...d, exercises: [...main, ...rest] }
+  })
+  const sets = weeklySets(days, musclesOf)
+  const notes = [...g.notes]
+  const parts = priority.map((p) => `${labels[p] ?? p} ${sets.get(p) ?? 0}`)
+  notes.push(`Öncelikli bölgeler (haftalık set): ${parts.join(', ')}. Önerilen aralık 10–20 set.`)
+  const low = priority.filter((p) => (sets.get(p) ?? 0) < 8)
+  if (low.length) notes.push(`${low.map((p) => labels[p] ?? p).join(', ')} için hacim düşük: seans süresini artır ya da bu bölgeye bir hareket ekle.`)
+  return { ...g, days, notes }
+}
