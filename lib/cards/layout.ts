@@ -27,6 +27,8 @@ export interface Design {
   modules?: ModuleColors
   /** Ö2b: stil (köşe, yoğunluk, yazı tipi, simge, bant, erişilebilirlik, dokunuş, akşam, birimler) */
   style?: Partial<StylePrefs>
+  /** Ö3b: şablondan geldiyse kaynağı (remix ve paylaşımda "X'in şablonundan" için) */
+  origin?: { templateId: string; name: string }
 }
 
 export interface ResolvedItem { id: string; size: CardSize; def: CardDef; stack?: string[] }

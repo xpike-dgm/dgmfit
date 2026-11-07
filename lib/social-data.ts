@@ -57,9 +57,10 @@ export async function hiddenIds(userId: string): Promise<{ blocked: Set<string>;
 
 // ───────── Bildirim ─────────
 
-export const NOTIFY_KINDS = { friend_request: 'Arkadaşlık isteği', friend_accept: 'İstek kabulü', reaction: 'Tepkiler', comment: 'Yorumlar', follow: 'Yeni takipçi', message: 'Mesajlar', nudge: 'Dürtmeler', group_invite: 'Grup davetleri', challenge_invite: 'Meydan okuma davetleri', partner_workout: 'Partner antrenmanı', pr_witness: 'Rekor tanıklığı' } as const
+export const NOTIFY_KINDS = { template_like: 'Şablon beğenileri', template_use: 'Şablonunu kullananlar', friend_request: 'Arkadaşlık isteği', friend_accept: 'İstek kabulü', reaction: 'Tepkiler', comment: 'Yorumlar', follow: 'Yeni takipçi', message: 'Mesajlar', nudge: 'Dürtmeler', group_invite: 'Grup davetleri', challenge_invite: 'Meydan okuma davetleri', partner_workout: 'Partner antrenmanı', pr_witness: 'Rekor tanıklığı' } as const
 export type NotifyKind = keyof typeof NOTIFY_KINDS
 const TEXT: Record<NotifyKind, (n: string) => string> = {
+  template_like: (n) => `${n} tasarım şablonunu beğendi`, template_use: (n) => `${n} tasarım şablonunu kullandı`,
   friend_request: (n) => `${n} sana arkadaşlık isteği gönderdi`, friend_accept: (n) => `${n} arkadaşlık isteğini kabul etti`,
   reaction: (n) => `${n} gönderine tepki verdi`, comment: (n) => `${n} gönderine yorum yaptı`, follow: (n) => `${n} seni takip etmeye başladı`,
   message: (n) => `${n} sana mesaj gönderdi`, nudge: (n) => `${n} seni dürttü`, group_invite: (n) => `${n} seni bir gruba davet etti`,
@@ -330,6 +331,13 @@ async function snapshot(userId: string, kind: PostKind, ref: string | null | und
     const b = [...a.list, ...w.badges].find((x) => x.id === ref && x.earnedDay)
     if (!b) throw new Error('Bu rozet henüz kazanılmadı')
     return { id: b.id, title: b.title, desc: b.desc, day: b.earnedDay }
+  }
+  if (kind === 'design') {
+    // Ö3b: şablon paylaşımı — yalnız kullanıcının kendi, herkese açık şablonu; veri şablonun paylaşılabilir tasarımı
+    const [t] = ref && /^[0-9a-f-]{36}$/.test(ref) ? await db.select({ id: schema.designTemplates.id, name: schema.designTemplates.name, data: schema.designTemplates.data, status: schema.designTemplates.status })
+      .from(schema.designTemplates).where(and(eq(schema.designTemplates.id, ref), eq(schema.designTemplates.ownerId, userId), isNull(schema.designTemplates.deletedAt))).limit(1) : []
+    if (!t || t.status !== 'public') throw new Error('Şablon bulunamadı')
+    return { templateId: t.id, name: t.name, design: t.data }
   }
   if (kind === 'milestone') {
     const g = await activeGoal(userId)

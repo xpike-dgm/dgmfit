@@ -2,7 +2,7 @@ import 'server-only'
 // Özelleştirme (Ö1): kullanıcının etkin tasarımı. Tek etkin tasarım (ui_designs_one_active); çoklu tasarım ve sürümler Ö3'te
 // aynı tabloyu kullanır.
 import { cache } from 'react'
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 import { db, schema } from '../db'
 import { publish } from '../events'
 import { isAdvanced } from '../ui-mode'
@@ -89,18 +89,36 @@ export async function allScreenLayouts(userId: string) {
   })) as Record<ScreenId, ReturnType<typeof resolveScreen>>
 }
 
-async function writeDesign(userId: string, d: Design) {
+async function writeDesign(userId: string, d: Design, note?: string, prev?: Design | null) {
   const data = { ...d, v: REGISTRY_VERSION } as unknown as Record<string, unknown>
-  const upd = await db.update(schema.uiDesigns).set({ data, updatedAt: new Date() })
+  let [row] = await db.update(schema.uiDesigns).set({ data, updatedAt: new Date() })
     .where(and(eq(schema.uiDesigns.userId, userId), eq(schema.uiDesigns.active, true))).returning({ id: schema.uiDesigns.id })
-  if (!upd.length) await db.insert(schema.uiDesigns).values({ userId, data, active: true }).onConflictDoNothing()
+  if (!row) [row] = await db.insert(schema.uiDesigns).values({ userId, data, active: true }).onConflictDoNothing().returning({ id: schema.uiDesigns.id })
+  if (row && note) await snapshot(userId, row.id, data, note, prev ? ({ ...prev, v: REGISTRY_VERSION } as unknown as Record<string, unknown>) : undefined)
+}
+
+const SNAP_MERGE_MS = 10 * 60_000
+export const SNAP_KEEP = 30
+/** Ö3a: sürüm anlık görüntüsü. Aynı notla 10 dk içindeki ardışık kayıtlar tek sürümde birleşir; tasarım başına en çok 30 sürüm. */
+export async function snapshot(userId: string, designId: string, data: Record<string, unknown>, note: string, prev?: Record<string, unknown>) {
+  const [last] = await db.select({ id: schema.uiDesignVersions.id, note: schema.uiDesignVersions.note, at: schema.uiDesignVersions.createdAt })
+    .from(schema.uiDesignVersions).where(eq(schema.uiDesignVersions.designId, designId)).orderBy(desc(schema.uiDesignVersions.createdAt)).limit(1)
+  // ilk sürümden önce değişiklik öncesi hâl "Başlangıç" olarak saklanır (ilk değişiklik de geri alınabilsin)
+  if (!last && prev) await db.insert(schema.uiDesignVersions).values({ designId, userId, note: 'Başlangıç', data: prev, createdAt: new Date(Date.now() - 1000) })
+  if (last && last.note === note && Date.now() - last.at.getTime() < SNAP_MERGE_MS) {
+    await db.update(schema.uiDesignVersions).set({ data, createdAt: new Date() }).where(eq(schema.uiDesignVersions.id, last.id))
+  } else {
+    await db.insert(schema.uiDesignVersions).values({ designId, userId, note, data })
+  }
+  await db.execute(sql`delete from ui_design_versions where design_id = ${designId} and id not in (select id from ui_design_versions where design_id = ${designId} order by created_at desc limit ${SNAP_KEEP})`)
 }
 /** Etkin tasarımı okuyup değiştirir (istek önbelleğindeki değil, güncel satır). */
-async function updateDesign(userId: string, f: (d: Design) => Design) {
+async function updateDesign(userId: string, f: (d: Design) => Design, note?: string) {
   const [row] = await db.select({ data: schema.uiDesigns.data }).from(schema.uiDesigns)
     .where(and(eq(schema.uiDesigns.userId, userId), eq(schema.uiDesigns.active, true))).limit(1)
-  const next = f(row ? (row.data as unknown as Design) : emptyDesign())
-  await writeDesign(userId, next)
+  const prev = row ? (row.data as unknown as Design) : null
+  const next = f(prev ?? emptyDesign())
+  await writeDesign(userId, next, note, prev ?? emptyDesign())
   return next
 }
 
@@ -119,32 +137,32 @@ export async function saveScreen(userId: string, screen: ScreenId, items: Layout
       }
     }
     return { ...cur, cards, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced }) } }
-  })
+  }, `${SCREENS[screen].title} düzeni`)
   await publish(userId, 'design.saved', { screen, cards: next.screens[screen]!.items.length })
 }
 
 /** Ekranı varsayılana döndürür (o ekranın kaydı silinir; kart ayarları, kurallar ve alt bar korunur). */
 export async function resetScreen(userId: string, screen: ScreenId) {
-  await updateDesign(userId, (cur) => { const screens = { ...cur.screens }; delete screens[screen]; return { ...cur, screens } })
+  await updateDesign(userId, (cur) => { const screens = { ...cur.screens }; delete screens[screen]; return { ...cur, screens } }, `${SCREENS[screen].title} varsayılana döndü`)
   await publish(userId, 'design.reset', { screen })
 }
 
 export async function saveNav(userId: string, nav: NavLayout | null) {
   const n = nav ? normalizeNav(nav) : null
-  await updateDesign(userId, (cur) => { const d = { ...cur }; if (n) d.nav = n; else delete d.nav; return d })
+  await updateDesign(userId, (cur) => { const d = { ...cur }; if (n) d.nav = n; else delete d.nav; return d }, 'Alt bar')
   await publish(userId, 'design.nav', { hidden: n?.hidden?.length ?? 0 })
 }
 
 export async function saveRules(userId: string, rules: Rule[]) {
   const r = normalizeRules(rules)
-  await updateDesign(userId, (cur) => ({ ...cur, rules: r }))
+  await updateDesign(userId, (cur) => ({ ...cur, rules: r }), 'Kurallar')
   await publish(userId, 'design.rules', { rules: r.length, on: r.filter((x) => x.on).length })
   return r
 }
 
 export async function savePrefs(userId: string, p: UsePrefs) {
   const n = normalizePrefs(p)
-  await updateDesign(userId, (cur) => ({ ...cur, prefs: n }))
+  await updateDesign(userId, (cur) => ({ ...cur, prefs: n }), 'Kullanım ayarları')
   await publish(userId, 'design.prefs', { hand: n.hand ?? 'none', holdToEdit: n.holdToEdit ?? true })
 }
 
@@ -168,7 +186,7 @@ export async function applyWizard(userId: string, a: WizardAnswers) {
     nav: normalizeNav(w.nav),
     prefs: normalizePrefs({ ...(cur.prefs ?? {}), hand: w.hand }),
     rules: normalizeRules(mergeRules(cur.rules ?? [], w.rules)),
-  }))
+  }), 'Düzen sihirbazı')
   await publish(userId, 'design.wizard', { focus: a.focus, detail: a.detail, hand: a.hand, time: a.time, logs: a.logs.join(',') })
   return w
 }
@@ -176,7 +194,7 @@ export async function applyWizard(userId: string, a: WizardAnswers) {
 // ───────── Ö2a: modül renkleri ─────────
 export async function saveModules(userId: string, mc: ModuleColors | null) {
   const n = mc ? normalizeModuleColors(mc) : undefined
-  await updateDesign(userId, (cur) => { const d = { ...cur }; if (n) d.modules = n; else delete d.modules; return d })
+  await updateDesign(userId, (cur) => { const d = { ...cur }; if (n) d.modules = n; else delete d.modules; return d }, 'Modül renkleri')
   await publish(userId, 'design.colors', { modules: n ? Object.keys(n).length : 0 })
 }
 
@@ -186,7 +204,10 @@ export async function userStyle(userId: string): Promise<StylePrefs> { return no
 
 export async function saveStyle(userId: string, patch: Partial<StylePrefs>) {
   let out: StylePrefs | null = null
-  await updateDesign(userId, (cur) => { out = normalizeStyle({ ...normalizeStyle(cur.style), ...patch, units: { ...normalizeStyle(cur.style).units, ...(patch.units ?? {}) } }); return { ...cur, style: out } })
+  await updateDesign(userId, (cur) => { out = normalizeStyle({ ...normalizeStyle(cur.style), ...patch, units: { ...normalizeStyle(cur.style).units, ...(patch.units ?? {}) } }); return { ...cur, style: out } }, 'Stil')
   await publish(userId, 'design.style', { keys: Object.keys(patch).join(',') })
   return out!
 }
+
+/** Ö3b: etkin tasarımı bir dönüşümle değiştirir (şablon uygulama); sürüm notu ile. */
+export async function transformDesign(userId: string, f: (d: Design) => Design, note: string) { return updateDesign(userId, f, note) }

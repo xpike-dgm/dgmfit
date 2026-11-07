@@ -5,6 +5,8 @@ import { requireUser, rateLimit } from '@/lib/auth'
 import { SCREENS, isScreen } from '@/lib/cards/registry'
 import { applyWizard, hideCardToday, pinCard, resetScreen, saveModules, saveNav, savePrefs, saveRules, saveScreen, saveStyle } from '@/lib/cards/design-data'
 import { readMedia } from '@/lib/media'
+import { activateDesign, createDesign, deleteDesign, renameDesign, restoreVersion } from '@/lib/cards/designs-data'
+import { adminTemplate, deleteTemplate, publishTemplate, reactTemplate, remixTemplate, reportTemplate, useTemplate } from '@/lib/cards/templates-data'
 import { cardDef } from '@/lib/cards/registry'
 import { RULES_MAX } from '@/lib/cards/prefs'
 
@@ -153,4 +155,56 @@ export async function saveStyleAction(patch: unknown): Promise<R> {
   await saveStyle(u.id, p.data as never)
   everywhere()
   return { ok: true }
+}
+
+// ───────── Ö3a: tasarımlarım ve sürümler ─────────
+const Id = z.string().regex(/^[0-9a-f-]{36}$/)
+export async function designAction(input: unknown): Promise<R & { id?: string }> {
+  const u = await requireUser()
+  const p = z.discriminatedUnion('op', [
+    z.object({ op: z.literal('create'), name: z.string().max(40), from: z.union([z.literal('default'), Id]) }),
+    z.object({ op: z.literal('activate'), id: Id }),
+    z.object({ op: z.literal('rename'), id: Id, name: z.string().min(1).max(40) }),
+    z.object({ op: z.literal('delete'), id: Id }),
+    z.object({ op: z.literal('restore'), id: Id }),
+  ]).safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz istek' }
+  if (limited(u.id)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  const a = p.data
+  if (a.op === 'create') { const r = await createDesign(u.id, a.name, a.from); if (!r.ok) return r; everywhere(); return { ok: true, id: r.id } }
+  const ok = a.op === 'activate' ? await activateDesign(u.id, a.id) : a.op === 'rename' ? await renameDesign(u.id, a.id, a.name)
+    : a.op === 'delete' ? await deleteDesign(u.id, a.id) : await restoreVersion(u.id, a.id)
+  if (!ok) return { ok: false, error: a.op === 'delete' ? 'Etkin tasarım silinemez' : 'Bulunamadı' }
+  everywhere()
+  return { ok: true }
+}
+
+// ───────── Ö3b: şablon kütüphanesi ─────────
+export async function templateAction(input: unknown): Promise<R & { id?: string; status?: string }> {
+  const u = await requireUser()
+  const p = z.discriminatedUnion('op', [
+    z.object({ op: z.literal('publish'), designId: Id, name: z.string().min(1).max(60), description: z.string().max(400).optional(), category: z.string().max(20), tags: z.array(z.string().max(30)).max(8), toFeed: z.boolean() }),
+    z.object({ op: z.enum(['like', 'save']), id: Id, on: z.boolean() }),
+    z.object({ op: z.literal('use'), id: Id, mode: z.enum(['all', 'colors', 'layout']) }),
+    z.object({ op: z.literal('remix'), id: Id }),
+    z.object({ op: z.literal('delete'), id: Id }),
+    z.object({ op: z.literal('report'), id: Id, reason: z.string().min(1).max(60) }),
+    z.object({ op: z.literal('admin'), id: Id, action: z.enum(['feature', 'approve', 'hide']) }),
+  ]).safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz istek' }
+  if (!rateLimit('template:' + u.id, 120, 3600_000)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  const a = p.data
+  switch (a.op) {
+    case 'publish': {
+      const r = await publishTemplate(u.id, a.designId, a, a.toFeed)
+      if (!r.ok) return r
+      revalidatePath('/profil/ozellestirme/sablonlar'); return { ok: true, id: r.id, status: r.status }
+    }
+    case 'like': case 'save': return (await reactTemplate(u.id, a.id, a.op, a.on)) ? { ok: true } : { ok: false, error: 'Şablon bulunamadı' }
+    case 'use': { if (!(await useTemplate(u.id, a.id, a.mode))) return { ok: false, error: 'Şablon bulunamadı' }; everywhere(); return { ok: true } }
+    case 'remix': { const r = await remixTemplate(u.id, a.id); if (!r.ok) return r; return { ok: true, id: r.id } }
+    case 'delete': return (await deleteTemplate(u.id, a.id, u.admin)) ? { ok: true } : { ok: false, error: 'Silinemedi' }
+    case 'report': return (await reportTemplate(u.id, a.id, a.reason)) ? { ok: true } : { ok: false, error: 'Şikayet gönderilemedi' }
+    case 'admin': { if (!u.admin) return { ok: false, error: 'Yetki yok' }; await adminTemplate(a.id, a.action); revalidatePath('/profil/ozellestirme/sablonlar'); return { ok: true } }
+  }
 }

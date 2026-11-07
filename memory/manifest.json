@@ -299,7 +299,12 @@
     "lib/cards/share.ts",
     "lib/cards/designs-data.ts",
     "components/cards/MiniPreview.tsx",
-    "tests/cards-share.test.ts"
+    "tests/cards-share.test.ts",
+    "tests/e2e/custom7.e2e.cjs",
+    "lib/cards/templates.ts",
+    "lib/cards/templates-data.ts",
+    "tests/cards-templates.test.ts",
+    "tests/e2e/custom8.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -367,7 +372,9 @@
     "exercise_favorites",
     "barcode_misses",
     "ui_designs",
-    "ui_design_versions"
+    "ui_design_versions",
+    "design_templates",
+    "template_reactions"
   ],
   "routes": [
     "/",
@@ -500,7 +507,9 @@
     "/panom",
     "/profil/ozellestirme/renkler",
     "/profil/ozellestirme/stil",
-    "/profil/ozellestirme/tasarimlar"
+    "/profil/ozellestirme/tasarimlar",
+    "/profil/ozellestirme/sablonlar",
+    "/profil/ozellestirme/sablonlar/[id]"
   ],
   "events": [
     "profile.onboarded",
@@ -530,7 +539,9 @@
     "design.style",
     "design.created",
     "design.activated",
-    "design.restored"
+    "design.restored",
+    "template.published",
+    "template.used"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -1051,6 +1062,19 @@
       "PALETTES",
       "MODULES"
     ],
+    "lib/cards/share.ts": [
+      "personalPart",
+      "withPersonal",
+      "shareable",
+      "applyTemplate"
+    ],
+    "lib/cards/templates.ts": [
+      "normalizeMeta",
+      "popularity",
+      "weekKey",
+      "searchTerm",
+      "CATEGORIES"
+    ],
     "lib/cards/wizard.ts": [
       "wizardDesign",
       "mergeRules",
@@ -1118,6 +1142,7 @@
     "0022_goal_intelligence.sql",
     "0023_meal_reminders.sql",
     "0024_ui_designs.sql",
-    "0025_design_versions.sql"
+    "0025_design_versions.sql",
+    "0026_design_templates.sql"
   ]
 }

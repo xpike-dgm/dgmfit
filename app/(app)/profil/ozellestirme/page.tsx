@@ -12,8 +12,6 @@ export const metadata = { title: 'Özelleştirme' }
 const SOON: [string, string][] = [
   ['Modlar', 'Odak, Ramazan, tatil'],
   ['Kendi kartlarım', 'Kart oluştur, takip ekle'],
-  ['Tasarımlarım', 'Sürümler, geri al'],
-  ['Şablon kütüphanesi', 'Topluluğun tasarımları'],
 ]
 
 /** Özelleştirme stüdyosu (Ö1): mevcut düzenin önizlemesi + ekran düzenleme. Diğer bölümler sonraki aşamalarda. */
@@ -73,6 +71,12 @@ export default async function Page() {
         </Link>
         <Link href="/profil/ozellestirme/stil" className={`${row} border-t border-line`} data-testid="studio-style">
           <span className="flex flex-col"><b className="text-[15px]">Stil</b><span className="text-[12.5px] text-mute">Köşeler, yazı tipi, bant, birimler, erişilebilirlik</span></span><span className="text-mute">›</span>
+        </Link>
+        <Link href="/profil/ozellestirme/tasarimlar" className={`${row} border-t border-line`} data-testid="studio-designs">
+          <span className="flex flex-col"><b className="text-[15px]">Tasarımlarım</b><span className="text-[12.5px] text-mute">Birden çok tasarım, sürümler, geri yükleme</span></span><span className="text-mute">›</span>
+        </Link>
+        <Link href="/profil/ozellestirme/sablonlar" className={`${row} border-t border-line`} data-testid="studio-library">
+          <span className="flex flex-col"><b className="text-[15px]">Şablon kütüphanesi</b><span className="text-[12.5px] text-mute">Topluluğun tasarımlarını önizle ve kullan</span></span><span className="text-mute">›</span>
         </Link>
         <Link href="/profil/ozellestirme/kurallar" className={`${row} border-t border-line`} data-testid="studio-rules">
           <span className="flex flex-col"><b className="text-[15px]">Kurallar</b><span className="text-[12.5px] text-mute">{rulesOn ? `${rulesOn} kural açık` : 'Sabah, antrenman günü, akşam düzeni…'}</span></span><span className="text-mute">›</span>

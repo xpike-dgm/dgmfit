@@ -1,4 +1,6 @@
 'use client'
+import MiniPreview from '@/components/cards/MiniPreview'
+import type { Design } from '@/lib/cards/layout'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -42,6 +44,15 @@ function Body({ p, onMsg }: { p: PostView; onMsg: (m: string) => void }) {
     )
   }
   if (p.kind === 'pr') return <div className="rounded-2xl bg-coach border border-coach-line px-3.5 py-3 text-[15px]" data-testid="post-pr">🏆 <b>{String(d.name)}</b> · {String(d.label)}: <b className="num">{fmtNum(Number(d.value), 1)}{d.type === 'reps' ? ' tekrar' : ' kg'}</b>{d.previous ? <span className="text-mute"> (önceki {fmtNum(Number(d.previous), 1)})</span> : null}</div>
+  if (p.kind === 'design') {
+    const g = d as { templateId: string; name: string; design: Design }
+    return (
+      <Link href={`/profil/ozellestirme/sablonlar/${g.templateId}`} className="rounded-2xl bg-surface-2 px-3.5 py-3 flex items-center gap-3" data-testid="post-design">
+        <MiniPreview design={g.design} width={64} label={`${g.name} önizlemesi`} />
+        <span className="flex flex-col gap-1 min-w-0"><span className="text-[11px] font-extrabold text-mute tracking-[0.06em]">TASARIM ŞABLONU</span><b className="truncate">{g.name}</b><span className="text-[13px] text-acc font-bold">Önizle ve kullan ›</span></span>
+      </Link>
+    )
+  }
   if (p.kind === 'program') {
     const g = d as { name: string; days: { name: string; focus: string; exercises: { name: string; sets: number; repMin: number; repMax: number; seconds: number | null }[] }[] }
     return (

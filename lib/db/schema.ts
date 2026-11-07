@@ -605,6 +605,45 @@ export const uiDesigns = pgTable('ui_designs', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index('ui_designs_user_idx').on(t.userId, t.active)])
 
+/** Ö3a: tasarım sürümleri (her kayıtta anlık görüntü; aynı türden ardışık kayıtlar 10 dk içinde birleşir, tasarım başına en çok 30). */
+export const uiDesignVersions = pgTable('ui_design_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  designId: uuid('design_id').notNull().references(() => uiDesigns.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  note: text('note').notNull().default(''),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('ui_design_versions_design_idx').on(t.designId, t.createdAt)])
+
+/** Ö3b: şablon kütüphanesi (paylaşılabilir tasarım; status public | pending | hidden). */
+export const designTemplates = pgTable('design_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description').notNull().default(''),
+  category: text('category').notNull().default('diger'),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull(),
+  remixOf: uuid('remix_of'),
+  status: text('status').notNull().default('public'),
+  moderationReason: text('moderation_reason'),
+  likes: integer('likes').notNull().default(0),
+  saves: integer('saves').notNull().default(0),
+  uses: integer('uses').notNull().default(0),
+  featuredWeek: date('featured_week'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [index('design_templates_list_idx').on(t.status, t.createdAt), index('design_templates_owner_idx').on(t.ownerId)])
+
+/** Ö3b: beğeni / kaydetme / kullanım (kullanıcı başına bir kez sayılır). kind: like | save | use */
+export const templateReactions = pgTable('template_reactions', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  templateId: uuid('template_id').notNull().references(() => designTemplates.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.userId, t.templateId, t.kind] }), index('template_reactions_tpl_idx').on(t.templateId, t.kind)])
+
 export const coachPrefs = pgTable('coach_prefs', {
   userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
   persona: text('persona').notNull().default('supportive'), // supportive | strict | science
