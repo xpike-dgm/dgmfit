@@ -9,6 +9,8 @@ import { fmtNum } from '@/lib/calc'
 import { TopBar } from '@/components/ui'
 import { GroupChat, GroupOp } from '../GroupClient'
 import NewChallenge from '../../meydan/NewChallenge'
+import { groupTheme } from '@/lib/cards/community-data'
+import MiniPreview from '@/components/cards/MiniPreview'
 
 export const metadata: Metadata = { title: 'Grup · DgFit' }
 
@@ -27,10 +29,17 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const fr = await friendsOverview(u.id)
   const memberIds = new Set(g.members.map((m) => m.id))
   const invitable = fr.friends.filter((f) => !memberIds.has(f.id))
+  const theme = await groupTheme(g.id)
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="group">
       <TopBar back="/sosyal/gruplar" title={g.name} />
       {g.description ? <p className="text-[14px] text-ink-2 px-1">{g.description}</p> : null}
+      {theme ? (
+        <Link href={`/profil/ozellestirme/sablonlar/${theme.id}`} className="card p-3 flex items-center gap-3" data-testid="group-theme-card">
+          <MiniPreview design={theme.data} width={56} label={`${theme.name} önizlemesi`} />
+          <span className="flex flex-col min-w-0"><span className="text-[11px] font-extrabold text-mute tracking-[0.06em]">GRUP TEMASI</span><b className="truncate">{theme.name}</b><span className="text-[12.5px] text-acc font-bold">Önizle ve kullan ›</span></span>
+        </Link>
+      ) : null}
       <section className="card p-4 flex flex-col gap-2" aria-label="Sıralama" data-testid="group-boards">
         <div className="flex items-center justify-between"><span className="text-[12px] font-bold tracking-[0.08em] uppercase text-mute">Sıralama</span>
           {g.myOptIn ? <GroupOp op="optout" groupId={g.id} label="Sıralamadan çık" /> : <GroupOp op="optin" groupId={g.id} label="Sıralamada görün" tone="primary" />}</div>

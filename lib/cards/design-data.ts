@@ -49,7 +49,7 @@ export const ruleCtx = cache(async (userId: string): Promise<RuleCtx> => {
  */
 export async function screenLayout(userId: string, screen: ScreenId, opts: { editing?: boolean } = {}) {
   const [d, advanced, goal] = await Promise.all([activeDesign(userId), isAdvanced(userId), userGoal(userId)])
-  const r = resolveScreen(d, screen, { advanced })
+  const r = await withAdminDefault(resolveScreen(d, screen, { advanced }), screen, advanced)
   if (!r.customized) r.items = goalFront(screen, r.items, goal)
   let applied: string[] = []
   let pinned: string[] = []
@@ -82,11 +82,13 @@ export async function screenLayout(userId: string, screen: ScreenId, opts: { edi
 /** Tüm ekranların çözülmüş düzeni (stüdyo listesi için; kurallar uygulanmaz). */
 export async function allScreenLayouts(userId: string) {
   const [d, advanced, goal] = await Promise.all([activeDesign(userId), isAdvanced(userId), userGoal(userId)])
-  return Object.fromEntries((Object.keys(SCREENS) as ScreenId[]).map((s) => {
-    const r = resolveScreen(d, s, { advanced })
+  const out = {} as Record<ScreenId, ReturnType<typeof resolveScreen>>
+  for (const s of Object.keys(SCREENS) as ScreenId[]) {
+    const r = await withAdminDefault(resolveScreen(d, s, { advanced }), s, advanced)
     if (!r.customized) r.items = goalFront(s, r.items, goal)
-    return [s, r]
-  })) as Record<ScreenId, ReturnType<typeof resolveScreen>>
+    out[s] = r
+  }
+  return out
 }
 
 async function writeDesign(userId: string, d: Design, note?: string, prev?: Design | null) {
@@ -211,3 +213,13 @@ export async function saveStyle(userId: string, patch: Partial<StylePrefs>) {
 
 /** Ö3b: etkin tasarımı bir dönüşümle değiştirir (şablon uygulama); sürüm notu ile. */
 export async function transformDesign(userId: string, f: (d: Design) => Design, note: string) { return updateDesign(userId, f, note) }
+
+/** Ö3c: yönetimden varsayılan düzen — özelleştirmemiş kullanıcıda kayıttaki varsayılanın yerine geçer (customized değişmez). */
+async function withAdminDefault(r: ReturnType<typeof resolveScreen>, screen: ScreenId, advanced: boolean) {
+  if (r.customized) return r
+  const { layoutDefaults } = await import('./community-data')
+  const def = (await layoutDefaults())[screen]
+  if (!def) return r
+  const x = resolveScreen({ v: REGISTRY_VERSION, screens: { [screen]: def } }, screen, { advanced })
+  return { ...x, notices: [], customized: false, drawer: x.drawer.map((i) => (i.reason === 'removed' ? { ...i, reason: 'available' as const } : i)) }
+}

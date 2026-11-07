@@ -644,6 +644,56 @@ export const templateReactions = pgTable('template_reactions', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [primaryKey({ columns: [t.userId, t.templateId, t.kind] }), index('template_reactions_tpl_idx').on(t.templateId, t.kind)])
 
+/** Ö3c: haftalık tasarım yarışması (tema yönetimden; o haftanın pazartesi günü). */
+export const designContests = pgTable('design_contests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  week: date('week').notNull().unique(),
+  theme: text('theme').notNull(),
+  description: text('description').notNull().default(''),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+export const contestEntries = pgTable('contest_entries', {
+  contestId: uuid('contest_id').notNull().references(() => designContests.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  templateId: uuid('template_id').notNull().references(() => designTemplates.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.contestId, t.userId] })])
+export const contestVotes = pgTable('contest_votes', {
+  contestId: uuid('contest_id').notNull().references(() => designContests.id, { onDelete: 'cascade' }),
+  voterId: uuid('voter_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  templateId: uuid('template_id').notNull().references(() => designTemplates.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.contestId, t.voterId] })])
+/** Ö3c: yönetimden duyuru kartı (Bugün'de; kullanıcı kapatınca bir daha görünmez). */
+export const announcements = pgTable('announcements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  body: text('body').notNull().default(''),
+  url: text('url'),
+  active: boolean('active').notNull().default(true),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  endsAt: timestamp('ends_at', { withTimezone: true }),
+})
+export const announcementDismissals = pgTable('announcement_dismissals', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  announcementId: uuid('announcement_id').notNull().references(() => announcements.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.userId, t.announcementId] })])
+/** Ö3c: tasarımcı takibi (sosyal takipten ayrı; yeni şablonlarından haberdar olmak için, gizlilik kurallarına dokunmaz). */
+export const designerFollows = pgTable('designer_follows', {
+  followerId: uuid('follower_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  designerId: uuid('designer_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.followerId, t.designerId] }), index('designer_follows_designer_idx').on(t.designerId)])
+/** Ö3c: uygulama geneli varsayılanlar (anahtar → veri), ör. 'layout' = yönetimden varsayılan ekran düzenleri. */
+export const appDefaults = pgTable('app_defaults', {
+  key: text('key').primaryKey(),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const coachPrefs = pgTable('coach_prefs', {
   userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
   persona: text('persona').notNull().default('supportive'), // supportive | strict | science
@@ -850,6 +900,8 @@ export const groups = pgTable('groups', {
   ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   description: text('description'),
+  /** Ö3c: grup teması (şablon) */
+  themeTemplateId: uuid('theme_template_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 })

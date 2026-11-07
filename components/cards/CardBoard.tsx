@@ -33,6 +33,8 @@ interface Props {
   pinned?: string[]
   /** Ö2a: kart renkleri */
   colors?: Record<string, CardColors>
+  /** Ö3c: sabit başlığın hemen altına konan kart dışı içerik (duyuru) */
+  afterHeader?: ReactNode
 }
 
 const HOLD_MS = 350
@@ -216,7 +218,7 @@ function Board(p: Props) {
     <div ref={box} className="relative flex flex-col gap-3" onPointerDown={down} onPointerMove={move} onPointerUp={cancel} onPointerCancel={cancel}
       onContextMenu={(e) => { if (pop || t.current) e.preventDefault() }}>
       <div className="grid grid-cols-2 gap-3" data-testid="card-board">
-        {p.items.map((it) => p.nodes[it.id] && !gone.includes(it.id) ? (
+        {p.items.flatMap((it, i) => [it, ...(i === 0 && p.afterHeader ? [{ id: '__after', size: 'full' as CardSize }] : [])]).map((it) => it.id === '__after' ? <div key="__after" className="col-span-2">{p.afterHeader}</div> : p.nodes[it.id] && !gone.includes(it.id) ? (
           it.stack?.some((sid) => p.nodes[sid]) ? (
             <StackCard key={it.id} id={it.id} size={it.size} ids={[it.id, ...it.stack.filter((sid) => p.nodes[sid])]} nodes={p.nodes} colors={p.colors} />
           ) : canHideToday(it.id) || canPin(it.id) ? (

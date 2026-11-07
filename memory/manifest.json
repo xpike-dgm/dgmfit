@@ -304,7 +304,12 @@
     "lib/cards/templates.ts",
     "lib/cards/templates-data.ts",
     "tests/cards-templates.test.ts",
-    "tests/e2e/custom8.e2e.cjs"
+    "tests/e2e/custom8.e2e.cjs",
+    "lib/cards/community.ts",
+    "lib/cards/community-data.ts",
+    "components/cards/AnnouncementCard.tsx",
+    "tests/cards-community.test.ts",
+    "tests/e2e/custom9.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -374,7 +379,14 @@
     "ui_designs",
     "ui_design_versions",
     "design_templates",
-    "template_reactions"
+    "template_reactions",
+    "design_contests",
+    "contest_entries",
+    "contest_votes",
+    "announcements",
+    "announcement_dismissals",
+    "app_defaults",
+    "designer_follows"
   ],
   "routes": [
     "/",
@@ -509,7 +521,11 @@
     "/profil/ozellestirme/stil",
     "/profil/ozellestirme/tasarimlar",
     "/profil/ozellestirme/sablonlar",
-    "/profil/ozellestirme/sablonlar/[id]"
+    "/profil/ozellestirme/sablonlar/[id]",
+    "/profil/ozellestirme/yarisma",
+    "/profil/ozellestirme/tasarimci/[username]",
+    "/t/[id]",
+    "/yonetim/tasarim"
   ],
   "events": [
     "profile.onboarded",
@@ -541,7 +557,11 @@
     "design.activated",
     "design.restored",
     "template.published",
-    "template.used"
+    "template.used",
+    "contest.set",
+    "contest.entered",
+    "announcement.created",
+    "layout.default"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -1075,6 +1095,14 @@
       "searchTerm",
       "CATEGORIES"
     ],
+    "lib/cards/community.ts": [
+      "contestOpen",
+      "contestWinner",
+      "voteError",
+      "visibleAnnouncement",
+      "safeUrl",
+      "publicTemplateUrl"
+    ],
     "lib/cards/wizard.ts": [
       "wizardDesign",
       "mergeRules",
@@ -1143,6 +1171,8 @@
     "0023_meal_reminders.sql",
     "0024_ui_designs.sql",
     "0025_design_versions.sql",
-    "0026_design_templates.sql"
+    "0026_design_templates.sql",
+    "0027_community.sql",
+    "0028_designer_follows.sql"
   ]
 }

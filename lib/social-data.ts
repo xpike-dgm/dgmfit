@@ -57,10 +57,11 @@ export async function hiddenIds(userId: string): Promise<{ blocked: Set<string>;
 
 // ───────── Bildirim ─────────
 
-export const NOTIFY_KINDS = { template_like: 'Şablon beğenileri', template_use: 'Şablonunu kullananlar', friend_request: 'Arkadaşlık isteği', friend_accept: 'İstek kabulü', reaction: 'Tepkiler', comment: 'Yorumlar', follow: 'Yeni takipçi', message: 'Mesajlar', nudge: 'Dürtmeler', group_invite: 'Grup davetleri', challenge_invite: 'Meydan okuma davetleri', partner_workout: 'Partner antrenmanı', pr_witness: 'Rekor tanıklığı' } as const
+export const NOTIFY_KINDS = { template_like: 'Şablon beğenileri', template_use: 'Şablonunu kullananlar', designer_follow: 'Tasarımcı takipçileri', designer_new: 'Takip ettiğin tasarımcıların yeni şablonları', friend_request: 'Arkadaşlık isteği', friend_accept: 'İstek kabulü', reaction: 'Tepkiler', comment: 'Yorumlar', follow: 'Yeni takipçi', message: 'Mesajlar', nudge: 'Dürtmeler', group_invite: 'Grup davetleri', challenge_invite: 'Meydan okuma davetleri', partner_workout: 'Partner antrenmanı', pr_witness: 'Rekor tanıklığı' } as const
 export type NotifyKind = keyof typeof NOTIFY_KINDS
 const TEXT: Record<NotifyKind, (n: string) => string> = {
   template_like: (n) => `${n} tasarım şablonunu beğendi`, template_use: (n) => `${n} tasarım şablonunu kullandı`,
+  designer_follow: (n) => `${n} seni tasarımcı olarak takip etmeye başladı`, designer_new: (n) => `${n} yeni bir tasarım şablonu paylaştı`,
   friend_request: (n) => `${n} sana arkadaşlık isteği gönderdi`, friend_accept: (n) => `${n} arkadaşlık isteğini kabul etti`,
   reaction: (n) => `${n} gönderine tepki verdi`, comment: (n) => `${n} gönderine yorum yaptı`, follow: (n) => `${n} seni takip etmeye başladı`,
   message: (n) => `${n} sana mesaj gönderdi`, nudge: (n) => `${n} seni dürttü`, group_invite: (n) => `${n} seni bir gruba davet etti`,

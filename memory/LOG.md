@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö3c başladı
+- Faz başı: memory-check geçti; son commit STATE ile uyumlu; ağaç temiz. Kapsam STATE Ö3c satırında.
+
 ## 2026-11-07 — Özelleştirme Ö3a + Ö3b tamamlandı (tek yayın)
 - Ö3a Tasarımlarım + sürümler (0025, `designs-data`, `share`), Ö3b şablon kütüphanesi + paylaşım (0026, `templates`, `templates-data`, 'design' gönderisi, bildirimler).
 - Süreç hatası yakalandı: Ö3a için arka planda verify→commit→release zinciri çalışırken Ö3b dosyaları yazılıyordu; zincir `git add -A` ile yarım Ö3b'yi alıp yayınlayacaktı → zincir commit'ten önce durduruldu (hiçbir şey yayınlanmadı), Ö3b tamamlanıp ikisi birlikte test edildi. Kural DECISIONS'a yazıldı.

@@ -7,6 +7,8 @@ import { applyWizard, hideCardToday, pinCard, resetScreen, saveModules, saveNav,
 import { readMedia } from '@/lib/media'
 import { activateDesign, createDesign, deleteDesign, renameDesign, restoreVersion } from '@/lib/cards/designs-data'
 import { adminTemplate, deleteTemplate, publishTemplate, reactTemplate, remixTemplate, reportTemplate, useTemplate } from '@/lib/cards/templates-data'
+import { closeAnnouncement, createAnnouncement, dismissAnnouncement, enterContest, followDesigner, isScreenId, setContest, setGroupTheme, setLayoutDefault, voteContest } from '@/lib/cards/community-data'
+import { activeDesign } from '@/lib/cards/design-data'
 import { cardDef } from '@/lib/cards/registry'
 import { RULES_MAX } from '@/lib/cards/prefs'
 
@@ -207,4 +209,47 @@ export async function templateAction(input: unknown): Promise<R & { id?: string;
     case 'report': return (await reportTemplate(u.id, a.id, a.reason)) ? { ok: true } : { ok: false, error: 'Şikayet gönderilemedi' }
     case 'admin': { if (!u.admin) return { ok: false, error: 'Yetki yok' }; await adminTemplate(a.id, a.action); revalidatePath('/profil/ozellestirme/sablonlar'); return { ok: true } }
   }
+}
+
+// ───────── Ö3c: topluluk ve yönetim ─────────
+export async function communityAction(input: unknown): Promise<R> {
+  const u = await requireUser()
+  const p = z.discriminatedUnion('op', [
+    z.object({ op: z.literal('enter'), templateId: Id }),
+    z.object({ op: z.literal('vote'), templateId: Id }),
+    z.object({ op: z.literal('follow'), userId: Id, on: z.boolean() }),
+    z.object({ op: z.literal('groupTheme'), groupId: Id, templateId: Id.nullable() }),
+    z.object({ op: z.literal('dismiss'), id: Id }),
+    z.object({ op: z.literal('contest'), theme: z.string().min(2).max(60), description: z.string().max(300) }),
+    z.object({ op: z.literal('announce'), title: z.string().min(2).max(80), body: z.string().max(300), url: z.string().max(300).nullable(), days: z.number().int().min(1).max(60) }),
+    z.object({ op: z.literal('closeAnnouncement'), id: Id }),
+    z.object({ op: z.literal('defaultLayout'), screen: z.string().max(20), reset: z.boolean() }),
+  ]).safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz istek' }
+  if (!rateLimit('community:' + u.id, 120, 3600_000)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  const a = p.data
+  const adminOnly = ['contest', 'announce', 'closeAnnouncement', 'defaultLayout'].includes(a.op)
+  if (adminOnly && !u.admin) return { ok: false, error: 'Yetki yok' }
+  let err: string | null = null
+  switch (a.op) {
+    case 'enter': err = await enterContest(u.id, a.templateId); break
+    case 'vote': err = await voteContest(u.id, a.templateId); break
+    case 'follow': try { await followDesigner(u.id, a.userId, a.on) } catch (e) { err = (e as Error).message } break
+    case 'groupTheme': err = await setGroupTheme(u.id, a.groupId, a.templateId); break
+    case 'dismiss': await dismissAnnouncement(u.id, a.id); break
+    case 'contest': { const r = await setContest(u.id, a.theme, a.description); if (!r.ok) err = r.error; break }
+    case 'announce': err = await createAnnouncement(u.id, a); break
+    case 'closeAnnouncement': await closeAnnouncement(a.id); break
+    case 'defaultLayout': {
+      if (!isScreenId(a.screen)) { err = 'Geçersiz ekran'; break }
+      const d = await activeDesign(u.id)
+      const items = a.reset ? null : d?.screens[a.screen]?.items ?? null
+      if (!a.reset && !items) { err = 'Önce bu ekranı kendin düzenle; senin düzenin varsayılan yapılır'; break }
+      await setLayoutDefault(u.id, a.screen, items)
+      break
+    }
+  }
+  if (err) return { ok: false, error: err }
+  everywhere()
+  return { ok: true }
 }

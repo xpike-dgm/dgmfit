@@ -59,6 +59,7 @@ export default async function Page() {
         </AdminCard>
         <AdminCard href="/yonetim/davetler" testId="card-invites" icon={<Ticket size={22} />} title="Davet kodları" value={d.invites.active} unit="etkin"
           hint="Kodla kayıt olan onay beklemeden girer" />
+        <AdminCard href="/yonetim/tasarim" testId="card-design" icon={<Spark size={22} />} title="Tasarım" hint="Yarışma teması, duyuru kartı, varsayılan düzen" />
         <AdminCard href="/yonetim/barkodlar" testId="card-barcodes" icon={<Search size={22} />} title="Bulunamayan barkodlar" value={misses.length} unit="ürün"
           hint="Okutulup hiçbir veritabanında bulunamayan ürünler">
           {misses.slice(0, 3).map((m) => <PreviewRow key={m.code} left={<b className="num">{m.code}</b>} right={`${m.count} kez · ${ago(m.lastAt)}`} />)}

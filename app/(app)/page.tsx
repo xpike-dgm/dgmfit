@@ -22,6 +22,8 @@ import { minuteOfDay } from '@/lib/water-data'
 import { screenLayout, userStyle } from '@/lib/cards/design-data'
 import { fmtEnergyNum, volumeNum, weightOut } from '@/lib/units'
 import CardBoard from '@/components/cards/CardBoard'
+import AnnouncementCard from '@/components/cards/AnnouncementCard'
+import { announcementFor } from '@/lib/cards/community-data'
 import type { ReactNode } from 'react'
 
 export default async function Today(props: { searchParams: Promise<{ duzenle?: string }> }) {
@@ -35,6 +37,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   const layout = await screenLayout(user.id, 'today', { editing })
   const qt = layout.quick['today.training']
   const un = (await userStyle(user.id)).units
+  const announcement = editing ? null : await announcementFor(user.id).catch(() => null)
   const eu = un.energy, eL = un.energy === 'kJ' ? 'kJ' : 'kcal'
   const want = (id: string) => editing || layout.items.some((i) => i.id === id || i.stack?.includes(id))
   const [tr, gs, partners, brief, streaks] = await Promise.all([
@@ -212,7 +215,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
 
   return (
     <div className="px-4 flex flex-col gap-3">
-      <CardBoard screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={nodes}
+      <CardBoard afterHeader={announcement ? <AnnouncementCard a={announcement} /> : null} screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={nodes}
         drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} colors={layout.colors} />
       {/* koç kartı kaldırılsa da güvenlik destek kartı gösterilir */}
       {coachHidden && !editing ? <div data-mod="coach"><InsightCard fallback="" weeklyReady={false} compact supportOnly /></div> : null}

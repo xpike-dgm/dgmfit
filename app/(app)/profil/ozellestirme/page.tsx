@@ -78,6 +78,9 @@ export default async function Page() {
         <Link href="/profil/ozellestirme/sablonlar" className={`${row} border-t border-line`} data-testid="studio-library">
           <span className="flex flex-col"><b className="text-[15px]">Şablon kütüphanesi</b><span className="text-[12.5px] text-mute">Topluluğun tasarımlarını önizle ve kullan</span></span><span className="text-mute">›</span>
         </Link>
+        <Link href="/profil/ozellestirme/yarisma" className={`${row} border-t border-line`} data-testid="studio-contest">
+          <span className="flex flex-col"><b className="text-[15px]">Tasarım yarışması</b><span className="text-[12.5px] text-mute">Haftalık tema, oy ver, rozet kazan</span></span><span className="text-mute">›</span>
+        </Link>
         <Link href="/profil/ozellestirme/kurallar" className={`${row} border-t border-line`} data-testid="studio-rules">
           <span className="flex flex-col"><b className="text-[15px]">Kurallar</b><span className="text-[12.5px] text-mute">{rulesOn ? `${rulesOn} kural açık` : 'Sabah, antrenman günü, akşam düzeni…'}</span></span><span className="text-mute">›</span>
         </Link>

@@ -82,6 +82,7 @@ export async function publishTemplate(userId: string, designId: string, meta: { 
   const data = shareable(d)
   const [row] = await db.insert(T).values({ ownerId: userId, name: m.name, description: m.description, category: m.category, tags: m.tags, data: data as unknown as Record<string, unknown>, remixOf, status, moderationReason: mod.reasons.join(', ') || null }).returning({ id: T.id })
   if (toFeed && status === 'public') await createPost(userId, { kind: 'design', body: m.description, mediaIds: [], audience: 'friends', audienceIds: [], ref: row.id }).catch(() => null)
+  if (status === 'public') { const { notifyDesignerFollowers } = await import('./community-data'); await notifyDesignerFollowers(userId, row.id) }
   await publish(userId, 'template.published', { status, category: m.category, remix: !!remixOf })
   return { ok: true as const, id: row.id, status }
 }
