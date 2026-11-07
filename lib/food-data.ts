@@ -49,6 +49,9 @@ export async function searchFoods(userId: string, q: string, limit = 30): Promis
         + case when f.name_tr is not null then 2 else 0 end
         + case when f.search like ${nq + '%'} then 1.5 when f.search like ${'%' + nq + '%'} then 1 else 0 end
         + word_similarity(${nq}, f.search) * 2
+        -- temel besin/tarif (markasız, küratörlü) genel aramada markalı ürünlerin önünde; marka aranınca ürün öne çıkar
+        + case when f.source in ('usda', 'dgfit') and f.name_tr is not null then 1.2 else 0 end
+        + case when f.brand is not null and length(f.brand) >= 2 and ${nq} like '%' || translate(lower(f.brand), 'çğıöşüâîûİ', 'cgiosuaiui') || '%' then 1.5 else 0 end
       ) as score
       from foods f
       where f.deleted_at is null and (f.user_id is null or f.user_id = ${userId} or (f.source = 'user' and f.barcode is not null)) and f.source <> 'user-supplement'
