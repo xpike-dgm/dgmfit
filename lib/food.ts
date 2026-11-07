@@ -89,11 +89,14 @@ export function mapOffProduct(code: string, p: Record<string, unknown> | null | 
  * 100 g başına değerler fiziksel olarak mümkün mü? Hata metni ya da null.
  * Enerji–makro (Atwater 4/4/9) uyumu: makrolardan gelen enerji 20 kcal'i aşıyorsa beyan edilen kalori
  * bunun %60'ı ile %160'ı (+80; alkol, poliol payı) arasında olmalı.
+ * Makro toplamı: etiketler yuvarlanır ve analiz payı içerir (çoğu etikette "±%10"), bu yüzden 100 g'ı biraz aşan
+ * toplamlar gerçek etikettir (ör. gainer: 19 + 81,2 + 0,4 = 100,6 g); 105 g'a kadar kabul edilir.
  */
+export const MACRO_SUM_MAX = 105
 export function per100Problem(v: { kcal: number; protein: number; carb: number; fat: number }): string | null {
   if ([v.kcal, v.protein, v.carb, v.fat].some((x) => !Number.isFinite(x) || x < 0)) return 'Değerler negatif olamaz'
   if (v.kcal > 900) return '100 g başına kalori 900\'ü geçemez (saf yağ ~900)'
-  if (v.protein + v.carb + v.fat > 100.5) return '100 g başına protein + karbonhidrat + yağ 100 g\'ı geçemez'
+  if (v.protein + v.carb + v.fat > MACRO_SUM_MAX) return `100 g başına protein + karbonhidrat + yağ toplamı ${MACRO_SUM_MAX} g'ı geçemez; değerleri kontrol et`
   const atw = v.protein * 4 + v.carb * 4 + v.fat * 9
   if (atw > 20 && (v.kcal < atw * 0.6 - 20 || v.kcal > atw * 1.6 + 80)) return `Kalori makrolarla uyuşmuyor (makrolardan ≈${Math.round(atw)} kcal). Değerleri kontrol et.`
   return null

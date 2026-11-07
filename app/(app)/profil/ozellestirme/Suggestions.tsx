@@ -10,10 +10,11 @@ export default function Suggestions({ list }: { list: Suggestion[] }) {
   const [pending, start] = useTransition()
   const router = useRouter()
   const run = (input: Record<string, unknown>, done: string) => start(async () => { const r = await suggestionAction(input).catch(() => null); setMsg(r?.ok ? done : r && !r.ok ? r.error : 'Olmadı'); if (r?.ok) router.refresh() })
-  if (!list.length) return null
+  // son öneri uygulanınca/reddedilince liste boşalır; onay mesajı yenilemeden sonra da görünsün
+  if (!list.length && !msg) return null
   return (
     <section aria-label="Koç önerileri" className="rounded-[24px] p-4 flex flex-col gap-2 bg-coach border border-coach-line" data-testid="suggestions">
-      <b className="text-[15px]">Koç önerisi</b>
+      {list.length ? <b className="text-[15px]">Koç önerisi</b> : null}
       {list.map((s) => (
         <div key={s.id} className="flex flex-col gap-1.5 py-1" data-suggestion={s.id}>
           <span className="text-[14px] font-bold">{s.text}</span>

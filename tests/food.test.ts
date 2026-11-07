@@ -59,4 +59,7 @@ test('per100Problem: fiziksel olarak imkânsız etiketleri yakalar', () => {
   assert.ok(per100Problem({ kcal: 3000, protein: 10, carb: 10, fat: 10 }), '900 üstü')
   assert.ok(per100Problem({ kcal: 400, protein: -5, carb: 50, fat: 10 }), 'negatif')
   assert.ok(per100Problem({ kcal: 800, protein: 10, carb: 200, fat: 0 }), 'makro toplamı 100 g üstü')
+  // gerçek etiket (kilo alma tozu, 100 g): yuvarlama yüzünden toplam 100,6 g — kabul edilmeli
+  assert.equal(per100Problem({ kcal: 404, protein: 19, carb: 81.2, fat: 0.4 }), null, 'gainer etiketi 100,6 g')
+  assert.ok(per100Problem({ kcal: 430, protein: 30, carb: 76, fat: 0 }), 'toplam 106 g reddedilir')
 })
