@@ -96,7 +96,13 @@ export async function runForUser(userId: string, nowDate = new Date()) {
     goalHistory(userId),
   ])
   if (!settings?.remindersEnabled) return { sent: false, reason: 'kapalı' }
-  const wake = parseHm(profile?.wake, 450), sleep = parseHm(profile?.sleep, 1410)
+  // Ö5b: tatil / hastalık modunda su hatırlatmaları susar; Ramazan'da uyanık pencere iftar → sahur olur (oruçta hatırlatma yok)
+  const { readModes } = await import('./modes-data')
+  const { ramadanOn, ramadanWaterWindow, remindersQuiet } = await import('./modes')
+  const modes = await readModes(userId)
+  if (remindersQuiet(modes, calDay, now, 'water')) return { sent: false, reason: 'mod: sessiz' }
+  const rw = ramadanOn(modes, calDay) ? ramadanWaterWindow(modes.sahur, modes.iftar) : null
+  const wake = rw ? rw.wake : parseHm(profile?.wake, 450), sleep = rw ? rw.sleep : parseHm(profile?.sleep, 1410)
   // uyku gece yarısından sonraysa (ör. 00:30) gece yarısı–uyku arası bir önceki günün devamıdır:
   // özet ve hatırlatmalar o günün kayıtlarıyla değerlendirilir (yeni günün boş verisiyle "0 ml içtin" gitmesin)
   const tail = sleep <= wake && now < wake
@@ -190,6 +196,10 @@ export async function runMealReminders(now = new Date(), onlyUser?: string): Pro
       habitCache.set(userId, c)
     }
     if (!Object.values(c.habit).some((h) => h !== null)) continue
+    // Ö5b: tatil / hastalık modunda ve Ramazan'da oruç saatinde öğün hatırlatması yok
+    const { readModes } = await import('./modes-data')
+    const { remindersQuiet } = await import('./modes')
+    if (remindersQuiet(await readModes(userId), today, minute, 'meal')) continue
     const [logged, sent] = await Promise.all([
       db.execute<{ meal: string }>(sql`select distinct meal from meal_items where user_id = ${userId} and day = ${today} and deleted_at is null`),
       db.execute<{ meal: string }>(sql`select payload->>'meal' as meal from events where user_id = ${userId} and type = 'reminder.meal' and payload->>'day' = ${today}`),

@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import { getModes } from '@/lib/modes-data'
+import { focusOn, ramadanOn } from '@/lib/modes'
+import { dayString } from '@/lib/time'
 import { requireUser } from '@/lib/auth'
 import { activeDesign, allScreenLayouts, userGoal } from '@/lib/cards/design-data'
 import { GOAL_FRONT, normalizePrefs, resolveNav } from '@/lib/cards/prefs'
@@ -11,14 +14,13 @@ import ResetButton from './ResetButton'
 
 export const metadata = { title: 'Özelleştirme' }
 
-const SOON: [string, string][] = [
-  ['Modlar', 'Odak, Ramazan, tatil'],
-]
 
 /** Özelleştirme stüdyosu (Ö1): mevcut düzenin önizlemesi + ekran düzenleme. Diğer bölümler sonraki aşamalarda. */
 export default async function Page() {
   const u = await requireUser()
-  const [all, d, goal, usage] = await Promise.all([allScreenLayouts(u.id), activeDesign(u.id), userGoal(u.id), usageFor(u.id, 14)])
+  const [all, d, goal, usage, modes] = await Promise.all([allScreenLayouts(u.id), activeDesign(u.id), userGoal(u.id), usageFor(u.id, 14), getModes(u.id)])
+  const fm = focusOn(modes, dayString())
+  const modeText = [fm ? `${fm.label} modu açık` : null, ramadanOn(modes, dayString()) ? 'Ramazan modu açık' : null].filter(Boolean).join(' · ') || 'Antrenman, diyet, tatil, hastalık, Ramazan'
   const suggestions = suggestionsFor((Object.keys(SCREENS) as ScreenId[]).map((s) => ({ screen: s, items: all[s].items })), usage, d?.insights?.dismissed ?? [])
   const today = all.today
   const nav = resolveNav(d?.nav)
@@ -67,7 +69,10 @@ export default async function Page() {
       </section>
 
       <section aria-label="Gezinme ve kurallar" className="card px-4 py-1 flex flex-col">
-        <Link href="/profil/ozellestirme/kartlarim" className={row} data-testid="studio-builder">
+        <Link href="/profil/ozellestirme/modlar" className={row} data-testid="studio-modes">
+          <span className="flex flex-col"><b className="text-[15px]">Modlar</b><span className="text-[12.5px] text-mute">{modeText}</span></span><span className="text-mute">›</span>
+        </Link>
+        <Link href="/profil/ozellestirme/kartlarim" className={`${row} border-t border-line`} data-testid="studio-builder">
           <span className="flex flex-col"><b className="text-[15px]">Kart oluşturucu</b><span className="text-[12.5px] text-mute">{d?.userCards && Object.keys(d.userCards).length ? `${Object.keys(d.userCards).length} kendi kartın` : 'Kendi kartını yap: veri, söz, geri sayım, fotoğraf'}</span></span><span className="text-mute">›</span>
         </Link>
         <Link href="/profil/ozellestirme/takip" className={`${row} border-t border-line`} data-testid="studio-trackers">
@@ -101,16 +106,6 @@ export default async function Page() {
       </section>
 
       <UsePrefsForm prefs={normalizePrefs(d?.prefs ?? {})} />
-
-      <div className="grid grid-cols-2 gap-2.5" aria-label="Yakında">
-        {SOON.map(([t, d]) => (
-          <div key={t} className="card p-3.5 flex flex-col gap-1 opacity-60">
-            <span className="flex items-center justify-between gap-2"><b className="text-[14px]">{t}</b></span>
-            <span className="text-[12px] text-mute leading-snug">{d}</span>
-            <span className="self-start mt-1 text-[10.5px] font-extrabold px-2 py-0.5 rounded-full bg-surface-3 text-ink-2">YAKINDA</span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

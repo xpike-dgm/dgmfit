@@ -36,6 +36,8 @@ export default function FoodDiary(p: {
   /** Özelleştirme: ekranın kart düzeni (sunucuda çözülür) */
   layout: { items: { id: string; size: 'half' | 'full'; stack?: string[] }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[]; applied?: string[]; quick?: Record<string, string>; pinned?: string[]; colors?: Record<string, CardColors>; titles?: Record<string, string>; extra?: Record<string, ReactNode> }
   editing?: boolean
+  /** Ö5b: Ramazan'da öğün adları (Sahur / İftar) */
+  mealLabels?: Record<MealId, string>
 }) {
   const router = useRouter()
   const [pending, start] = useTransition()
@@ -203,12 +205,12 @@ export default function FoodDiary(p: {
       <Sheet open={!!quick} onClose={() => setQuick(null)} title="Hızlı kalori">
         {quick ? <QuickForm meal={quick} onSave={(v) => { setQuick(null); run(() => addQuickCalories({ ...v, day: p.day }), 'Eklendi') }} /> : null}
       </Sheet>
-      <Sheet open={!!menu} onClose={() => setMenu(null)} title={menu ? MEAL_LABEL[menu] : ''}>
+      <Sheet open={!!menu} onClose={() => setMenu(null)} title={menu ? (p.mealLabels ?? MEAL_LABEL)[menu] : ''}>
         {menu ? (
           <div className="flex flex-col gap-2 pb-4">
             <button type="button" disabled={!p.yesterdayHas[menu] || pending} onClick={() => { const m = menu; setMenu(null); run(() => copyMeal({ fromDay: p.prevDay, fromMeal: m, toDay: p.day, toMeal: m }), 'Önceki günden kopyalandı') }}
               className="min-h-[56px] px-4 rounded-[18px] bg-surface-2 text-left font-bold disabled:opacity-40">
-              Önceki günün {MEAL_LABEL[menu].toLocaleLowerCase('tr-TR')} öğününü kopyala <span className="text-mute font-normal text-sm">({p.yesterdayHas[menu] ?? 0} besin)</span>
+              Önceki günün {(p.mealLabels ?? MEAL_LABEL)[menu].toLocaleLowerCase('tr-TR')} öğününü kopyala <span className="text-mute font-normal text-sm">({p.yesterdayHas[menu] ?? 0} besin)</span>
             </button>
             <SaveTemplate disabled={!p.meals.find((m) => m.id === menu)?.items.length} onSave={(name) => { const m = menu; setMenu(null); run(() => saveMealAsTemplate(p.day, m, name), 'Öğün kaydedildi') }} />
             <button type="button" onClick={() => { const m = menu; setMenu(null); setQuick(m) }} className="min-h-[56px] px-4 rounded-[18px] bg-surface-2 text-left font-bold">Hızlı kalori ekle</button>

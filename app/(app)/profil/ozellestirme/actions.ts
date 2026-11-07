@@ -1,6 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { addDays, dayString } from '@/lib/time'
 import { requireUser, rateLimit } from '@/lib/auth'
 import { SCREENS, isScreen } from '@/lib/cards/registry'
 import { applyWizard, hideCardToday, pinCard, resetScreen, saveModules, saveNav, savePrefs, saveRules, saveScreen, saveStyle } from '@/lib/cards/design-data'
@@ -310,4 +311,24 @@ export async function userCardAction(input: unknown): Promise<R & { id?: string 
   if (!r.ok) return r
   everywhere()
   return { ok: true, id: r.id }
+}
+
+// ───────── Ö5b: odak modu ve Ramazan modu ─────────
+const Hm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+const Day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+export async function modesAction(patch: unknown): Promise<R> {
+  const u = await requireUser()
+  const p = z.object({
+    focus: z.enum(['training', 'diet', 'vacation', 'sick']).nullable(), focusFrom: Day.nullable(), focusUntil: Day.nullable(),
+    ramadan: z.boolean(), sahur: Hm, iftar: Hm, ramadanUntil: Day.nullable(),
+  }).partial().safeParse(patch)
+  if (!p.success) return { ok: false, error: 'Geçersiz ayar' }
+  if (p.data.sahur && p.data.iftar && p.data.sahur >= p.data.iftar) return { ok: false, error: 'Sahur saati iftardan önce olmalı' }
+  // geçmişe en çok 14 gün (tatil dün başladıysa o günlerin dengelemesi de durur; kapanmış günler değişmez)
+  if (p.data.focusFrom && p.data.focusFrom < addDays(dayString(), -14)) return { ok: false, error: 'Başlangıç en çok 14 gün önce olabilir' }
+  if (limited(u.id)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  const { saveModes } = await import('@/lib/modes-data')
+  await saveModes(u.id, p.data)
+  everywhere()
+  return { ok: true }
 }

@@ -717,6 +717,18 @@ export const trackerLogs = pgTable('tracker_logs', {
   value: real('value').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index('tracker_logs_idx').on(t.trackerId, t.day)])
+/** Ö5b: odak modu ve Ramazan modu (kullanıcı başına tek satır). */
+export const userModes = pgTable('user_modes', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  focus: text('focus'),
+  focusFrom: date('focus_from'),
+  focusUntil: date('focus_until'),
+  ramadan: boolean('ramadan').notNull().default(false),
+  sahur: text('sahur').notNull().default('04:45'),
+  iftar: text('iftar').notNull().default('18:30'),
+  ramadanUntil: date('ramadan_until'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
 /** Ö3c: uygulama geneli varsayılanlar (anahtar → veri), ör. 'layout' = yönetimden varsayılan ekran düzenleri. */
 export const appDefaults = pgTable('app_defaults', {
   key: text('key').primaryKey(),

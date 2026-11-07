@@ -36,6 +36,8 @@ interface Props {
   colors?: Record<string, CardColors>
   /** Ö3c: sabit başlığın hemen altına konan kart dışı içerik (duyuru) */
   afterHeader?: ReactNode
+  /** Ö5b: düzeni değiştiren odak modu (ör. 'Hastalık modu') */
+  mode?: string | null
   /** Ö5a: kendi kartlarımın adları (kayıttaki genel ad yerine) */
   titles?: Record<string, string>
 }
@@ -255,6 +257,7 @@ function Board(p: Props) {
           {toast.undo ? <button type="button" onClick={toast.undo} className="h-9 px-3 rounded-full bg-bg/15 font-extrabold shrink-0" data-testid="swipe-undo">Geri al</button> : null}
         </div>
       ) : null}
+      {p.mode ? <Link href="/profil/ozellestirme/modlar" className="self-center inline-flex items-center h-8 px-3 rounded-full bg-surface-2 border border-line text-[12px] font-bold text-mute" data-testid="mode-applied">Mod: {p.mode}</Link> : null}
       {applied ? (
         <Link href="/profil/ozellestirme/kurallar" className="self-center inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-surface-2 border border-line text-[12px] font-bold text-mute" data-testid="rule-applied">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 7h11M4 12h7M4 17h11M17 10l3 3-3 3" /></svg>

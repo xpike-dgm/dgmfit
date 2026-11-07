@@ -16,6 +16,7 @@ import { mergeRules, wizardDesign, type WizardAnswers } from './wizard'
 import { normalizeCardColors, normalizeModuleColors, type CardColors, type ModuleColors } from './colors'
 import { normalizeStyle, type StylePrefs } from './style'
 import type { UserCard } from './custom'
+import { applyMode, focusOn } from '../modes'
 
 /** İstek başına bir sorgu (alt bar, düzen ve stüdyo aynı istekte okur). */
 export const activeDesign = cache(async (userId: string): Promise<Design | null> => {
@@ -70,6 +71,17 @@ export async function screenLayout(userId: string, screen: ScreenId, opts: { edi
     if (!opts.editing) { r.items = g.items; hiddenToday = g.hiddenToday }
     pinned = opts.editing ? (d.gestures.pins?.[screen] ?? []) : g.pinned
   }
+  // Ö5b: odak modu (antrenman / diyet / tatil / hastalık) — düzenleme dışında kartları öne alır ya da gizler
+  let mode: string | null = null
+  if (!opts.editing) {
+    const { getModes } = await import('../modes-data')
+    const m = focusOn(await getModes(userId), dayString())
+    if (m && (m.front[screen]?.length || m.hide[screen]?.length)) {
+      const before = r.items.map((i) => i.id).join()
+      r.items = applyMode(screen, r.items, m, (id): ResolvedItem | null => { const def = cardDef(id); return def && def.screen === screen ? { id, size: def.size, def } : null }, (id) => cardDef(id)?.locked === 'top')
+      if (r.items.map((i) => i.id).join() !== before) mode = `${m.label} modu`
+    }
+  }
   // Ö1b-3: kart ayarları (hızlı eylem); kart çizicileri `quick[id]` ile okur
   const quick: Record<string, string> = {}
   for (const c of r.items) { const q = quickOf(c.id, d?.cards?.[c.id]?.quick); if (q) quick[c.id] = q }
@@ -81,7 +93,7 @@ export async function screenLayout(userId: string, screen: ScreenId, opts: { edi
   const userCards: Record<string, UserCard> = {}
   const titles: Record<string, string> = {}
   for (const id of ids) { const u = d?.userCards?.[id]; if (u) { userCards[id] = u; titles[id] = u.title } }
-  return { ...r, applied, pinned, hiddenToday, quick, colors, userCards, titles }
+  return { ...r, applied, pinned, hiddenToday, quick, colors, userCards, titles, mode }
 }
 
 /** Tüm ekranların çözülmüş düzeni (stüdyo listesi için; kurallar uygulanmaz). */

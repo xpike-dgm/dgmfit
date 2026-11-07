@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-07",
-  "phase": "Ö5a",
+  "phase": "Ö5b",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -326,7 +326,15 @@
     "app/(app)/profil/ozellestirme/takip/Trackers.tsx",
     "tests/cards-custom.test.ts",
     "tests/e2e/custom11.e2e.cjs",
-    "drizzle/0030_trackers.sql"
+    "drizzle/0030_trackers.sql",
+    "lib/modes.ts",
+    "lib/modes-data.ts",
+    "components/ModeCard.tsx",
+    "app/(app)/profil/ozellestirme/modlar/page.tsx",
+    "app/(app)/profil/ozellestirme/modlar/ModesForm.tsx",
+    "tests/modes.test.ts",
+    "tests/e2e/custom12.e2e.cjs",
+    "drizzle/0031_user_modes.sql"
   ],
   "tables": [
     "users",
@@ -406,7 +414,8 @@
     "designer_follows",
     "card_usage",
     "trackers",
-    "tracker_logs"
+    "tracker_logs",
+    "user_modes"
   ],
   "routes": [
     "/",
@@ -549,7 +558,8 @@
     "/profil/ozellestirme/kullanim",
     "/api/cards/usage",
     "/profil/ozellestirme/kartlarim",
-    "/profil/ozellestirme/takip"
+    "/profil/ozellestirme/takip",
+    "/profil/ozellestirme/modlar"
   ],
   "events": [
     "profile.onboarded",
@@ -588,7 +598,9 @@
     "layout.default",
     "tracker.created",
     "tracker.logged",
-    "usercard.created"
+    "usercard.created",
+    "mode.focus",
+    "mode.ramadan"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -1191,6 +1203,29 @@
     ],
     "lib/cards/user-nodes.tsx": [
       "userNodes"
+    ],
+    "lib/modes.ts": [
+      "MODES",
+      "modeDef",
+      "DEFAULT_MODES",
+      "normalizeModes",
+      "focusOn",
+      "ramadanOn",
+      "fasting",
+      "ramadanWaterWindow",
+      "RAMADAN_LABEL",
+      "mealLabel",
+      "ramadanMealFor",
+      "untilNext",
+      "postIftarProtein",
+      "remindersQuiet",
+      "applyMode"
+    ],
+    "lib/modes-data.ts": [
+      "getModes",
+      "readModes",
+      "saveModes",
+      "balancePausedOn"
     ]
   },
   "dependencies": {
@@ -1238,6 +1273,7 @@
     "0027_community.sql",
     "0028_designer_follows.sql",
     "0029_card_usage.sql",
-    "0030_trackers.sql"
+    "0030_trackers.sql",
+    "0031_user_modes.sql"
   ]
 }

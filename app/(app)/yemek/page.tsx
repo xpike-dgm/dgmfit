@@ -16,6 +16,8 @@ import { macroPlan, microTargets, proteinPerMeal } from '@/lib/body-comp'
 import type { GoalType, Sex } from '@/lib/calc'
 import { screenLayout } from '@/lib/cards/design-data'
 import { userNodes } from '@/lib/cards/user-nodes'
+import { getModes } from '@/lib/modes-data'
+import { RAMADAN_LABEL, mealLabel, ramadanMealFor, ramadanOn } from '@/lib/modes'
 
 export const metadata: Metadata = { title: 'Yemek' }
 
@@ -35,6 +37,8 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
     usualMeals(u.id, day),
     screenLayout(u.id, 'food', { editing: duzenle === '1' }),
   ])
+  const modes = await getModes(u.id)
+  const ram = ramadanOn(modes, day)
   const kcal = t?.target.kcal ?? 2000
   const mp = t ? macroPlan({ goal: (t.goal?.type ?? 'recomp') as GoalType, sex: t.profile.sex as Sex, age: t.age, weightKg: t.weight.trend || t.profile.weightKg, heightCm: t.profile.heightCm, bfPct: t.profile.bodyFatPct ?? null, kcal }) : null
   const detail = t && mp ? <NutritionDetail t={microTargets(t.profile.sex as Sex, t.age, kcal)} eaten={diary.micro} perMeal={proteinPerMeal(t.target.protein, t.weight.trend || t.profile.weightKg)} lean={mp.leanKg} bf={mp.bfPct} bfEstimated={mp.bfEstimated} /> : null
@@ -42,9 +46,9 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
   return (
     <FoodDiary
       day={day} isToday={day === today} prevDay={prevDay} nextDay={day < today ? addDays(day, 1) : null} dayLabel={longDate(day)}
-      meals={diary.meals} totals={diary.totals} micro={diary.micro}
+      meals={ram ? diary.meals.map((m) => ({ ...m, label: mealLabel(m.id as MealId, m.label, true) })) : diary.meals} mealLabels={ram ? RAMADAN_LABEL : undefined} totals={diary.totals} micro={diary.micro}
       target={{ kcal: t?.target.kcal ?? 2000, protein: t?.target.protein ?? 120, carb: t?.target.carb ?? 200, fat: t?.target.fat ?? 65 }}
-      adjust={t ? { base: t.target.base, kcal: t.target.adjustment, closed: t.target.closed } : null} burned={t?.burned ?? 0} trained={(t?.burned ?? 0) > 0} suggested={day === today ? mealForTime(minuteOfDay(new Date())) : 'lunch'} yesterdayHas={yesterdayHas}
+      adjust={t ? { base: t.target.base, kcal: t.target.adjustment, closed: t.target.closed } : null} burned={t?.burned ?? 0} trained={(t?.burned ?? 0) > 0} suggested={day === today ? (ram ? ramadanMealFor(minuteOfDay(new Date()), modes.sahur, modes.iftar) : mealForTime(minuteOfDay(new Date()))) : 'lunch'} yesterdayHas={yesterdayHas}
       supplements={<SupplementCard day={day} {...supp} />} detail={detail} hasSupplements={supp.items.length > 0} adv={adv}
       layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned, colors: l.colors, titles: l.titles, extra: await userNodes(u.id, l, duzenle === '1') }} editing={duzenle === '1'}
       usual={Object.fromEntries(Object.entries(usual).map(([k, v]) => [k, { names: v!.items.map((x) => x.name), kcal: v!.kcal }]))}

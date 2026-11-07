@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö5a tamamlandı, Ö5b başladı
+- Ö5a: kart oluşturucu, kendi takip alanlarım (0030), motivasyon kartları (söz, geri sayım, `motive` fotoğrafı, rekorlar); altı ekranda kendi kartları.
+- Hatalar: (1) yeni kart ekrana eklenmiyordu — `normalizeScreen` tanımları bilmediği için kendi kartını düşürüyordu → tanımlar parametre olarak geçer (düzen kaydında da); (2) söz/fotoğraf kartında başlık test kimliği eksikti; (3) "Bugün" dönemli çubuk görünüm tek dev çubuk çiziyordu → çubuk/çizgi her zaman 7 gün.
+- Doğrulama: commit `7a338c3`; verify.sh VERIFY OK (270 birim); deploy `2026-11-07T08-55-32-814Z`; canlıda 21 e2e OK — custom8 bir kez "Beğendin" beklerken zaman aşımı (hidrasyondan önce tıklama), tek başına yeniden çalıştırıldı OK, test beğeni gerçekleşene kadar yeniden deneyecek şekilde düzeltildi; 28 test kullanıcısı silindi; logda hata 0.
+- Ö5b başladı: saf `lib/modes.ts` + 5 test, 0031 `user_modes`.
+
 ## 2026-11-07 — Özelleştirme Ö4 tamamlandı, Ö5a başladı
 - Ö4: kart kullanım ölçümü (0029, `POST /api/cards/usage`), kullanım haritası, koç önerisi, deney raporu, uyumluluk testleri.
 - Doğrulama: commit `525321d`; verify.sh VERIFY OK (266 birim); release `2026-11-07T08-29-50-945Z` RELEASE OK; canlıda 21 e2e OK; 25 test kullanıcısı silindi; logda hata 0.

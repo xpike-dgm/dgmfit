@@ -144,7 +144,7 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
   }
   return (
     <div className="flex flex-col gap-3 px-4">
-      <CardBoard screen="fitness" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={{ ...nodes, ...ucNodes }} titles={layout.titles}
+      <CardBoard screen="fitness" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={{ ...nodes, ...ucNodes }} titles={layout.titles} mode={layout.mode}
         drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} colors={layout.colors} />
     </div>
   )

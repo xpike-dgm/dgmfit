@@ -34,6 +34,8 @@ export type EventType =
   | 'tracker.created'
   | 'tracker.logged'
   | 'usercard.created'
+  | 'mode.focus'
+  | 'mode.ramadan'
   | 'workout.finished'
   | 'pr.achieved'
   | 'water.logged'

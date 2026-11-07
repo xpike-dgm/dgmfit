@@ -53,7 +53,13 @@ async function signup(b, u, errors) {
   await pb.fill('#tq', sfx); await pb.getByRole('button', { name: 'Ara', exact: true }).click()
   await pb.locator(`[data-template="${tname}"]`).click(); await pb.getByTestId('template-detail').waitFor()
   await pb.screenshot({ path: `${OUT}/custom8-02-kutuphane-detay.png`, fullPage: true })
-  await pb.getByTestId('tpl-like').click(); await status(pb, 'Beğendin')
+  // hidrasyon bitmeden tıklanırsa tıklama boşa gider (canlıda yavaş ağda görüldü): beğeni gerçekleşene kadar bir kez daha dene
+  for (let i = 0; i < 3; i++) {
+    if ((await pb.getByTestId('tpl-like').getAttribute('aria-pressed')) !== 'true') await pb.getByTestId('tpl-like').click()
+    if (await pb.getByRole('status').filter({ hasText: 'Beğendin' }).first().waitFor({ timeout: 8000 }).then(() => true).catch(() => false)) break
+    if ((await pb.getByTestId('tpl-like').getAttribute('aria-pressed')) === 'true') break // mesaj yenilemeyle gitti, beğeni duruyor
+    if (i === 2) fail('beğeni kaydedilmedi')
+  }
   await pb.getByTestId('tpl-use').click(); await pb.getByTestId('use-sheet').waitFor(); await pb.locator('[data-use-mode=colors]').click()
   await pb.waitForURL(BASE + '/'); await pb.getByTestId('card-board').waitFor()
   if (!(await order(pb)).includes('today.water')) fail('yalnız renkler düzeni değiştirdi')

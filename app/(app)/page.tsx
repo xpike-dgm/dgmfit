@@ -21,6 +21,9 @@ import { recentFoods } from '@/lib/food-data'
 import { minuteOfDay } from '@/lib/water-data'
 import { screenLayout, userStyle } from '@/lib/cards/design-data'
 import { userNodes } from '@/lib/cards/user-nodes'
+import { getModes } from '@/lib/modes-data'
+import ModeCard from '@/components/ModeCard'
+import { focusOn, ramadanOn } from '@/lib/modes'
 import { fmtEnergyNum, volumeNum, weightOut } from '@/lib/units'
 import CardBoard from '@/components/cards/CardBoard'
 import AnnouncementCard from '@/components/cards/AnnouncementCard'
@@ -72,6 +75,8 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   ]
 
   const tile = 'card p-3.5 flex flex-col gap-2 border-t-4 border-acc min-w-0'
+  const modes = editing ? null : await getModes(user.id)
+  const modeCard = modes && (focusOn(modes, t.day) || ramadanOn(modes, t.day)) ? <ModeCard s={modes} day={t.day} nowMin={nowMin} protein={{ eaten: t.eaten.protein, target: t.target.protein }} /> : null
   const trained = tr.workouts || tr.cardio
 
   const ucNodes = await userNodes(user.id, layout, editing)
@@ -217,7 +222,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
 
   return (
     <div className="px-4 flex flex-col gap-3">
-      <CardBoard afterHeader={announcement ? <AnnouncementCard a={announcement} /> : null} screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={{ ...nodes, ...ucNodes }} titles={layout.titles}
+      <CardBoard afterHeader={announcement || modeCard ? <div className="flex flex-col gap-3">{modeCard}{announcement ? <AnnouncementCard a={announcement} /> : null}</div> : null} screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size, stack: i.stack }))} nodes={{ ...nodes, ...ucNodes }} titles={layout.titles} mode={layout.mode}
         drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} colors={layout.colors} />
       {/* koç kartı kaldırılsa da güvenlik destek kartı gösterilir */}
       {coachHidden && !editing ? <div data-mod="coach"><InsightCard fallback="" weeklyReady={false} compact supportOnly /></div> : null}

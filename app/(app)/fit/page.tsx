@@ -190,6 +190,7 @@ function closureText(c: Screen['closures'][number]): string {
     case 'balanced': return `${d}: hedefin ±50 kcal içindeydin. Harika, düzeltme gerekmedi.`
     case 'incomplete': return `${d}: kayıt hedefin %60'ının altında kaldı, büyük olasılıkla eksik. Bu yüzden dengeleme yapılmadı.`
     case 'exception': return `${d} istisna sayıldı; sonraki günlerin hedefi düşürülmedi.`
+    case 'paused': return `${d}: tatil / hastalık modundaydın; fark sonraki günlere dağıtılmadı.`
     default: return `${d}: kayıt yoktu, dengeleme yapılmadı. Kayıt tuttuğun günler planı daha isabetli yapar.`
   }
 }

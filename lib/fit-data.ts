@@ -98,7 +98,10 @@ export async function closeDay(userId: string, day: string): Promise<{ kind: str
   const eaten = await dayMacros(userId, day)
   const [{ n }] = await db.execute<{ n: number }>(sql`select count(*)::int as n from meal_items where user_id = ${userId} and day = ${day} and deleted_at is null and meal <> 'supplement'`)
   const burned = await dayBurned(userId, day) // antrenman + kardiyo net kalorisi (Faz 3a)
-  const c = closureDiff({ eaten: eaten.kcal, target: t.kcal, burned, items: Number(n) })
+  const c0 = closureDiff({ eaten: eaten.kcal, target: t.kcal, burned, items: Number(n) })
+  // Ö5b: tatil / hastalık modunda dengeleme durur (fark sonraki günlere dağıtılmaz)
+  const { balancePausedOn } = await import('./modes-data')
+  const c = c0.diff !== 0 && (await balancePausedOn(userId, day)) ? { ...c0, kind: 'paused' as const, diff: 0 } : c0
   const row = {
     userId, day, baseKcal: t.base, adjustmentKcal: t.adjustment, proteinG: t.protein, carbG: t.carb, fatG: t.fat, waterMl: goal.waterMl,
     closedAt: new Date(), eatenKcal: eaten.kcal, burnedKcal: burned, items: Number(n), closureKind: c.kind, diffKcal: c.diff, leftoverKcal: 0,
@@ -223,7 +226,7 @@ export async function checkinData(userId: string) {
     sexOf(userId),
     db.select().from(schema.events).where(and(eq(schema.events.userId, userId), eq(schema.events.type, 'plan.adjusted'), sql`${schema.events.payload}->>'kind' = 'checkin'`)).orderBy(desc(schema.events.createdAt)).limit(1),
   ])
-  const intakeBy = new Map(closed.filter((c) => ['balanced', 'over', 'under', 'exception'].includes(c.closureKind ?? '')).map((c) => [c.day, c.eatenKcal ?? null]))
+  const intakeBy = new Map(closed.filter((c) => ['balanced', 'over', 'under', 'exception', 'paused'].includes(c.closureKind ?? '')).map((c) => [c.day, c.eatenKcal ?? null]))
   // check-in sayacı aktif plana göre: yeni hedef/aşama başlayınca eski planın check-in'i sayılmaz
   const lastCheckin = lastEvt[0] && dayString(lastEvt[0].createdAt) > goal.startDate ? dayString(lastEvt[0].createdAt) : goal.startDate
   const { tdee, smoothTdee, trendNow, forecast, due, proposal } = checkinCompute({ goal: { ...goal, type: goal.type as 'lose' }, series, intakeBy, today, lastCheckin, floor: calorieFloor(sex) })
