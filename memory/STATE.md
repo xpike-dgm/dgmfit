@@ -279,6 +279,27 @@ Yerel ortam notu: `service postgresql start`; sunucu yeniden başlatma betiği s
 | A9 | P-6 yemek verisi içe aktarma aracı | tamamlandı | biçim `dgfit-yemek/1` (`docs/yemek-verisi/SABLON.json` + `TALIMAT.md`): besinler USDA eşlemesi, yemekler tarif (hesap), ürünler etiket (fiziksel tutarlılık + barkod sağlama); `scripts/food-import.mjs` rapor/`--uygula`, tekrar ayıklama, kategori uç değer uyarısı; `data/tr-products.json` → seed `dgfit-label`; 7 birim test; aynı release |
 | A10 | P-7 özellikler | tamamlandı | her zamanki öğün (tek dokunuş), fotoğraf/ölçü karşılaştırma v2 (fark özeti + kaydırarak), başarılar ve seriler (`/profil/basarilar`) + rozet paylaşımı, tarif linkinden içe aktarma (JSON-LD, SSRF korumalı), akıllı öğün hatırlatmaları (0023), haftalık akıllı özet (Bugün pzt–salı), fotoğraftan porsiyon (ölçek ipuçlu istem + Az/Tahmin/Çok), program sihirbazı v2 (öncelikli bölgeler); `p7.e2e.cjs`; aynı release |
 
+### ÖZELLEŞTİRME — planlandı, onay bekliyor (2026-11-07; başlamak için kullanıcının açık "başla" onayı gerekir)
+Kullanıcının istediği çekirdek (birebir):
+- **Özelleştirme modu** (kart tabanlı ana sayfalar: Bugün, Fit, Su, Yemek, Fitness): kartlar titrer; her kartın sağ üstünde **✎ düzenle** ve hemen sağında **− kaldır**.
+- **Yer değiştirme:** kartı basılı tutup sürükleyerek başka kartın yerine koyma (ör. Bugün'de Fit ↔ Su).
+- **Kaldırma:** − ile; kaldırılan kart çekmeceye gider.
+- **Ekleme:** "Kart çekmecesi"nde kaldırılanlar + Sade modda olmayan kartlar; sürükleyip istenen yere bırakma.
+- **Renkler:** modül renkleri değiştirilebilir; ayrıca ✎ ile ayrı ekranda **yalnızca o kartın** renkleri (arka plan, başlık, metin, vurgu, halka/çubuk) — modülün diğer yerleri etkilenmez.
+- **Paylaşım + Şablon kütüphanesi:** tasarım (düzen + renkler, kişisel veri yok) sosyalde paylaşılır, "Şablon kütüphanesi"ne düşer; başkaları önizler ve kullanır.
+Claude'un önerdiği ekler (kullanıcı 21 dışında hepsini kabul etti):
+1. Kart boyutu (küçük/normal/büyük; küçükler yan yana, ızgara)  2. Kart görünüm türü (halka/çubuk/sayı)  3. Kart içi seçenekler (hangi alanlar görünsün)
+4. Alt bar düzeni (sekme sırası, modül gizleme)  5. Zamana göre düzen (sabah/gün içi/akşam; kapatılabilir)  6. Antrenman günü düzeni (antrenman kartı üste)
+7. Hazır paletler  8. Fotoğraftan palet çıkarma  9. Köşe yuvarlaklığı, yoğunluk (sıkı/ferah), 2–3 yazı tipi  10. Bant arka planı (düz/degrade/kendi fotoğrafı, koyulaştırılarak)
+11. Erişilebilirlik ön ayarları (renk körlüğü paleti, yüksek kontrast, hareketi azalt)  12. Kütüphanede kategori/etiket, arama, en çok kullanılan, haftanın öne çıkanları
+13. Otomatik önizleme görüntüsü (örnek veriyle; gerçek kilo/kalori görünmez)  14. Beğen/kaydet/kullanım sayacı + sahibine bildirim  15. Kısmi kullanım (yalnız renk / yalnız düzen)
+16. Sürümler + geri alma; birden çok kendi tasarımı arasında geçiş  17. Remix (kopyala-değiştir, orijinal sahibi belirtilir)  18. Haftanın şablonu (yönetimden öne çıkarma)
+19. Koç önerisi (kullanım verisinden "şu kartı aşağı/üste alalım mı?", onayla)  20. Hedefe göre başlangıç düzeni (kilo verme/kas/koruma)
+22. Cihazlar arası eşitleme (tasarım hesapta)  23. Paylaşımda moderasyon (ad/açıklama; fotoğraflı bant paylaşılmaz)  24. Yeni kartlarda eski şablonlar bozulmaz ("Yeni" etiketiyle çekmecede)
+Hariç: 21 (rozetle açılan paletler).
+Kurallar: okunurluk denetimi (kontrast düşükse uyarı + yazı rengi otomatik), açık/koyu tema için renkler türetilir; güvenlik/destek kartı ve hedef seçim kartı kaldırılamaz; gizli kartın verisi hesaplanmaz; formlar ve ayar sayfaları sabit; tasarım ≠ kişisel veri.
+Önerilen aşamalar: Ö1 kart kaydı + düzen (taşı/kaldır/ekle, boyut, görünüm türü, alt bar, zaman/antrenman düzeni, hedefe göre varsayılan) → Ö2 renk ve stil (modül + kart renkleri, paletler, fotoğraftan palet, köşe/yoğunluk/yazı tipi, bant arka planı, erişilebilirlik) → Ö3 kayıt ve paylaşım (sürümler, birden çok tasarım, eşitleme, sosyal paylaşım, kütüphane, önizleme görüntüsü, kategori/arama, beğen/sayaç, kısmi kullanım, remix, haftanın şablonu, moderasyon) → Ö4 koç önerisi + uyumluluk (yeni kartlar) + kapsamlı e2e (320 px / iki tema) + canlı.
+
 ### Planlandı — onay bekliyor (2026-11-07, kullanıcı "yapılacaklar planına ekle" dedi; başlamak için açık onay gerekir)
 
 **Faz 7: Modüller arası entegrasyon (önerilen sıra: 7-1 → 7-2 → 7-3)**
