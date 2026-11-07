@@ -32,7 +32,7 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
     listSupplements(u.id, day),
     isAdvanced(u.id),
     usualMeals(u.id, day),
-    screenLayout(u.id, 'food'),
+    screenLayout(u.id, 'food', { editing: duzenle === '1' }),
   ])
   const kcal = t?.target.kcal ?? 2000
   const mp = t ? macroPlan({ goal: (t.goal?.type ?? 'recomp') as GoalType, sex: t.profile.sex as Sex, age: t.age, weightKg: t.weight.trend || t.profile.weightKg, heightCm: t.profile.heightCm, bfPct: t.profile.bodyFatPct ?? null, kcal }) : null
@@ -45,7 +45,7 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
       target={{ kcal: t?.target.kcal ?? 2000, protein: t?.target.protein ?? 120, carb: t?.target.carb ?? 200, fat: t?.target.fat ?? 65 }}
       adjust={t ? { base: t.target.base, kcal: t.target.adjustment, closed: t.target.closed } : null} burned={t?.burned ?? 0} trained={(t?.burned ?? 0) > 0} suggested={day === today ? mealForTime(minuteOfDay(new Date())) : 'lunch'} yesterdayHas={yesterdayHas}
       supplements={<SupplementCard day={day} {...supp} />} detail={detail} hasSupplements={supp.items.length > 0} adv={adv}
-      layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices }} editing={duzenle === '1'}
+      layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied }} editing={duzenle === '1'}
       usual={Object.fromEntries(Object.entries(usual).map(([k, v]) => [k, { names: v!.items.map((x) => x.name), kcal: v!.kcal }]))}
     />
   )

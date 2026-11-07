@@ -277,7 +277,11 @@
     "lib/cards/registry.ts",
     "lib/cards/layout.ts",
     "lib/cards/design-data.ts",
-    "components/cards/CardBoard.tsx"
+    "components/cards/CardBoard.tsx",
+    "lib/cards/prefs.ts",
+    "components/cards/DesignPrefs.tsx",
+    "tests/cards-prefs.test.ts",
+    "tests/e2e/custom2.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -470,7 +474,9 @@
     "/profil/vucut",
     "/api/today/state",
     "/profil/basarilar",
-    "/profil/ozellestirme"
+    "/profil/ozellestirme",
+    "/profil/ozellestirme/alt-bar",
+    "/profil/ozellestirme/kurallar"
   ],
   "events": [
     "profile.onboarded",
@@ -490,7 +496,10 @@
     "meal.usual",
     "reminder.meal",
     "design.saved",
-    "design.reset"
+    "design.reset",
+    "design.nav",
+    "design.rules",
+    "design.prefs"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -965,7 +974,26 @@
       "screenLayout",
       "allScreenLayouts",
       "saveScreen",
-      "resetScreen"
+      "resetScreen",
+      "ruleCtx",
+      "userGoal",
+      "saveNav",
+      "saveRules",
+      "savePrefs"
+    ],
+    "lib/cards/prefs.ts": [
+      "resolveNav",
+      "normalizeNav",
+      "applyRules",
+      "normalizeRules",
+      "condMatches",
+      "ruleMatches",
+      "describeRule",
+      "goalFront",
+      "normalizePrefs",
+      "PRESET_RULES",
+      "GOAL_FRONT",
+      "NAV_TABS"
     ]
   },
   "dependencies": {

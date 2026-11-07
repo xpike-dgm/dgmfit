@@ -1,29 +1,74 @@
 import 'server-only'
 // Özelleştirme (Ö1): kullanıcının etkin tasarımı. Tek etkin tasarım (ui_designs_one_active); çoklu tasarım ve sürümler Ö3'te
 // aynı tabloyu kullanır.
-import { and, eq } from 'drizzle-orm'
+import { cache } from 'react'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 import { db, schema } from '../db'
 import { publish } from '../events'
 import { isAdvanced } from '../ui-mode'
-import { REGISTRY_VERSION, SCREENS, type ScreenId } from './registry'
-import { emptyDesign, normalizeScreen, resolveScreen, type Design, type LayoutItem } from './layout'
+import { dayString } from '../time'
+import { minuteOfDay } from '../water-data'
+import { trainingWeekdays } from '../fit'
+import { REGISTRY_VERSION, SCREENS, cardDef, type ScreenId } from './registry'
+import { emptyDesign, normalizeScreen, resolveScreen, type Design, type LayoutItem, type ResolvedItem } from './layout'
+import { applyRules, goalFront, normalizeNav, normalizePrefs, normalizeRules, type NavLayout, type Rule, type RuleCtx, type UsePrefs } from './prefs'
 
-export async function activeDesign(userId: string): Promise<Design | null> {
+/** İstek başına bir sorgu (alt bar, düzen ve stüdyo aynı istekte okur). */
+export const activeDesign = cache(async (userId: string): Promise<Design | null> => {
   const [row] = await db.select({ data: schema.uiDesigns.data }).from(schema.uiDesigns)
     .where(and(eq(schema.uiDesigns.userId, userId), eq(schema.uiDesigns.active, true))).limit(1)
   return row ? (row.data as unknown as Design) : null
+})
+
+type Goal = RuleCtx['goal']
+export const userGoal = cache(async (userId: string): Promise<Goal> => {
+  const [g] = await db.select({ type: schema.goals.type }).from(schema.goals).where(and(eq(schema.goals.userId, userId), eq(schema.goals.active, true))).limit(1)
+  return g && ['lose', 'gain', 'recomp'].includes(g.type) ? (g.type as Goal) : null
+})
+
+/** Kuralların koşul bağlamı: saat/gün (İstanbul), antrenman günü (planlı gün ya da bugün antrenman kaydı), hedef. */
+export const ruleCtx = cache(async (userId: string): Promise<RuleCtx> => {
+  const day = dayString()
+  const weekday = new Date(day + 'T12:00:00Z').getUTCDay()
+  const [goal, [p], [cc], [w]] = await Promise.all([
+    userGoal(userId),
+    db.select({ n: schema.profiles.trainingDays }).from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1),
+    db.select({ on: schema.carbCycle.enabled, days: schema.carbCycle.weekdays }).from(schema.carbCycle).where(eq(schema.carbCycle.userId, userId)).limit(1),
+    db.select({ n: sql<number>`count(*)::int` }).from(schema.workouts).where(and(eq(schema.workouts.userId, userId), eq(schema.workouts.day, day), isNull(schema.workouts.deletedAt))),
+  ])
+  const planned = p?.n ? trainingWeekdays(p.n, cc?.on ? cc.days : null).includes(weekday) : false
+  return { minute: minuteOfDay(new Date()), weekday, training: planned || Number(w?.n ?? 0) > 0, goal }
+})
+
+/**
+ * Ekranın çözülmüş düzeni (göç + doğrulama). Tasarımı olmayan kullanıcı hedefine göre sıralanmış varsayılanı alır.
+ * Düzenlemede kurallar uygulanmaz (kullanıcı kayıtlı düzenini görür); normal görünümde `applied` uygulanan kural adlarıdır.
+ */
+export async function screenLayout(userId: string, screen: ScreenId, opts: { editing?: boolean } = {}) {
+  const [d, advanced, goal] = await Promise.all([activeDesign(userId), isAdvanced(userId), userGoal(userId)])
+  const r = resolveScreen(d, screen, { advanced })
+  if (!r.customized) r.items = goalFront(screen, r.items, goal)
+  let applied: string[] = []
+  if (!opts.editing && d?.rules?.some((x) => x.on)) {
+    const x = await ruleCtx(userId)
+    const out = applyRules(screen, r.items, d.rules, x, (id): ResolvedItem | null => { const def = cardDef(id); return def ? { id, size: def.size, def } : null })
+    if (out.applied.length) {
+      r.items = out.items; applied = out.applied
+      const shown = new Set(r.items.map((i) => i.id))
+      r.drawer = r.drawer.filter((i) => !shown.has(i.def.id))
+    }
+  }
+  return { ...r, applied }
 }
 
-/** Ekranın çözülmüş düzeni (göç + doğrulama). Tasarımı olmayan kullanıcı varsayılanı alır. */
-export async function screenLayout(userId: string, screen: ScreenId) {
-  const [d, advanced] = await Promise.all([activeDesign(userId), isAdvanced(userId)])
-  return resolveScreen(d, screen, { advanced })
-}
-
-/** Tüm ekranların çözülmüş düzeni (stüdyo listesi için tek sorgu). */
+/** Tüm ekranların çözülmüş düzeni (stüdyo listesi için; kurallar uygulanmaz). */
 export async function allScreenLayouts(userId: string) {
-  const [d, advanced] = await Promise.all([activeDesign(userId), isAdvanced(userId)])
-  return Object.fromEntries((Object.keys(SCREENS) as ScreenId[]).map((s) => [s, resolveScreen(d, s, { advanced })])) as Record<ScreenId, ReturnType<typeof resolveScreen>>
+  const [d, advanced, goal] = await Promise.all([activeDesign(userId), isAdvanced(userId), userGoal(userId)])
+  return Object.fromEntries((Object.keys(SCREENS) as ScreenId[]).map((s) => {
+    const r = resolveScreen(d, s, { advanced })
+    if (!r.customized) r.items = goalFront(s, r.items, goal)
+    return [s, r]
+  })) as Record<ScreenId, ReturnType<typeof resolveScreen>>
 }
 
 async function writeDesign(userId: string, d: Design) {
@@ -32,21 +77,43 @@ async function writeDesign(userId: string, d: Design) {
     .where(and(eq(schema.uiDesigns.userId, userId), eq(schema.uiDesigns.active, true))).returning({ id: schema.uiDesigns.id })
   if (!upd.length) await db.insert(schema.uiDesigns).values({ userId, data, active: true }).onConflictDoNothing()
 }
+/** Etkin tasarımı okuyup değiştirir (istek önbelleğindeki değil, güncel satır). */
+async function updateDesign(userId: string, f: (d: Design) => Design) {
+  const [row] = await db.select({ data: schema.uiDesigns.data }).from(schema.uiDesigns)
+    .where(and(eq(schema.uiDesigns.userId, userId), eq(schema.uiDesigns.active, true))).limit(1)
+  const next = f(row ? (row.data as unknown as Design) : emptyDesign())
+  await writeDesign(userId, next)
+  return next
+}
 
 /** Ekran düzenini kaydeder (sunucuda yeniden doğrulanır: bilinmeyen kart, tekrar, kilitli kart). */
 export async function saveScreen(userId: string, screen: ScreenId, items: LayoutItem[]) {
-  const cur = (await activeDesign(userId)) ?? emptyDesign()
-  const next: Design = { ...cur, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced: await isAdvanced(userId) }) } }
-  await writeDesign(userId, next)
+  const advanced = await isAdvanced(userId)
+  const next = await updateDesign(userId, (cur) => ({ ...cur, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced }) } }))
   await publish(userId, 'design.saved', { screen, cards: next.screens[screen]!.items.length })
 }
 
-/** Ekranı varsayılana döndürür (o ekranın kaydı silinir; kart ayarları korunur). */
+/** Ekranı varsayılana döndürür (o ekranın kaydı silinir; kart ayarları, kurallar ve alt bar korunur). */
 export async function resetScreen(userId: string, screen: ScreenId) {
-  const cur = await activeDesign(userId)
-  if (!cur?.screens[screen]) return
-  const screens = { ...cur.screens }
-  delete screens[screen]
-  await writeDesign(userId, { ...cur, screens })
+  await updateDesign(userId, (cur) => { const screens = { ...cur.screens }; delete screens[screen]; return { ...cur, screens } })
   await publish(userId, 'design.reset', { screen })
+}
+
+export async function saveNav(userId: string, nav: NavLayout | null) {
+  const n = nav ? normalizeNav(nav) : null
+  await updateDesign(userId, (cur) => { const d = { ...cur }; if (n) d.nav = n; else delete d.nav; return d })
+  await publish(userId, 'design.nav', { hidden: n?.hidden?.length ?? 0 })
+}
+
+export async function saveRules(userId: string, rules: Rule[]) {
+  const r = normalizeRules(rules)
+  await updateDesign(userId, (cur) => ({ ...cur, rules: r }))
+  await publish(userId, 'design.rules', { rules: r.length, on: r.filter((x) => x.on).length })
+  return r
+}
+
+export async function savePrefs(userId: string, p: UsePrefs) {
+  const n = normalizePrefs(p)
+  await updateDesign(userId, (cur) => ({ ...cur, prefs: n }))
+  await publish(userId, 'design.prefs', { hand: n.hand ?? 'none', holdToEdit: n.holdToEdit ?? true })
 }

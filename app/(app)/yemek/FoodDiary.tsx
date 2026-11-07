@@ -33,7 +33,7 @@ export default function FoodDiary(p: {
   /** P-7 hızlı kayıt: öğün alışkanlıkları ("her zamanki kahvaltın") */
   usual?: Partial<Record<MealId, { names: string[]; kcal: number }>>
   /** Özelleştirme: ekranın kart düzeni (sunucuda çözülür) */
-  layout: { items: { id: string; size: 'half' | 'full' }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[] }
+  layout: { items: { id: string; size: 'half' | 'full' }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[]; applied?: string[] }
   editing?: boolean
 }) {
   const router = useRouter()
@@ -76,7 +76,7 @@ export default function FoodDiary(p: {
 
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="diary-state" data-left={left} data-budget={budget}>
-      <CardBoard screen="food" editing={!!p.editing} items={p.layout.items} drawer={p.layout.drawer} notices={p.layout.notices} nodes={{
+      <CardBoard screen="food" editing={!!p.editing} items={p.layout.items} drawer={p.layout.drawer} notices={p.layout.notices} applied={p.layout.applied} nodes={{
         'food.header': (
       <Band title="Yemek" sub={<span className="capitalize">{p.isToday ? `Bugün · ${p.dayLabel}` : p.dayLabel}</span>}
         right={<div className="flex items-center gap-2 shrink-0">{!p.isToday ? <Link href="/yemek" className={hdrBtn}>Bugüne dön</Link> : null}<DayCardSheet day={p.day} /></div>}

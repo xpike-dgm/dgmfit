@@ -18,8 +18,9 @@ const WD = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct']
 
 export default async function FitnessPage(props: { searchParams: Promise<{ gun?: string; duzenle?: string }> }) {
   const u = await requireUser()
-  const [h, adv, sp, rec, layout] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id), props.searchParams, recoveryFor(u.id).catch(() => null), screenLayout(u.id, 'fitness')])
+  const sp = await props.searchParams
   const editing = sp.duzenle === '1'
+  const [h, adv, rec, layout] = await Promise.all([fitnessHome(u.id), isAdvanced(u.id), recoveryFor(u.id).catch(() => null), screenLayout(u.id, 'fitness', { editing })])
   // gün sekmesi yalnızca önizlemeyi değiştirir; antrenman "Antrenmana başla" ile başlar
   const day = (sp.gun && h.program?.days.find((d) => d.id === sp.gun)) || h.next
   const shown = adv ? 6 : 3 // sade modda sıradaki antrenmanın ilk 3 hareketi
@@ -142,7 +143,7 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
   return (
     <div className="flex flex-col gap-3 px-4">
       <CardBoard screen="fitness" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
-        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} />
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} />
     </div>
   )
 }

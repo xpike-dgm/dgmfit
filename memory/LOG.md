@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö1b-2 başladı
+- Kullanıcı: "Devam et". Faz başı: memory-check geçti; son commit `125bd26` STATE ile uyumlu; çalışma ağacı temiz.
+- Ö1b ikiye bölündü: Ö1b-2 (alt bar, kurallar + zaman/antrenman günü, hedefe göre varsayılan, tek el, basılı tut → düzenle), Ö1b-3 (yığın, kendi panom, hızlı eylem, kaydırma, sihirbaz).
+
 ## 2026-11-07 — Özelleştirme Ö1b-1 tamamlandı (diğer ekranlar)
 - Fit, Fitness, Su (WaterScreen), Yemek (FoodDiary) CardBoard'a geçti; kayıtta fit/fitness/water/food kartları; `LayoutCtx.advanced`; stüdyo ekran başına durum (`allScreenLayouts`) — önceki sürümde tüm ekranlar Bugün'ün durumunu gösteriyordu.
 - Görsel kontrol: Su düzenlemesinde ✎/− düğmeleri içeriğin (içecek çipleri, miktar düğmeleri) üstüne biniyordu → kart başlık şeridi; bandın alt taşması yer tutucunun üstüne biniyordu → düzenlemede kapalı.

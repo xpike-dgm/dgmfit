@@ -27,8 +27,9 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
   const s = await getFitScreen(user.id)
   if (!s) redirect('/kurulum')
   const { goal, today, checkin } = s
-  const [cc, adv, layout, sp] = await Promise.all([carbCycleFor(user.id), isAdvanced(user.id), screenLayout(user.id, 'fit'), props.searchParams])
+  const sp = await props.searchParams
   const editing = sp.duzenle === '1'
+  const [cc, adv, layout] = await Promise.all([carbCycleFor(user.id), isAdvanced(user.id), screenLayout(user.id, 'fit', { editing })])
   const type = goal.type as GoalType
   const totalDays = diffDays(goal.startDate, goal.endDate) + 1
   const dayIndex = Math.min(totalDays, diffDays(goal.startDate, today) + 1)
@@ -166,7 +167,7 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
   return (
     <div className="flex flex-col gap-3 px-4">
       <CardBoard screen="fit" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
-        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} />
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} />
     </div>
   )
 }

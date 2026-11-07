@@ -1,6 +1,7 @@
 // Özelleştirme: tasarım (kullanıcının düzeni) ↔ kart kaydı. Saf; testleri tests/cards.test.ts.
 // Tasarım verisi kişisel veri içermez (yalnızca kart kimlikleri, boyutlar, ileride renkler) → şablon olarak paylaşılabilir.
 import { CARD_MIGRATIONS, REGISTRY_VERSION, cardDef, cardsFor, type CardDef, type CardSize, type ScreenId } from './registry.ts'
+import type { NavLayout, Rule, UsePrefs } from './prefs.ts'
 
 export interface LayoutItem { id: string; size?: CardSize }
 export interface ScreenLayout { items: LayoutItem[]; /** kullanıcının bilerek kaldırdıkları (çekmecede "kaldırdıkların") */ removed?: string[] }
@@ -11,6 +12,12 @@ export interface Design {
   v: number
   screens: Partial<Record<ScreenId, ScreenLayout>>
   cards?: Record<string, CardSettings>
+  /** Ö1b-2: alt bar sırası ve gizlenen sekmeler */
+  nav?: NavLayout
+  /** Ö1b-2: eğer–ise kuralları (görüntülemede uygulanır, kayıtlı düzeni değiştirmez) */
+  rules?: Rule[]
+  /** Ö1b-2: tek el, basılı tutunca düzenle */
+  prefs?: UsePrefs
 }
 
 export interface ResolvedItem { id: string; size: CardSize; def: CardDef }
@@ -22,7 +29,7 @@ export const emptyDesign = (): Design => ({ v: REGISTRY_VERSION, screens: {} })
 /** Eski sürümde kaydedilmiş tasarımı güncel kayda taşır (kimlik eşlemesi, kart ayarlarının taşınması). */
 export function migrateDesign(d: Design): { design: Design; notices: string[] } {
   const notices: string[] = []
-  let cur: Design = { v: d.v ?? REGISTRY_VERSION, screens: { ...d.screens }, cards: { ...(d.cards ?? {}) } }
+  let cur: Design = { ...d, v: d.v ?? REGISTRY_VERSION, screens: { ...d.screens }, cards: { ...(d.cards ?? {}) } }
   for (const m of CARD_MIGRATIONS.filter((x) => x.version > cur.v).sort((a, b) => a.version - b.version)) {
     const screens: Design['screens'] = {}
     for (const [sid, sl] of Object.entries(cur.screens) as [ScreenId, ScreenLayout][]) {
@@ -38,7 +45,9 @@ export function migrateDesign(d: Design): { design: Design; notices: string[] } 
     }
     const cards: Record<string, CardSettings> = {}
     for (const [id, s] of Object.entries(cur.cards ?? {})) for (const nid of m.map[id] ?? [id]) cards[nid] = s
-    cur = { v: m.version, screens, cards }
+    // kurallardaki kart kimlikleri de aynı eşlemeden geçer (kaldırılan kartın eylemi düşer, eylemsiz kural silinir)
+    const rules = cur.rules?.map((r) => ({ ...r, then: r.then.flatMap((a) => (m.map[a.card] ?? [a.card]).map((card) => ({ ...a, card }))) })).filter((r) => r.then.length)
+    cur = { ...cur, v: m.version, screens, cards, ...(rules ? { rules } : {}) }
   }
   return { design: { ...cur, v: REGISTRY_VERSION }, notices }
 }

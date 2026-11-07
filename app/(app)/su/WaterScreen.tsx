@@ -24,7 +24,7 @@ const SOURCE_LABEL: Record<string, string> = {
 function isoAt(day: string, hm: string) { return new Date(`${day}T${hm}:00+03:00`).toISOString() }
 function hmFromMin(min: number) { const h = Math.floor(min / 60) % 24, m = min % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` }
 
-type Layout = { items: { id: string; size: 'half' | 'full' }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[] }
+type Layout = { items: { id: string; size: 'half' | 'full' }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[]; applied?: string[] }
 export default function WaterScreen({ data, layout, editing }: { data: Data; layout: Layout; editing?: boolean }) {
   const router = useRouter()
   const [logs, setLogs] = useState<WaterLogView[]>(data.logs)
@@ -103,7 +103,7 @@ export default function WaterScreen({ data, layout, editing }: { data: Data; lay
 
   return (
     <div className="px-4 flex flex-col gap-3" data-testid="water-state" data-goal={data.goal} data-total={total}>
-      <CardBoard screen="water" editing={!!editing} items={layout.items} drawer={layout.drawer} notices={layout.notices} nodes={{
+      <CardBoard screen="water" editing={!!editing} items={layout.items} drawer={layout.drawer} notices={layout.notices} applied={layout.applied} nodes={{
         'water.header': (
       <Band
         title={data.isToday ? 'Su' : dayLabel(data.day)}

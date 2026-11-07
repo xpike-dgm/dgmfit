@@ -29,8 +29,9 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   const t = await getToday(user.id)
   if (!t) redirect('/kurulum')
   // Özelleştirme: düzen (yalnızca görünen kartların verisi hesaplanır; düzenlemede hepsi, çekmece için)
-  const [layout, sp] = await Promise.all([screenLayout(user.id, 'today'), props.searchParams])
+  const sp = await props.searchParams
   const editing = sp.duzenle === '1'
+  const layout = await screenLayout(user.id, 'today', { editing })
   const want = (id: string) => editing || layout.items.some((i) => i.id === id)
   const [tr, gs, partners, brief, streaks] = await Promise.all([
     todayTraining(user.id, t.day), goalStatus(user.id),
@@ -204,7 +205,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   return (
     <div className="px-4 flex flex-col gap-3">
       <CardBoard screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
-        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} />
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} />
       {/* koç kartı kaldırılsa da güvenlik destek kartı gösterilir */}
       {coachHidden && !editing ? <div data-mod="coach"><InsightCard fallback="" weeklyReady={false} compact supportOnly /></div> : null}
     </div>

@@ -8,6 +8,8 @@ import { cardDef, SCREENS, type CardSize, type ScreenId } from '@/lib/cards/regi
 import { addItem, moveItem, removeItem, setSize, type LayoutItem } from '@/lib/cards/layout'
 import { resetLayoutAction, saveLayoutAction } from '@/app/(app)/profil/ozellestirme/actions'
 import Sheet from '@/components/Sheet'
+import Link from 'next/link'
+import { useDesignPrefs } from './DesignPrefs'
 
 type Item = { id: string; size: CardSize }
 interface Props {
@@ -17,26 +19,83 @@ interface Props {
   drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]
   editing: boolean
   notices?: string[]
+  /** Ö1b-2: şu an uygulanan kuralların adları (düzen geçici olarak değişti) */
+  applied?: string[]
 }
 
 const HOLD_MS = 350
 const SLOP = 8
 
 export default function CardBoard(p: Props) {
-  if (!p.editing) {
-    return (
+  if (!p.editing) return <Board {...p} />
+  return <Editor {...p} />
+}
+
+const HOLD_EDIT_MS = 600
+/** Basılı tutulunca düzenlemeye geçmeyecek öğeler (dokunulabilir içerik). */
+const INTERACTIVE = 'a,button,input,select,textarea,label,summary,details,[role=button],[role=slider],[role=dialog],[contenteditable],[data-no-hold]'
+
+/** Normal görünüm: kartlar + (açıksa) kart dışı/etkileşimsiz bir yere basılı tutunca "Ekranı düzenle" balonu. */
+function Board(p: Props) {
+  const router = useRouter()
+  const { holdToEdit } = useDesignPrefs()
+  const [pop, setPop] = useState<{ x: number; y: number } | null>(null)
+  const t = useRef<{ timer: number; x: number; y: number } | null>(null)
+  const box = useRef<HTMLDivElement>(null)
+  const cancel = () => { if (t.current) { clearTimeout(t.current.timer); t.current = null } }
+  useEffect(() => cancel, [])
+  useEffect(() => {
+    if (!pop) return
+    const close = (e: PointerEvent) => { if (!(e.target as HTMLElement).closest('[data-hold-pop]')) setPop(null) }
+    const t2 = setTimeout(() => window.addEventListener('pointerdown', close), 0)
+    const onScroll = () => setPop(null)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { clearTimeout(t2); window.removeEventListener('pointerdown', close); window.removeEventListener('scroll', onScroll) }
+  }, [pop])
+  const down = (e: React.PointerEvent) => {
+    if (!holdToEdit || e.button > 0 || (e.target as HTMLElement).closest(INTERACTIVE)) return
+    const r = box.current!.getBoundingClientRect()
+    const x = e.clientX - r.left, y = e.clientY - r.top
+    cancel()
+    t.current = { x: e.clientX, y: e.clientY, timer: window.setTimeout(() => {
+      t.current = null
+      window.getSelection()?.removeAllRanges()
+      navigator.vibrate?.(12)
+      setPop({ x: Math.max(70, Math.min(r.width - 70, x)), y })
+    }, HOLD_EDIT_MS) }
+  }
+  const move = (e: React.PointerEvent) => { if (t.current && Math.hypot(e.clientX - t.current.x, e.clientY - t.current.y) > 10) cancel() }
+  const applied = p.applied?.length ? p.applied : null
+  return (
+    <div ref={box} className="relative flex flex-col gap-3" onPointerDown={down} onPointerMove={move} onPointerUp={cancel} onPointerCancel={cancel}
+      onContextMenu={(e) => { if (pop || t.current) e.preventDefault() }}>
       <div className="grid grid-cols-2 gap-3" data-testid="card-board">
         {p.items.map((it) => p.nodes[it.id] ? (
           <div key={it.id} className={`${it.size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col [&>*]:flex-1`} data-card={it.id}>{p.nodes[it.id]}</div>
         ) : null)}
       </div>
-    )
-  }
-  return <Editor {...p} />
+      {applied ? (
+        <Link href="/profil/ozellestirme/kurallar" className="self-center inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-surface-2 border border-line text-[12px] font-bold text-mute" data-testid="rule-applied">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 7h11M4 12h7M4 17h11M17 10l3 3-3 3" /></svg>
+          Kural: {applied.join(', ')}
+        </Link>
+      ) : null}
+      {pop ? (
+        <div data-hold-pop className="absolute z-30 -translate-x-1/2 -translate-y-[calc(100%+10px)] animate-[fadeUp_.15s_ease-out]" style={{ left: pop.x, top: pop.y }}>
+          <button type="button" onClick={() => { setPop(null); router.push(SCREENS[p.screen].path + '?duzenle=1') }} data-testid="hold-edit"
+            className="h-11 px-4 rounded-full bg-ink text-bg text-[14px] font-extrabold shadow-lg inline-flex items-center gap-2 whitespace-nowrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>
+            Ekranı düzenle
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 function Editor(p: Props) {
   const router = useRouter()
+  const left = useDesignPrefs().hand === 'left'
   const [items, setItems] = useState<Item[]>(p.items)
   const [history, setHistory] = useState<Item[][]>([])
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; dx: number; dy: number; w: number; h: number } | null>(null)
@@ -218,13 +277,13 @@ function Editor(p: Props) {
               onPointerDown={(e) => startHold(e, it.id)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
               className={`relative min-w-0 rounded-[24px] touch-pan-y ${it.size === 'full' ? 'col-span-2' : ''} ${flash === it.id ? 'ring-2 ring-acc ring-offset-2 ring-offset-bg' : ''}`}>
               <div className={`h-full rounded-[24px] flex flex-col ${dragging ? 'opacity-0' : def.locked === 'top' ? '' : 'card-wiggle'}`} style={{ animationDelay: `${(idx % 3) * 90}ms` }}>
-                {def.locked !== 'top' ? <div className="h-9 flex items-center gap-2 pl-1.5 pr-[76px] min-w-0" aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b></div> : null}
+                {def.locked !== 'top' ? <div className={`h-9 flex items-center gap-2 min-w-0 ${left ? 'pl-[76px] pr-1.5 justify-end' : 'pl-1.5 pr-[76px]'}`} aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b></div> : null}
                 <div className="pointer-events-none flex-1 flex flex-col [&>*]:flex-1" aria-hidden>
                   {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-2.5 flex items-center min-h-[52px]" data-testid="card-placeholder"><span className="text-[12.5px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
                 </div>
               </div>
               {dragging ? <div className="absolute inset-0 rounded-[24px] border-2 border-dashed border-acc bg-acc/5" aria-hidden /> : null}
-              <div className={`absolute flex gap-1.5 z-10 ${def.locked === 'top' ? '-top-2.5 -right-1.5' : 'top-0.5 right-0'}`}>
+              <div className={`absolute flex gap-1.5 z-10 ${def.locked === 'top' ? (left ? '-top-2.5 -left-1.5' : '-top-2.5 -right-1.5') : (left ? 'top-0.5 left-0' : 'top-0.5 right-0')}`} data-card-ctl>
                 <button type="button" data-card-btn aria-label={`${def.title} kartını düzenle`} onClick={() => setSheet(it.id)}
                   className="w-8 h-8 rounded-full bg-ink text-bg shadow-md flex items-center justify-center hit">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>

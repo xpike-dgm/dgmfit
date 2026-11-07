@@ -5,10 +5,10 @@ import { trackNav } from './BackButton'
 import { hidesNav, moduleFor } from '@/lib/theme'
 
 /** Bulunulan modülün renk paletini (`data-mod`) alt ağaca uygular. Sunucu çiziminde de doğru değer gelir. */
-export default function ModShell({ children, className }: { children: React.ReactNode; className?: string }) {
+export default function ModShell({ children, className, hand }: { children: React.ReactNode; className?: string; hand?: 'left' | 'right' | null }) {
   const path = usePathname()
   const sp = useSearchParams()
   const q = sp.toString()
   useEffect(() => { trackNav(path + (q ? '?' + q : '')) }, [path, q])
-  return <div data-mod={moduleFor(path)} data-shell="" className={`${className ?? ''} ${hidesNav(path) ? '!pb-0' : ''}`}>{children}</div>
+  return <div data-mod={moduleFor(path)} data-shell="" data-hand={hand ?? undefined} className={`${className ?? ''} ${hidesNav(path) ? '!pb-0' : ''}`}>{children}</div>
 }

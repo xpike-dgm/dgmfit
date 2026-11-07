@@ -51,7 +51,7 @@ export function Band({ title, sub, right, ring, ringHref, visual, pills, childre
 }) {
   return (
     <section className="band -mx-4 px-4 safe-top pb-12 -mb-9">
-      <div className="flex items-start justify-between gap-3 pt-1">
+      <div className="band-head flex items-start justify-between gap-3 pt-1">
         <div className="min-w-0">
           <h1 className="text-[26px] font-extrabold leading-tight tracking-[-0.01em]">{title}</h1>
           {sub ? <p className="text-[13px] font-semibold opacity-90 mt-0.5">{sub}</p> : null}

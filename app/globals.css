@@ -117,23 +117,23 @@
 .rir-range::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; margin-top: -9px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
 .rir-range::-moz-range-thumb { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
 
-/* P-5: tutarlı onay kutuları (katmansız: tek tek verilmiş w-4/w-5/w-6 ve accent-* sınıflarının önüne geçer).
+/* P-5: tutarlı onay kutuları (anahtarlar [role=switch] hariç; onlar kendi sınıflarıyla çizilir) (katmansız: tek tek verilmiş w-4/w-5/w-6 ve accent-* sınıflarının önüne geçer).
    Boyut 22 px; dokunma alanı kutuyu saran etiket satırından gelir. Seçiliyken bulunulan modülün vurgu rengi. */
-input[type="checkbox"]:not(.sr-only) {
+input[type="checkbox"]:not(.sr-only):not([role=switch]) {
   appearance: none; -webkit-appearance: none; margin: 0;
   width: 22px; height: 22px; flex-shrink: 0; border-radius: 7px;
   border: 2px solid var(--color-line-2); background: var(--color-surface-2);
   display: inline-grid; place-content: center; cursor: pointer; transition: background-color .12s, border-color .12s;
 }
-input[type="checkbox"]:not(.sr-only)::after {
+input[type="checkbox"]:not(.sr-only):not([role=switch])::after {
   content: ''; width: 12px; height: 12px; background: var(--color-acc-ink); transform: scale(0); transition: transform .12s;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6.5' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6.5' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
-input[type="checkbox"]:not(.sr-only):checked { background: var(--color-acc); border-color: var(--color-acc); }
-input[type="checkbox"]:not(.sr-only):checked::after { transform: scale(1); }
-input[type="checkbox"]:not(.sr-only):focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }
-input[type="checkbox"]:not(.sr-only):disabled { opacity: .45; cursor: not-allowed; }
+input[type="checkbox"]:not(.sr-only):not([role=switch]):checked { background: var(--color-acc); border-color: var(--color-acc); }
+input[type="checkbox"]:not(.sr-only):not([role=switch]):checked::after { transform: scale(1); }
+input[type="checkbox"]:not(.sr-only):not([role=switch]):focus-visible { outline: 2px solid var(--color-acc); outline-offset: 2px; }
+input[type="checkbox"]:not(.sr-only):not([role=switch]):disabled { opacity: .45; cursor: not-allowed; }
 
 /* P-5: küçük simge ve satır içi bağlantılarda dokunma alanı ≥ 44 px (görünüm değişmeden, görünmez genişletme) */
 .hit { position: relative; }
@@ -143,6 +143,10 @@ input[type="checkbox"]:not(.sr-only):disabled { opacity: .45; cursor: not-allowe
 html[data-editing] nav[aria-label="Ana menü"] { display: none; }
 /* düzenlemede bant alttaki karta taşmaz (kart başlık şeritleri bandın üstüne binmesin) */
 html[data-editing] [data-edit-card] .band { margin-bottom: 0; padding-bottom: 1rem; }
+@keyframes fadeUp { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+/* Ö1b-2 tek el modu (sol el): bant düğmeleri sola (başlık sağa); + düğmesi ve kart düğmeleri bileşenlerde */
+[data-hand=left] .band-head { flex-direction: row-reverse; }
+[data-hand=left] .band-head > .min-w-0 { text-align: right; }
 html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; transition: opacity .15s; }
 @keyframes cardWiggle { 0%, 100% { transform: rotate(-0.35deg); } 50% { transform: rotate(0.35deg); } }
 .card-wiggle { animation: cardWiggle .5s ease-in-out infinite; transform-origin: 50% 60%; }
