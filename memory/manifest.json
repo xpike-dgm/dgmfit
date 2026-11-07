@@ -309,7 +309,13 @@
     "lib/cards/community-data.ts",
     "components/cards/AnnouncementCard.tsx",
     "tests/cards-community.test.ts",
-    "tests/e2e/custom9.e2e.cjs"
+    "tests/e2e/custom9.e2e.cjs",
+    "lib/cards/usage.ts",
+    "lib/cards/usage-data.ts",
+    "components/cards/usage-tracker.ts",
+    "tests/cards-usage.test.ts",
+    "tests/cards-compat.test.ts",
+    "tests/e2e/custom10.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -386,7 +392,8 @@
     "announcements",
     "announcement_dismissals",
     "app_defaults",
-    "designer_follows"
+    "designer_follows",
+    "card_usage"
   ],
   "routes": [
     "/",
@@ -525,7 +532,9 @@
     "/profil/ozellestirme/yarisma",
     "/profil/ozellestirme/tasarimci/[username]",
     "/t/[id]",
-    "/yonetim/tasarim"
+    "/yonetim/tasarim",
+    "/profil/ozellestirme/kullanim",
+    "/api/cards/usage"
   ],
   "events": [
     "profile.onboarded",
@@ -1103,6 +1112,12 @@
       "safeUrl",
       "publicTemplateUrl"
     ],
+    "lib/cards/usage.ts": [
+      "suggestLayout",
+      "applySuggestion",
+      "experiment",
+      "tapRate"
+    ],
     "lib/cards/wizard.ts": [
       "wizardDesign",
       "mergeRules",
@@ -1173,6 +1188,7 @@
     "0025_design_versions.sql",
     "0026_design_templates.sql",
     "0027_community.sql",
-    "0028_designer_follows.sql"
+    "0028_designer_follows.sql",
+    "0029_card_usage.sql"
   ]
 }

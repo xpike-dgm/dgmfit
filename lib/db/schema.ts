@@ -687,6 +687,14 @@ export const designerFollows = pgTable('designer_follows', {
   designerId: uuid('designer_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [primaryKey({ columns: [t.followerId, t.designerId] }), index('designer_follows_designer_idx').on(t.designerId)])
+/** Ö4: kart kullanımı (günlük; kişisel kullanım haritası ve koç önerisi). */
+export const cardUsage = pgTable('card_usage', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  day: date('day').notNull(),
+  card: text('card').notNull(),
+  views: integer('views').notNull().default(0),
+  taps: integer('taps').notNull().default(0),
+}, (t) => [primaryKey({ columns: [t.userId, t.day, t.card] })])
 /** Ö3c: uygulama geneli varsayılanlar (anahtar → veri), ör. 'layout' = yönetimden varsayılan ekran düzenleri. */
 export const appDefaults = pgTable('app_defaults', {
   key: text('key').primaryKey(),

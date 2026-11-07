@@ -10,6 +10,7 @@ import { hideTodayAction, pinCardAction, resetLayoutAction, saveLayoutAction } f
 import { canHideToday, canPin } from '@/lib/cards/prefs'
 import { cardVars, type CardColors } from '@/lib/cards/colors'
 import ColorEditor from './ColorEditor'
+import { trackTap, trackView } from './usage-tracker'
 
 /** Ö2a: kartın renk değişkenleri (sarmalayıcıya yayılır). */
 const ccAttrs = (c: CardColors | undefined): { style?: Record<string, string>; 'data-cc'?: string } => { const v = cardVars(c); return v ? { style: v.style, 'data-cc': v.slots } : {} }
@@ -190,6 +191,17 @@ function Board(p: Props) {
   }
   const move = (e: React.PointerEvent) => { if (t.current && Math.hypot(e.clientX - t.current.x, e.clientY - t.current.y) > 10) cancel() }
   const applied = p.applied?.length ? p.applied : null
+  // Ö4: kullanım ölçümü — her kart sayfa başına bir kez "görüldü"; içindeki dokunuşlar "dokunma"
+  useEffect(() => {
+    const root = box.current
+    if (!root || typeof IntersectionObserver === 'undefined') return
+    const seen = new Set<string>()
+    const io = new IntersectionObserver((es) => { for (const e of es) { const id = (e.target as HTMLElement).dataset.card; if (e.isIntersecting && id && !seen.has(id)) { seen.add(id); trackView(id) } } }, { threshold: 0.5 })
+    root.querySelectorAll<HTMLElement>('[data-card]').forEach((el) => io.observe(el))
+    const onClick = (ev: MouseEvent) => { const id = (ev.target as HTMLElement).closest<HTMLElement>('[data-card]')?.dataset.card; if (id && (ev.target as HTMLElement).closest('a,button')) trackTap(id) }
+    root.addEventListener('click', onClick, true)
+    return () => { io.disconnect(); root.removeEventListener('click', onClick, true) }
+  }, [p.items])
   // Ö1b-3: kaydırma hareketleri — bir anda tek kart açık; gizleme iyimser, "Geri al" ile döner
   const [openId, setOpenId] = useState<string | null>(null)
   const [gone, setGone] = useState<string[]>([])

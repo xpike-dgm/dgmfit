@@ -29,6 +29,8 @@ export interface Design {
   style?: Partial<StylePrefs>
   /** Ö3b: şablondan geldiyse kaynağı (remix ve paylaşımda "X'in şablonundan" için) */
   origin?: { templateId: string; name: string }
+  /** Ö4: koç önerileri — "şimdi değil" denenler (kişisel) */
+  insights?: { dismissed: string[] }
 }
 
 export interface ResolvedItem { id: string; size: CardSize; def: CardDef; stack?: string[] }

@@ -212,7 +212,7 @@ export async function saveStyle(userId: string, patch: Partial<StylePrefs>) {
 }
 
 /** Ö3b: etkin tasarımı bir dönüşümle değiştirir (şablon uygulama); sürüm notu ile. */
-export async function transformDesign(userId: string, f: (d: Design) => Design, note: string) { return updateDesign(userId, f, note) }
+export async function transformDesign(userId: string, f: (d: Design) => Design, note?: string) { return updateDesign(userId, f, note) }
 
 /** Ö3c: yönetimden varsayılan düzen — özelleştirmemiş kullanıcıda kayıttaki varsayılanın yerine geçer (customized değişmez). */
 async function withAdminDefault(r: ReturnType<typeof resolveScreen>, screen: ScreenId, advanced: boolean) {

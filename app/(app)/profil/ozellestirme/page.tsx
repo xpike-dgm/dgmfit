@@ -3,6 +3,8 @@ import { requireUser } from '@/lib/auth'
 import { activeDesign, allScreenLayouts, userGoal } from '@/lib/cards/design-data'
 import { GOAL_FRONT, normalizePrefs, resolveNav } from '@/lib/cards/prefs'
 import UsePrefsForm from './UsePrefsForm'
+import Suggestions from './Suggestions'
+import { suggestionsFor, usageFor } from '@/lib/cards/usage-data'
 import { SCREENS, cardDef, type ScreenId } from '@/lib/cards/registry'
 import { TopBar } from '@/components/ui'
 import ResetButton from './ResetButton'
@@ -17,7 +19,8 @@ const SOON: [string, string][] = [
 /** Özelleştirme stüdyosu (Ö1): mevcut düzenin önizlemesi + ekran düzenleme. Diğer bölümler sonraki aşamalarda. */
 export default async function Page() {
   const u = await requireUser()
-  const [all, d, goal] = await Promise.all([allScreenLayouts(u.id), activeDesign(u.id), userGoal(u.id)])
+  const [all, d, goal, usage] = await Promise.all([allScreenLayouts(u.id), activeDesign(u.id), userGoal(u.id), usageFor(u.id, 14)])
+  const suggestions = suggestionsFor((Object.keys(SCREENS) as ScreenId[]).map((s) => ({ screen: s, items: all[s].items })), usage, d?.insights?.dismissed ?? [])
   const today = all.today
   const nav = resolveNav(d?.nav)
   const rulesOn = (d?.rules ?? []).filter((r) => r.on).length
@@ -40,6 +43,8 @@ export default async function Page() {
           <Link href="/?duzenle=1" className="h-11 rounded-full bg-acc text-acc-ink font-extrabold text-[14px] inline-flex items-center justify-center" data-testid="studio-edit">Düzenlemeye başla</Link>
         </div>
       </section>
+
+      <Suggestions list={suggestions} />
 
       <Link href="/profil/ozellestirme/sihirbaz" className="card p-4 flex items-center gap-3 border border-acc/30" data-testid="studio-wizard">
         <span aria-hidden className="w-11 h-11 rounded-2xl bg-acc text-acc-ink flex items-center justify-center shrink-0">
@@ -80,6 +85,9 @@ export default async function Page() {
         </Link>
         <Link href="/profil/ozellestirme/yarisma" className={`${row} border-t border-line`} data-testid="studio-contest">
           <span className="flex flex-col"><b className="text-[15px]">Tasarım yarışması</b><span className="text-[12.5px] text-mute">Haftalık tema, oy ver, rozet kazan</span></span><span className="text-mute">›</span>
+        </Link>
+        <Link href="/profil/ozellestirme/kullanim" className={`${row} border-t border-line`} data-testid="studio-usage">
+          <span className="flex flex-col"><b className="text-[15px]">Kullanım haritam</b><span className="text-[12.5px] text-mute">Hangi kartı ne kadar kullanıyorsun, düzen deneyin</span></span><span className="text-mute">›</span>
         </Link>
         <Link href="/profil/ozellestirme/kurallar" className={`${row} border-t border-line`} data-testid="studio-rules">
           <span className="flex flex-col"><b className="text-[15px]">Kurallar</b><span className="text-[12.5px] text-mute">{rulesOn ? `${rulesOn} kural açık` : 'Sabah, antrenman günü, akşam düzeni…'}</span></span><span className="text-mute">›</span>

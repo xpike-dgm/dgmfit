@@ -7,7 +7,7 @@ import { publish } from '../events'
 import { moderateText } from '../moderation'
 import { dayString } from '../time'
 import { notify, createPost } from '../social-data'
-import type { Design } from './layout'
+import { migrateDesign, type Design } from './layout'
 import { applyTemplate, shareable, type ApplyMode } from './share'
 import { normalizeMeta, popularity, searchTerm, weekKey, type Sort } from './templates'
 import { transformDesign } from './design-data'
@@ -110,7 +110,9 @@ export async function reactTemplate(userId: string, id: string, kind: 'like' | '
 export async function useTemplate(userId: string, id: string, mode: ApplyMode) {
   const t = await getTemplate(userId, id)
   if (!t || (t.status !== 'public' && t.ownerId !== userId)) return false
-  await transformDesign(userId, (cur) => ({ ...applyTemplate(cur, t.data, mode), origin: { templateId: t.id, name: t.name } }), `Şablon: ${t.name}`)
+  // eski kayıt sürümünde paylaşılmış şablon önce güncel karta göç ettirilir (uyumluluk)
+  const tpl = migrateDesign(t.data).design
+  await transformDesign(userId, (cur) => ({ ...applyTemplate(cur, tpl, mode), origin: { templateId: t.id, name: t.name } }), `Şablon: ${t.name}`)
   const ins = await db.insert(RX).values({ userId, templateId: id, kind: 'use' }).onConflictDoNothing().returning({ k: RX.kind })
   if (ins.length) { await recount(id); await notify(t.ownerId, 'template_use', userId, null, { url: `/profil/ozellestirme/sablonlar/${id}` }).catch(() => null) }
   await publish(userId, 'template.used', { mode })

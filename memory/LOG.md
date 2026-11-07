@@ -2,6 +2,12 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö3c tamamlandı, Ö4 başladı
+- Ö3c: yarışma, tasarımcı profili + tasarımcı takibi, grup teması, bağlantı + QR, `/t/[id]` girişsiz önizleme, yönetim (yarışma teması, duyuru kartı, varsayılan düzen).
+- Hatalar: (1) oy/takip sonrası yenilemede düğme değişince durum mesajı kayboluyordu (testte ekrandaki yeni duruma bakıldı); (2) sosyal takip gizlilik kuralı tasarımcı takibini engelledi → ayrı `designer_follows` (0028); (3) 0027'ye sonradan eklenen tablo yerelde uygulanmayacaktı (göç dosya adıyla kaydedilir) → ayrı dosya.
+- Doğrulama: commit `45a11cc`; verify.sh VERIFY OK (260 birim); release `2026-11-07T08-05-17-463Z` RELEASE OK; canlıda 20 e2e OK (custom9 kısmi: yönetici adımları atlandı, küresel ayar değişmedi); test kullanıcıları silindi; logda hata 0.
+- Ö4 başladı: saf `lib/cards/usage.ts` (öneri, uygulama, deney raporu) + 3 test; `tests/cards-compat.test.ts` (1500 rastgele tasarım, sahte göç, şablon/sihirbaz) 3 test.
+
 ## 2026-11-07 — Özelleştirme Ö3c başladı
 - Faz başı: memory-check geçti; son commit STATE ile uyumlu; ağaç temiz. Kapsam STATE Ö3c satırında.
 

@@ -8,7 +8,8 @@ import { readMedia } from '@/lib/media'
 import { activateDesign, createDesign, deleteDesign, renameDesign, restoreVersion } from '@/lib/cards/designs-data'
 import { adminTemplate, deleteTemplate, publishTemplate, reactTemplate, remixTemplate, reportTemplate, useTemplate } from '@/lib/cards/templates-data'
 import { closeAnnouncement, createAnnouncement, dismissAnnouncement, enterContest, followDesigner, isScreenId, setContest, setGroupTheme, setLayoutDefault, voteContest } from '@/lib/cards/community-data'
-import { activeDesign } from '@/lib/cards/design-data'
+import { activeDesign, screenLayout, transformDesign } from '@/lib/cards/design-data'
+import { applySuggestion } from '@/lib/cards/usage'
 import { cardDef } from '@/lib/cards/registry'
 import { RULES_MAX } from '@/lib/cards/prefs'
 
@@ -251,5 +252,26 @@ export async function communityAction(input: unknown): Promise<R> {
   }
   if (err) return { ok: false, error: err }
   everywhere()
+  return { ok: true }
+}
+
+// ───────── Ö4: koç önerileri ─────────
+export async function suggestionAction(input: unknown): Promise<R> {
+  const u = await requireUser()
+  const p = z.discriminatedUnion('op', [
+    z.object({ op: z.literal('apply'), screen: z.string().max(20), card: z.string().max(60), kind: z.enum(['up', 'remove']) }),
+    z.object({ op: z.literal('dismiss'), id: z.string().max(80) }),
+  ]).safeParse(input)
+  if (!p.success) return { ok: false, error: 'Geçersiz istek' }
+  if (limited(u.id)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  const a = p.data
+  if (a.op === 'dismiss') {
+    await transformDesign(u.id, (d) => ({ ...d, insights: { dismissed: [...new Set([...(d.insights?.dismissed ?? []), a.id])].slice(-50) } }))
+    revalidatePath('/profil/ozellestirme'); return { ok: true }
+  }
+  if (!isScreen(a.screen)) return { ok: false, error: 'Geçersiz ekran' }
+  const l = await screenLayout(u.id, a.screen, { editing: true })
+  await saveScreen(u.id, a.screen, applySuggestion(l.items.map((i) => ({ id: i.id, size: i.size, ...(i.stack ? { stack: i.stack } : {}) })), a))
+  revalidatePath(SCREENS[a.screen].path); revalidatePath('/profil/ozellestirme')
   return { ok: true }
 }

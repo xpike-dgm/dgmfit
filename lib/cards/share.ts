@@ -6,12 +6,12 @@ import { normalizeStyle, type StylePrefs } from './style.ts'
 import { REGISTRY_VERSION } from './registry.ts'
 
 const PERSONAL_STYLE = ['units', 'haptics', 'sound', 'warm', 'motion', 'contrast', 'bandMedia'] as const
-export interface Personal { gestures?: Design['gestures']; prefs?: Design['prefs']; style?: Partial<StylePrefs> }
+export interface Personal { gestures?: Design['gestures']; prefs?: Design['prefs']; style?: Partial<StylePrefs>; insights?: Design['insights'] }
 
 export function personalPart(d: Design | null | undefined): Personal {
   if (!d) return {}
   const st = d.style ? Object.fromEntries(PERSONAL_STYLE.filter((k) => k in d.style!).map((k) => [k, d.style![k]])) : undefined
-  return { ...(d.gestures ? { gestures: d.gestures } : {}), ...(d.prefs ? { prefs: d.prefs } : {}), ...(st && Object.keys(st).length ? { style: st } : {}) }
+  return { ...(d.gestures ? { gestures: d.gestures } : {}), ...(d.prefs ? { prefs: d.prefs } : {}), ...(d.insights ? { insights: d.insights } : {}), ...(st && Object.keys(st).length ? { style: st } : {}) }
 }
 
 /** Kişisel kısmı tasarıma uygular (kişisel alanlar `p`'den gelir; bant fotoğrafı yoksa fotoğraflı bant degradeye döner). */
@@ -19,9 +19,10 @@ export function withPersonal(d: Design, p: Personal): Design {
   const look = d.style ? Object.fromEntries(Object.entries(d.style).filter(([k]) => !(PERSONAL_STYLE as readonly string[]).includes(k))) : {}
   const style = normalizeStyle({ ...look, ...(p.style ?? {}) })
   const out: Design = { ...d, style }
-  delete out.gestures; delete out.prefs
+  delete out.gestures; delete out.prefs; delete out.insights
   if (p.gestures) out.gestures = p.gestures
   if (p.prefs) out.prefs = p.prefs
+  if (p.insights) out.insights = p.insights
   return out
 }
 
