@@ -47,10 +47,12 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
 
   const onBarcode = async (code: string) => {
     setScan(false); setBarcodeMsg(null)
-    const r = await fetch('/api/food/barcode?code=' + code)
-    const j = await r.json()
-    if (j.hit) setSelected(j.hit)
-    else setBarcodeMsg({ code, text: j.error ?? 'Bu barkodla kayıtlı ürün bulunamadı.' })
+    try {
+      const r = await fetch('/api/food/barcode?code=' + encodeURIComponent(code))
+      const j = await r.json()
+      if (j.hit) setSelected(j.hit)
+      else setBarcodeMsg({ code, text: j.error ?? 'Bu barkodla kayıtlı ürün bulunamadı.' })
+    } catch { setBarcodeMsg({ code, text: 'Bağlantı yok; barkod sorgulanamadı. İnternet gelince tekrar dene ya da elle ara.' }) }
   }
 
   const add = (v: { grams: number; portionLabel: string; portionQty: number; meal: MealId }) => {

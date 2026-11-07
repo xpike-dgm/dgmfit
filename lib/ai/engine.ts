@@ -154,6 +154,9 @@ export async function userCallsToday(userId: string): Promise<number> {
  * Bir AI görevini çalıştırır: kullanıcı kotası → önbellek → sağlayıcılar öncelik sırasıyla (kota/limit/hata → sonraki).
  * Dönen JSON görev şemasıyla doğrulanmıştır. İçerik kaydedilmez; yalnızca sağlayıcı, token, süre, hata.
  */
+/** Kullanıcı başına sürmekte olan (kotaya sayılan) AI istekleri — tek süreç. */
+const inflight = new Map<string, number>()
+
 export async function runTask<T extends Task>(userId: string, task: T, input: CallInput, opts: { cache?: boolean } = {}): Promise<{ result: ReturnType<typeof parseResult<T>>; provider: ProviderId | 'cache' }> {
   // Önbellek yalnızca bağlamsız görevlerde (fotoğraf/metin/etiket); koç ve rapor kişisel bağlam taşır
   const useCache = opts.cache ?? (!input.system && !input.history?.length)
@@ -166,43 +169,50 @@ export async function runTask<T extends Task>(userId: string, task: T, input: Ca
   if (USER_QUOTA_TASKS.includes(task)) {
     const userDaily = await userDailyLimit(userId)
     if (userDaily === 0) throw new AiError('AI özellikleri hesabında kapalı. Elle eklemeye devam edebilirsin.', 'kota')
-    if ((await userCallsToday(userId)) >= userDaily) throw new AiError(`Bugünkü AI hakkın doldu (${userDaily}). Yarın yenilenir; şimdilik elle ekleyebilirsin.`, 'kota')
+    // sürmekte olan istekler de hakka sayılır (paralel isteklerle kota aşılmasın)
+    if ((await userCallsToday(userId)) + (inflight.get(userId) ?? 0) >= userDaily) throw new AiError(`Bugünkü AI hakkın doldu (${userDaily}). Yarın yenilenir; şimdilik elle ekleyebilirsin.`, 'kota')
   }
+  const reserve = USER_QUOTA_TASKS.includes(task)
+  if (reserve) inflight.set(userId, (inflight.get(userId) ?? 0) + 1)
 
-  const rows = await ensureProviders()
-  const used = await usageByProvider()
-  const states: ProviderState[] = rows.map((p) => ({
-    id: p.id as ProviderId, enabled: p.enabled, priority: p.priority, hasKey: !!p.keyData?.length,
-    dailyTokenLimit: p.dailyTokenLimit, monthlyTokenLimit: p.monthlyTokenLimit, usedToday: used.get(p.id)?.today ?? 0, usedMonth: used.get(p.id)?.month ?? 0, cooldownUntil: p.cooldownUntil,
-  }))
-  const { usable } = pickProviders(states, new Date())
-  if (!usable.length) throw new AiError('AI şu an kullanılamıyor (sağlayıcı yok ya da limitler doldu). Elle eklemeye devam edebilirsin.', 'yok')
+  try {
+    const rows = await ensureProviders()
+    const used = await usageByProvider()
+    const states: ProviderState[] = rows.map((p) => ({
+      id: p.id as ProviderId, enabled: p.enabled, priority: p.priority, hasKey: !!p.keyData?.length,
+      dailyTokenLimit: p.dailyTokenLimit, monthlyTokenLimit: p.monthlyTokenLimit, usedToday: used.get(p.id)?.today ?? 0, usedMonth: used.get(p.id)?.month ?? 0, cooldownUntil: p.cooldownUntil,
+    }))
+    const { usable } = pickProviders(states, new Date())
+    if (!usable.length) throw new AiError('AI şu an kullanılamıyor (sağlayıcı yok ya da limitler doldu). Elle eklemeye devam edebilirsin.', 'yok')
 
-  for (const id of usable) {
-    const p = rows.find((r) => r.id === id)!
-    const t0 = Date.now()
-    try {
-      const key = openKey(p)
-      if (!key) continue
-      const model = modelFor(p, task)
-      const out = id === 'claude' ? await callClaude(key, model, task, input) : await callOpenAI(key, model, task, input)
-      await db.insert(schema.aiCalls).values({ userId, task, provider: id, model, ok: true, inputTokens: out.inputTokens, outputTokens: out.outputTokens, ms: Date.now() - t0 })
-      if (useCache) await db.insert(schema.aiCache).values({ hash, task, result: out.json as object, provider: id }).onConflictDoNothing()
-      if (p.lastError) await db.update(schema.aiProviders).set({ cooldownUntil: null }).where(eq(schema.aiProviders.id, id))
-      return { result: out.json as never, provider: id }
-    } catch (e) {
-      const pe = e instanceof ProviderError ? e : new ProviderError((e as Error).message, null, null)
-      const c = classifyError(pe.code === 'refusal' || pe.code === 'bad_output' ? 400 : pe.status, pe.code)
-      const kind = pe.code === 'refusal' ? 'refusal' : pe.code === 'bad_output' ? 'bad_output' : c.kind
-      await db.insert(schema.aiCalls).values({ userId, task, provider: id, model: modelFor(p, task), ok: false, ms: Date.now() - t0, error: `${kind}${pe.status ? ' ' + pe.status : ''}: ${pe.message.slice(0, 160)}` })
-      await db.update(schema.aiProviders).set({
-        lastError: `${kind}${pe.status ? ' ' + pe.status : ''}${pe.code ? ' ' + pe.code : ''}`, lastErrorAt: new Date(),
-        ...(c.cooldownMs && kind !== 'refusal' && kind !== 'bad_output' ? { cooldownUntil: new Date(Date.now() + c.cooldownMs) } : {}),
-      }).where(eq(schema.aiProviders.id, id))
-      console.error('[dgfit] AI sağlayıcı hatası', id, kind, pe.status)
+    for (const id of usable) {
+      const p = rows.find((r) => r.id === id)!
+      const t0 = Date.now()
+      try {
+        const key = openKey(p)
+        if (!key) continue
+        const model = modelFor(p, task)
+        const out = id === 'claude' ? await callClaude(key, model, task, input) : await callOpenAI(key, model, task, input)
+        await db.insert(schema.aiCalls).values({ userId, task, provider: id, model, ok: true, inputTokens: out.inputTokens, outputTokens: out.outputTokens, ms: Date.now() - t0 })
+        if (useCache) await db.insert(schema.aiCache).values({ hash, task, result: out.json as object, provider: id }).onConflictDoNothing()
+        if (p.lastError) await db.update(schema.aiProviders).set({ cooldownUntil: null }).where(eq(schema.aiProviders.id, id))
+        return { result: out.json as never, provider: id }
+      } catch (e) {
+        const pe = e instanceof ProviderError ? e : new ProviderError((e as Error).message, null, null)
+        const c = classifyError(pe.code === 'refusal' || pe.code === 'bad_output' ? 400 : pe.status, pe.code)
+        const kind = pe.code === 'refusal' ? 'refusal' : pe.code === 'bad_output' ? 'bad_output' : c.kind
+        await db.insert(schema.aiCalls).values({ userId, task, provider: id, model: modelFor(p, task), ok: false, ms: Date.now() - t0, error: `${kind}${pe.status ? ' ' + pe.status : ''}: ${pe.message.slice(0, 160)}` })
+        await db.update(schema.aiProviders).set({
+          lastError: `${kind}${pe.status ? ' ' + pe.status : ''}${pe.code ? ' ' + pe.code : ''}`, lastErrorAt: new Date(),
+          ...(c.cooldownMs && kind !== 'refusal' && kind !== 'bad_output' ? { cooldownUntil: new Date(Date.now() + c.cooldownMs) } : {}),
+        }).where(eq(schema.aiProviders.id, id))
+        console.error('[dgfit] AI sağlayıcı hatası', id, kind, pe.status)
+      }
     }
+    throw new AiError('AI yanıt veremedi. Biraz sonra tekrar dene ya da elle ekle.', 'hata')
+  } finally {
+    if (reserve) { const n = (inflight.get(userId) ?? 1) - 1; if (n > 0) inflight.set(userId, n); else inflight.delete(userId) }
   }
-  throw new AiError('AI yanıt veremedi. Biraz sonra tekrar dene ya da elle ekle.', 'hata')
 }
 
 /** Yönetici ekranı için durum. Anahtarın kendisi asla dönmez. */

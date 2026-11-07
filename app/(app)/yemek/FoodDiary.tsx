@@ -50,7 +50,9 @@ export default function FoodDiary(p: {
     })
   })
   const optimistic = meals !== p.meals
-  const totals = optimistic ? meals.reduce((a, m) => ({ kcal: a.kcal + m.totals.kcal, protein: a.protein + m.totals.protein, carb: a.carb + m.totals.carb, fat: a.fat + m.totals.fat }), { kcal: 0, protein: 0, carb: 0, fat: 0 }) : p.totals
+  // iyimser durumda yalnızca öğün farkı uygulanır (sunucu toplamı takviyeleri de içerir)
+  const sumOf = (ms: MealBlock[]) => ms.reduce((a, m) => ({ kcal: a.kcal + m.totals.kcal, protein: a.protein + m.totals.protein, carb: a.carb + m.totals.carb, fat: a.fat + m.totals.fat }), { kcal: 0, protein: 0, carb: 0, fat: 0 })
+  const totals = optimistic ? (() => { const a = sumOf(meals), b = sumOf(p.meals); return { kcal: p.totals.kcal + a.kcal - b.kcal, protein: p.totals.protein + a.protein - b.protein, carb: p.totals.carb + a.carb - b.carb, fat: p.totals.fat + a.fat - b.fat } })() : p.totals
   const budget = p.target.kcal + p.burned
   const left = budget - totals.kcal
   const macro = [

@@ -32,7 +32,7 @@ export default async function Page() {
         </>
       ) : null}
       <h2 className="text-[13px] font-bold tracking-[0.06em] uppercase text-mute px-1 pt-1">Hedefi değiştir</h2>
-      <PlanForm mode="goal" base={{ sex: t.profile.sex as Sex, age: t.age, nowKg: Math.round(t.weight.trend * 10) / 10, heightCm: t.profile.heightCm, activity: t.profile.activity as Activity, goal: (t.goal?.type ?? t.profile.goal) as GoalType, targetWeightKg: t.goal?.targetWeightKg ?? t.profile.targetWeightKg, daysLeft: Math.max(7, t.totalDays - t.dayIndex + 1) }} />
+      <PlanForm mode="goal" base={{ sex: t.profile.sex as Sex, age: t.age, nowKg: Math.round(t.weight.trend * 10) / 10, heightCm: t.profile.heightCm, activity: t.profile.activity as Activity, goal: (t.goal?.type ?? t.profile.goal) as GoalType, targetWeightKg: t.goal?.targetWeightKg ?? t.profile.targetWeightKg, daysLeft: Math.max(7, t.totalDays - t.dayIndex + 1), experience: t.profile.experience as 'new' | 'mid' | 'adv' | null, bfPct: t.profile.bodyFatPct }} />
       <Link href="/fit" className={btn.secondary + ' h-12'}>Plan ayrıntıları ve dengeleme</Link>
     </div>
   )

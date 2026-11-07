@@ -5,7 +5,7 @@ import { ACTIVITY, GOALS, HARD_MAX_WEEKLY_KG, computePlan, fmtNum, type Activity
 import { btn } from '@/components/ui'
 import { replanAction } from './plan-actions'
 
-type Base = { sex: Sex; age: number; nowKg: number; heightCm: number; activity: Activity; goal: GoalType; targetWeightKg: number; daysLeft: number }
+type Base = { sex: Sex; age: number; nowKg: number; heightCm: number; activity: Activity; goal: GoalType; targetWeightKg: number; daysLeft: number; experience?: 'new' | 'mid' | 'adv' | null; bfPct?: number | null }
 
 /** Hesap sayfası: boy + aktivite. Hedef sayfası: tür + hedef kilo + süre. İkisi de planı bugünden yeniden kurar (önizlemeli). */
 export default function PlanForm({ base, mode }: { base: Base; mode: 'body' | 'goal' }) {
@@ -17,7 +17,7 @@ export default function PlanForm({ base, mode }: { base: Base; mode: 'body' | 'g
   const input = { heightCm: num(v.heightCm), activity: v.activity, goal: v.goal, targetWeightKg: v.goal === 'recomp' ? base.nowKg : num(v.target), days: Math.round(num(v.days)) }
   const plan = useMemo(() => {
     if (!(input.heightCm >= 120 && input.heightCm <= 230) || !(input.targetWeightKg >= 30) || !(input.days >= 7)) return null
-    return computePlan({ sex: base.sex, age: base.age, heightCm: input.heightCm, weightKg: base.nowKg, activity: input.activity, goal: input.goal, targetWeightKg: input.targetWeightKg, days: input.goal === 'recomp' ? 90 : input.days })
+    return computePlan({ sex: base.sex, age: base.age, heightCm: input.heightCm, weightKg: base.nowKg, activity: input.activity, goal: input.goal, targetWeightKg: input.targetWeightKg, days: input.goal === 'recomp' ? 90 : input.days, experience: base.experience ?? null, bfPct: base.bfPct ?? null }) // kaydetmeyle aynı girdiler
   }, [input.heightCm, input.activity, input.goal, input.targetWeightKg, input.days, base])
   const field = 'h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink font-normal'
   return (

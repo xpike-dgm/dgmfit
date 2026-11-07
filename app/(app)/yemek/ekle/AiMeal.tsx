@@ -80,8 +80,9 @@ export default function AiMeal({ day, meal, onAdded, ask }: { day: string; meal:
       if (r.pick >= 0) {
         const c = r.candidates[r.pick]
         const res = await addMealItem({ foodId: c.id, grams: g, portionLabel: null, portionQty: null, meal: m, day, source: 'ai' })
-        if (res.ok) { lines.push(`${c.name} · ${res.kcal} kcal`); kcal += res.kcal } else { setErr(res.error); return }
+        if (res.ok) { lines.push(`${c.name} · ${res.kcal} kcal`); kcal += res.kcal; if (res.waterMl > 0) { lines.push(`${r.name} · ${res.waterMl} ml Su'ya`); continue } } else { setErr(res.error); return }
       }
+      // yemek kaydı suyu zaten eklediyse (Su ayarı: yemeklerden gelen su) ikinci kez eklenmez
       if (r.water && r.drink) {
         const w = await addWater({ ml: Math.min(3000, g), drink: r.drink as never, source: 'voice', force: true })
         if (w.ok) lines.push(`${r.name} · ${Math.min(3000, g)} ml Su'ya`)

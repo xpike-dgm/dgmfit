@@ -38,6 +38,7 @@ export async function deleteSupplementAction(id: number): Promise<R> {
 export async function servingAction(id: number, day: string, delta: 1 | -1 | 0.5): Promise<R> {
   const u = await requireUser()
   if (!okDay(day)) return { ok: false, error: 'Geçersiz gün' }
+  if (!Number.isInteger(id) || ![1, -1, 0.5].includes(delta)) return { ok: false, error: 'Geçersiz istek' } // istemciye güvenilmez
   const ok = delta === -1 ? await unlogServing(u.id, id, day) : await logServing(u.id, id, day, delta)
   if (!ok) return { ok: false, error: delta === -1 ? 'Geri alınacak kayıt yok' : 'Takviye bulunamadı' }
   refresh(); return { ok: true }

@@ -119,11 +119,15 @@ export async function toggleShopping(userId: string, id: number, checked: boolea
   await db.update(schema.shoppingItems).set({ checked }).where(and(eq(schema.shoppingItems.id, id), eq(schema.shoppingItems.userId, userId)))
 }
 /** Planın bir öğünündeki eşleşmiş kalemler (günlüğe eklenecek). Ekleme sunucu aksiyonunda addMealItem ile yapılır. */
-export async function planMealItems(userId: string, planId: string, day: string, meal: string) {
-  return db.select().from(schema.mealPlanItems).where(and(eq(schema.mealPlanItems.planId, planId), eq(schema.mealPlanItems.userId, userId), eq(schema.mealPlanItems.day, day), eq(schema.mealPlanItems.meal, meal), isNull(schema.mealPlanItems.loggedAt), isNotNull(schema.mealPlanItems.foodId)))
+/** Öğün kalemlerini atomik olarak "eklendi" işaretleyip döndürür (çift gönderimde ikinci çağrı boş liste alır). */
+export async function claimPlanMeal(userId: string, planId: string, day: string, meal: string) {
+  return db.update(schema.mealPlanItems).set({ loggedAt: new Date() })
+    .where(and(eq(schema.mealPlanItems.planId, planId), eq(schema.mealPlanItems.userId, userId), eq(schema.mealPlanItems.day, day), eq(schema.mealPlanItems.meal, meal), isNull(schema.mealPlanItems.loggedAt), isNotNull(schema.mealPlanItems.foodId)))
+    .returning()
 }
-export async function markPlanLogged(userId: string, ids: number[]) {
-  if (ids.length) await db.update(schema.mealPlanItems).set({ loggedAt: new Date() }).where(and(inArray(schema.mealPlanItems.id, ids), eq(schema.mealPlanItems.userId, userId)))
+/** Eklenemeyen kalemlerin işaretini geri alır (yeniden denenebilsin). */
+export async function unclaimPlanItems(userId: string, ids: number[]) {
+  if (ids.length) await db.update(schema.mealPlanItems).set({ loggedAt: null }).where(and(inArray(schema.mealPlanItems.id, ids), eq(schema.mealPlanItems.userId, userId)))
 }
 
 // ───────── Elimdekiler ve restoran ─────────

@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { getUser, rateLimit } from '@/lib/auth'
 import { AiError } from '@/lib/ai/engine'
 import { addDays, dayString } from '@/lib/time'
-import { BUDGETS, createMenu, markPlanLogged, pantryRecipes, planMealItems, toggleShopping, type Budget, type PantryRecipe } from '@/lib/planner-data'
+import { BUDGETS, claimPlanMeal, createMenu, pantryRecipes, toggleShopping, unclaimPlanItems, type Budget, type PantryRecipe } from '@/lib/planner-data'
 import { addMealItem } from '../actions'
 
 async function uid() { const u = await getUser(); if (!u) throw new Error('Oturum yok'); return u.id }
@@ -28,15 +28,20 @@ export async function logPlanMealAction(input: { planId: string; day: string; me
   if (!p.success) return { ok: false, error: 'Geçersiz istek' }
   if (p.data.day > dayString()) return { ok: false, error: 'Gelecek günün öğünü henüz eklenemez' }
   const userId = await uid()
-  const items = await planMealItems(userId, p.data.planId, p.data.day, p.data.meal)
+  // önce sahiplen (çift dokunuşta ikinci istek boş döner), eklenemeyenlerin işareti geri alınır
+  const items = await claimPlanMeal(userId, p.data.planId, p.data.day, p.data.meal)
+  if (!items.length) return { ok: false, error: 'Bu öğün zaten eklendi' }
   let kcal = 0
   const done: number[] = []
   for (const it of items) {
     const r = await addMealItem({ foodId: it.foodId!, grams: Math.round(it.grams), meal: p.data.meal, day: p.data.day, source: 'plan' })
-    if (!r.ok) return { ok: false, error: r.error }
+    if (!r.ok) {
+      await unclaimPlanItems(userId, items.filter((x) => !done.includes(x.id)).map((x) => x.id))
+      revalidatePath('/yemek/plan')
+      return { ok: false, error: done.length ? `${done.length} kalem eklendi; kalanı eklenemedi: ${r.error}` : r.error }
+    }
     kcal += r.kcal; done.push(it.id)
   }
-  await markPlanLogged(userId, done)
   revalidatePath('/yemek/plan')
   return { ok: true, n: done.length, kcal }
 }

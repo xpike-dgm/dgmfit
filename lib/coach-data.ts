@@ -280,6 +280,19 @@ export async function applyCoachAction(userId: string, messageId: string, index:
   const list = (m.actions ?? []) as StoredAction[]
   const a = list[index]
   if (!a || a.status !== 'pending') throw new Error('Bu eylem zaten işlendi')
+  // eylemi atomik olarak sahiplen: çift dokunuş / iki sekme aynı eylemi iki kez uygulamasın
+  const claim = await db.execute(sql`update ai_messages set actions = jsonb_set(actions, ${`{${index},status}`}::text[], '"processing"'::jsonb)
+    where id = ${m.id} and user_id = ${userId} and actions->${index}->>'status' = 'pending' returning id`)
+  if (!claim.length) throw new Error('Bu eylem zaten işlendi')
+  try { return await runCoachAction(userId, m.id, list, index, a, decision, water) }
+  catch (e) { // beklenmeyen hata: eylem yeniden denenebilsin
+    await db.execute(sql`update ai_messages set actions = jsonb_set(actions, ${`{${index},status}`}::text[], '"pending"'::jsonb) where id = ${m.id} and actions->${index}->>'status' = 'processing'`)
+    throw e
+  }
+}
+
+async function runCoachAction(userId: string, messageId: string, list: StoredAction[], index: number, a: StoredAction, decision: 'confirm' | 'cancel', water: (ml: number, drink: string) => Promise<{ ok: boolean; error?: string }>): Promise<StoredAction> {
+  const m = { id: messageId }
   const save = async (next: StoredAction) => {
     list[index] = next
     await db.update(schema.aiMessages).set({ actions: list }).where(eq(schema.aiMessages.id, m.id))
@@ -301,7 +314,7 @@ export async function applyCoachAction(userId: string, messageId: string, index:
       if (pe) await updateProgramExercise(userId, pe.id, { sets: a.data.sets!, repMin: a.data.repMin!, repMax: a.data.repMax!, rir: pe.rir, rest: pe.rest, seconds: pe.seconds, setType: pe.setType })
     } catch (e) { return save({ ...a, status: 'invalid', error: (e as Error).message }) }
   } else if (a.type === 'plan_menu') {
-    try { await createMenu(userId, { startDay: addDays(dayString(), 1), days: 1, budget: 'orta', prep: false, note: '' }) }
+    try { await createMenu(userId, { startDay: a.data.newEnd && a.data.newEnd > dayString() ? a.data.newEnd : addDays(dayString(), 1), days: 1, budget: 'orta', prep: false, note: '' }) }
     catch (e) { return save({ ...a, status: 'invalid', error: (e as Error).message }) }
   } else {
     const r = await water(a.data.ml!, a.data.drink ?? 'water')
@@ -422,7 +435,8 @@ export async function weeklyReport(userId: string, weekStart: string): Promise<W
       if (numbersAllowed([r.result.summary, ...r.result.suggestions].join(' '), nums)) { summary = r.result.summary; suggestions = r.result.suggestions; provider = r.provider }
     } catch { /* kural metni */ }
   }
-  await db.insert(schema.aiInsights).values({ userId, kind: 'weekly', period: ws, key: 'week', title: `Hafta ${ws}`, body: summary, data: { suggestions, stats: stats as unknown as Record<string, unknown> }, provider }).onConflictDoNothing()
+  // pazar akşamı rapor hazır olsa da gün bitmedi: kalıcı kayıt hafta tamamen kapanınca (pazartesiden itibaren) yazılır
+  if (today > we) await db.insert(schema.aiInsights).values({ userId, kind: 'weekly', period: ws, key: 'week', title: `Hafta ${ws}`, body: summary, data: { suggestions, stats: stats as unknown as Record<string, unknown> }, provider }).onConflictDoNothing()
   return { ...base, summary, suggestions, provider }
 }
 

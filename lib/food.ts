@@ -71,6 +71,7 @@ export function mapOffProduct(code: string, p: Record<string, unknown> | null | 
   const name = String(p.product_name_tr || p.product_name || p.generic_name_tr || p.generic_name || '').trim()
   if (!name) return null
   const per100: Nutrients = { kcal: Math.round(kcal), protein: round1(protein), carb: round1(carb), fat: round1(fat) }
+  if (per100Problem({ kcal: per100.kcal!, protein: per100.protein!, carb: per100.carb!, fat: per100.fat! })) return null // OFF'ta hatalı girilmiş ürün
   const opt: [string, keyof Nutrients, number][] = [['fiber_100g', 'fiber', 1], ['sugars_100g', 'sugar', 1], ['saturated-fat_100g', 'satFat', 1], ['sodium_100g', 'sodium', 1000]]
   for (const [k, key, mul] of opt) { const v = num(k); if (v !== undefined) per100[key] = round1(v * mul) }
   const brand = String(p.brands ?? '').split(',')[0].trim() || null
@@ -82,6 +83,20 @@ export function mapOffProduct(code: string, p: Record<string, unknown> | null | 
   portions.push({ label: '100 g', g: 100 })
   const img = typeof p.image_front_small_url === 'string' && /^https:\/\//.test(p.image_front_small_url) ? p.image_front_small_url : null
   return { nameTr: name.slice(0, 120), brand: brand?.slice(0, 60) ?? null, barcode: code, per100, portions, imageUrl: img, search: normalizeSearch([name, brand].filter(Boolean).join(' ')) }
+}
+
+/**
+ * 100 g başına değerler fiziksel olarak mümkün mü? Hata metni ya da null.
+ * Enerji–makro (Atwater 4/4/9) uyumu: makrolardan gelen enerji 20 kcal'i aşıyorsa beyan edilen kalori
+ * bunun %60'ı ile %160'ı (+80; alkol, poliol payı) arasında olmalı.
+ */
+export function per100Problem(v: { kcal: number; protein: number; carb: number; fat: number }): string | null {
+  if ([v.kcal, v.protein, v.carb, v.fat].some((x) => !Number.isFinite(x) || x < 0)) return 'Değerler negatif olamaz'
+  if (v.kcal > 900) return '100 g başına kalori 900\'ü geçemez (saf yağ ~900)'
+  if (v.protein + v.carb + v.fat > 100.5) return '100 g başına protein + karbonhidrat + yağ 100 g\'ı geçemez'
+  const atw = v.protein * 4 + v.carb * 4 + v.fat * 9
+  if (atw > 20 && (v.kcal < atw * 0.6 - 20 || v.kcal > atw * 1.6 + 80)) return `Kalori makrolarla uyuşmuyor (makrolardan ≈${Math.round(atw)} kcal). Değerleri kontrol et.`
+  return null
 }
 
 export function isValidBarcode(code: string): boolean {

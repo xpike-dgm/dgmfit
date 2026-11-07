@@ -6,7 +6,7 @@ import { db, schema } from '@/lib/db'
 import { getUser } from '@/lib/auth'
 import { publish } from '@/lib/events'
 import { dayString } from '@/lib/time'
-import { macrosFor } from '@/lib/food'
+import { isValidBarcode, macrosFor, per100Problem } from '@/lib/food'
 import { computeRecipe, normalizeSearch, NUTRIENT_KEYS, type Nutrients } from '@/lib/nutrition'
 import { ensureWaterSetup } from '@/lib/water-data'
 import { refreshClosedDay } from '@/lib/fit-data'
@@ -30,16 +30,17 @@ function checkDay(day: string | undefined) {
 }
 
 /** Çorba, ayran gibi su oranı yüksek yemeklerden gelen suyu (ayar açıksa) Su modülüne ekler. */
-async function maybeFoodWater(userId: string, itemId: number, per100: Nutrients, grams: number, category: string | null, name: string, day: string) {
+async function maybeFoodWater(userId: string, itemId: number, per100: Nutrients, grams: number, category: string | null, name: string, day: string): Promise<number> {
   const water = ((per100.water ?? 0) * grams) / 100
   const liquid = (per100.water ?? 0) >= 80 && (/Çorba|İçecek/i.test(category ?? '') || /(^|\s)(süt|kefir|ayran)/i.test(name))
-  if (!liquid || water < 50) return
+  if (!liquid || water < 50) return 0
   await ensureWaterSetup(userId)
   const [s] = await db.select({ on: schema.waterSettings.foodWater }).from(schema.waterSettings).where(eq(schema.waterSettings.userId, userId)).limit(1)
-  if (!s?.on) return
+  if (!s?.on) return 0
   const ml = Math.round(water / 10) * 10
   const at = day === dayString() ? new Date() : new Date(`${day}T12:00:00+03:00`)
   await db.insert(schema.waterLogs).values({ userId, loggedAt: at, ml, drink: 'water', hydration: 1, effectiveMl: ml, source: 'meal', note: `meal_item:${itemId}`, history: [{ at: new Date().toISOString(), action: 'create' }] })
+  return ml
 }
 
 const AddInput = z.object({
@@ -52,7 +53,7 @@ const AddInput = z.object({
   source: z.enum(['search', 'recent', 'barcode', 'saved', 'recipe', 'ai', 'plan']).default('search'),
 })
 
-export async function addMealItem(input: z.input<typeof AddInput>): Promise<R<{ id: number; kcal: number }>> {
+export async function addMealItem(input: z.input<typeof AddInput>): Promise<R<{ id: number; kcal: number; waterMl: number }>> {
   const userId = await uid()
   const p = AddInput.safeParse(input)
   if (!p.success) return { ok: false, error: 'Geçersiz miktar' }
@@ -66,11 +67,11 @@ export async function addMealItem(input: z.input<typeof AddInput>): Promise<R<{ 
     userId, day, meal: p.data.meal, foodId: f.id, name: f.nameTr ?? f.nameEn ?? 'Besin', grams: p.data.grams,
     portionLabel: p.data.portionLabel ?? null, portionQty: p.data.portionQty ?? null, per100: f.per100, ...m, source: p.data.source,
   }).returning({ id: schema.mealItems.id })
-  await maybeFoodWater(userId, row.id, f.per100, p.data.grams, f.category, f.nameTr ?? f.nameEn ?? '', day)
+  const waterMl = await maybeFoodWater(userId, row.id, f.per100, p.data.grams, f.category, f.nameTr ?? f.nameEn ?? '', day)
   await publish(userId, 'meal.logged', { id: row.id, day, meal: p.data.meal, ...m })
   await refreshClosedDay(userId, day)
   revalidatePath('/'); revalidatePath('/yemek')
-  return { ok: true, id: row.id, kcal: m.kcal }
+  return { ok: true, id: row.id, kcal: m.kcal, waterMl }
 }
 
 const EditInput = z.object({ id: z.number().int(), grams: z.number().min(1).max(5000), portionLabel: z.string().max(80).nullable(), portionQty: z.number().min(0.05).max(5000).nullable(), meal: Meal })
@@ -82,7 +83,12 @@ export async function updateMealItem(input: z.input<typeof EditInput>): Promise<
   const [it] = await db.select().from(schema.mealItems).where(and(eq(schema.mealItems.id, p.data.id), eq(schema.mealItems.userId, userId), isNull(schema.mealItems.deletedAt))).limit(1)
   if (!it) return { ok: false, error: 'Kayıt bulunamadı' }
   const m = it.per100 ? macrosFor(it.per100, p.data.grams) : { kcal: it.kcal, protein: it.protein, carb: it.carb, fat: it.fat }
-  await db.update(schema.mealItems).set({ grams: p.data.grams, portionLabel: p.data.portionLabel, portionQty: p.data.portionQty, meal: p.data.meal, ...m }).where(eq(schema.mealItems.id, it.id))
+  await db.update(schema.mealItems).set({ grams: it.per100 ? p.data.grams : it.grams, portionLabel: p.data.portionLabel, portionQty: p.data.portionQty, meal: p.data.meal, ...m }).where(eq(schema.mealItems.id, it.id)) // hızlı kalori kaydında gram yok
+  // bu yemekten Su'ya aktarılmış kayıt varsa miktarı da güncellenir (silme zaten kaldırıyor)
+  if (it.per100?.water && it.grams > 0) {
+    const ml = Math.round((((it.per100.water ?? 0) * p.data.grams) / 100) / 10) * 10
+    await db.update(schema.waterLogs).set({ ml, effectiveMl: ml }).where(and(eq(schema.waterLogs.userId, userId), eq(schema.waterLogs.note, `meal_item:${it.id}`), isNull(schema.waterLogs.deletedAt)))
+  }
   await refreshClosedDay(userId, it.day)
   revalidatePath('/'); revalidatePath('/yemek')
   return { ok: true }
@@ -176,7 +182,9 @@ export async function createFood(input: z.input<typeof FoodInput>): Promise<R<{ 
   const f = d.basis === 'serving' ? 100 / d.servingG! : 1
   const per100: Nutrients = {}
   for (const k of ['kcal', 'protein', 'carb', 'fat', 'fiber', 'sugar', 'satFat', 'sodium'] as const) if (d[k] !== undefined) per100[k] = Math.round(d[k]! * f * 10) / 10
-  if ((per100.protein ?? 0) + (per100.carb ?? 0) + (per100.fat ?? 0) > 100.5) return { ok: false, error: '100 g başına protein + karbonhidrat + yağ 100 g\'ı geçemez. Değerleri kontrol et.' }
+  const bad = per100Problem({ kcal: per100.kcal ?? 0, protein: per100.protein ?? 0, carb: per100.carb ?? 0, fat: per100.fat ?? 0 })
+  if (bad) return { ok: false, error: bad }
+  if (d.barcode && !isValidBarcode(d.barcode)) return { ok: false, error: 'Barkod numarası hatalı görünüyor; ürünün üzerindeki numarayı kontrol et' }
   const portions = [...(d.servingG ? [{ label: d.servingLabel || `1 porsiyon (${d.servingG} g)`, g: d.servingG }] : []), { label: '100 g', g: 100 }]
   const [row] = await db.insert(schema.foods).values({
     source: 'user', sourceId: crypto.randomUUID(), userId, nameTr: d.name, brand: d.brand || null, barcode: d.barcode || null, category: 'Kendi besinim',

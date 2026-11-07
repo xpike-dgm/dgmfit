@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { budgetImpact, isValidBarcode, macrosFor, mapOffProduct, mealForTime, portionGrams, sumMacros } from '../lib/food.ts'
+import { budgetImpact, isValidBarcode, macrosFor, mapOffProduct, per100Problem, mealForTime, portionGrams, sumMacros } from '../lib/food.ts'
 
 test('öğün önerisi saate göre', () => {
   assert.equal(mealForTime(8 * 60), 'breakfast')
@@ -48,4 +48,15 @@ test('Open Food Facts eşleme', () => {
   // makro eksik → null
   assert.equal(mapOffProduct('1', { product_name: 'x', nutriments: { 'energy-kcal_100g': 100 } }), null)
   assert.equal(mapOffProduct('1', null), null)
+})
+
+test('per100Problem: fiziksel olarak imkânsız etiketleri yakalar', () => {
+  assert.equal(per100Problem({ kcal: 52, protein: 0.3, carb: 14, fat: 0.2 }), null, 'elma')
+  assert.equal(per100Problem({ kcal: 884, protein: 0, carb: 0, fat: 100 }), null, 'zeytinyağı')
+  assert.equal(per100Problem({ kcal: 231, protein: 0, carb: 0, fat: 0 }), null, 'votka (alkol, makro yok)')
+  assert.equal(per100Problem({ kcal: 43, protein: 0.5, carb: 3.6, fat: 0 }), null, 'bira')
+  assert.ok(per100Problem({ kcal: 0, protein: 20, carb: 50, fat: 10 }), '0 kcal ama makro dolu')
+  assert.ok(per100Problem({ kcal: 3000, protein: 10, carb: 10, fat: 10 }), '900 üstü')
+  assert.ok(per100Problem({ kcal: 400, protein: -5, carb: 50, fat: 10 }), 'negatif')
+  assert.ok(per100Problem({ kcal: 800, protein: 10, carb: 200, fat: 0 }), 'makro toplamı 100 g üstü')
 })

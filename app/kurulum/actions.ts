@@ -33,11 +33,18 @@ export async function completeOnboarding(raw: OnboardingInput): Promise<{ error?
   const parsed = Input.safeParse(raw)
   if (!parsed.success) return { error: 'Bazı bilgiler eksik veya geçersiz. Lütfen adımları kontrol et.' }
   const d = parsed.data
+  // regex 2000-13-45 gibi tarihleri geçirir: gerçek bir takvim günü mü?
+  const bd = new Date(d.birthDate + 'T12:00:00Z')
+  if (Number.isNaN(bd.getTime()) || bd.toISOString().slice(0, 10) !== d.birthDate) return { error: 'Doğum tarihini kontrol et.' }
   const age = ageFromBirthDate(d.birthDate)
+  if (!Number.isFinite(age)) return { error: 'Doğum tarihini kontrol et.' }
   if (age < 16) return { error: 'DgFit 16 yaş ve üzeri içindir.' }
   if (age > 100) return { error: 'Doğum tarihini kontrol et.' }
   const target = d.goal === 'recomp' ? d.weightKg : d.targetWeightKg
   const minHealthy = 18.5 * (d.heightCm / 100) ** 2
+  // sihirbazdaki yön kontrolü sunucuda da (plan güncelleme ile aynı kural)
+  if (d.goal === 'lose' && target >= d.weightKg) return { error: 'Kilo verme hedefinde hedef kilo şu anki kilondan düşük olmalı.' }
+  if (d.goal === 'gain' && target <= d.weightKg) return { error: 'Kilo alma hedefinde hedef kilo şu anki kilondan yüksek olmalı.' }
   if (d.goal === 'lose' && target < minHealthy - 0.05) return { error: 'Hedef kilo sağlıklı aralığın altında. Lütfen daha yüksek bir hedef seç.' }
 
   const plan = computePlan({ sex: d.sex, age, heightCm: d.heightCm, weightKg: d.weightKg, activity: d.activity, goal: d.goal, targetWeightKg: target, days: d.days, experience: d.experience ?? null })

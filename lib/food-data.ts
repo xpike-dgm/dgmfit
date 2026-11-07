@@ -166,21 +166,20 @@ export async function lookupBarcode(userId: string, code: string): Promise<{ hit
     .where(and(inCodes, isNull(schema.foods.deletedAt), sql`(${schema.foods.userId} is null or ${schema.foods.userId} = ${userId})`))
     .orderBy(sql`case when ${schema.foods.userId} = ${userId} then 0 else 1 end`).limit(1)
   if (local) return { hit: toHit(local), from: 'local' }
-  const [shared] = await db.select().from(schema.foods)
-    .where(and(inCodes, isNull(schema.foods.deletedAt), eq(schema.foods.source, 'user')))
-    .orderBy(desc(schema.foods.createdAt)).limit(1)
-  if (shared) return { hit: { ...toHit(shared), sub: `${shared.brand ? shared.brand + ' · ' : ''}kullanıcı ekledi`, source: 'community' }, from: 'community' }
-  const miss = async () => {
-    await db.insert(schema.barcodeMisses).values({ code }).onConflictDoUpdate({ target: schema.barcodeMisses.code, set: { count: sql`${schema.barcodeMisses.count} + 1`, lastAt: new Date(), resolvedAt: null } })
-  }
+  // Önce Open Food Facts (resmî etiket verisi); topluluk kaydı yalnızca OFF'ta yoksa ve "doğrulanmadı" etiketiyle
+  // (tek bir hatalı/kötü niyetli kayıt herkesin taramasını ezmesin)
+  let offError: string | undefined
   for (const c of codes) {
     const r = await offLookup(c)
-    if (r.hit || r.error) {
-      if (!r.hit) await miss()
-      return r
-    }
+    if (r.hit) return r
+    if (r.error) { offError = r.error; break }
   }
-  await miss()
+  const [shared] = await db.select().from(schema.foods)
+    .where(and(inCodes, isNull(schema.foods.deletedAt), eq(schema.foods.source, 'user'), sql`${schema.foods.kcal} <= 900`))
+    .orderBy(desc(schema.foods.createdAt)).limit(1)
+  if (shared) return { hit: { ...toHit(shared), sub: `${shared.brand ? shared.brand + ' · ' : ''}kullanıcı ekledi · doğrulanmadı`, source: 'community' }, from: 'community' }
+  if (offError) return { hit: null, from: 'none', error: offError }
+  await db.insert(schema.barcodeMisses).values({ code }).onConflictDoUpdate({ target: schema.barcodeMisses.code, set: { count: sql`${schema.barcodeMisses.count} + 1`, lastAt: new Date(), resolvedAt: null } })
   return { hit: null, from: 'none' }
 }
 
