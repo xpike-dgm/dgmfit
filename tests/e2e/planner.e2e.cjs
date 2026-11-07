@@ -151,7 +151,7 @@ function fake(port, handler) {
   // 6) AI program: fazla gün ve bilinmeyen hareket atılır, yeni başlayanda set ≤ 4
   await p.goto(BASE + '/fitness/programlar/olustur'); await p.selectOption('#gen-env', 'gym')
   const ai = p.getByTestId('ai-program')
-  await ai.getByRole('button', { name: 'Arka bacak' }).click()
+  await p.getByTestId('gen-priority').getByRole('button', { name: 'Arka bacak' }).click() // öncelikli bölgeler iki oluşturucuda ortak
   await ai.getByRole('button', { name: 'AI ile oluştur' }).click()
   await p.waitForURL(/\/fitness\/programlar\/[0-9a-f-]{36}$/, { timeout: 30000 }).catch(() => fail('AI programı oluşmadı'))
   const pc = state.calls.find((c) => c.task === 'program')
@@ -171,7 +171,7 @@ function fake(port, handler) {
 
   // 8) Karb döngüsü: Pzt/Çar/Cum → Bugün karbonhidrat hedefi değişir
   await p.goto(BASE + '/')
-  const carbGoal = async () => num((await p.locator('section[aria-label="Kalori"]').getByText(/Karbonhidrat/).locator('..').locator('..').innerText()).split('/')[1])
+  const carbGoal = async () => num((await p.locator('section[aria-label="Kalori"]').getByText(/^Karbonhidrat$/).first().locator('xpath=ancestor::a[1]').innerText()).split('/')[1])
   const c0 = await carbGoal()
   await p.goto(BASE + '/fit/karb')
   const cc = p.getByTestId('carb-cycle')
