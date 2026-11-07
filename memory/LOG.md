@@ -2,6 +2,13 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö1b-2 tamamlandı
+- Saf modül `lib/cards/prefs.ts` (8 test): alt bar, kural motoru + hazır kurallar (sabah, antrenman günü, akşam, dinlenme günü), hedefe göre varsayılan, tercihler. Design'a nav/rules/prefs; göç kuralları da eşler.
+- Sunucu: `screenLayout(.., {editing})` hedef sırası + kurallar (`ruleCtx`), `applied` notu; layout tasarımı okuyup alt bara, tek el özniteliğine ve basılı tut bağlamına verir. Stüdyo: Alt bar, Kurallar, Kullanım.
+- Görsel kontrol: kural penceresinde anahtar bozuk çiziliyordu → genel onay kutusu CSS'i `[role=switch]` hariç (Gelişmiş mod anahtarı da P-5'ten beri etkileniyordu).
+- İlk verify hafıza kontrolünde durdu (yeni rotalar/olaylar manifest'te yoktu) → manifest güncellendi, yeniden VERIFY OK.
+- Doğrulama: commit `01d0350`; verify.sh VERIFY OK (233 birim); release `2026-11-07T04-52-14-807Z` RELEASE OK; canlıda 13 e2e OK; 15 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö1b-2 başladı
 - Kullanıcı: "Devam et". Faz başı: memory-check geçti; son commit `125bd26` STATE ile uyumlu; çalışma ağacı temiz.
 - Ö1b ikiye bölündü: Ö1b-2 (alt bar, kurallar + zaman/antrenman günü, hedefe göre varsayılan, tek el, basılı tut → düzenle), Ö1b-3 (yığın, kendi panom, hızlı eylem, kaydırma, sihirbaz).
