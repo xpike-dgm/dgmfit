@@ -2,6 +2,10 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö5b tamamlandı (Özelleştirme planı bitti)
+- Odak modları (Antrenman / Diyet / Tatil / Hastalık) ve Ramazan modu (0031 `user_modes`, `lib/modes.ts`, `lib/modes-data.ts`, `/profil/ozellestirme/modlar`, Bugün mod kartı, Yemek Sahur/İftar, zamanlayıcı ve gün kapanışı).
+- Doğrulama: commit `aa9d084`; verify.sh VERIFY OK (275 birim); release `2026-11-07T09-18-09-474Z` RELEASE OK; canlıda 23 e2e OK (custom12 kısmi: dengeleme kancası yalnız yerelde); 27 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö5a tamamlandı, Ö5b başladı
 - Ö5a: kart oluşturucu, kendi takip alanlarım (0030), motivasyon kartları (söz, geri sayım, `motive` fotoğrafı, rekorlar); altı ekranda kendi kartları.
 - Hatalar: (1) yeni kart ekrana eklenmiyordu — `normalizeScreen` tanımları bilmediği için kendi kartını düşürüyordu → tanımlar parametre olarak geçer (düzen kaydında da); (2) söz/fotoğraf kartında başlık test kimliği eksikti; (3) "Bugün" dönemli çubuk görünüm tek dev çubuk çiziyordu → çubuk/çizgi her zaman 7 gün.
