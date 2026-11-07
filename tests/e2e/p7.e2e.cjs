@@ -24,9 +24,12 @@ const fail = (m) => { throw new Error(m) }
   // 1) Büyük yazı (Görünüm) → html[data-text], geri al
   await p.goto(BASE + '/profil/gorunum'); await p.getByTestId('text-size').getByRole('radio', { name: /Büyük/ }).first().click()
   await p.waitForFunction(() => document.documentElement.getAttribute('data-text') === 'lg')
+  // seçim anında uygulanır; çerez sunucu aksiyonuyla yazılır → aksiyon bitince (düğmeler yeniden etkin) yenile
+  await p.waitForTimeout(300); await p.waitForFunction(() => !document.querySelector('[data-testid=text-size] button[disabled]'))
   await p.reload(); if ((await p.evaluate(() => document.documentElement.getAttribute('data-text'))) !== 'lg') fail('büyük yazı çerezde kalmadı')
   await p.screenshot({ path: `${OUT}/p7-01-buyuk-yazi.png` })
   await p.getByTestId('text-size').getByRole('radio', { name: /^Normal/ }).click(); await p.waitForFunction(() => !document.documentElement.hasAttribute('data-text'))
+  await p.waitForTimeout(300); await p.waitForFunction(() => !document.querySelector('[data-testid=text-size] button[disabled]'))
 
   // 2) Program sihirbazı v2: öncelikli bölge → ek set + haftalık set notu
   await p.goto(BASE + '/fitness/programlar/olustur'); await p.selectOption('#gen-env', 'gym')
