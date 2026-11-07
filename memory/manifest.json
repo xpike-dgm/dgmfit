@@ -295,7 +295,11 @@
     "lib/units.ts",
     "components/cards/StyleEffects.tsx",
     "tests/cards-style.test.ts",
-    "tests/e2e/custom6.e2e.cjs"
+    "tests/e2e/custom6.e2e.cjs",
+    "lib/cards/share.ts",
+    "lib/cards/designs-data.ts",
+    "components/cards/MiniPreview.tsx",
+    "tests/cards-share.test.ts"
   ],
   "tables": [
     "users",
@@ -362,7 +366,8 @@
     "invites",
     "exercise_favorites",
     "barcode_misses",
-    "ui_designs"
+    "ui_designs",
+    "ui_design_versions"
   ],
   "routes": [
     "/",
@@ -494,7 +499,8 @@
     "/profil/ozellestirme/sihirbaz",
     "/panom",
     "/profil/ozellestirme/renkler",
-    "/profil/ozellestirme/stil"
+    "/profil/ozellestirme/stil",
+    "/profil/ozellestirme/tasarimlar"
   ],
   "events": [
     "profile.onboarded",
@@ -521,7 +527,10 @@
     "design.gesture",
     "design.wizard",
     "design.colors",
-    "design.style"
+    "design.style",
+    "design.created",
+    "design.activated",
+    "design.restored"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -1108,6 +1117,7 @@
     "0021_barcode_misses.sql",
     "0022_goal_intelligence.sql",
     "0023_meal_reminders.sql",
-    "0024_ui_designs.sql"
+    "0024_ui_designs.sql",
+    "0025_design_versions.sql"
   ]
 }

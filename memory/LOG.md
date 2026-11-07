@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö2b tamamlandı
+- Stil (kabuk öznitelikleri + katmansız CSS), bant fotoğrafı (`band` medya türü), birimler (ana özetler + tartı), titreşim/ses, akşam katmanı.
+- Süreç: release.sh 16 canlı e2e ile 10 dakikayı aşıyor; arka plan komutu varsayılan 10 dk sınırında durduruldu (deploy tamamdı, 12 test geçmişti) → kalan testler canlıya doğrudan çalıştırıldı (6/6 OK). Bundan sonra release 30 dk sınırla çalıştırılır.
+- Doğrulama: commit `87a5e50`; verify.sh VERIFY OK (250 birim); deploy `2026-11-07T07-02-28-071Z`; canlıda 18 e2e OK; test kullanıcıları silindi; logda hata 0.
+
 ## 2026-11-07 — Özelleştirme Ö2a tamamlandı, Ö2b başladı
 - Ö2a: kart renkleri (CSS değişkeni katmanı, ✎ → Renkler), modül renkleri, paletler, fotoğraftan palet.
 - Hata: zod 4 enum anahtarlı `z.record` kısmi modül renklerini reddetti → `z.partialRecord`.
