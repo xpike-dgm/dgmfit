@@ -44,6 +44,14 @@ export default async function Page() {
         </div>
       </section>
 
+      <Link href="/profil/ozellestirme/sihirbaz" className="card p-4 flex items-center gap-3 border border-acc/30" data-testid="studio-wizard">
+        <span aria-hidden className="w-11 h-11 rounded-2xl bg-acc text-acc-ink flex items-center justify-center shrink-0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 6.2l-1.4-1.4M3 21l9-9" /></svg>
+        </span>
+        <span className="flex flex-col flex-1"><b className="text-[15px]">Düzen sihirbazı</b><span className="text-[12.5px] text-mute">5 soruda sana göre düzen, alt bar ve kurallar</span></span>
+        <span className="text-mute">›</span>
+      </Link>
+
       <section aria-label="Ekranlar" className="card px-4 py-1 flex flex-col">
         {Object.entries(SCREENS).map(([id, s]) => (
           <div key={id} data-studio-screen={id} className="min-h-[60px] flex items-center justify-between gap-3">
@@ -54,7 +62,7 @@ export default async function Page() {
             </span>
           </div>
         ))}
-        <p className="text-[12px] text-mute pb-3 leading-relaxed">Kartı basılı tutup sürükleyerek taşı, − ile kaldır, “+ Kart ekle” ile geri getir. Her ekranın düzeni ayrı kaydedilir.</p>
+        <p className="text-[12px] text-mute pb-3 leading-relaxed">Kartı basılı tutup sürükleyerek taşı, − ile kaldır, “+ Kart ekle” ile geri getir. Ekranda bir kartı sola kaydırırsan “Bugünlük gizle” ve “Üste sabitle” çıkar.</p>
       </section>
 
       <section aria-label="Gezinme ve kurallar" className="card px-4 py-1 flex flex-col">

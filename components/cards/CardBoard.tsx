@@ -6,7 +6,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import { useRouter } from 'next/navigation'
 import { cardDef, SCREENS, type CardSize, type ScreenId } from '@/lib/cards/registry'
 import { addItem, moveItem, removeItem, setSize, type LayoutItem } from '@/lib/cards/layout'
-import { resetLayoutAction, saveLayoutAction } from '@/app/(app)/profil/ozellestirme/actions'
+import { hideTodayAction, pinCardAction, resetLayoutAction, saveLayoutAction } from '@/app/(app)/profil/ozellestirme/actions'
+import { canHideToday, canPin } from '@/lib/cards/prefs'
 import Sheet from '@/components/Sheet'
 import Link from 'next/link'
 import { useDesignPrefs } from './DesignPrefs'
@@ -21,6 +22,10 @@ interface Props {
   notices?: string[]
   /** Ö1b-2: şu an uygulanan kuralların adları (düzen geçici olarak değişti) */
   applied?: string[]
+  /** Ö1b-3: kart başına seçili hızlı eylem */
+  quick?: Record<string, string>
+  /** Ö1b-3: üste sabitlenen kartlar */
+  pinned?: string[]
 }
 
 const HOLD_MS = 350
@@ -34,6 +39,93 @@ export default function CardBoard(p: Props) {
 const HOLD_EDIT_MS = 600
 /** Basılı tutulunca düzenlemeye geçmeyecek öğeler (dokunulabilir içerik). */
 const INTERACTIVE = 'a,button,input,select,textarea,label,summary,details,[role=button],[role=slider],[role=dialog],[contenteditable],[data-no-hold]'
+
+const SW = 168 // açık kartta görünen eylem alanı genişliği
+
+/** Bir öğenin atası yatay kaydırılabiliyor mu (içerikteki yatay şeritlerde kart kaydırması devreye girmesin). */
+function inHScroll(el: HTMLElement | null, stop: HTMLElement) {
+  for (let n = el; n && n !== stop; n = n.parentElement) {
+    const ox = getComputedStyle(n).overflowX
+    if ((ox === 'auto' || ox === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true
+  }
+  return false
+}
+
+/**
+ * Ö1b-3: sola kaydırılınca "Bugünlük gizle" ve "Üste sabitle" eylemlerini açan kart sarmalayıcı. Dokunmatikte
+ * touch olayları (dikey kaydırma tarayıcıda kalır, yatay kilitlenince sayfa kaymaz), farede işaretçi olayları kullanılır.
+ */
+function SwipeCard({ id, size, pinned, open, onOpen, onAct, children }: { id: string; size: CardSize; pinned: boolean; open: boolean; onOpen: (o: boolean) => void; onAct: (k: 'hide' | 'pin') => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [dx, setDx] = useState(0)
+  const [drag, setDrag] = useState(false)
+  const g = useRef<{ x: number; y: number; base: number; axis: 'x' | 'y' | null } | null>(null)
+  const swallow = useRef(0)
+  const openRef = useRef(open); openRef.current = open
+  useEffect(() => { if (!g.current) setDx(open ? -SW : 0) }, [open])
+  const begin = (x: number, y: number, t: EventTarget | null) => {
+    const el = t as HTMLElement
+    if (el.closest('input,select,textarea,[role=slider],[data-no-swipe],[data-swipe-act]') || inHScroll(el, ref.current!)) return false
+    g.current = { x, y, base: openRef.current ? -SW : 0, axis: null }
+    return true
+  }
+  const moveTo = (x: number, y: number) => {
+    const s = g.current
+    if (!s) return false
+    const ddx = x - s.x, ddy = y - s.y
+    if (!s.axis && Math.hypot(ddx, ddy) > 8) s.axis = Math.abs(ddx) > Math.abs(ddy) * 1.2 ? 'x' : 'y'
+    if (s.axis !== 'x') return false
+    setDrag(true)
+    setDx(Math.max(-SW - 36, Math.min(0, s.base + ddx)))
+    return true
+  }
+  const finish = () => {
+    const s = g.current
+    g.current = null
+    setDrag(false)
+    if (!s || s.axis !== 'x') return
+    swallow.current = Date.now()
+    setDx((v) => { const o = v < -SW / 2; onOpen(o); return o ? -SW : 0 })
+  }
+  useEffect(() => {
+    const el = ref.current!
+    const ts = (e: TouchEvent) => { if (e.touches.length === 1) begin(e.touches[0].clientX, e.touches[0].clientY, e.target) }
+    const tm = (e: TouchEvent) => { if (g.current && moveTo(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault() }
+    const te = () => finish()
+    el.addEventListener('touchstart', ts, { passive: true })
+    el.addEventListener('touchmove', tm, { passive: false })
+    el.addEventListener('touchend', te); el.addEventListener('touchcancel', te)
+    return () => { el.removeEventListener('touchstart', ts); el.removeEventListener('touchmove', tm); el.removeEventListener('touchend', te); el.removeEventListener('touchcancel', te) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const mouseDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0 || !begin(e.clientX, e.clientY, e.target)) return
+    const mv = (ev: PointerEvent) => { moveTo(ev.clientX, ev.clientY) }
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); finish() }
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up)
+  }
+  const shown = dx < -4
+  return (
+    <div ref={ref} className={`${size === 'full' ? 'col-span-2' : ''} relative min-w-0 flex flex-col`} data-card={id} data-swiped={open ? '' : undefined}
+      onPointerDown={mouseDown} onDragStart={(e) => e.preventDefault()}
+      onClickCapture={(e) => {
+        if ((e.target as HTMLElement).closest('[data-swipe-act]')) return
+        // kaydırmanın sonundaki tıklama yutulur (bağlantı açılmaz); açık kartta dokunuş kartı kapatır
+        if (Date.now() - swallow.current < 350) { e.preventDefault(); e.stopPropagation(); return }
+        if (open) { e.preventDefault(); e.stopPropagation(); onOpen(false) }
+      }}>
+      {shown ? (
+        <div className="absolute inset-y-0 right-0 flex gap-2 items-stretch py-1" style={{ width: SW }} data-swipe-act>
+          {canHideToday(id) ? <button type="button" onClick={() => onAct('hide')} data-testid="swipe-hide" className="flex-1 rounded-[20px] bg-surface-3 text-ink text-[12.5px] font-extrabold flex flex-col items-center justify-center gap-1 px-1 text-center leading-tight">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M3 3l18 18M10.6 6.1A10 10 0 0122 12a17 17 0 01-3 3.7M6.6 6.6A17 17 0 002 12s3.6 7 10 7a9.6 9.6 0 004.4-1.1" /></svg>Bugünlük gizle</button> : null}
+          {canPin(id) ? <button type="button" onClick={() => onAct('pin')} data-testid="swipe-pin" className="flex-1 rounded-[20px] bg-acc text-acc-ink text-[12.5px] font-extrabold flex flex-col items-center justify-center gap-1 px-1 text-center leading-tight">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z" /></svg>{pinned ? 'Sabiti kaldır' : 'Üste sabitle'}</button> : null}
+        </div>
+      ) : null}
+      <div className={`relative flex-1 flex flex-col [&>*]:flex-1 ${drag ? '' : 'transition-transform duration-200'}`} style={dx ? { transform: `translateX(${dx}px)` } : undefined}>{children}</div>
+    </div>
+  )
+}
 
 /** Normal görünüm: kartlar + (açıksa) kart dışı/etkileşimsiz bir yere basılı tutunca "Ekranı düzenle" balonu. */
 function Board(p: Props) {
@@ -66,14 +158,47 @@ function Board(p: Props) {
   }
   const move = (e: React.PointerEvent) => { if (t.current && Math.hypot(e.clientX - t.current.x, e.clientY - t.current.y) > 10) cancel() }
   const applied = p.applied?.length ? p.applied : null
+  // Ö1b-3: kaydırma hareketleri — bir anda tek kart açık; gizleme iyimser, "Geri al" ile döner
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [gone, setGone] = useState<string[]>([])
+  const [toast, setToast] = useState<{ text: string; undo?: () => void } | null>(null)
+  useEffect(() => { if (!toast) return; const t2 = setTimeout(() => setToast(null), 5000); return () => clearTimeout(t2) }, [toast])
+  useEffect(() => { setGone([]) }, [p.items])
+  const act = (id: string, kind: 'hide' | 'pin') => {
+    setOpenId(null)
+    const title = cardDef(id)?.title ?? 'Kart'
+    if (kind === 'hide') {
+      setGone((g) => [...g, id])
+      void hideTodayAction(id, true).then((r) => {
+        if (!r.ok) { setGone((g) => g.filter((x) => x !== id)); setToast({ text: r.error }); return }
+        setToast({ text: `${title} bugünlük gizlendi`, undo: () => { setToast(null); setGone((g) => g.filter((x) => x !== id)); void hideTodayAction(id, false).then(() => router.refresh()) } })
+        router.refresh()
+      })
+    } else {
+      const on = !(p.pinned ?? []).includes(id)
+      void pinCardAction(id, on).then((r) => {
+        setToast({ text: !r.ok ? r.error : on ? `${title} üste sabitlendi` : `${title} sabitlemesi kaldırıldı`, undo: r.ok ? () => { setToast(null); void pinCardAction(id, !on).then(() => router.refresh()) } : undefined })
+        router.refresh()
+      })
+    }
+  }
   return (
     <div ref={box} className="relative flex flex-col gap-3" onPointerDown={down} onPointerMove={move} onPointerUp={cancel} onPointerCancel={cancel}
       onContextMenu={(e) => { if (pop || t.current) e.preventDefault() }}>
       <div className="grid grid-cols-2 gap-3" data-testid="card-board">
-        {p.items.map((it) => p.nodes[it.id] ? (
-          <div key={it.id} className={`${it.size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col [&>*]:flex-1`} data-card={it.id}>{p.nodes[it.id]}</div>
+        {p.items.map((it) => p.nodes[it.id] && !gone.includes(it.id) ? (
+          canHideToday(it.id) || canPin(it.id) ? (
+            <SwipeCard key={it.id} id={it.id} size={it.size} pinned={(p.pinned ?? []).includes(it.id)} open={openId === it.id}
+              onOpen={(o) => setOpenId(o ? it.id : null)} onAct={(k) => act(it.id, k)}>{p.nodes[it.id]}</SwipeCard>
+          ) : <div key={it.id} className={`${it.size === 'full' ? 'col-span-2' : ''} min-w-0 flex flex-col [&>*]:flex-1`} data-card={it.id}>{p.nodes[it.id]}</div>
         ) : null)}
       </div>
+      {toast ? (
+        <div role="status" className="fixed left-1/2 -translate-x-1/2 bottom-[96px] z-40 max-w-[calc(100%-32px)] w-max flex items-center gap-3 pl-4 pr-2 h-12 rounded-full bg-ink text-bg shadow-lg text-[13.5px] font-bold" data-testid="swipe-toast">
+          <span className="truncate">{toast.text}</span>
+          {toast.undo ? <button type="button" onClick={toast.undo} className="h-9 px-3 rounded-full bg-bg/15 font-extrabold shrink-0" data-testid="swipe-undo">Geri al</button> : null}
+        </div>
+      ) : null}
       {applied ? (
         <Link href="/profil/ozellestirme/kurallar" className="self-center inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-surface-2 border border-line text-[12px] font-bold text-mute" data-testid="rule-applied">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 7h11M4 12h7M4 17h11M17 10l3 3-3 3" /></svg>
@@ -111,7 +236,9 @@ function Editor(p: Props) {
   itemsRef.current = items
   const dragRef = useRef(drag)
   dragRef.current = drag
-  const changed = JSON.stringify(items) !== JSON.stringify(p.items)
+  const [quick, setQuick] = useState<Record<string, string>>(p.quick ?? {})
+  const [pins, setPins] = useState<string[]>(p.pinned ?? [])
+  const changed = JSON.stringify(items) !== JSON.stringify(p.items) || JSON.stringify(quick) !== JSON.stringify(p.quick ?? {})
   const path = SCREENS[p.screen].path
 
   const commit = useCallback((next: Item[]) => {
@@ -230,7 +357,8 @@ function Editor(p: Props) {
 
   const done = async () => {
     setBusy(true)
-    const r = await saveLayoutAction(p.screen, items.map((i): LayoutItem => ({ id: i.id, size: i.size })))
+    const settings = Object.fromEntries(Object.entries(quick).filter(([id, q]) => (p.quick ?? {})[id] !== q).map(([id, q]) => [id, { quick: q }]))
+    const r = await saveLayoutAction(p.screen, items.map((i): LayoutItem => ({ id: i.id, size: i.size })), settings)
     setBusy(false)
     if (!r.ok) { setMsg(r.error); return }
     router.replace(path); router.refresh()
@@ -277,7 +405,7 @@ function Editor(p: Props) {
               onPointerDown={(e) => startHold(e, it.id)} onPointerMove={moveHold} onPointerUp={endHold} onPointerCancel={endHold} onContextMenu={(e) => e.preventDefault()}
               className={`relative min-w-0 rounded-[24px] touch-pan-y ${it.size === 'full' ? 'col-span-2' : ''} ${flash === it.id ? 'ring-2 ring-acc ring-offset-2 ring-offset-bg' : ''}`}>
               <div className={`h-full rounded-[24px] flex flex-col ${dragging ? 'opacity-0' : def.locked === 'top' ? '' : 'card-wiggle'}`} style={{ animationDelay: `${(idx % 3) * 90}ms` }}>
-                {def.locked !== 'top' ? <div className={`h-9 flex items-center gap-2 min-w-0 ${left ? 'pl-[76px] pr-1.5 justify-end' : 'pl-1.5 pr-[76px]'}`} aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b></div> : null}
+                {def.locked !== 'top' ? <div className={`h-9 flex items-center gap-2 min-w-0 ${left ? 'pl-[76px] pr-1.5 justify-end' : 'pl-1.5 pr-[76px]'}`} aria-hidden><b className="text-[12px] font-extrabold text-mute truncate">{def.title}</b>{pins.includes(def.id) ? <span className="text-[10.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-surface-3 text-ink-2 shrink-0">SABİT</span> : null}</div> : null}
                 <div className="pointer-events-none flex-1 flex flex-col [&>*]:flex-1" aria-hidden>
                   {node ?? <div className="rounded-[20px] border-2 border-dashed border-line-2 px-4 py-2.5 flex items-center min-h-[52px]" data-testid="card-placeholder"><span className="text-[12.5px] text-mute leading-snug">{def.conditional ?? def.desc}</span></div>}
                 </div>
@@ -356,6 +484,26 @@ function Editor(p: Props) {
                 <button type="button" onClick={() => step(sheetDef.id, 1)} disabled={sheetIdx >= items.length - 1} className="h-11 rounded-xl bg-surface-2 border border-line text-[14px] font-bold disabled:opacity-40" data-testid="card-down">Aşağı taşı</button>
               </div>
             ) : <p className="text-[13px] text-mute">Bu kart ekranın en üstünde sabit.</p>}
+            {sheetDef.quick ? (
+              <div className="flex flex-col gap-2">
+                <span className="text-[13px] font-bold">Hızlı eylem</span>
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Hızlı eylem" data-testid="quick-pick">
+                  {sheetDef.quick.map((q) => {
+                    const on = (quick[sheetDef.id] ?? sheetDef.quick![0].id) === q.id
+                    return <button key={q.id} type="button" role="radio" aria-checked={on} onClick={() => setQuick({ ...quick, [sheetDef.id]: q.id })}
+                      className={`min-h-11 px-2 rounded-xl text-[13.5px] font-bold border ${on ? 'bg-acc text-acc-ink border-acc' : 'bg-surface-2 border-line'}`}>{q.label}</button>
+                  })}
+                </div>
+              </div>
+            ) : null}
+            {canPin(sheetDef.id) ? (
+              <label className="flex items-center justify-between gap-3 min-h-11 cursor-pointer">
+                <span className="flex flex-col"><b className="text-[14px]">Üste sabitle</b><span className="text-[12px] text-mute">Kurallardan önce, başlığın hemen altında durur</span></span>
+                <input type="checkbox" role="switch" checked={pins.includes(sheetDef.id)} data-testid="card-pin"
+                  onChange={(e) => { const on = e.target.checked, id = sheetDef.id; setPins(on ? [...pins, id] : pins.filter((x) => x !== id)); void pinCardAction(id, on).then((r) => { if (!r.ok) { setPins((ps) => (on ? ps.filter((x) => x !== id) : [...ps, id])); setMsg(r.error) } }) }}
+                  className="appearance-none w-12 h-7 rounded-full bg-surface-3 relative shrink-0 transition checked:bg-acc before:content-[''] before:absolute before:top-1 before:left-1 before:w-5 before:h-5 before:rounded-full before:bg-white before:transition checked:before:translate-x-5" />
+              </label>
+            ) : null}
             <p className="text-[12px] text-mute">Kart renkleri bir sonraki güncellemede bu ekrana eklenecek.</p>
             <button type="button" onClick={() => setSheet(null)} className="h-12 rounded-full bg-acc text-acc-ink font-extrabold">Tamam</button>
           </div>

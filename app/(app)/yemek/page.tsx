@@ -45,7 +45,7 @@ export default async function Page(props: { searchParams: Promise<{ gun?: string
       target={{ kcal: t?.target.kcal ?? 2000, protein: t?.target.protein ?? 120, carb: t?.target.carb ?? 200, fat: t?.target.fat ?? 65 }}
       adjust={t ? { base: t.target.base, kcal: t.target.adjustment, closed: t.target.closed } : null} burned={t?.burned ?? 0} trained={(t?.burned ?? 0) > 0} suggested={day === today ? mealForTime(minuteOfDay(new Date())) : 'lunch'} yesterdayHas={yesterdayHas}
       supplements={<SupplementCard day={day} {...supp} />} detail={detail} hasSupplements={supp.items.length > 0} adv={adv}
-      layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied }} editing={duzenle === '1'}
+      layout={{ items: l.items.map((i) => ({ id: i.id, size: i.size })), drawer: l.drawer.map((d) => ({ id: d.def.id, reason: d.reason })), notices: l.notices, applied: l.applied, quick: l.quick, pinned: l.pinned }} editing={duzenle === '1'}
       usual={Object.fromEntries(Object.entries(usual).map(([k, v]) => [k, { names: v!.items.map((x) => x.name), kcal: v!.kcal }]))}
     />
   )

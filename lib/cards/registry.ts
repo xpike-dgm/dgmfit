@@ -33,6 +33,8 @@ export interface CardDef {
   since: number
   /** ileride renk düzenleyicinin sunacağı alanlar (Ö2) */
   colorSlots?: string[]
+  /** Ö1b-3: kartın üstündeki hızlı eylem seçenekleri (ilki varsayılan); ✎ penceresinden seçilir */
+  quick?: { id: string; label: string }[]
 }
 
 export const REGISTRY_VERSION = 1
@@ -107,6 +109,21 @@ export const CARDS: CardDef[] = [
  * Örnek (ileride): { version: 2, map: { 'today.water': ['today.water-v2'] }, note: { 'today.water': 'Su kartı yenilendi' } }
  */
 export const CARD_MIGRATIONS: { version: number; map: Record<string, string[]>; note?: Record<string, string> }[] = []
+
+// Ö1b-3: hızlı eylem seçenekleri (kart çizicileri bu kimlikleri tanır)
+const QUICK: Record<string, CardDef['quick']> = {
+  'today.water': [{ id: '250', label: '+250 ml' }, { id: '330', label: '+330 ml (kutu)' }, { id: '500', label: '+500 ml (şişe)' }, { id: 'none', label: 'Düğme yok' }],
+  'today.training': [{ id: 'start', label: 'Antrenmanı başlat' }, { id: 'cardio', label: 'Kardiyo ekle' }, { id: 'stats', label: 'İstatistikler' }],
+  'today.fit': [{ id: 'plan', label: 'Plana git' }, { id: 'weigh', label: 'Tartıl' }],
+  'today.macros': [{ id: 'none', label: 'Düğme yok' }, { id: 'add', label: 'Besin ekle' }],
+}
+for (const c of CARDS) if (QUICK[c.id]) c.quick = QUICK[c.id]
+/** Kartın geçerli hızlı eylemi (bilinmeyen seçim → varsayılan). */
+export function quickOf(id: string, chosen?: unknown): string | null {
+  const q = QUICK[id]
+  if (!q) return null
+  return q.some((o) => o.id === chosen) ? (chosen as string) : q[0].id
+}
 
 const byId = new Map(CARDS.map((c) => [c.id, c]))
 export function cardDef(id: string): CardDef | undefined { return byId.get(id) }

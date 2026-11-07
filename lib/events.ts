@@ -18,6 +18,8 @@ export type EventType =
   | 'design.nav'
   | 'design.rules'
   | 'design.prefs'
+  | 'design.gesture'
+  | 'design.wizard'
   | 'workout.finished'
   | 'pr.achieved'
   | 'water.logged'

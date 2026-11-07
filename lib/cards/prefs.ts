@@ -142,3 +142,36 @@ export function goalFront<T extends LayoutItem>(screen: ScreenId, items: T[], go
 // ───────── kullanım tercihleri ─────────
 export interface UsePrefs { hand?: 'left' | 'right' | null; holdToEdit?: boolean }
 export const normalizePrefs = (p: UsePrefs): UsePrefs => ({ hand: p.hand === 'left' || p.hand === 'right' ? p.hand : null, holdToEdit: p.holdToEdit !== false })
+
+// ───────── Ö1b-3: kaydırma hareketleri (üste sabitle, bugünlük gizle) ─────────
+/** Sabitlenen kartlar (ekran başına, sırayla) ve yalnız bugün gizlenenler (gün değişince kendiliğinden geçersiz). */
+export interface Gestures { pins?: Partial<Record<ScreenId, string[]>>; daily?: { day: string; hidden: string[] } }
+
+export const canHideToday = (id: string) => { const d = cardDef(id); return !!d && !d.locked }
+export const canPin = (id: string) => { const d = cardDef(id); return !!d && d.locked !== 'top' }
+
+/** Görüntülemede: bugün gizlenenleri çıkarır, sabitleri başlığın hemen altına (sabitleme sırasıyla) alır. */
+export function applyGestures<T extends LayoutItem>(screen: ScreenId, items: T[], g: Gestures | undefined, today: string): { items: T[]; hiddenToday: string[]; pinned: string[] } {
+  const hidden = g?.daily?.day === today ? g.daily.hidden.filter((id) => cardDef(id)?.screen === screen && canHideToday(id)) : []
+  const pins = (g?.pins?.[screen] ?? []).filter((id) => canPin(id) && !hidden.includes(id))
+  let out = hidden.length ? items.filter((i) => !hidden.includes(i.id)) : items
+  const lifted = pins.map((id) => out.find((i) => i.id === id)).filter(Boolean) as T[]
+  if (lifted.length) {
+    const head = out.filter((i) => cardDef(i.id)?.locked === 'top')
+    out = [...head, ...lifted, ...out.filter((i) => !head.includes(i) && !lifted.includes(i))]
+  }
+  return { items: out, hiddenToday: hidden, pinned: lifted.map((i) => i.id) }
+}
+
+export function setPin(g: Gestures, id: string, on: boolean): Gestures {
+  const d = cardDef(id)
+  if (!d || !canPin(id)) return g
+  const cur = (g.pins?.[d.screen] ?? []).filter((x) => x !== id)
+  return { ...g, pins: { ...g.pins, [d.screen]: on ? [...cur, id].slice(-5) : cur } }
+}
+export function setHiddenToday(g: Gestures, id: string, on: boolean, today: string): Gestures {
+  if (!canHideToday(id)) return g
+  const cur = g.daily?.day === today ? g.daily.hidden : []
+  const hidden = on ? [...new Set([...cur, id])].slice(-30) : cur.filter((x) => x !== id)
+  return { ...g, daily: { day: today, hidden } }
+}

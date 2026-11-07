@@ -281,7 +281,10 @@
     "lib/cards/prefs.ts",
     "components/cards/DesignPrefs.tsx",
     "tests/cards-prefs.test.ts",
-    "tests/e2e/custom2.e2e.cjs"
+    "tests/e2e/custom2.e2e.cjs",
+    "lib/cards/wizard.ts",
+    "tests/cards-wizard.test.ts",
+    "tests/e2e/custom3.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -476,7 +479,8 @@
     "/profil/basarilar",
     "/profil/ozellestirme",
     "/profil/ozellestirme/alt-bar",
-    "/profil/ozellestirme/kurallar"
+    "/profil/ozellestirme/kurallar",
+    "/profil/ozellestirme/sihirbaz"
   ],
   "events": [
     "profile.onboarded",
@@ -499,7 +503,9 @@
     "design.reset",
     "design.nav",
     "design.rules",
-    "design.prefs"
+    "design.prefs",
+    "design.gesture",
+    "design.wizard"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -967,7 +973,8 @@
       "REGISTRY_VERSION",
       "SCREENS",
       "cardDef",
-      "cardsFor"
+      "cardsFor",
+      "quickOf"
     ],
     "lib/cards/design-data.ts": [
       "activeDesign",
@@ -979,7 +986,15 @@
       "userGoal",
       "saveNav",
       "saveRules",
-      "savePrefs"
+      "savePrefs",
+      "pinCard",
+      "hideCardToday",
+      "applyWizard"
+    ],
+    "lib/cards/wizard.ts": [
+      "wizardDesign",
+      "mergeRules",
+      "WIZARD_QUESTIONS"
     ],
     "lib/cards/prefs.ts": [
       "resolveNav",
@@ -993,7 +1008,12 @@
       "normalizePrefs",
       "PRESET_RULES",
       "GOAL_FRONT",
-      "NAV_TABS"
+      "NAV_TABS",
+      "applyGestures",
+      "setPin",
+      "setHiddenToday",
+      "canPin",
+      "canHideToday"
     ]
   },
   "dependencies": {

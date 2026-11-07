@@ -156,7 +156,7 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
         ))}
       </nav> ,
     'fit.weigh': (
-      <section aria-label="Tartı" className="card p-5 flex flex-col gap-3">
+      <section id="tarti" aria-label="Tartı" className="card p-5 flex flex-col gap-3 scroll-mt-4">
         <div className="flex items-center gap-2"><Scale size={18} className="text-mute" /><Eyebrow>Tartı</Eyebrow><InfoTip label="Tartı ipucu">Sabah, tuvaletten sonra ve kahvaltıdan önce tartılmak en tutarlı sonucu verir.</InfoTip></div>
         <WeighIn last={lastWeigh?.raw ?? goal.startWeightKg} />
         <Link href="/profil/hedef" className="text-[13px] text-mute underline underline-offset-4">Hedef ve plan</Link>
@@ -167,7 +167,7 @@ export default async function FitPage(props: { searchParams: Promise<{ duzenle?:
   return (
     <div className="flex flex-col gap-3 px-4">
       <CardBoard screen="fit" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
-        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} />
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} />
     </div>
   )
 }

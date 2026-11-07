@@ -2,6 +2,9 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — Özelleştirme Ö1b-3 başladı
+- Kullanıcı: "Devam et". Faz başı: memory-check geçti; son commit STATE ile uyumlu; ağaç temiz. Ö1b-3 (sihirbaz, kaydırma, hızlı eylem) ve Ö1b-4 (yığın, kendi panom) olarak bölündü.
+
 ## 2026-11-07 — Özelleştirme Ö1b-2 tamamlandı
 - Saf modül `lib/cards/prefs.ts` (8 test): alt bar, kural motoru + hazır kurallar (sabah, antrenman günü, akşam, dinlenme günü), hedefe göre varsayılan, tercihler. Design'a nav/rules/prefs; göç kuralları da eşler.
 - Sunucu: `screenLayout(.., {editing})` hedef sırası + kurallar (`ruleCtx`), `applied` notu; layout tasarımı okuyup alt bara, tek el özniteliğine ve basılı tut bağlamına verir. Stüdyo: Alt bar, Kurallar, Kullanım.

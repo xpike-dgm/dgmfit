@@ -10,7 +10,7 @@ import { Band, Bar, Ring, hdrIcon } from '@/components/ui'
 import QuickWaterButton from '@/components/QuickWaterButton'
 import InsightCard from '@/components/InsightCard'
 import { latestReportWeek, mondayOf } from '@/lib/coach-data'
-import { Drop, Dumbbell, Flame, Pulse, Target, User } from '@/components/icons'
+import { Drop, Dumbbell, Flame, Plus, Pulse, Target, User } from '@/components/icons'
 import { dayState } from '@/lib/day-state'
 import { goalStatus } from '@/lib/goal-phase'
 import GoalChoiceCard from '@/components/GoalChoiceCard'
@@ -32,6 +32,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   const sp = await props.searchParams
   const editing = sp.duzenle === '1'
   const layout = await screenLayout(user.id, 'today', { editing })
+  const qt = layout.quick['today.training']
   const want = (id: string) => editing || layout.items.some((i) => i.id === id)
   const [tr, gs, partners, brief, streaks] = await Promise.all([
     todayTraining(user.id, t.day), goalStatus(user.id),
@@ -113,6 +114,9 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
             <span>{adjustText(t.target.reasons)} Plan {fmtNum(t.target.base)} kcal → bugün <b className="text-ink">{fmtNum(t.target.kcal)} kcal</b>.</span>
           </Link>
         ) : null}
+        {layout.quick['today.macros'] === 'add' ? (
+          <Link href="/yemek/ekle" className="h-10 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center justify-center gap-1.5" data-testid="quick-macros"><Plus size={16} /> Besin ekle</Link>
+        ) : null}
       </div>
     ),
     'today.goal-choice': gs ? <GoalChoiceCard s={gs} /> : null,
@@ -148,7 +152,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
       </section>
     ) : null,
     'today.fit': (
-      <Link href="/fit" data-mod="plan" aria-label="Kilo hedefi ve plan" className={tile}>
+      <Link href={layout.quick['today.fit'] === 'weigh' ? '/fit#tarti' : '/fit'} data-mod="plan" aria-label={layout.quick['today.fit'] === 'weigh' ? 'Tartıl' : 'Kilo hedefi ve plan'} className={tile}>
         <span className="flex items-center justify-between text-[13px] font-extrabold"><span className="flex items-center gap-1.5"><Target size={16} className="text-acc" />Fit</span><span className="text-acc text-[12px]">›</span></span>
         <span className="num text-[22px] font-bold leading-none">{fmtNum(w.trend, 1)} <span className="text-[13px] text-mute">kg</span></span>
         {!recomp ? (
@@ -161,6 +165,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
             {t.dayIndex > 1 ? <span className="text-[11.5px] text-ink-2 leading-tight">{Math.abs(diffPlan) < 0.05 ? 'Planla aynı' : `Planın ${fmtNum(Math.abs(diffPlan), 1)} kg ${diffPlan > 0 ? 'önünde' : 'gerisinde'}`}</span> : <span className="text-[11.5px] text-ink-2">Gün {t.dayIndex} / {t.totalDays}</span>}
           </>
         ) : <span className="text-[12px] text-ink-2 leading-snug">Rekompozisyon: kilonu koru, kas kazan.</span>}
+        {layout.quick['today.fit'] === 'weigh' ? <span className="mt-auto h-9 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center justify-center" data-testid="quick-fit">Tartıl</span> : null}
       </Link>
     ),
     'today.water': (
@@ -173,18 +178,18 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
           </span>
           <Bar value={waterFrac} color="var(--color-acc)" height={6} />
         </Link>
-        <QuickWaterButton compact />
+        {layout.quick['today.water'] !== 'none' ? <QuickWaterButton compact ml={Number(layout.quick['today.water'] ?? 250)} /> : null}
       </section>
     ),
     'today.training': (
-      <Link href={trained || !tr.next ? '/fitness' : `/fitness/antrenman?gun=${tr.next.id}`} aria-label="Antrenman" data-mod="fitness" className={tile} data-testid="today-training">
+      <Link href={qt === 'cardio' ? '/fitness/kardiyo' : qt === 'stats' ? '/fitness/istatistik' : trained || !tr.next ? '/fitness' : `/fitness/antrenman?gun=${tr.next.id}`} aria-label="Antrenman" data-mod="fitness" className={tile} data-testid="today-training">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col min-w-[9rem] flex-1">
             <span className="flex items-center gap-1.5 text-[13px] font-extrabold"><Dumbbell size={16} className="text-acc" />Antrenman</span>
             <span className="text-[15px] font-extrabold leading-snug truncate mt-1">{trained ? `${tr.minutes} dk tamamlandı` : tr.next ? `Sıradaki: ${tr.next.name}` : 'Bugün kayıt yok'}</span>
             <span className="text-[12px] text-mute truncate">{trained ? `+${fmtNum(t.burned)} kcal bütçeye eklendi` : tr.next ? null : t.profile.trainingDays ? `Haftalık hedef · ${t.profile.trainingDays} gün` : 'Program oluşturarak başla'}</span>
           </div>
-          <span className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center shrink-0">{trained ? 'Detay' : 'Başlat'}</span>
+          <span className="h-10 px-4 rounded-full bg-acc text-acc-ink font-bold text-[14px] inline-flex items-center shrink-0" data-testid="quick-training">{qt === 'cardio' ? 'Kardiyo ekle' : qt === 'stats' ? 'İstatistik' : trained ? 'Detay' : 'Başlat'}</span>
         </div>
       </Link>
     ),
@@ -205,7 +210,7 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   return (
     <div className="px-4 flex flex-col gap-3">
       <CardBoard screen="today" editing={editing} items={layout.items.map((i) => ({ id: i.id, size: i.size }))} nodes={nodes}
-        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} />
+        drawer={layout.drawer.map((d) => ({ id: d.def.id, reason: d.reason }))} notices={layout.notices} applied={layout.applied} quick={layout.quick} pinned={layout.pinned} />
       {/* koç kartı kaldırılsa da güvenlik destek kartı gösterilir */}
       {coachHidden && !editing ? <div data-mod="coach"><InsightCard fallback="" weeklyReady={false} compact supportOnly /></div> : null}
     </div>

@@ -3,19 +3,23 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser, rateLimit } from '@/lib/auth'
 import { SCREENS, isScreen } from '@/lib/cards/registry'
-import { resetScreen, saveNav, savePrefs, saveRules, saveScreen } from '@/lib/cards/design-data'
+import { applyWizard, hideCardToday, pinCard, resetScreen, saveNav, savePrefs, saveRules, saveScreen } from '@/lib/cards/design-data'
+import { cardDef } from '@/lib/cards/registry'
 import { RULES_MAX } from '@/lib/cards/prefs'
 
 type R = { ok: true } | { ok: false; error: string }
 const Items = z.array(z.object({ id: z.string().min(1).max(60), size: z.enum(['half', 'full']).optional() })).max(60)
 
 /** Özelleştirme: ekran düzenini kaydet (sunucu kart kaydına göre yeniden doğrular). */
-export async function saveLayoutAction(screen: string, items: unknown): Promise<R> {
+const Settings = z.record(z.string().max(60), z.object({ quick: z.string().max(20).optional() })).optional()
+
+export async function saveLayoutAction(screen: string, items: unknown, settings?: unknown): Promise<R> {
   const u = await requireUser()
   const p = Items.safeParse(items)
-  if (!isScreen(screen) || !p.success) return { ok: false, error: 'Geçersiz düzen' }
+  const st = Settings.safeParse(settings)
+  if (!isScreen(screen) || !p.success || !st.success) return { ok: false, error: 'Geçersiz düzen' }
   if (!rateLimit('design:' + u.id, 60, 3600_000)) return { ok: false, error: 'Çok sık kaydedildi; biraz sonra dene' }
-  await saveScreen(u.id, screen, p.data)
+  await saveScreen(u.id, screen, p.data, st.data ?? {})
   revalidatePath(SCREENS[screen].path); revalidatePath('/profil/ozellestirme')
   return { ok: true }
 }
@@ -72,6 +76,47 @@ export async function savePrefsAction(prefs: unknown): Promise<R> {
   if (!p.success) return { ok: false, error: 'Geçersiz ayar' }
   if (limited(u.id)) return { ok: false, error: 'Çok sık kaydedildi; biraz sonra dene' }
   await savePrefs(u.id, p.data)
+  everywhere()
+  return { ok: true }
+}
+
+// ───────── Ö1b-3: kaydırma hareketleri, sihirbaz ─────────
+const gestureLimited = (id: string) => !rateLimit('gesture:' + id, 120, 3600_000)
+const screenOf = (id: string) => { const d = cardDef(id); return d ? SCREENS[d.screen].path : null }
+
+export async function pinCardAction(id: string, on: boolean): Promise<R> {
+  const u = await requireUser()
+  const path = typeof id === 'string' ? screenOf(id) : null
+  if (!path || typeof on !== 'boolean') return { ok: false, error: 'Geçersiz kart' }
+  if (gestureLimited(u.id)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  await pinCard(u.id, id, on)
+  revalidatePath(path)
+  return { ok: true }
+}
+
+export async function hideTodayAction(id: string, on: boolean): Promise<R> {
+  const u = await requireUser()
+  const path = typeof id === 'string' ? screenOf(id) : null
+  if (!path || typeof on !== 'boolean') return { ok: false, error: 'Geçersiz kart' }
+  if (gestureLimited(u.id)) return { ok: false, error: 'Çok sık; biraz sonra dene' }
+  await hideCardToday(u.id, id, on)
+  revalidatePath(path)
+  return { ok: true }
+}
+
+const Wizard = z.object({
+  focus: z.enum(['weight', 'strength', 'health']),
+  logs: z.array(z.enum(['food', 'water', 'training'])).max(3),
+  detail: z.enum(['simple', 'detailed']),
+  hand: z.enum(['right', 'left', 'both']),
+  time: z.enum(['morning', 'evening', 'all']),
+})
+export async function applyWizardAction(answers: unknown): Promise<R> {
+  const u = await requireUser()
+  const p = Wizard.safeParse(answers)
+  if (!p.success) return { ok: false, error: 'Eksik cevap' }
+  if (limited(u.id)) return { ok: false, error: 'Çok sık kaydedildi; biraz sonra dene' }
+  await applyWizard(u.id, { ...p.data, logs: [...new Set(p.data.logs)] })
   everywhere()
   return { ok: true }
 }

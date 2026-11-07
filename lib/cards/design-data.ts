@@ -9,9 +9,10 @@ import { isAdvanced } from '../ui-mode'
 import { dayString } from '../time'
 import { minuteOfDay } from '../water-data'
 import { trainingWeekdays } from '../fit'
-import { REGISTRY_VERSION, SCREENS, cardDef, type ScreenId } from './registry'
+import { REGISTRY_VERSION, SCREENS, cardDef, quickOf, type ScreenId } from './registry'
 import { emptyDesign, normalizeScreen, resolveScreen, type Design, type LayoutItem, type ResolvedItem } from './layout'
-import { applyRules, goalFront, normalizeNav, normalizePrefs, normalizeRules, type NavLayout, type Rule, type RuleCtx, type UsePrefs } from './prefs'
+import { applyGestures, applyRules, goalFront, normalizeNav, normalizePrefs, normalizeRules, setHiddenToday, setPin, type NavLayout, type Rule, type RuleCtx, type UsePrefs } from './prefs'
+import { mergeRules, wizardDesign, type WizardAnswers } from './wizard'
 
 /** İstek başına bir sorgu (alt bar, düzen ve stüdyo aynı istekte okur). */
 export const activeDesign = cache(async (userId: string): Promise<Design | null> => {
@@ -49,6 +50,8 @@ export async function screenLayout(userId: string, screen: ScreenId, opts: { edi
   const r = resolveScreen(d, screen, { advanced })
   if (!r.customized) r.items = goalFront(screen, r.items, goal)
   let applied: string[] = []
+  let pinned: string[] = []
+  let hiddenToday: string[] = []
   if (!opts.editing && d?.rules?.some((x) => x.on)) {
     const x = await ruleCtx(userId)
     const out = applyRules(screen, r.items, d.rules, x, (id): ResolvedItem | null => { const def = cardDef(id); return def ? { id, size: def.size, def } : null })
@@ -58,7 +61,16 @@ export async function screenLayout(userId: string, screen: ScreenId, opts: { edi
       r.drawer = r.drawer.filter((i) => !shown.has(i.def.id))
     }
   }
-  return { ...r, applied }
+  // Ö1b-3: kaydırma hareketleri (sabitle, bugünlük gizle) — düzenlemede yalnız sabit listesi bilgi olarak döner
+  if (d?.gestures) {
+    const g = applyGestures(screen, r.items, d.gestures, dayString())
+    if (!opts.editing) { r.items = g.items; hiddenToday = g.hiddenToday }
+    pinned = opts.editing ? (d.gestures.pins?.[screen] ?? []) : g.pinned
+  }
+  // Ö1b-3: kart ayarları (hızlı eylem); kart çizicileri `quick[id]` ile okur
+  const quick: Record<string, string> = {}
+  for (const c of r.items) { const q = quickOf(c.id, d?.cards?.[c.id]?.quick); if (q) quick[c.id] = q }
+  return { ...r, applied, pinned, hiddenToday, quick }
 }
 
 /** Tüm ekranların çözülmüş düzeni (stüdyo listesi için; kurallar uygulanmaz). */
@@ -87,9 +99,17 @@ async function updateDesign(userId: string, f: (d: Design) => Design) {
 }
 
 /** Ekran düzenini kaydeder (sunucuda yeniden doğrulanır: bilinmeyen kart, tekrar, kilitli kart). */
-export async function saveScreen(userId: string, screen: ScreenId, items: LayoutItem[]) {
+export async function saveScreen(userId: string, screen: ScreenId, items: LayoutItem[], settings: Record<string, { quick?: string }> = {}) {
   const advanced = await isAdvanced(userId)
-  const next = await updateDesign(userId, (cur) => ({ ...cur, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced }) } }))
+  const next = await updateDesign(userId, (cur) => {
+    const cards = { ...(cur.cards ?? {}) }
+    for (const [id, st] of Object.entries(settings)) {
+      if (cardDef(id)?.screen !== screen || st.quick === undefined) continue
+      const q = quickOf(id, st.quick)
+      if (q) cards[id] = { ...cards[id], quick: q }
+    }
+    return { ...cur, cards, screens: { ...cur.screens, [screen]: normalizeScreen(screen, items, { advanced }) } }
+  })
   await publish(userId, 'design.saved', { screen, cards: next.screens[screen]!.items.length })
 }
 
@@ -116,4 +136,29 @@ export async function savePrefs(userId: string, p: UsePrefs) {
   const n = normalizePrefs(p)
   await updateDesign(userId, (cur) => ({ ...cur, prefs: n }))
   await publish(userId, 'design.prefs', { hand: n.hand ?? 'none', holdToEdit: n.holdToEdit ?? true })
+}
+
+// ───────── Ö1b-3: kaydırma hareketleri ve sihirbaz ─────────
+export async function pinCard(userId: string, id: string, on: boolean) {
+  await updateDesign(userId, (cur) => ({ ...cur, gestures: setPin(cur.gestures ?? {}, id, on) }))
+  await publish(userId, 'design.gesture', { kind: on ? 'pin' : 'unpin', card: id })
+}
+export async function hideCardToday(userId: string, id: string, on: boolean) {
+  await updateDesign(userId, (cur) => ({ ...cur, gestures: setHiddenToday(cur.gestures ?? {}, id, on, dayString()) }))
+  await publish(userId, 'design.gesture', { kind: on ? 'hide-today' : 'unhide-today', card: id })
+}
+
+/** Sihirbaz sonucunu uygular: Bugün düzeni, alt bar, tek el; hazır kurallar mevcutlara eklenir. Diğer ekranlar korunur. */
+export async function applyWizard(userId: string, a: WizardAnswers) {
+  const w = wizardDesign(a)
+  const advanced = await isAdvanced(userId)
+  await updateDesign(userId, (cur) => ({
+    ...cur,
+    screens: { ...cur.screens, today: normalizeScreen('today', w.today, { advanced }) },
+    nav: normalizeNav(w.nav),
+    prefs: normalizePrefs({ ...(cur.prefs ?? {}), hand: w.hand }),
+    rules: normalizeRules(mergeRules(cur.rules ?? [], w.rules)),
+  }))
+  await publish(userId, 'design.wizard', { focus: a.focus, detail: a.detail, hand: a.hand, time: a.time, logs: a.logs.join(',') })
+  return w
 }

@@ -1,7 +1,7 @@
 // Özelleştirme: tasarım (kullanıcının düzeni) ↔ kart kaydı. Saf; testleri tests/cards.test.ts.
 // Tasarım verisi kişisel veri içermez (yalnızca kart kimlikleri, boyutlar, ileride renkler) → şablon olarak paylaşılabilir.
 import { CARD_MIGRATIONS, REGISTRY_VERSION, cardDef, cardsFor, type CardDef, type CardSize, type ScreenId } from './registry.ts'
-import type { NavLayout, Rule, UsePrefs } from './prefs.ts'
+import type { Gestures, NavLayout, Rule, UsePrefs } from './prefs.ts'
 
 export interface LayoutItem { id: string; size?: CardSize }
 export interface ScreenLayout { items: LayoutItem[]; /** kullanıcının bilerek kaldırdıkları (çekmecede "kaldırdıkların") */ removed?: string[] }
@@ -18,6 +18,8 @@ export interface Design {
   rules?: Rule[]
   /** Ö1b-2: tek el, basılı tutunca düzenle */
   prefs?: UsePrefs
+  /** Ö1b-3: kaydırma hareketleri (sabitlenen kartlar, bugünlük gizlenenler). Şablon paylaşımında taşınmaz. */
+  gestures?: Gestures
 }
 
 export interface ResolvedItem { id: string; size: CardSize; def: CardDef }
@@ -47,7 +49,13 @@ export function migrateDesign(d: Design): { design: Design; notices: string[] } 
     for (const [id, s] of Object.entries(cur.cards ?? {})) for (const nid of m.map[id] ?? [id]) cards[nid] = s
     // kurallardaki kart kimlikleri de aynı eşlemeden geçer (kaldırılan kartın eylemi düşer, eylemsiz kural silinir)
     const rules = cur.rules?.map((r) => ({ ...r, then: r.then.flatMap((a) => (m.map[a.card] ?? [a.card]).map((card) => ({ ...a, card }))) })).filter((r) => r.then.length)
-    cur = { ...cur, v: m.version, screens, cards, ...(rules ? { rules } : {}) }
+    const mapIds = (xs: string[]) => [...new Set(xs.flatMap((id) => m.map[id] ?? [id]))]
+    const g = cur.gestures
+    const gestures = g ? {
+      ...(g.pins ? { pins: Object.fromEntries(Object.entries(g.pins).map(([s, ids]) => [s, mapIds(ids ?? [])])) } : {}),
+      ...(g.daily ? { daily: { ...g.daily, hidden: mapIds(g.daily.hidden) } } : {}),
+    } : undefined
+    cur = { ...cur, v: m.version, screens, cards, ...(rules ? { rules } : {}), ...(gestures ? { gestures } : {}) }
   }
   return { design: { ...cur, v: REGISTRY_VERSION }, notices }
 }
