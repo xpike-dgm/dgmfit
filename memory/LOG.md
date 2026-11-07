@@ -2,6 +2,11 @@
 
 En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
+## 2026-11-07 — 19 108 ürün eklendi (kullanıcının CSV'si) + aramada temel besin önde
+- Girdi: kullanıcı CSV'si `dgfit-besinler.csv` (19 108 satır, kaynak "ChatGPT tarafından derlendi"). Rapor: bozuk 0, tekrar 0, 488 kategori uyarısı (değerler makul; eklendi). foods-seed 27 205 satır.
+- Sorun bulundu ve düzeltildi: markalı ürünler "süt", "yumurta" gibi genel aramalarda temel besinleri ilk 7'den itiyordu → markasız temel besin/tarif +1,2, sorguda marka varsa o marka +1,5 (DECISIONS).
+- Doğrulama: commit `5557698`; verify.sh VERIFY OK (277 birim); deploy `2026-11-07T20-56-24-953Z`; canlıda 22/23 e2e OK, water e2e gece yarısı sınırında (23.56–00.00) testin kendi saat seçiminden düştü, 00.08'de tek başına yeniden çalıştırıldı OK; canlıda foods: dgfit-label 19 108, usda 7 797, dgfit 300; 28 test kullanıcısı silindi; logda hata 0.
+
 ## 2026-11-07 — Yemek verisi: hazır 100 g değerleri doğrudan kabul, CSV toplu giriş
 - Kullanıcı: elde başka yapay zekâların topladığı 17 binden fazla 100 g değeri var, "veriler sağlam yerden geliyor, direkt (yaklaşık işareti olmadan) kabul et" (DECISIONS).
 - `urunler` kaynak isteğe bağlı; yalnız fiziksel olarak imkânsız satırlar ayrılır; geçersiz barkod → barkodsuz eklenir; CSV (`csvToImport`, `parseCsv`); `--hatalilari-atla`; tam rapor `<dosya>.rapor.txt`; kaynak metni besin ayrıntısında, marka aramada.
