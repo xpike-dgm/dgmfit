@@ -399,3 +399,8 @@ En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
 ## 2026-11-08 — G1 başladı (kullanıcı geri bildirimi)
 - Kullanıcı uygulamayı telefonda kullandı, 10 sorun + 9 ekran görüntüsü gönderdi (STATE G1 satırı). Kök neden ilk bulgu: düzenleme modunda FLIP animasyonu ekran (viewport) koordinatı kullanıyor ve her render'da çalışıyordu → sayfa kayınca tüm kartlar kayma animasyonuna girip görünmez oluyordu; hedef algılama parmak noktasıyla yapılıyordu (sürüklenen kartın kenarı değil).
+
+## 2026-11-08 — G1 tamamlandı
+- Kod: sürükle-bırak (belge koordinatlı FLIP yalnız sıra değişince, ön kenar noktası + kilit, kenar kaydırması parmak kenara gidince ve ≤0,5 px/ms), küçük animasyonlu kaydırma eylemleri, `components/Confirm.tsx` (tüm confirm/prompt yerine), Besinlerim düzenle (`/yemek/besin/[id]`, `updateFood`) + ml birimi ("100 ml" temel porsiyon), alt bar yalnız sekme köklerinde, Programlarım kart satırı, özelleştirme sayfaları (Düzen, Kendi kartlarım, Kurallar, Takip, Tasarımlarım, Kullanım, Alt bar) `StudioUI` ile yeniden; bölüm vurgusu `layout.tsx` data-mod=today.
+- Hata: ilk verify'da koç e2e onay düğmesini bulamadı — `start(async () => { await ask() })` içinde setQ geçişe dahil olup işlem bitene kadar yansımıyordu → `ask` isteği setTimeout ile kuyruğa alır (commit `53163ad`). fit/sosyal/ux testleri tarayıcı penceresini kabul ediyordu → `confirm-ok` tıklaması (commit `0f81695`).
+- Doğrulama: verify.sh VERIFY OK (279 birim, 38 e2e); release `2026-11-08T02-42-57-751Z` DEPLOY OK + RELEASE OK; canlıda 28 test kullanıcısı silindi, app logunda hata 0.
