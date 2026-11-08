@@ -93,7 +93,7 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await p.getByRole('button', { name: /^Test çorba Kendi tarifin/ }).waitFor()
 
   // 7) Önceki günden kopyalama
-  const y = new Date(Date.now() + 3 * 3600000 - 86400000).toISOString().slice(0, 10)
+  const y = new Date(Date.now() - 3600000 - 86400000 /* Y1: mantıksal dün (+3 sa, gün 04.00) */).toISOString().slice(0, 10)
   await p.goto(`${BASE}/yemek/ekle?ogun=breakfast&gun=${y}`)
   await p.fill('#food-q', 'simit'); await p.getByRole('button', { name: /^Simit/ }).first().click()
   await p.getByRole('button', { name: 'Kahvaltıya ekle' }).click()

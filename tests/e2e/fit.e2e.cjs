@@ -7,7 +7,8 @@ const INVITE = process.env.DGFIT_E2E_INVITE ? '?davet=' + encodeURIComponent(pro
 const OUT = process.env.OUT || require('os').tmpdir()
 const fail = (m) => { throw new Error(m) }
 const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''))
-const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date(Date.now() + offset * 86400000))
+// Y1: uygulama mantıksal günü kullanır (varsayılan gün başlangıcı 04.00) — gece 00.00–04.00 arası hâlâ önceki gün
+const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date(Date.now() - 4 * 3600000 + offset * 86400000))
 
 ;(async () => {
   const fit = await import(path.join(__dirname, '../../lib/fit.ts'))

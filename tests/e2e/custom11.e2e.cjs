@@ -48,7 +48,7 @@ function png(w, h, colorAt) {
   await p.getByTestId('uc-save').click(); await msg('uc-msg', 'eklendi')
   await p.getByTestId('uc-new').click(); await p.getByTestId('uc-kind-quote').click(); await p.getByTestId('uc-text').fill('Disiplin özgürlüktür'); await p.getByTestId('uc-save').click()
   await p.locator('[data-my-card="Sözüm"]').waitFor()
-  const in10 = new Date(Date.now() + 10 * 86400000).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+  const in10 = new Date(Date.now() - 4 * 3600000 + 10 * 86400000) /* Y1 mantıksal gün */.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   await p.getByTestId('uc-new').click(); await p.getByTestId('uc-kind-countdown').click(); await p.getByTestId('uc-date').fill(in10); await p.getByTestId('uc-name').fill('Tatile'); await p.getByTestId('uc-save').click()
   await p.locator('[data-my-card="Tatile"]').waitFor()
   await p.getByTestId('uc-new').click(); await p.getByTestId('uc-kind-photo').click()

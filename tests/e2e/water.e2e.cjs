@@ -92,7 +92,7 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   // 7) Geçmiş saate özel miktar: şimdiden 15 dk önce (gece yarısına yakınsa 00:00) 300 ml — gelecek saat reddedilir
   const nowMin = await p.evaluate(() => { const t = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()).split(':'); return (Number(t[0]) % 24) * 60 + Number(t[1]) })
   if (nowMin < 1) await p.waitForTimeout(61000)
-  const pastMin = nowMin >= 16 ? nowMin - 15 : 0
+  const pastMin = Math.max(nowMin >= 240 ? 240 : 0, nowMin - 15) // Y1: mantıksal günün içinde kalsın (gün 04.00'te başlar)
   const HM = `${String(Math.floor(pastMin / 60)).padStart(2, '0')}:${String(pastMin % 60).padStart(2, '0')}`, HMd = HM.replace(':', '.')
   await p.getByRole('button', { name: 'Özel', exact: true }).click()
   await p.fill('#c-ml', '300'); await p.fill('#c-time', HM)
@@ -123,7 +123,7 @@ const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace
   await expectTotal(1300, 'birleştir')
 
   // 11) Geçmiş gün: dün 10:00'a 500 ml; bugün değişmez
-  const y = new Date(Date.now() + 3 * 3600000 - 86400000).toISOString().slice(0, 10)
+  const y = new Date(Date.now() + 3 * 3600000 - 4 * 3600000 - 86400000) /* Y1: mantıksal dün */.toISOString().slice(0, 10)
   await p.goto(`${BASE}/su?gun=${y}`)
   await expectTotal(0, 'dün boş')
   await p.fill('#past-time', '10:00')

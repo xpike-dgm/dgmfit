@@ -16,7 +16,7 @@ const lastUserText = (body) => { const m = body.messages.at(-1); return typeof m
 const A = (o) => ({ type: 'log_water', weeks: null, programDay: null, exercise: null, sets: null, repMin: null, repMax: null, ml: null, drink: null, ...o })
 // Y2: koç yanıtında yeni alanlar (katı şema) — varsayılanlar
 const Y2 = { lookups: [], mealPlan: null, remember: [], memo: null }
-const yestTr = () => new Date(Date.now() + 3 * 3600000 - 86400000).toISOString().slice(0, 10)
+const yestTr = () => new Date(Date.now() - 3600000 - 86400000 /* Y1 mantıksal dün */).toISOString().slice(0, 10)
 function coachReply(body) { return { ...Y2, ...coachReply0(body) } }
 function coachReply0(body) {
   const t = lastUserText(body), sys = body.system
@@ -228,7 +228,7 @@ function fake(port, handler) {
   if (num(await p.getByTestId('coach-left').innerText()) !== left0 - used + 0) fail(`kalan hak ${left0} − ${used} olmalı`)
 
   // 12) Haftalık rapor: 9 gün önceki hafta hazır → AI özeti + motor istatistikleri + güvenlik kartı yok (o haftada düşük gün yok ya da var)
-  const d9 = new Date(Date.now() + 3 * 3600000 - 9 * 86400000).toISOString().slice(0, 10)
+  const d9 = new Date(Date.now() - 3600000 - 9 * 86400000).toISOString().slice(0, 10)
   await p.goto(`${BASE}/rapor?hafta=${d9}`)
   await p.getByTestId('report-summary').getByText('Test haftalık özet').waitFor({ timeout: 20000 }).catch(() => fail('AI haftalık özeti yok'))
   const wk = state.calls.filter((c) => c.task === 'weekly').at(-1)

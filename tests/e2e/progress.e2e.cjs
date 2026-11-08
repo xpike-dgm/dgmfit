@@ -38,7 +38,7 @@ async function register(b, prefix) {
   await p.goto(BASE + '/profil/gorunum'); await p.getByTestId('ui-advanced').check(); await p.waitForTimeout(300)
   await p.waitForFunction(() => { const c = document.querySelector('[data-testid=ui-advanced]'); return c && c.checked && !c.disabled })
 
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date())
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date(Date.now() - 4 * 3600000)) // Y1 mantıksal gün
   const dayOf = (n) => new Date(Date.parse(today + 'T12:00:00Z') - n * 86400000).toISOString().slice(0, 10)
   // 1) Bench geçmişi (plato) → detay: grafik, plato, kuvvet seviyesi, alternatifler
   const sessions = [{ daysAgo: 35, kg: 95, reps: 6 }, { daysAgo: 28, kg: 97.5, reps: 6 }, { daysAgo: 21, kg: 97.5, reps: 6 }, { daysAgo: 14, kg: 95, reps: 7 }, { daysAgo: 7, kg: 97.5, reps: 5 }, { daysAgo: 0, kg: 97.5, reps: 6 }].map((s) => ({ ...s, sets: 3 }))

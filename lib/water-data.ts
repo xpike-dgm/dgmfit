@@ -90,6 +90,8 @@ export interface WaterScreen {
   bonus: number
   day: string
   isToday: boolean
+  /** Y1: gün başlangıcı (dk) — saat seçiminde gün başından önceki saatler ertesi takvim gününe düşer */
+  dayStartMin: number
   nowMin: number
   wake: number
   sleep: number
@@ -166,7 +168,7 @@ export async function getWaterScreen(userId: string, day: string = dayString()):
   const streak = computeStreak(firstActive >= 0 ? days.slice(firstActive) : days.slice(-1))
 
   return {
-    day, isToday, nowMin, wake, sleep, goal, total, logs, bonus: bonusToday,
+    day, isToday, dayStartMin: currentDayStart(), nowMin, wake, sleep, goal, total, logs, bonus: bonusToday,
     containers: containersRows.map((c) => ({ id: c.id, name: c.name, kind: c.kind, capacityMl: c.capacityMl, lastFill: c.lastFill, isDefault: c.isDefault })),
     buttons: (settings?.buttons?.length ? settings.buttons : DEFAULT_BUTTONS).slice(0, 8),
     frequent: frequentAmounts(freqInput, nowMin, 3),

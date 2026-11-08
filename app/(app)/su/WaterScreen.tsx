@@ -22,7 +22,12 @@ const SOURCE_LABEL: Record<string, string> = {
   backdate: 'Sonradan eklendi', meal: 'Yemekten', voice: 'Sesli kayıt', notification: 'Bildirim yanıtı',
 }
 
-function isoAt(day: string, hm: string) { return new Date(`${day}T${hm}:00+03:00`).toISOString() }
+/** Mantıksal günün saati → zaman damgası. Gün 04.00'te başlıyorsa 00.30 kaydı takvimde ertesi güne aittir (Y1). */
+function isoAt(day: string, hm: string, dayStartMin = 0) {
+  const [h, m] = hm.split(':').map(Number)
+  const base = new Date(`${day}T${hm}:00+03:00`).getTime()
+  return new Date(h * 60 + m < dayStartMin ? base + 86400000 : base).toISOString()
+}
 function hmFromMin(min: number) { const h = Math.floor(min / 60) % 24, m = min % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` }
 
 type Layout = { items: { id: string; size: 'half' | 'full'; stack?: string[] }[]; drawer: { id: string; reason: 'removed' | 'new' | 'available' }[]; notices: string[]; applied?: string[]; quick?: Record<string, string>; pinned?: string[]; colors?: Record<string, CardColors>; titles?: Record<string, string>; extra?: Record<string, ReactNode> }
@@ -59,7 +64,7 @@ export default function WaterScreen({ data, layout, editing }: { data: Data; lay
 
   const add = (p: Pending, force = false) => {
     const tempId = -Date.now()
-    const atIso = p.at ?? (data.isToday ? new Date().toISOString() : isoAt(data.day, pastTime))
+    const atIso = p.at ?? (data.isToday ? new Date().toISOString() : isoAt(data.day, pastTime, data.dayStartMin))
     // Anında çift kayıt kontrolü (henüz sunucuya ulaşmamış kayıtlar dahil); sunucu da ayrıca kontrol eder
     if (!force && isLikelyDuplicate(p.ml, Date.parse(atIso), logs.map((l) => ({ ml: l.ml, atMs: Date.parse(l.atIso) })))) { setDup(p); return }
     const cont = p.containerId ? data.containers.find((c) => c.id === p.containerId) : null
@@ -256,14 +261,14 @@ export default function WaterScreen({ data, layout, editing }: { data: Data; lay
       {/* Alt sayfalar */}
       <Sheet open={sheet === 'voice'} onClose={() => setSheet(null)} title="Söyle veya yaz">
         <VoiceForm ctx={{ nowMin: data.isToday ? data.nowMin : 1439, sipMl: data.sipMl, containers: data.containers }}
-          onAdd={(ml, d, atMin) => { setSheet(null); add({ ml, drink: d, source: 'voice', at: atMin !== null ? isoAt(data.day, hmFromMin(atMin)) : undefined }) }} />
+          onAdd={(ml, d, atMin) => { setSheet(null); add({ ml, drink: d, source: 'voice', at: atMin !== null ? isoAt(data.day, hmFromMin(atMin), data.dayStartMin) : undefined }) }} />
       </Sheet>
       <Sheet open={sheet === 'sip'} onClose={() => setSheet(null)} title="Yudum ekle">
         <SipForm sipMl={data.sipMl} calibrated={data.sipCalibrated} onAdd={(n) => { setSheet(null); add({ ml: n * data.sipMl, source: 'sip' }) }} />
       </Sheet>
       <Sheet open={sheet === 'custom'} onClose={() => setSheet(null)} title={data.isToday ? 'Özel miktar veya geçmiş saat' : 'Bu güne ekle'}>
         <CustomForm day={data.day} defaultTime={data.isToday ? hmFromMin(data.nowMin) : pastTime}
-          onAdd={(ml, hm, changedTime) => { setSheet(null); add({ ml, source: 'custom', at: changedTime || !data.isToday ? isoAt(data.day, hm) : undefined }) }} />
+          onAdd={(ml, hm, changedTime) => { setSheet(null); add({ ml, source: 'custom', at: changedTime || !data.isToday ? isoAt(data.day, hm, data.dayStartMin) : undefined }) }} />
       </Sheet>
       <Sheet open={!!sheet && typeof sheet === 'object' && 'container' in sheet} onClose={() => setSheet(null)}
         title={sheet && typeof sheet === 'object' && 'container' in sheet ? `${sheet.container.name} · ${fmtNum(sheet.container.capacityMl)} ml` : ''}>
@@ -278,7 +283,7 @@ export default function WaterScreen({ data, layout, editing }: { data: Data; lay
               const l = sheet.edit
               setSheet(null)
               start(async () => {
-                const r = await updateWater({ id: l.id, ml, drink: d, at: isoAt(data.day, hm) })
+                const r = await updateWater({ id: l.id, ml, drink: d, at: isoAt(data.day, hm, data.dayStartMin) })
                 if (!r.ok) showToast({ kind: 'info', text: r.error })
                 router.refresh()
               })
