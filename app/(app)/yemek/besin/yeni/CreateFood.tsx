@@ -4,13 +4,19 @@ import { useState, useTransition } from 'react'
 import { shrinkImage } from '@/lib/client-image'
 import { btn } from '@/components/ui'
 import { TopBar } from '@/components/ui'
-import { createFood } from '../../actions'
+import { createFood, updateFood } from '../../actions'
+import type { FoodUnit } from '@/lib/food'
 
 const input = 'h-12 rounded-xl bg-surface-2 border border-line px-3 text-ink outline-none focus:border-acc w-full'
 
-export default function CreateFood({ name, barcode, back, aiOn = false }: { name: string; barcode: string; back: string; aiOn?: boolean }) {
+type Init = { brand: string; unit: FoodUnit; servingG: string; servingLabel: string; kcal: string; protein: string; carb: string; fat: string; fiber: string; sugar: string; satFat: string; sodium: string }
+
+/** Yeni besin / G1: düzenleme (editId) ve içecekler için ml birimi. */
+export default function CreateFood({ name, barcode, back, aiOn = false, editId, initial }: { name: string; barcode: string; back: string; aiOn?: boolean; editId?: number; initial?: Init }) {
   const router = useRouter()
-  const [v, setV] = useState({ name, brand: '', barcode, servingG: '', servingLabel: '', kcal: '', protein: '', carb: '', fat: '', fiber: '', sugar: '', satFat: '', sodium: '' })
+  const { unit: unit0 = 'g', ...rest } = initial ?? {}
+  const [v, setV] = useState({ name, brand: '', barcode, servingG: '', servingLabel: '', kcal: '', protein: '', carb: '', fat: '', fiber: '', sugar: '', satFat: '', sodium: '', ...rest })
+  const [unit, setUnit] = useState<FoodUnit>(unit0)
   const [basis, setBasis] = useState<'100g' | 'serving'>('100g')
   const [err, setErr] = useState<string | null>(null)
   const [pending, start] = useTransition()
@@ -42,18 +48,19 @@ export default function CreateFood({ name, barcode, back, aiOn = false }: { name
   const submit = () => {
     setErr(null)
     start(async () => {
-      const r = await createFood({
-        name: v.name, brand: v.brand || undefined, barcode: v.barcode || '', basis, servingG: n(v.servingG), servingLabel: v.servingLabel || undefined,
+      const input = {
+        name: v.name, brand: v.brand || undefined, barcode: v.barcode || '', basis, unit, servingG: n(v.servingG), servingLabel: v.servingLabel || undefined,
         kcal: n(v.kcal) ?? -1, protein: n(v.protein) ?? 0, carb: n(v.carb) ?? 0, fat: n(v.fat) ?? 0,
         fiber: n(v.fiber), sugar: n(v.sugar), satFat: n(v.satFat), sodium: n(v.sodium),
-      })
+      }
+      const r = editId ? await updateFood(editId, input) : await createFood(input)
       if (!r.ok) { setErr(r.error); return }
-      router.push(back)
+      router.push(back); router.refresh()
     })
   }
   return (
     <div className="px-4 flex flex-col gap-3 pb-8">
-      <TopBar back={back} title="Yeni besin" />
+      <TopBar back={back} title={editId ? 'Besini düzenle' : 'Yeni besin'} />
       {aiOn ? (
         <section className="card p-4 flex flex-col gap-2 mt-2" data-testid="label-ocr">
           <label className={`${btn.secondary} cursor-pointer ${ocr.busy ? 'opacity-50' : ''}`}>
@@ -72,16 +79,28 @@ export default function CreateFood({ name, barcode, back, aiOn = false }: { name
         </div>
       </section>
       <section className="card p-5 flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-mute">Bu bir…</span>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Birim">
+            {([['g', 'Yiyecek', 'gram (g)', <path key="g" d="M4 11h16M5 11a7 7 0 0014 0M12 4v3" />], ['ml', 'İçecek', 'mililitre (ml)', <path key="m" d="M7 3h10l-1.5 17.5a1 1 0 01-1 .5h-5a1 1 0 01-1-.5zM7.5 9h9" />]] as const).map(([k, l, sub, icon]) => (
+              <button key={k} type="button" role="radio" aria-checked={unit === k} onClick={() => setUnit(k)} data-testid={`unit-${k}`}
+                className="min-h-[60px] rounded-2xl border border-line bg-surface-2 px-3 flex items-center gap-2.5 text-left aria-checked:border-2 aria-checked:border-acc aria-checked:bg-[color-mix(in_oklab,var(--color-acc)_10%,var(--color-surface-2))]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-acc shrink-0" aria-hidden>{icon}</svg>
+                <span className="flex flex-col leading-tight"><b className="text-[14px]">{l}</b><span className="text-[11.5px] text-mute">{sub}</span></span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-1.5 p-1 rounded-full bg-surface-2" role="group" aria-label="Değerler neye göre">
-          {([['100g', '100 g başına'], ['serving', 'Porsiyon başına']] as const).map(([k, l]) => (
+          {([['100g', `100 ${unit} başına`], ['serving', 'Porsiyon başına']] as const).map(([k, l]) => (
             <button key={k} type="button" aria-pressed={basis === k} onClick={() => setBasis(k)} className={`h-10 rounded-full text-sm font-bold ${basis === k ? 'bg-ink text-bg' : 'text-mute'}`}>{l}</button>
           ))}
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {num('servingG', 'Porsiyon', 'g')}
-          <div className="flex flex-col gap-1"><label htmlFor="cf-sl" className="text-xs text-mute">Porsiyon adı</label><input id="cf-sl" value={v.servingLabel} onChange={set('servingLabel')} className={input} placeholder="Ör. 1 kase" /></div>
+          {num('servingG', 'Porsiyon', unit)}
+          <div className="flex flex-col gap-1"><label htmlFor="cf-sl" className="text-xs text-mute">Porsiyon adı</label><input id="cf-sl" value={v.servingLabel} onChange={set('servingLabel')} className={input} placeholder={unit === 'ml' ? 'Ör. 1 kutu' : 'Ör. 1 kase'} /></div>
         </div>
-        <p className="text-xs text-mute -mt-1">{basis === 'serving' ? 'Etiketteki porsiyon değerlerini gir; 100 g\'a otomatik çevrilir.' : 'Etiketteki 100 g değerlerini gir. Porsiyon isteğe bağlıdır.'}</p>
+        <p className="text-xs text-mute -mt-1">{basis === 'serving' ? `Etiketteki porsiyon değerlerini gir; 100 ${unit}'e otomatik çevrilir.` : `Etiketteki 100 ${unit} değerlerini gir. Porsiyon isteğe bağlıdır.`}{unit === 'ml' ? ' İçeceklerde 1 ml ≈ 1 g sayılır.' : ''}</p>
         <div className="grid grid-cols-2 gap-2">
           {num('kcal', 'Kalori', 'kcal')}{num('protein', 'Protein', 'g')}{num('carb', 'Karbonhidrat', 'g')}{num('fat', 'Yağ', 'g')}
         </div>
@@ -91,7 +110,7 @@ export default function CreateFood({ name, barcode, back, aiOn = false }: { name
         </details>
       </section>
       {err ? <p role="alert" className="text-sm font-semibold text-danger px-1">{err}</p> : null}
-      <button type="button" disabled={pending || !v.name.trim() || !v.kcal} onClick={submit} className="h-14 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40">{pending ? 'Kaydediliyor…' : 'Besini kaydet'}</button>
+      <button type="button" disabled={pending || !v.name.trim() || !v.kcal} onClick={submit} className="h-14 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40">{pending ? 'Kaydediliyor…' : editId ? 'Değişiklikleri kaydet' : 'Besini kaydet'}</button>
     </div>
   )
 }

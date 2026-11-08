@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { friendAction } from './actions'
+import { ask } from '@/components/Confirm'
 
 type Op = Parameters<typeof friendAction>[0]['op']
 const RESULT: Record<string, string> = { sent: 'İstek gönderildi', accepted: 'Artık arkadaşsınız', already: 'Zaten gönderildi' }
@@ -22,7 +23,7 @@ export function RelButton({ op, id, username, label, tone = 'secondary', confirm
   return (
     <>
       <button type="button" disabled={pending} className={`h-9 px-3 rounded-full text-[12px] font-bold ${cls}`} onClick={() => start(async () => {
-        if (confirmText && !confirm(confirmText)) return
+        if (confirmText && !(await ask(confirmText))) return
         const r = await friendAction({ op, id, username })
         if (!r.ok) setErr(r.error); else router.refresh()
       })}>{label}</button>

@@ -10,6 +10,7 @@ import { POST_KINDS, REACTIONS, type Reaction } from '@/lib/social'
 import type { PostView } from '@/lib/social-data'
 import { Bookmark, Chat, Smile } from '@/components/icons'
 import { addRecipeMealAction, copyWorkoutAction, saveProgramAction, deletePostAction, friendAction, reactAction, reportAction, saveAction, saveRecipeAction } from '@/app/(app)/sosyal/actions'
+import { ask } from '@/components/Confirm'
 
 export function Avatar({ src, name, size = 40 }: { src: string | null; name: string; size?: number }) {
   // eslint-disable-next-line @next/next/no-img-element
@@ -132,7 +133,7 @@ export default function PostCard({ p, detail = false }: { p: PostView; detail?: 
       {menu ? (
         <div className="flex flex-wrap gap-2 -mt-1" role="menu">
           <Link href={`/sosyal/mesaj?paylas=${p.id}`} role="menuitem" className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold inline-flex items-center">Mesajla gönder</Link>
-          {p.mine ? <button type="button" role="menuitem" className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold text-danger" onClick={async () => { if (!confirm('Gönderi silinsin mi?')) return; await deletePostAction(p.id); setGone(true); router.refresh() }}>Sil</button> : (
+          {p.mine ? <button type="button" role="menuitem" className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold text-danger" onClick={async () => { if (!(await ask('Gönderi silinsin mi?'))) return; await deletePostAction(p.id); setGone(true); router.refresh() }}>Sil</button> : (
             <>
               {(['taciz', 'uygunsuz', 'zararlı diyet', 'spam'] as const).map((r) => <button key={r} type="button" role="menuitem" className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={async () => { const x = await reportAction({ targetType: 'post', targetId: p.id, reason: r }); setMsg(x.ok ? 'Şikayetin alındı, teşekkürler.' : x.error); setMenu(false) }}>Şikayet: {r}</button>)}
               <button type="button" role="menuitem" className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={async () => { await friendAction({ op: 'mute', id: p.author.id }); setGone(true) }}>Sessize al</button>

@@ -27,7 +27,7 @@ export default function Thread({ username, canSend, messages }: { username: stri
       <div ref={end} />
       {support ? <p className="text-[13px] text-water">{SUPPORT[support].body}</p> : null}
       {canSend ? (
-        <form className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] bg-bg pt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (!text.trim()) return; start(async () => { const r = await sendDMAction({ to: username, body: text }); if (!r.ok) { setErr(r.error); return } setText(''); setSupport(r.support); router.refresh() }) }}>
+        <form className="sticky bottom-[calc(12px+env(safe-area-inset-bottom))] bg-bg pt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (!text.trim()) return; start(async () => { const r = await sendDMAction({ to: username, body: text }); if (!r.ok) { setErr(r.error); return } setText(''); setSupport(r.support); router.refresh() }) }}>
           <label htmlFor="dm-input" className="sr-only">Mesaj</label>
           <input id="dm-input" maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder="Mesaj yaz…" className="flex-1 h-12 rounded-full bg-surface-2 border border-line px-4" />
           <button type="submit" disabled={pending || !text.trim()} className="h-12 px-5 rounded-full bg-acc text-acc-ink font-bold disabled:opacity-40">Gönder</button>

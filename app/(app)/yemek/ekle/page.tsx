@@ -11,7 +11,7 @@ import { aiAvailable } from '@/lib/ai/engine'
 export const metadata: Metadata = { title: 'Besin ekle' }
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snack']
 
-export default async function Page(props: { searchParams: Promise<{ ogun?: string; gun?: string; barkod?: string }> }) {
+export default async function Page(props: { searchParams: Promise<{ ogun?: string; gun?: string; barkod?: string; sekme?: string }> }) {
   const u = await requireUser()
   const sp = await props.searchParams
   const today = dayString()
@@ -20,7 +20,7 @@ export default async function Page(props: { searchParams: Promise<{ ogun?: strin
   const [recent, saved, mine, t, aiOn] = await Promise.all([recentFoods(u.id), savedMealsFor(u.id), userFoods(u.id), getToday(u.id, day), aiAvailable()])
   const remaining = t ? t.target.kcal + t.burned - t.eaten.kcal : 2000
   return (
-    <AddFood day={day} meal={meal} remaining={remaining} startBarcode={sp.barkod === '1'} aiOn={aiOn}
+    <AddFood day={day} meal={meal} remaining={remaining} startBarcode={sp.barkod === '1'} aiOn={aiOn} startTab={sp.sekme === 'mine' ? 'mine' : 'recent'}
       recent={recent} mine={mine} saved={saved.map((s) => ({ id: s.id, name: s.name, count: s.items.length }))} />
   )
 }

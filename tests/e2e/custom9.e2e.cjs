@@ -53,7 +53,7 @@ async function signup(b, u, errors) {
       await pa.getByTestId('contest-theme').fill('Kırmızı test ' + sfx); await pa.getByTestId('contest-save').click(); await status(pa, 'kaydedildi')
       annTitle = 'Test duyuru ' + sfx
       await pa.getByTestId('ann-title').fill(annTitle); await pa.getByTestId('ann-body').fill('Yeni şablonlara göz at'); await pa.getByTestId('ann-save').click(); await status(pa, 'yayında')
-      pa.once('dialog', (d) => d.accept()); await pa.locator('[data-default-screen=today] [data-testid=default-set]').click(); await status(pa, 'varsayılanı güncellendi'); setDefault = true
+      await pa.locator('[data-default-screen=today] [data-testid=default-set]').click(); await pa.getByTestId('confirm-ok').click(); await status(pa, 'varsayılanı güncellendi'); setDefault = true
       await pa.screenshot({ path: `${OUT}/custom9-01-yonetim.png`, fullPage: true })
       // A yarışmaya katılır
       await pa.goto(BASE + '/profil/ozellestirme/yarisma'); await pa.getByTestId('contest-current').waitFor()

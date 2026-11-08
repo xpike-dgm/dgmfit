@@ -69,14 +69,14 @@ async function signup(b, u, errors) {
   await pb.goto(tUrl); await pb.getByTestId('tpl-remix').click(); await pb.waitForURL('**/tasarimlar')
   await pb.locator(`[data-design="${tname} (remix)"]`).waitFor().catch(() => fail('remix tasarımlara eklenmedi'))
   // şikayet
-  await pb.goto(tUrl); pb.once('dialog', (d) => d.accept('test şikayeti')); await pb.getByTestId('tpl-report').click(); await status(pb, 'Şikayetin alındı')
+  await pb.goto(tUrl); await pb.getByTestId('tpl-report').click(); await pb.getByTestId('confirm-input').fill('test şikayeti'); await pb.getByTestId('confirm-ok').click(); await status(pb, 'Şikayetin alındı')
 
   // 3) A: bildirimler (beğeni + kullanım), sayaçlar, sil
   await pa.goto(BASE + '/sosyal/bildirimler'); await pa.getByTestId('notifications').waitFor()
   for (const k of ['template_like', 'template_use']) if (!(await pa.locator(`[data-testid=notification][data-kind=${k}]`).count())) fail('bildirim yok: ' + k)
   await pa.goto(tUrl)
   if (!/♥ 1 · 0 kayıt · 1 kullanım/.test(await pa.getByTestId('template-detail').innerText())) fail('sayaçlar yanlış')
-  pa.once('dialog', (d) => d.accept()); await pa.getByTestId('tpl-delete').click(); await pa.waitForURL('**/sablonlar')
+  await pa.getByTestId('tpl-delete').click(); await pa.getByTestId('confirm-ok').click(); await pa.waitForURL('**/sablonlar')
   await pb.goto(BASE + '/profil/ozellestirme/sablonlar?q=' + sfx); await pb.getByTestId('library').waitFor()
   if (await pb.locator(`[data-template="${tname}"]`).count()) fail('silinen şablon kütüphanede')
 

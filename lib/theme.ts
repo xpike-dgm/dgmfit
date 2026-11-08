@@ -48,8 +48,18 @@ export function tabFor(path: string): TabId {
   return m === 'coach' || m === 'profile' ? 'today' : m
 }
 
-/** Alt barın gizlendiği odak ekranları (canlı antrenman, koç sohbeti: yazma alanı ekranın altında). */
-export function hidesNav(path: string): boolean {
+/** Ekranın altını kendisi kullanan odak sayfaları (canlı antrenman, koç sohbeti…): alt boşluk bırakılmaz. */
+export function isFocusPage(path: string): boolean {
   const p = path.split('?')[0]
   return p === '/fitness/antrenman' || p === '/koc' || p === '/fitness/anatomi' || p.startsWith('/fitness/anatomi/') || p === '/fitness/kaydedilenler' || p === '/fitness/rekor' || /^\/fitness\/hareketler\/\d+$/.test(p)
+}
+
+/** Alt barın göründüğü sekme ana sayfaları. */
+export const NAV_ROOTS = ['/', '/fit', '/su', '/yemek', '/fitness', '/sosyal', '/panom']
+
+/** G1: alt bar yalnız sekme ana sayfalarında görünür; iç sayfalarda (ayarlar, ekleme, ayrıntı, canlı antrenman, koç…)
+ *  gizlenir — bu sayfalarda geri düğmesi var (kullanıcı: "hesap ve ayarlara girince alt menü duruyor"). */
+export function hidesNav(path: string): boolean {
+  const p = path.split('?')[0].replace(/(.)\/$/, '$1')
+  return !NAV_ROOTS.includes(p)
 }

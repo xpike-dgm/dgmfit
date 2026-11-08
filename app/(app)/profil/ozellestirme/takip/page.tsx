@@ -10,9 +10,8 @@ export default async function Page() {
   const u = await requireUser()
   const list = await listTrackers(u.id)
   return (
-    <div className="px-4 flex flex-col gap-3" data-testid="trackers">
-      <StudioHeader back="/profil/ozellestirme/kartlarim" title="Takip alanlarım" />
-      <p className="text-[12.5px] text-mute -mt-2 px-1">{`${list.length} / ${TRACKERS_MAX} · kendi ölçtüğün şeyler`}</p>
+    <div className="px-4 flex flex-col gap-4 pb-6" data-testid="trackers" data-mod="today">
+      <StudioHeader back="/profil/ozellestirme/kartlarim" title="Takip alanlarım" right={<span className="num text-[13px] font-bold text-mute pr-2">{list.length}/{TRACKERS_MAX}</span>} />
       <Trackers list={list} />
     </div>
   )

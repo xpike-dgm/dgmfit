@@ -7,6 +7,7 @@ import { addMeasurementAction, deleteMeasurementAction, deleteMediaAction } from
 import { shrinkImage } from '@/lib/client-image'
 import { fmtNum } from '@/lib/calc'
 import { compareDays, type Snap } from '@/lib/progress-compare'
+import { ask } from '@/components/Confirm'
 
 const FIELDS = [['waistCm', 'Bel'], ['chestCm', 'Göğüs'], ['hipsCm', 'Kalça'], ['armCm', 'Kol'], ['thighCm', 'Uyluk'], ['calfCm', 'Baldır'], ['neckCm', 'Boyun'], ['bodyFatPct', 'Yağ']] as const
 type Key = (typeof FIELDS)[number][0]
@@ -136,7 +137,7 @@ export function Photos({ enabled, today, photos, measures = [], weights = [] }: 
               <img src={`/api/media/${p.id}`} alt="" loading="lazy" className="w-full aspect-[3/4] object-cover bg-surface-2" />
             </button>
             <span className="text-[11px] text-mute">{short(p.day)}{p.pose ? ` · ${p.pose}` : ''}</span>
-            <button type="button" aria-label="Fotoğrafı sil" disabled={pending} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center" onClick={() => { if (confirm('Fotoğraf kalıcı olarak silinsin mi?')) start(async () => { const r = await deleteMediaAction(p.id); if (r.ok) { setSel(sel.filter((x) => x !== p.id)); router.refresh() } }) }}><Trash size={14} /></button>
+            <button type="button" aria-label="Fotoğrafı sil" disabled={pending} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center" onClick={async () => { if ((await ask('Fotoğraf kalıcı olarak silinsin mi?'))) start(async () => { const r = await deleteMediaAction(p.id); if (r.ok) { setSel(sel.filter((x) => x !== p.id)); router.refresh() } }) }}><Trash size={14} /></button>
           </li>
         ))}
       </ul>

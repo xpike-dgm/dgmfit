@@ -6,7 +6,7 @@ import { db, schema } from '@/lib/db'
 import { getUser } from '@/lib/auth'
 import { publish } from '@/lib/events'
 import { dayString } from '@/lib/time'
-import { isValidBarcode, macrosFor, per100Problem } from '@/lib/food'
+import { isValidBarcode, macrosFor, per100Problem, userFoodPortions } from '@/lib/food'
 import { computeRecipe, normalizeSearch, NUTRIENT_KEYS, type Nutrients } from '@/lib/nutrition'
 import { ensureWaterSetup } from '@/lib/water-data'
 import { refreshClosedDay } from '@/lib/fit-data'
@@ -188,6 +188,7 @@ const FoodInput = z.object({
   brand: z.string().trim().max(60).optional(),
   barcode: z.string().regex(/^\d{8,14}$/).optional().or(z.literal('')),
   basis: z.enum(['100g', 'serving']),
+  unit: z.enum(['g', 'ml']).default('g'),
   servingG: z.number().min(1).max(3000).optional(),
   servingLabel: z.string().trim().max(40).optional(),
   kcal: z.number().min(0).max(1000 * 30),
@@ -195,28 +196,50 @@ const FoodInput = z.object({
   fiber: z.number().min(0).max(3000).optional(), sugar: z.number().min(0).max(3000).optional(), satFat: z.number().min(0).max(3000).optional(), sodium: z.number().min(0).max(100000).optional(),
 })
 
-/** Kullanıcının kendi besini. Porsiyon bazında girilirse 100 g'a çevrilir. */
-export async function createFood(input: z.input<typeof FoodInput>): Promise<R<{ id: number }>> {
-  const userId = await uid()
+/** Formdan besin satırı: porsiyon bazında girilirse 100 g / 100 ml'e çevrilir. */
+function foodValues(input: z.input<typeof FoodInput>): { ok: false; error: string } | { ok: true; d: z.output<typeof FoodInput>; per100: Nutrients } {
   const p = FoodInput.safeParse(input)
   if (!p.success) return { ok: false, error: 'Ad, kalori ve makrolar gerekli' }
   const d = p.data
-  if (d.basis === 'serving' && !d.servingG) return { ok: false, error: 'Porsiyon gramajı gerekli' }
+  if (d.basis === 'serving' && !d.servingG) return { ok: false, error: d.unit === 'ml' ? 'Porsiyon miktarı (ml) gerekli' : 'Porsiyon gramajı gerekli' }
   const f = d.basis === 'serving' ? 100 / d.servingG! : 1
   const per100: Nutrients = {}
   for (const k of ['kcal', 'protein', 'carb', 'fat', 'fiber', 'sugar', 'satFat', 'sodium'] as const) if (d[k] !== undefined) per100[k] = Math.round(d[k]! * f * 10) / 10
   const bad = per100Problem({ kcal: per100.kcal ?? 0, protein: per100.protein ?? 0, carb: per100.carb ?? 0, fat: per100.fat ?? 0 })
-  if (bad) return { ok: false, error: bad }
+  if (bad) return { ok: false, error: d.unit === 'ml' ? bad.replace(/100 g/g, '100 ml') : bad }
   if (d.barcode && !isValidBarcode(d.barcode)) return { ok: false, error: 'Barkod numarası hatalı görünüyor; ürünün üzerindeki numarayı kontrol et' }
-  const portions = [...(d.servingG ? [{ label: d.servingLabel || `1 porsiyon (${d.servingG} g)`, g: d.servingG }] : []), { label: '100 g', g: 100 }]
+  return { ok: true, d, per100 }
+}
+
+/** Kullanıcının kendi besini (katı: 100 g, içecek: 100 ml başına). */
+export async function createFood(input: z.input<typeof FoodInput>): Promise<R<{ id: number }>> {
+  const userId = await uid()
+  const v = foodValues(input)
+  if (!v.ok) return v
+  const { d, per100 } = v
   const [row] = await db.insert(schema.foods).values({
     source: 'user', sourceId: crypto.randomUUID(), userId, nameTr: d.name, brand: d.brand || null, barcode: d.barcode || null, category: 'Kendi besinim',
-    per100, kcal: per100.kcal ?? 0, protein: per100.protein ?? 0, carb: per100.carb ?? 0, fat: per100.fat ?? 0, portions,
+    per100, kcal: per100.kcal ?? 0, protein: per100.protein ?? 0, carb: per100.carb ?? 0, fat: per100.fat ?? 0, portions: userFoodPortions(d.unit, d.servingG, d.servingLabel),
     search: normalizeSearch([d.name, d.brand].filter(Boolean).join(' ')),
   }).returning({ id: schema.foods.id })
   if (d.barcode) await resolveBarcodeMiss(d.barcode)
   revalidatePath('/yemek/ekle')
   return { ok: true, id: row.id }
+}
+
+/** G1: kendi besinini düzenleme. Geçmiş öğün kayıtları değişmez (değerler kayıt anında kopyalanır). */
+export async function updateFood(id: number, input: z.input<typeof FoodInput>): Promise<R> {
+  const userId = await uid()
+  const v = foodValues(input)
+  if (!v.ok) return v
+  const { d, per100 } = v
+  const res = await db.update(schema.foods).set({
+    nameTr: d.name, brand: d.brand || null, barcode: d.barcode || null, per100, kcal: per100.kcal ?? 0, protein: per100.protein ?? 0, carb: per100.carb ?? 0, fat: per100.fat ?? 0,
+    portions: userFoodPortions(d.unit, d.servingG, d.servingLabel), search: normalizeSearch([d.name, d.brand].filter(Boolean).join(' ')), updatedAt: new Date(),
+  }).where(and(eq(schema.foods.id, id), eq(schema.foods.userId, userId), eq(schema.foods.source, 'user'), isNull(schema.foods.deletedAt))).returning({ id: schema.foods.id })
+  if (!res.length) return { ok: false, error: 'Besin bulunamadı' }
+  revalidatePath('/yemek/ekle')
+  return { ok: true }
 }
 
 const RecipeInput = z.object({

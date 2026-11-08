@@ -8,21 +8,22 @@ import BarcodeScanner from '@/components/BarcodeScanner'
 import { btn, TopBar } from '@/components/ui'
 import { Back, Check, Plus } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
-import { MEAL_LABEL, type MealId } from '@/lib/food'
+import { MEAL_LABEL, foodUnit, type MealId } from '@/lib/food'
+import { ask } from '@/components/Confirm'
 import { addMealItem, addSavedMeal, deleteUserFood } from '../actions'
 import AiMeal from './AiMeal'
 import ImpactLine from '@/components/ImpactLine'
 
 interface Hit extends SheetFood { kcal: number; source: string; count?: number; partial?: boolean }
 
-export default function AddFood({ day, meal, remaining, recent, saved, mine, startBarcode, aiOn }: {
-  day: string; meal: MealId; remaining: number; recent: Hit[]; saved: { id: string; name: string; count: number }[]; mine: Hit[]; startBarcode: boolean; aiOn: boolean
+export default function AddFood({ day, meal, remaining, recent, saved, mine, startBarcode, aiOn, startTab = 'recent' }: {
+  day: string; meal: MealId; remaining: number; recent: Hit[]; saved: { id: string; name: string; count: number }[]; mine: Hit[]; startBarcode: boolean; aiOn: boolean; startTab?: 'recent' | 'mine'
 }) {
   const router = useRouter()
   const [q, setQ] = useState('')
   const [results, setResults] = useState<Hit[] | null>(null)
   const [loading, setLoading] = useState(false)
-  const [tab, setTab] = useState<'recent' | 'saved' | 'mine'>('recent')
+  const [tab, setTab] = useState<'recent' | 'saved' | 'mine'>(startTab)
   const [selected, setSelected] = useState<Hit | null>(null)
   const [scan, setScan] = useState(startBarcode)
   const [barcodeMsg, setBarcodeMsg] = useState<{ code: string; text: string } | null>(null)
@@ -126,27 +127,41 @@ export default function AddFood({ day, meal, remaining, recent, saved, mine, sta
           {results === null && tab === 'recent' && recent.length === 0 ? <li className="p-4 text-sm text-mute">Henüz kayıt yok. Yukarıdan arayarak başla.</li> : null}
           {results === null && tab === 'mine' ? (
             <li className="flex gap-2 p-2">
-              <Link href={`/yemek/besin/yeni?ogun=${meal}&gun=${day}`} className={btn.secondary + ' flex-1 h-11 text-sm'}><Plus size={16} /> Besin oluştur</Link>
-              <Link href={`/yemek/tarif/yeni?ogun=${meal}&gun=${day}`} className={btn.secondary + ' flex-1 h-11 text-sm'}><Plus size={16} /> Tarif oluştur</Link>
+              <Link href={`/yemek/besin/yeni?ogun=${meal}&gun=${day}`} className={btn.secondary + ' flex-1 min-w-0 h-11 text-sm whitespace-nowrap px-3'}><Plus size={16} /> Besin oluştur</Link>
+              <Link href={`/yemek/tarif/yeni?ogun=${meal}&gun=${day}`} className={btn.secondary + ' flex-1 min-w-0 h-11 text-sm whitespace-nowrap px-3'}><Plus size={16} /> Tarif oluştur</Link>
             </li>
           ) : null}
-          {list.map((f) => (
-            <li key={f.id} className="flex items-center border-t border-surface-2 first:border-t-0">
-              <button type="button" onClick={() => setSelected(f)} className="flex-1 flex items-center gap-3 min-h-[60px] px-2 text-left">
+          {list.map((f) => {
+            const u = foodUnit(f.portions)
+            const own = tab === 'mine' && results === null && f.source === 'user'
+            return (
+            <li key={f.id} className="flex items-center border-t border-surface-2 first:border-t-0" data-food-row={f.id}>
+              <button type="button" onClick={() => setSelected(f)} className="flex-1 min-w-0 flex items-center gap-3 min-h-[60px] px-2 text-left">
                 <span className="flex flex-col flex-1 min-w-0">
                   <span className="text-[15px] font-bold truncate">{f.name}</span>
                   <span className="text-xs text-mute truncate">{f.sub ?? ''}{f.count ? ` · ${f.count} kez` : ''}</span>
                 </span>
                 <span className="flex flex-col items-end shrink-0">
                   <span className="num text-sm font-semibold">{fmtNum(f.kcal)}</span>
-                  <span className="text-[11px] text-mute">kcal/100 g</span>
+                  <span className="text-[11px] text-mute">kcal/100 {u}</span>
                 </span>
               </button>
               {tab === 'mine' && results === null ? (
-                <button type="button" aria-label={`${f.name} sil`} className="w-10 h-10 text-mute" onClick={() => start(async () => { await deleteUserFood(f.id); router.refresh() })}>×</button>
+                <span className="flex items-center shrink-0 pr-1">
+                  {own ? (
+                    <Link href={`/yemek/besin/${f.id}?ogun=${meal}&gun=${day}`} aria-label={`${f.name} düzenle`} data-testid="food-edit" className="w-10 h-10 rounded-full text-ink-2 flex items-center justify-center">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>
+                    </Link>
+                  ) : null}
+                  <button type="button" aria-label={`${f.name} sil`} className="w-10 h-10 rounded-full text-mute flex items-center justify-center" data-testid="food-delete"
+                    onClick={async () => { if (await ask(`“${f.name}” silinsin mi? Geçmiş kayıtların günlükte kalır.`)) start(async () => { await deleteUserFood(f.id); router.refresh() }) }}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" /></svg>
+                  </button>
+                </span>
               ) : null}
             </li>
-          ))}
+            )
+          })}
           {results !== null && !loading && q.trim().length >= 2 ? (
             <li className="border-t border-surface-2 px-2 py-3 flex flex-col gap-2" data-testid="food-notfound">
               <span className="text-[12.5px] text-mute">Aradığını bulamadın mı?</span>

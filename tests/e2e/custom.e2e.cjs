@@ -78,7 +78,7 @@ const fail = (m) => { throw new Error(m) }
   await p.screenshot({ path: `${OUT}/custom-04-yeni-duzen.png`, fullPage: true })
 
   // 7) Stüdyodan varsayılana dön
-  await p.goto(BASE + '/profil/ozellestirme/duzen'); p.once('dialog', (d) => d.accept()); await p.locator('[data-studio-screen=today] [data-testid=studio-reset]').click()
+  await p.goto(BASE + '/profil/ozellestirme/duzen'); await p.locator('[data-studio-screen=today] [data-testid=studio-reset]').click(); await p.getByTestId('confirm-ok').click()
   await p.waitForTimeout(800); await p.goto(BASE + '/')
   if (JSON.stringify(await order()) !== JSON.stringify(o0)) fail('varsayılana dönmedi: ' + (await order()))
 
@@ -112,7 +112,7 @@ const fail = (m) => { throw new Error(m) }
   await p.goto(BASE + '/profil/ozellestirme/duzen')
   if (!(await p.locator('[data-studio-screen=food] [data-testid=studio-reset]').count())) fail('stüdyo yemek özelleştirmesini göstermiyor')
   if (await p.locator('[data-studio-screen=fit] [data-testid=studio-reset]').count()) fail('stüdyo fit ekranını yanlışlıkla özelleştirilmiş gösteriyor')
-  p.once('dialog', (d) => d.accept()); await p.locator('[data-studio-screen=food] [data-testid=studio-reset]').click()
+  await p.locator('[data-studio-screen=food] [data-testid=studio-reset]').click(); await p.getByTestId('confirm-ok').click()
   await p.waitForTimeout(800); await p.goto(BASE + '/yemek')
   if (!(await order()).includes('food.tip')) fail('yemek varsayılana dönmedi')
 

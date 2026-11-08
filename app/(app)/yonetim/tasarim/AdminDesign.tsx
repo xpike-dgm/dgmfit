@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { communityAction } from '@/app/(app)/profil/ozellestirme/actions'
+import { ask } from '@/components/Confirm'
 
 export default function AdminDesign({ contest, announcements, screens }: {
   contest: { theme: string; description: string; entries: number } | null
@@ -53,7 +54,7 @@ export default function AdminDesign({ contest, announcements, screens }: {
           <div key={s.id} className="flex items-center justify-between gap-2 min-h-[52px] border-t border-line" data-default-screen={s.id}>
             <span className="flex flex-col"><b className="text-[14px]">{s.title}</b><span className="text-[11.5px] text-mute">{s.custom ? `Yönetim varsayılanı · ${s.count} kart` : 'Kayıttaki varsayılan'}</span></span>
             <span className="flex gap-1.5">
-              <button type="button" disabled={pending} onClick={() => { if (confirm(`${s.title}: senin düzenin herkesin varsayılanı olsun mu?`)) run({ op: 'defaultLayout', screen: s.id, reset: false }, `${s.title} varsayılanı güncellendi`) }} className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[12px] font-extrabold" data-testid="default-set">Benimkini yap</button>
+              <button type="button" disabled={pending} onClick={async () => { if ((await ask(`${s.title}: senin düzenin herkesin varsayılanı olsun mu?`))) run({ op: 'defaultLayout', screen: s.id, reset: false }, `${s.title} varsayılanı güncellendi`) }} className="h-9 px-3 rounded-full bg-acc text-acc-ink text-[12px] font-extrabold" data-testid="default-set">Benimkini yap</button>
               {s.custom ? <button type="button" disabled={pending} onClick={() => run({ op: 'defaultLayout', screen: s.id, reset: true }, `${s.title} kayıttaki varsayılana döndü`)} className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" data-testid="default-reset">Sıfırla</button> : null}
             </span>
           </div>

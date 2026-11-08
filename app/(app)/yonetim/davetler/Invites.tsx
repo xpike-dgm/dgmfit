@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
 import { Check, Ticket, Trash } from '@/components/icons'
 import { createInviteAction, inviteDeleteAction, inviteToggleAction } from '../actions'
+import { ask } from '@/components/Confirm'
 
 interface Inv { code: string; label: string; maxUses: number | null; uses: number; expiresAt: string | null; disabled: boolean; usable: boolean; createdAt: string }
 const field = 'w-full h-12 rounded-2xl bg-surface-2 border border-line px-4 text-[16px] outline-none focus:border-acc'
@@ -60,7 +61,7 @@ export default function Invites({ list, origin }: { list: Inv[]; origin: string 
             <div className="flex gap-2 flex-wrap">
               {i.usable ? <button type="button" className="h-9 px-3.5 rounded-full border border-line-2 text-[13px] font-bold" onClick={() => copy(i.code)}>{copied === i.code ? 'Kopyalandı' : 'Paylaş'}</button> : null}
               <button type="button" disabled={pending} className="h-9 px-3.5 rounded-full border border-line-2 text-[13px] font-bold" onClick={() => start(async () => { await inviteToggleAction(i.code, !i.disabled); router.refresh() })}>{i.disabled ? 'Aç' : 'Kapat'}</button>
-              <button type="button" disabled={pending} aria-label="Kodu sil" className="h-9 w-9 rounded-full border border-line-2 text-danger flex items-center justify-center ml-auto" onClick={() => confirm(`${i.code} silinsin mi?`) && start(async () => { await inviteDeleteAction(i.code); router.refresh() })}><Trash size={16} /></button>
+              <button type="button" disabled={pending} aria-label="Kodu sil" className="h-9 w-9 rounded-full border border-line-2 text-danger flex items-center justify-center ml-auto" onClick={async () => (await ask(`${i.code} silinsin mi?`)) && start(async () => { await inviteDeleteAction(i.code); router.refresh() })}><Trash size={16} /></button>
             </div>
           </article>
         )) : <p className="card p-4 text-[14px] text-mute">Henüz kod yok. Kod olmadan kayıt olanlar onay listesine düşer.</p>}

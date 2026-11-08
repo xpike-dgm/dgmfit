@@ -18,6 +18,7 @@ const ccAttrs = (c: CardColors | undefined): { style?: Record<string, string>; '
 import Sheet from '@/components/Sheet'
 import Link from 'next/link'
 import { useDesignPrefs } from './DesignPrefs'
+import { ask } from '@/components/Confirm'
 
 type Item = { id: string; size: CardSize; stack?: string[] }
 interface Props {
@@ -61,7 +62,7 @@ const HOLD_EDIT_MS = 600
 /** Basılı tutulunca düzenlemeye geçmeyecek öğeler (dokunulabilir içerik). */
 const INTERACTIVE = 'a,button,input,select,textarea,label,summary,details,[role=button],[role=slider],[role=dialog],[contenteditable],[data-no-hold]'
 
-const SW = 168 // açık kartta görünen eylem alanı genişliği
+const SW = 160 // açık kartta görünen eylem alanı genişliği
 
 /** Ö1b-4: kart yığını — kartlar aynı yerde yana kaydırılarak (scroll-snap) gezilir; noktalar hangi kartta olunduğunu gösterir. */
 function StackCard({ id, size, ids, nodes, colors }: { id: string; size: CardSize; ids: string[]; nodes: Record<string, ReactNode>; colors?: Record<string, CardColors> }) {
@@ -150,6 +151,7 @@ function SwipeCard({ id, size, pinned, open, onOpen, onAct, colors, children }: 
     window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up)
   }
   const shown = dx < -4
+  const prog = Math.min(1, -dx / SW)
   return (
     <div ref={ref} className={`${size === 'full' ? 'col-span-2' : ''} relative min-w-0 flex flex-col`} data-card={id} data-swiped={open ? '' : undefined}
       onPointerDown={mouseDown} onDragStart={(e) => e.preventDefault()}
@@ -160,11 +162,19 @@ function SwipeCard({ id, size, pinned, open, onOpen, onAct, colors, children }: 
         if (open) { e.preventDefault(); e.stopPropagation(); onOpen(false) }
       }}>
       {shown ? (
-        <div className="absolute inset-y-0 right-0 flex gap-2 items-stretch py-1" style={{ width: SW }} data-swipe-act>
-          {canHideToday(id) ? <button type="button" onClick={() => onAct('hide')} data-testid="swipe-hide" className="flex-1 rounded-[20px] bg-surface-3 text-ink text-[12.5px] font-extrabold flex flex-col items-center justify-center gap-1 px-1 text-center leading-tight">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M3 3l18 18M10.6 6.1A10 10 0 0122 12a17 17 0 01-3 3.7M6.6 6.6A17 17 0 002 12s3.6 7 10 7a9.6 9.6 0 004.4-1.1" /></svg>Bugünlük gizle</button> : null}
-          {canPin(id) ? <button type="button" onClick={() => onAct('pin')} data-testid="swipe-pin" className="flex-1 rounded-[20px] bg-acc text-acc-ink text-[12.5px] font-extrabold flex flex-col items-center justify-center gap-1 px-1 text-center leading-tight">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z" /></svg>{pinned ? 'Sabiti kaldır' : 'Üste sabitle'}</button> : null}
+        // G1: küçük yuvarlak eylemler; kaydırdıkça belirir (saydamlık + ölçek), uzun kartta üst bölümde durur
+        <div className="absolute right-0 top-0 h-full max-h-[180px] flex items-center justify-end gap-2.5 pr-1.5" style={{ width: SW }} data-swipe-act>
+          {([canHideToday(id) ? ['hide', 'Bugünlük gizle', 'bg-surface-3 text-ink', <path key="h" d="M3 3l18 18M10.6 6.1A10 10 0 0122 12a17 17 0 01-3 3.7M6.6 6.6A17 17 0 002 12s3.6 7 10 7a9.6 9.6 0 004.4-1.1" />] : null,
+            canPin(id) ? ['pin', pinned ? 'Sabiti kaldır' : 'Üste sabitle', 'bg-acc text-acc-ink', <path key="p" d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z" />] : null] as ([ 'hide' | 'pin', string, string, ReactNode ] | null)[]).map((b, i) => b ? (
+            <button key={b[0]} type="button" onClick={() => onAct(b[0])} data-testid={`swipe-${b[0]}`} tabIndex={open ? 0 : -1}
+              className="w-[68px] flex flex-col items-center gap-1.5 text-[11.5px] font-bold text-ink-2 leading-tight text-center"
+              style={{ opacity: prog, transform: `translateX(${(1 - prog) * (24 + i * 12)}px) scale(${0.7 + 0.3 * prog})`, transition: drag ? 'none' : 'opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1)' }}>
+              <span className={`w-12 h-12 rounded-full ${b[2]} flex items-center justify-center shadow-[0_4px_14px_rgba(0,0,0,.25)]`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{b[3]}</svg>
+              </span>
+              {b[1]}
+            </button>
+          ) : null)}
         </div>
       ) : null}
       {(() => { const cc = ccAttrs(colors); return <div className={`relative flex-1 flex flex-col [&>*]:flex-1 ${drag ? '' : 'transition-transform duration-200'}`} data-cc={cc['data-cc']} style={{ ...cc.style, ...(dx ? { transform: `translateX(${dx}px)` } : {}) }}>{children}</div> })()}
@@ -295,7 +305,7 @@ function Editor(p: Props) {
   const defOf = useDefOf()
   const router = useRouter()
   const left = useDesignPrefs().hand === 'left'
-  const [items, setItems] = useState<Item[]>(p.items)
+  const [items, setItemsRaw] = useState<Item[]>(p.items)
   const [history, setHistory] = useState<Item[][]>([])
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; dx: number; dy: number; w: number; h: number } | null>(null)
   const [studio, setStudio] = useState<{ id: string; tab: 'color' | 'layout' } | null>(null)
@@ -307,7 +317,6 @@ function Editor(p: Props) {
   const [msg, setMsg] = useState<string | null>(p.notices?.length ? p.notices.join(' ') : null)
   const [flash, setFlash] = useState<string | null>(null)
   const refs = useRef(new Map<string, HTMLDivElement>())
-  const rects = useRef(new Map<string, DOMRect>())
   const hold = useRef<{ timer: number; x: number; y: number; id: string; el: HTMLElement } | null>(null)
   const itemsRef = useRef(items)
   itemsRef.current = items
@@ -324,7 +333,7 @@ function Editor(p: Props) {
     if (next === itemsRef.current) return
     setHistory((h) => [...h.slice(-30), itemsRef.current])
     setItems(next)
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // alt menü düzenlemede gizlenir (kaydedilmemiş değişiklikle sayfadan çıkılmasın)
   useEffect(() => {
@@ -338,47 +347,110 @@ function Editor(p: Props) {
     else delete document.documentElement.dataset.dragging
   }, [drag !== null]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // FLIP: sıra değişince kartlar kayarak yerine geçer
+  // FLIP (G1): sıra değişmeden hemen önce kartların görünen yerleri belge koordinatında alınır; yeni yerleşimden sonra
+  // her kart eski yerinden kayarak gelir. Sayfa kayması ve yarım kalmış animasyonlar konumu bozmaz (önceki sürüm ekran
+  // koordinatıyla her render'da çalışıyordu → sayfa kayınca tüm kartlar kayıp görünüyordu).
+  const before = useRef<Map<string, { x: number; y: number }> | null>(null)
+  const snap = () => {
+    const m = new Map<string, { x: number; y: number }>()
+    for (const [id, el] of refs.current) { const r = el.getBoundingClientRect(); m.set(id, { x: r.left + window.scrollX, y: r.top + window.scrollY }) }
+    return m
+  }
+  function setItems(next: Item[]) { before.current = snap(); setItemsRaw(next) }
   useLayoutEffect(() => {
+    const prev = before.current
+    before.current = null
+    if (!prev) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     for (const [id, el] of refs.current) {
-      const now = el.getBoundingClientRect()
-      const old = rects.current.get(id)
-      if (old && !reduce && (old.left !== now.left || old.top !== now.top) && id !== dragRef.current?.id) {
-        el.animate([{ transform: `translate(${old.left - now.left}px, ${old.top - now.top}px)` }, { transform: 'none' }], { duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' })
-      }
-      rects.current.set(id, now)
+      el.getAnimations().forEach((a) => a.cancel())
+      const o = prev.get(id)
+      if (!o || reduce || id === dragRef.current?.id) continue
+      const r = el.getBoundingClientRect()
+      const dx = o.x - (r.left + window.scrollX), dy = o.y - (r.top + window.scrollY)
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' })
     }
-  })
+  }, [items])
 
-  // sürükleme sırasında: işaretçiyi izle, altındaki kartın yerine taşı, kenarlarda kaydır
+  // Kartın yerleşim kutusu (animasyon dönüşümünden etkilenmez): ızgara `relative`, kartlar onun çocuğu.
+  const grid = useRef<HTMLDivElement>(null)
+  const head = useRef<HTMLDivElement>(null)
+  const layoutRect = (el: HTMLElement) => {
+    const g = grid.current!.getBoundingClientRect()
+    return { left: g.left + el.offsetLeft, top: g.top + el.offsetTop, right: g.left + el.offsetLeft + el.offsetWidth, bottom: g.top + el.offsetTop + el.offsetHeight }
+  }
+  const lock = useRef<string | null>(null)
+  const dir = useRef<1 | -1>(1)
+  const pointer = useRef({ x: 0, y: 0 })
+  /** Sürüklenen kartın ön kenarına yakın bir nokta hangi kartın üstündeyse onun yerine geçer. Az önce yer değiştirilen
+   *  kart, nokta ondan çıkana kadar kilitli kalır (iki kart arasında gidip gelme olmaz). */
+  const probe = () => {
+    const d = dragRef.current
+    if (!d || !grid.current) return
+    const top = pointer.current.y - d.dy
+    const inset = Math.min(d.h / 2, 56)
+    const py = dir.current > 0 ? top + d.h - inset : top + inset
+    const px = pointer.current.x
+    const list = itemsRef.current
+    const from = list.findIndex((i) => i.id === d.id)
+    if (lock.current) {
+      const el = refs.current.get(lock.current)
+      const r = el ? layoutRect(el) : null
+      if (!r || px < r.left || px > r.right || py < r.top || py > r.bottom) lock.current = null
+    }
+    for (let i = 0; i < list.length; i++) {
+      const id = list[i].id
+      if (id === d.id || id === lock.current) continue
+      const el = refs.current.get(id)
+      if (!el) continue
+      const r = layoutRect(el)
+      if (px >= r.left && px <= r.right && py >= r.top && py <= r.bottom) {
+        const next = moveItem(list, from, i)
+        if (next !== list) { lock.current = id; setItems(next) }
+        break
+      }
+    }
+  }
+
+  // sürükleme sırasında: işaretçiyi izle, kenara yaklaşınca sayfayı yumuşakça kaydır (parmak dursa da sürer)
   useEffect(() => {
     if (!drag) return
-    let raf = 0
+    let raf = 0, last = 0
+    lock.current = null
     const onMove = (e: PointerEvent) => {
       const d = dragRef.current
       if (!d) return
+      if (e.clientY - pointer.current.y > 2) dir.current = 1
+      else if (e.clientY - pointer.current.y < -2) dir.current = -1
+      pointer.current = { x: e.clientX, y: e.clientY }
       setDrag({ ...d, x: e.clientX, y: e.clientY })
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        const list = itemsRef.current
-        const from = list.findIndex((i) => i.id === d.id)
-        for (let i = 0; i < list.length; i++) {
-          const el = refs.current.get(list[i].id)
-          if (!el || list[i].id === d.id) continue
-          const r = el.getBoundingClientRect()
-          if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
-            const next = moveItem(list, from, i)
-            if (next !== list) setItems(next)
-            break
-          }
-        }
-        if (e.clientY < 90) window.scrollBy(0, -12)
-        else if (e.clientY > window.innerHeight - 90) window.scrollBy(0, 12)
-      })
     }
+    // Kenar kaydırması yalnız parmak kenara doğru gidince başlar: kart zaten ekranın altındaysa sürükleme başlar başlamaz
+    // sayfa hızla aşağı akıp kartı en alta götürüyordu (G1). Hız 0–0,5 px/ms, kenara yaklaştıkça artar.
+    const start = { ...pointer.current }
+    let armed = false
+    const tick = (t: number) => {
+      const dt = last ? Math.min(48, t - last) : 16
+      last = t
+      const y = pointer.current.y
+      const topEdge = (head.current?.getBoundingClientRect().bottom ?? 0) + 64
+      const bottomEdge = window.innerHeight - 72
+      if (!armed && ((y > topEdge && y < bottomEdge) || Math.abs(y - start.y) > 28)) armed = true
+      let v = 0
+      if (armed && y < topEdge && y < start.y + 4) v = -Math.min(1, (topEdge - y) / 64)
+      else if (armed && y > bottomEdge && y > start.y - 4) v = Math.min(1, (y - bottomEdge) / 64)
+      if (v) {
+        const sy = window.scrollY
+        window.scrollBy(0, Math.sign(v) * Math.max(0.06, v * v * 0.5) * dt)
+        if (window.scrollY !== sy) dir.current = v > 0 ? 1 : -1
+      }
+      probe()
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
     const onUp = () => {
       cancelAnimationFrame(raf)
+      lock.current = null
       setDrag(null)
       setDrawerOpen(false)
     }
@@ -410,10 +482,12 @@ function Editor(p: Props) {
         let at = itemsRef.current.length
         itemsRef.current.forEach((it, i) => { const r = refs.current.get(it.id)?.getBoundingClientRect(); if (r && y < r.top + r.height / 2 && at === itemsRef.current.length) at = i })
         setItems(addItem(itemsRef.current, id, at) as Item[])
+        pointer.current = { x, y }
         setDrag({ id, x, y, dx: 150, dy: 40, w: 300, h: 88 })
         return
       }
       const r = el.getBoundingClientRect()
+      pointer.current = { x, y }
       setDrag({ id, x, y, dx: x - r.left, dy: y - r.top, w: r.width, h: r.height })
     }, HOLD_MS)
     hold.current = { timer, x, y, id, el }
@@ -424,7 +498,7 @@ function Editor(p: Props) {
   }
   const endHold = () => { if (hold.current) { clearTimeout(hold.current.timer); hold.current = null } }
 
-  const undo = () => setHistory((h) => { if (!h.length) return h; setItems(h[h.length - 1]); return h.slice(0, -1) })
+  const undo = () => { if (!history.length) return; setItems(history[history.length - 1]); setHistory(history.slice(0, -1)) }
   const remove = (id: string) => { commit(removeItem(items, id)); setMsg(`${defOf(id)?.title} kaldırıldı · çekmeceden geri ekleyebilirsin`) }
   const add = (id: string) => {
     commit(addItem(items, id) as Item[])
@@ -447,9 +521,9 @@ function Editor(p: Props) {
     if (!r.ok) { setMsg(r.error); return }
     router.replace(path); router.refresh()
   }
-  const cancel = () => { if (!changed || confirm('Değişiklikler kaydedilmeden çıkılsın mı?')) router.replace(path) }
+  const cancel = async () => { if (!changed || (await ask('Değişiklikler kaydedilmeden çıkılsın mı?'))) router.replace(path) }
   const reset = async () => {
-    if (!confirm('Bu ekran varsayılan düzene dönsün mü?')) return
+    if (!(await ask('Bu ekran varsayılan düzene dönsün mü?'))) return
     setBusy(true); await resetLayoutAction(p.screen); setBusy(false)
     router.replace(path); router.refresh()
   }
@@ -487,7 +561,7 @@ function Editor(p: Props) {
 
   return (
     <div className="flex flex-col gap-3" data-testid="card-editor" data-mod="today">
-      <div className="sticky top-0 z-40 -mx-4 bg-surface border-b border-line">
+      <div ref={head} className="sticky top-0 z-40 -mx-4 bg-surface border-b border-line">
         <div className="flex items-center justify-between px-3 pt-3 pb-2">
           <button type="button" onClick={cancel} className="min-h-11 px-3 text-[14px] font-bold text-mute">Vazgeç</button>
           <span className="flex flex-col items-center leading-tight"><b className="text-[15px] font-extrabold">{SCREENS[p.screen].title}</b><span className="text-[11.5px] font-bold text-acc">Düzenleniyor</span></span>
@@ -507,7 +581,7 @@ function Editor(p: Props) {
       </div>
       <p className="text-[12.5px] text-mute text-center" role="status">{msg ?? (pickColor ? 'Rengini değiştirmek istediğin karta dokun' : 'Taşımak için kartı basılı tut ve sürükle')}</p>
 
-      <div className="grid grid-cols-2 gap-3 select-none [-webkit-touch-callout:none] pt-1">
+      <div ref={grid} className="relative grid grid-cols-2 gap-3 select-none [-webkit-touch-callout:none] pt-1">
         {items.map((it, idx) => {
           const def = defOf(it.id)!
           const dragging = drag?.id === it.id

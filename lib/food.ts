@@ -111,3 +111,15 @@ export function isValidBarcode(code: string): boolean {
 }
 
 function round1(v: number) { return Math.round(v * 10) / 10 }
+
+/** G1: içecekler ml ile girilir. Birim, temel porsiyonun adından okunur ("100 ml" → ml); 1 ml ≈ 1 g kabul edilir. */
+export type FoodUnit = 'g' | 'ml'
+export const baseLabel = (u: FoodUnit) => (u === 'ml' ? '100 ml' : '100 g')
+export const isBasePortion = (label: string | null | undefined) => label === '100 g' || label === '100 ml'
+export function foodUnit(portions: { label: string }[] | null | undefined): FoodUnit {
+  return portions?.some((p) => p.label === '100 ml') ? 'ml' : 'g'
+}
+/** Kendi besininin porsiyon listesi: (varsa) porsiyon + temel 100 g / 100 ml. */
+export function userFoodPortions(unit: FoodUnit, servingG?: number, servingLabel?: string): { label: string; g: number }[] {
+  return [...(servingG ? [{ label: servingLabel || `1 porsiyon (${servingG} ${unit})`, g: servingG }] : []), { label: baseLabel(unit), g: 100 }]
+}

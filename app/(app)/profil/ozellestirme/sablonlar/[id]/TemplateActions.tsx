@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Sheet from '@/components/Sheet'
 import { templateAction } from '../../actions'
+import { ask, askText } from '@/components/Confirm'
 
 const MODES: ['all' | 'colors' | 'layout', string, string][] = [
   ['all', 'Tümünü kullan', 'Düzen, renkler ve stil'],
@@ -34,8 +35,8 @@ export default function TemplateActions({ id, name, liked, saved, mine, admin, s
         className="h-12 rounded-full border border-line-2 font-bold text-[14px]" data-testid="tpl-remix">↻ Tasarımlarıma ekle (remix)</button>
       {msg ? <p role="status" className="text-[13px] font-bold text-ink-2 px-1">{msg}</p> : null}
       <div className="flex flex-wrap gap-2 justify-center pt-1">
-        {!mine ? <button type="button" disabled={pending} onClick={() => { const reason = prompt('Neden şikayet ediyorsun? (ör. uygunsuz ad)'); if (reason?.trim()) run({ op: 'report', reason: reason.trim() }, 'Şikayetin alındı') }} className="h-9 px-3 text-[12.5px] font-bold text-mute" data-testid="tpl-report">Şikayet et</button> : null}
-        {mine || admin ? <button type="button" disabled={pending} onClick={() => { if (confirm(`${name} şablonu silinsin mi?`)) run({ op: 'delete' }, 'Silindi', () => router.push('/profil/ozellestirme/sablonlar')) }} className="h-9 px-3 text-[12.5px] font-bold text-danger" data-testid="tpl-delete">Şablonu sil</button> : null}
+        {!mine ? <button type="button" disabled={pending} onClick={async () => { const reason = (await askText('Neden şikayet ediyorsun? (ör. uygunsuz ad)')); if (reason?.trim()) run({ op: 'report', reason: reason.trim() }, 'Şikayetin alındı') }} className="h-9 px-3 text-[12.5px] font-bold text-mute" data-testid="tpl-report">Şikayet et</button> : null}
+        {mine || admin ? <button type="button" disabled={pending} onClick={async () => { if ((await ask(`${name} şablonu silinsin mi?`))) run({ op: 'delete' }, 'Silindi', () => router.push('/profil/ozellestirme/sablonlar')) }} className="h-9 px-3 text-[12.5px] font-bold text-danger" data-testid="tpl-delete">Şablonu sil</button> : null}
         {admin ? <>
           <button type="button" disabled={pending} onClick={() => run({ op: 'admin', action: 'feature' }, 'Haftanın şablonu yapıldı')} className="h-9 px-3 text-[12.5px] font-bold text-acc" data-testid="tpl-feature">Haftanın şablonu yap</button>
           {status !== 'public' ? <button type="button" disabled={pending} onClick={() => run({ op: 'admin', action: 'approve' }, 'Onaylandı')} className="h-9 px-3 text-[12.5px] font-bold text-acc">Onayla</button> : <button type="button" disabled={pending} onClick={() => run({ op: 'admin', action: 'hide' }, 'Gizlendi')} className="h-9 px-3 text-[12.5px] font-bold text-mute">Gizle</button>}

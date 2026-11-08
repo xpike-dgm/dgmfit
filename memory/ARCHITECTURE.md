@@ -120,3 +120,11 @@ Su kuralları: hedefe `effective_ml` sayılır; Bugün ekranının su hedefi `wa
 ## Olay türleri (`lib/events.ts`)
 
 `profile.onboarded`, `profile.updated`, `weight.logged`, `meal.logged`, `meal.usual`, `reminder.meal`, `goal.reached`, `goal.choice`, `bodyfat.updated`, `workout.finished`, `pr.achieved`, `water.logged`, `day.closed`, `plan.adjusted`. Şu an yayınlananlar: `profile.onboarded`, `weight.logged`, `water.logged`, `meal.logged`, `day.closed`, `plan.adjusted`. Dinleyici: `water.logged` (zamanlayıcı, hatırlatma etkinliği). Henüz dinleyici (`on`) kaydı yok.
+
+## G1 (2026-11-08) eklemeleri
+- `components/Confirm.tsx`: uygulama içi onay (`ask(message, opts)` → Promise<boolean>, `askText` → Promise<string|null>); `<ConfirmHost/>` (app) yerleşiminde. Düğme adı/rengi `lib/confirm.ts` `inferOk`. e2e: `confirm-ok`, `confirm-cancel`, `confirm-input`, `confirm-message`.
+- `lib/theme.ts`: `hidesNav` = sekme kökü değilse gizli (`NAV_ROOTS`); `isFocusPage` alt boşluğu sıfır olan odak sayfaları (ModShell).
+- Yemek: `lib/food.ts` `foodUnit/baseLabel/isBasePortion/userFoodPortions`; `updateFood` aksiyonu; `/yemek/besin/[id]` düzenleme (CreateFood `editId`, `initial`); `/yemek/ekle?sekme=mine`.
+- Kart düzenleyici (CardBoard Editor): `setItems` öncesi `snap()` (belge koordinatı) → `useLayoutEffect([items])` FLIP; `probe()` ön kenar noktası + `lock`; rAF kenar kaydırması (`armed`).
+- Özelleştirme: `components/cards/StudioUI.tsx` (Group, Row, IconBox, Ico, ScreenThumb, Lead, switchClass/segClass/chipClass); `app/(app)/profil/ozellestirme/layout.tsx` data-mod=today; alt pencere Kaydet çubuğu `.sheet-actions` (globals.css).
+

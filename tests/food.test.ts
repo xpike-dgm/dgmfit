@@ -63,3 +63,13 @@ test('per100Problem: fiziksel olarak imkânsız etiketleri yakalar', () => {
   assert.equal(per100Problem({ kcal: 404, protein: 19, carb: 81.2, fat: 0.4 }), null, 'gainer etiketi 100,6 g')
   assert.ok(per100Problem({ kcal: 430, protein: 30, carb: 76, fat: 0 }), 'toplam 106 g reddedilir')
 })
+
+test('G1: ml birimli kendi besini', async () => {
+  const { foodUnit, userFoodPortions, isBasePortion } = await import('../lib/food.ts')
+  const p = userFoodPortions('ml', 330, '1 kutu')
+  assert.deepEqual(p, [{ label: '1 kutu', g: 330 }, { label: '100 ml', g: 100 }])
+  assert.equal(foodUnit(p), 'ml')
+  assert.equal(foodUnit(userFoodPortions('g', 40)), 'g')
+  assert.equal(userFoodPortions('g', 40)[0].label, '1 porsiyon (40 g)')
+  assert.ok(isBasePortion('100 ml') && isBasePortion('100 g') && !isBasePortion('1 kutu'))
+})

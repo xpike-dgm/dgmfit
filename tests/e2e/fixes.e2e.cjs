@@ -66,7 +66,7 @@ const fail = (m) => { throw new Error(m) }
   await p.getByTestId('live-strip').getByRole('tab', { name: BENCH, exact: true }).click()
   await sec('Barbell Bench Press').getByRole('button', { name: 'Set 1 geri al' }).waitFor().catch(() => fail('devam edince taslak gelmedi'))
   await p.goto(BASE + dayHref); await p.getByTestId('draft-conflict').waitFor()
-  await p.getByRole('button', { name: 'Sil ve yenisini başlat' }).click()
+  await p.getByRole('button', { name: 'Sil ve yenisini başlat' }).click(); await p.getByTestId('confirm-ok').click()
   await p.getByTestId('live-strip').waitFor(); if (await p.getByTestId('draft-conflict').count()) fail('yeni antrenman başlamadı')
   await p.getByRole('button', { name: 'Bitir' }).click(); await p.keyboard.press('Escape')
 

@@ -210,7 +210,7 @@ function fake(port, handler) {
   // 13) Sohbeti sil
   await p.goto(BASE + '/koc')
   await p.getByRole('button', { name: 'Sohbetler' }).click()
-  await p.getByRole('button', { name: /sohbetini sil$/ }).first().click()
+  await p.getByRole('button', { name: /sohbetini sil$/ }).first().click(); await p.getByTestId('confirm-ok').click()
   await p.waitForURL('**/koc?yeni=1'); await p.waitForTimeout(500)
   if (await p.getByTestId('msg-user').count()) fail('silinen sohbet hâlâ görünüyor')
 

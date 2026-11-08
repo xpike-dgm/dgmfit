@@ -100,7 +100,7 @@ function png() {
   await pb.goto(BASE + '/'); await pb.waitForURL('**/kurulum')
 
   // 6) Askıya al → oturum kapanır; yeniden girişte askı ekranı
-  await pa.getByTestId('suspend').click(); await status(pa, /Askıya alındı/)
+  await pa.getByTestId('suspend').click(); await pa.getByTestId('confirm-ok').click(); await status(pa, /Askıya alındı/)
   await pa.locator('[data-testid=admin-user][data-status=suspended]').waitFor({ timeout: 8000 }).catch(() => fail('durum askıda olmalı'))
   await pb.goto(BASE + '/'); if (!pb.url().includes('/giris')) fail('askıya alınan oturum kapanmadı: ' + pb.url())
   await pb.fill('#login', B); await pb.fill('#password', 'Deneme1234'); await pb.getByRole('button', { name: /Giriş yap/ }).click(); await pb.waitForURL('**/beklemede')

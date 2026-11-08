@@ -109,6 +109,7 @@
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @keyframes wave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes popIn { from { opacity: 0; transform: scale(.94) translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* RiR kaydırıcısı (canlı antrenman): kırmızıdan koyuya ray, beyaz tutamaç */
 .rir-range { -webkit-appearance: none; appearance: none; height: 34px; background: transparent; }
@@ -196,3 +197,6 @@ html[data-dragging] dialog, html[data-dragging] dialog::backdrop { opacity: 0; t
   :root:not([data-theme="dark"]) .ramadan-card { background: linear-gradient(160deg, #EEF0FF, #F4ECFF); border-color: #DCD3F2; }
   :root:not([data-theme="dark"]) .ramadan-moon { stroke: #B7791F; }
 }
+
+/* G1: alt penceredeki sabit Kaydet çubuğu: pencerenin alt dolgusunu da örter (altından içerik görünmesin) */
+.sheet-actions { position: sticky; bottom: calc(-1 * max(env(safe-area-inset-bottom), 12px)); margin-bottom: calc(-1 * max(env(safe-area-inset-bottom), 12px)); padding-bottom: calc(max(env(safe-area-inset-bottom), 12px) + 12px); }

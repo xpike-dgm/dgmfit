@@ -6,6 +6,7 @@ import { Close, Plus, Trash } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
 import { COMMON_EXTRAS, EXTRA_UNITS, SUPP_UNITS, suppError, type SuppInput, type SuppUnit } from '@/lib/supplements'
 import { deleteSupplementAction, saveSupplementAction } from './actions'
+import { ask } from '@/components/Confirm'
 
 export interface FormInit { name: string; brand: string | null; unit: string; servingG: number | null; kcal: number; protein: number; carb: number; fat: number; extras: { name: string; amount: number; unit: string }[]; daily: number | null }
 const field = 'w-full h-12 rounded-2xl bg-surface-2 border border-line px-4 text-[16px] outline-none focus:border-acc'
@@ -88,7 +89,7 @@ export default function SuppForm({ id, init }: { id: number | null; init?: FormI
       {(err || live) ? <p role="status" className="text-[13.5px] font-semibold text-danger px-1">{err ?? live}</p> : null}
       <button type="button" className={btn.primary} disabled={pending || !!live || !name.trim()} onClick={save} data-testid="supp-save">{pending ? 'Kaydediliyor…' : id ? 'Kaydet' : 'Takviyeyi ekle'}</button>
       {id ? (
-        <button type="button" className={btn.secondary + ' text-danger'} disabled={pending} onClick={() => confirm(`${name} silinsin mi? Geçmiş kayıtların günlükte kalır.`) && start(async () => { await deleteSupplementAction(id); router.push('/yemek/takviyeler'); router.refresh() })}><Trash size={16} /> Takviyeyi sil</button>
+        <button type="button" className={btn.secondary + ' text-danger'} disabled={pending} onClick={async () => (await ask(`${name} silinsin mi? Geçmiş kayıtların günlükte kalır.`)) && start(async () => { await deleteSupplementAction(id); router.push('/yemek/takviyeler'); router.refresh() })}><Trash size={16} /> Takviyeyi sil</button>
       ) : null}
     </div>
   )

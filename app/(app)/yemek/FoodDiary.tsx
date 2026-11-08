@@ -6,7 +6,7 @@ import Sheet from '@/components/Sheet'
 import { Band, Bar, btn, hdrBtn } from '@/components/ui'
 import { Back, Dots, Next, Plus, Spark, Trash } from '@/components/icons'
 import { fmtNum } from '@/lib/calc'
-import { MEALS, MEAL_LABEL, type MealId } from '@/lib/food'
+import { MEALS, MEAL_LABEL, isBasePortion, type MealId } from '@/lib/food'
 import { NUTRIENT_INFO, type NutrientKey } from '@/lib/nutrition'
 import { addQuickCalories, addUsualMeal, copyMeal, deleteMealItem, saveMealAsTemplate, updateMealItem } from './actions'
 import DayCardSheet from './DayCardSheet'
@@ -160,7 +160,7 @@ export default function FoodDiary(p: {
             <button key={it.id} type="button" onClick={() => setEdit(it)} className="flex items-center justify-between gap-3 py-2.5 border-t border-surface-2 text-left">
               <span className="flex flex-col min-w-0">
                 <span className="text-sm font-semibold truncate">{it.name}</span>
-                <span className="text-xs text-mute truncate">{it.source === 'quick' ? 'Elle girilen kalori' : it.portionLabel && it.portionLabel !== '100 g' ? `${fmtNum(it.portionQty ?? 1, (it.portionQty ?? 1) % 1 ? 1 : 0)} × ${it.portionLabel}` : `${fmtNum(it.grams)} g`}</span>
+                <span className="text-xs text-mute truncate">{it.source === 'quick' ? 'Elle girilen kalori' : it.portionLabel && !isBasePortion(it.portionLabel) ? `${fmtNum(it.portionQty ?? 1, (it.portionQty ?? 1) % 1 ? 1 : 0)} × ${it.portionLabel}` : `${fmtNum(it.grams)} ${it.portionLabel === '100 ml' ? 'ml' : 'g'}`}</span>
               </span>
               <span className="num text-sm text-ink-2 shrink-0">{fmtNum(it.kcal)}</span>
             </button>
@@ -226,19 +226,20 @@ function EditItem({ item, onSave, onDelete }: { item: Item; onSave: (v: { grams:
   const [g, setG] = useState(String(item.grams))
   const [meal, setMeal] = useState<MealId>(item.meal)
   const quick = item.source === 'quick'
+  const ml = item.portionLabel === '100 ml'
   const v = Number(g.replace(',', '.'))
   return (
     <div className="flex flex-col gap-4 pb-4">
       {!quick ? (
         <div className="flex items-center gap-3">
-          <label htmlFor="ed-g" className="text-sm font-bold flex-1">Miktar (gram)</label>
+          <label htmlFor="ed-g" className="text-sm font-bold flex-1">Miktar ({ml ? 'ml' : 'gram'})</label>
           <input id="ed-g" inputMode="decimal" value={g} onChange={(e) => setG(e.target.value)} className="w-28 h-12 rounded-xl bg-surface-2 border border-line px-3 num text-lg text-right" />
         </div>
       ) : <p className="text-sm text-mute">Hızlı kalori kaydı: {fmtNum(item.kcal)} kcal</p>}
       <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Öğün">
         {MEALS.map((x) => <button key={x.id} type="button" aria-pressed={meal === x.id} onClick={() => setMeal(x.id)} className={`h-10 rounded-full text-[13px] font-bold border ${meal === x.id ? 'bg-acc text-acc-ink border-acc' : 'bg-surface-2 text-ink-2 border-line'}`}>{x.label.replace(' yemeği', '')}</button>)}
       </div>
-      <button type="button" disabled={!quick && !(v >= 1 && v <= 5000)} onClick={() => onSave({ grams: quick ? item.grams || 1 : v, portionLabel: quick ? null : '100 g', portionQty: quick ? null : v, meal })} className="h-14 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40">Kaydet</button>
+      <button type="button" disabled={!quick && !(v >= 1 && v <= 5000)} onClick={() => onSave({ grams: quick ? item.grams || 1 : v, portionLabel: quick ? null : ml ? '100 ml' : '100 g', portionQty: quick ? null : v, meal })} className="h-14 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40">Kaydet</button>
       <button type="button" onClick={onDelete} className="h-12 rounded-full border border-danger-line text-danger font-bold flex items-center justify-center gap-2"><Trash size={18} /> Sil</button>
     </div>
   )

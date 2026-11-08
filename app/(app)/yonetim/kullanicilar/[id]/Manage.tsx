@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
 import { Check, Lock, Logout, Spark, Trash } from '@/components/icons'
 import { deleteUserAction, endSessionsAction, resetDataAction, setAiDailyAction, setNoteAction, setStatusAction } from '../../actions'
+import { ask } from '@/components/Confirm'
 
 type R = { ok: true; msg?: string } | { ok: false; error: string }
 interface U { id: string; username: string; status: string; aiDaily: number | null; note: string; admin: boolean; self: boolean }
@@ -38,8 +39,8 @@ export default function Manage({ u, stats, defaultDaily }: { u: U; stats: { sess
         <p className="text-[13px] text-mute">{u.status === 'pending' ? 'Bu kişi kayıt oldu ve onayını bekliyor.' : u.status === 'approved' ? 'Uygulamaya girebiliyor.' : 'Uygulamaya giremiyor; verileri duruyor.'}</p>
         <div className="grid grid-cols-2 gap-2">
           {u.status !== 'approved' ? <button type="button" disabled={pending} className={btn.primary + ' h-12 text-[15px] col-span-2'} onClick={() => run('st', () => setStatusAction(u.id, 'approved'))} data-testid="approve">Onayla</button> : null}
-          {u.status === 'pending' ? <button type="button" disabled={pending || !canDestroy} className={btn.secondary} onClick={() => confirm(`@${u.username} reddedilsin mi?`) && run('st', () => setStatusAction(u.id, 'rejected'))}>Reddet</button> : null}
-          {u.status !== 'suspended' && canDestroy ? <button type="button" disabled={pending} className={btn.secondary} data-testid="suspend" onClick={() => confirm(`@${u.username} askıya alınsın mı? Tüm oturumları kapanır.`) && run('st', () => setStatusAction(u.id, 'suspended'))}><Lock size={16} /> Askıya al</button> : null}
+          {u.status === 'pending' ? <button type="button" disabled={pending || !canDestroy} className={btn.secondary} onClick={async () => (await ask(`@${u.username} reddedilsin mi?`)) && run('st', () => setStatusAction(u.id, 'rejected'))}>Reddet</button> : null}
+          {u.status !== 'suspended' && canDestroy ? <button type="button" disabled={pending} className={btn.secondary} data-testid="suspend" onClick={async () => (await ask(`@${u.username} askıya alınsın mı? Tüm oturumları kapanır.`)) && run('st', () => setStatusAction(u.id, 'suspended'))}><Lock size={16} /> Askıya al</button> : null}
           {u.status === 'approved' && canDestroy ? <button type="button" disabled={pending} className={btn.secondary} onClick={() => run('st', () => setStatusAction(u.id, 'pending'))}>Beklemeye al</button> : null}
         </div>
         <Msg k="st" />

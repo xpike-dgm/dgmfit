@@ -48,7 +48,7 @@ const fail = (m) => { throw new Error(m) }
   // 4) Sürümler: Başlangıç'a geri yükle → su geri gelir
   await p.goto(BASE + '/profil/ozellestirme/tasarimlar'); await p.getByTestId('versions').waitFor()
   for (const n of ['Başlangıç', 'Bugün düzeni']) if (!(await p.locator(`[data-version="${n}"]`).count())) fail('sürüm yok: ' + n)
-  p.once('dialog', (d) => d.accept()); await p.locator('[data-version="Başlangıç"] [data-testid=version-restore]').click(); await status('geri yüklendi')
+  await p.locator('[data-version="Başlangıç"] [data-testid=version-restore]').click(); await p.getByTestId('confirm-ok').click(); await status('geri yüklendi')
   await p.screenshot({ path: `${OUT}/custom7-02-surumler.png`, fullPage: true })
   await p.goto(BASE + '/')
   if (!(await order()).includes('today.water')) fail('sürüm geri yüklenmedi')
@@ -57,7 +57,7 @@ const fail = (m) => { throw new Error(m) }
   // 5) Yeni tasarımı sil
   await p.goto(BASE + '/profil/ozellestirme/tasarimlar')
   await p.locator('[data-design="Yeni tasarım"]').getByRole('button', { name: /seçenekleri/ }).click()
-  p.once('dialog', (d) => d.accept()); await p.getByTestId('design-delete').click(); await status('Silindi')
+  await p.getByTestId('design-delete').click(); await p.getByTestId('confirm-ok').click(); await status('Silindi')
   await p.locator('[data-design="Yeni tasarım"]').waitFor({ state: 'detached', timeout: 10000 }).catch(() => fail('tasarım silinmedi'))
 
   console.log('ÖZELLEŞTİRME-7 E2E OK user=', u)

@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { btn, Eyebrow } from '@/components/ui'
 import { resetCooldownAction, saveAiSettingsAction, saveProviderAction } from './actions'
+import { ask } from '@/components/Confirm'
 
 type P = { id: 'claude' | 'openai'; enabled: boolean; priority: number; model: string; taskModels: Record<string, string>; dailyTokenLimit: number; monthlyTokenLimit: number; hasKey: boolean; cooling: boolean }
 const TASKS = [['meal-photo', 'Fotoğraf'], ['label', 'Etiket'], ['restaurant', 'Restoran menüsü'], ['meal-text', 'Yazı / ses'], ['coach', 'Koç'], ['menu', 'Menü'], ['pantry', 'Elimdekiler'], ['program', 'Program']] as const
@@ -48,7 +49,7 @@ export function ProviderForm({ p }: { p: P }) {
       </label>
       <div className="flex flex-wrap gap-2">
         <button type="submit" className={`${btn.primary} h-11 text-[15px] px-5`} disabled={pending}>Kaydet</button>
-        {p.hasKey ? <button type="button" className={btn.ghost} disabled={pending} onClick={() => { if (confirm('Anahtar silinsin mi?')) save({ removeKey: true }) }}>Anahtarı sil</button> : null}
+        {p.hasKey ? <button type="button" className={btn.ghost} disabled={pending} onClick={async () => { if ((await ask('Anahtar silinsin mi?'))) save({ removeKey: true }) }}>Anahtarı sil</button> : null}
         {p.cooling ? <button type="button" className={btn.ghost} disabled={pending} onClick={() => start(async () => { await resetCooldownAction(p.id); router.refresh() })}>Beklemeyi sıfırla</button> : null}
       </div>
       {msg ? <p role="status" className={`text-[13px] ${msg.ok ? 'text-acc' : 'text-danger'}`}>{msg.t}</p> : null}

@@ -21,7 +21,7 @@ export default function UsePrefsForm({ prefs }: { prefs: UsePrefs }) {
     })
   }
   return (
-    <section className="card p-4 flex flex-col gap-3" aria-label="Kullanım" data-testid="use-prefs">
+    <section className="card rounded-[22px] p-4 flex flex-col gap-3" aria-label="Kullanım" data-testid="use-prefs">
       <div className="flex flex-col gap-2">
         <span className="flex flex-col"><b className="text-[15px]">Tek el modu</b>
           <span className="text-[12.5px] text-mute leading-snug">Hızlı ekle (+), bant düğmeleri ve kart düğmeleri seçtiğin elin kenarına geçer.</span></span>

@@ -396,3 +396,6 @@ En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 - Uygulama: commit `2c7f978` (Faz 0), commit `dce73c0` (paket içine git geçmişi).
 - Hatalar ve düzeltmeler: Ruler'da `left: 50%` iç genişliğe göre hesaplanıyordu → ölçülen yarım genişlik; değer 0 olan halkada nokta → çizilmiyor; source.tgz içine eski release.tgz giriyordu → hariç tutuldu; yerel testte eski `next-server` süreci portu tutuyordu → `pkill -f next-server`.
 - Doğrulama: birim test 7/7; yerel e2e OK; canlı e2e OK; SW kaydı + çevrimdışı sayfa OK; deploy `2026-11-04T15-03-11-216Z` ve `2026-11-04T15-10-22-113Z` DEPLOY OK; yedek betiği çalıştı (`dgfit-pwa-2026-11-04.dump`).
+
+## 2026-11-08 — G1 başladı (kullanıcı geri bildirimi)
+- Kullanıcı uygulamayı telefonda kullandı, 10 sorun + 9 ekran görüntüsü gönderdi (STATE G1 satırı). Kök neden ilk bulgu: düzenleme modunda FLIP animasyonu ekran (viewport) koordinatı kullanıyor ve her render'da çalışıyordu → sayfa kayınca tüm kartlar kayma animasyonuna girip görünmez oluyordu; hedef algılama parmak noktasıyla yapılıyordu (sürüklenen kartın kenarı değil).

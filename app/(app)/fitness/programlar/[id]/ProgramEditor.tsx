@@ -12,6 +12,7 @@ import { gzSets, type GzState } from '@/lib/schemes'
 import { addDayAction, addExerciseToDayAction, removeDayAction, removeProgramExerciseAction, setActiveProgramAction, setSchemeKgAction, updateProgramExerciseAction, updateProgramSettingsAction, linkSupersetAction } from '../../actions'
 import { supersetBlocks } from '@/lib/supersets'
 import { ExercisePicker } from '../../antrenman/LiveWorkout'
+import { ask } from '@/components/Confirm'
 
 type Ex = { id: string; exerciseId: number; name: string; kind: string; thumb?: string | null; images?: string[]; sets: number; repMin: number; repMax: number; rir: number; rest: number; seconds: number | null; setType: string; scheme: string | null; schemeState: GzState | null; superset?: number | null; note?: string | null }
 type Day = { id: string; name: string; focus: string; exercises: Ex[] }
@@ -73,7 +74,7 @@ export default function ProgramEditor({ program, adv = true }: { adv?: boolean; 
           {d.exercises.length ? <Link href={`/fitness/antrenman?gun=${d.id}`} className="h-14 mt-1 rounded-2xl bg-[#E53935] text-white font-extrabold text-[17px] flex items-center justify-center gap-2"><Play size={22} />Antrenmana Başla</Link> : null}
           <div className="flex gap-2">
             <button type="button" className="flex-1 h-10 rounded-full border border-dashed border-line-2 text-[13px] font-bold text-ink-2 flex items-center justify-center gap-1.5" onClick={() => { setErr(null); setPick(d.id) }}><Plus size={16} />Hareket ekle</button>
-            <button type="button" aria-label={`${d.name} gününü sil`} disabled={pending} onClick={() => { if (confirm(`${d.name} günü programdan silinsin mi? Geçmiş antrenmanların korunur.`)) go(() => removeDayAction(d.id)) }} className="h-10 px-3 rounded-full text-[13px] font-bold text-danger border border-danger-line flex items-center gap-1.5"><Trash size={15} />Günü sil</button>
+            <button type="button" aria-label={`${d.name} gününü sil`} disabled={pending} onClick={async () => { if ((await ask(`${d.name} günü programdan silinsin mi? Geçmiş antrenmanların korunur.`))) go(() => removeDayAction(d.id)) }} className="h-10 px-3 rounded-full text-[13px] font-bold text-danger border border-danger-line flex items-center gap-1.5"><Trash size={15} />Günü sil</button>
           </div>
         </section>
       ))}

@@ -140,7 +140,19 @@ export default async function FitnessPage(props: { searchParams: Promise<{ gun?:
         ))}
       </section>
     ),
-    'fitness.programs': adv ? null : <Link href="/fitness/programlar" className={btn.secondary}>Programlarım ({h.programs.length})</Link>,
+    // G1: kart görünümlü satır (eski çerçeveli düğme kötü görünüyordu)
+    'fitness.programs': adv ? null : (
+      <Link href="/fitness/programlar" className="card rounded-[22px] min-h-[68px] px-4 py-3 flex items-center gap-3 active:scale-[0.99] transition" data-testid="programs-link">
+        <span className="w-10 h-10 rounded-[14px] bg-[color-mix(in_oklab,var(--color-acc)_16%,var(--color-surface-2))] text-acc flex items-center justify-center shrink-0" aria-hidden>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="3" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>
+        </span>
+        <span className="flex flex-col flex-1 min-w-0 leading-tight gap-0.5">
+          <b className="text-[15px] font-extrabold">Programlarım</b>
+          <span className="text-[12.5px] text-mute truncate">{h.programs.length ? `${h.programs.length} program · düzenle, yenisini oluştur` : 'Program oluştur ya da şablondan başla'}</span>
+        </span>
+        <Next size={18} className="text-mute shrink-0" />
+      </Link>
+    ),
   }
   return (
     <div className="flex flex-col gap-3 px-4">

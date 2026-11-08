@@ -1,4 +1,5 @@
 import BottomNav from '@/components/BottomNav'
+import ConfirmHost from '@/components/Confirm'
 import ModShell from '@/components/ModShell'
 import { DesignPrefsProvider } from '@/components/cards/DesignPrefs'
 import { requireUser } from '@/lib/auth'
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Ö2a: modül renkleri (yalnız #RRGGBB değerlerinden üretilir; kullanıcı metni içermez) */}
       {d?.modules ? <style data-testid="module-colors" dangerouslySetInnerHTML={{ __html: moduleCss(d.modules) }} /> : null}
       <DesignPrefsProvider value={prefs}>{children}</DesignPrefsProvider>
+      <ConfirmHost />
       <BottomNav tabs={resolveNav(d?.nav).visible} hand={prefs.hand ?? null} />
     </ModShell>
   )

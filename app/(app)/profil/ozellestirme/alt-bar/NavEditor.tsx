@@ -7,6 +7,8 @@ import { saveNavAction } from '../actions'
 
 const ICON: Record<NavTab, typeof Home> = { today: Home, plan: Target, water: Drop, food: Fork, fitness: Dumbbell, social: Users, mine: Grid }
 const label = (id: NavTab) => NAV_TABS.find((t) => t.id === id)!.label
+const MOD: Record<NavTab, string> = { today: 'today', plan: 'plan', water: 'water', food: 'food', fitness: 'fitness', social: 'social', mine: 'today' }
+const arrow = (d: string) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
 
 export default function NavEditor({ order: initOrder, hidden: initHidden, custom }: { order: NavTab[]; hidden: NavTab[]; custom: boolean }) {
   const [order, setOrder] = useState(initOrder)
@@ -31,22 +33,22 @@ export default function NavEditor({ order: initOrder, hidden: initHidden, custom
   const slots: (NavTab | null)[] = [...visible]; slots.splice(Math.floor(slots.length / 2), 0, null)
   return (
     <>
-      <section aria-label="Önizleme" className="card p-3">
+      <section aria-label="Önizleme" className="card rounded-[22px] p-3">
         <div className="h-[56px] rounded-[18px] bg-nav border border-line grid items-center px-1" style={{ gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))` }} data-testid="nav-preview">
           {slots.map((id, i) => id ? (
-            <span key={id} className="flex flex-col items-center gap-0.5 text-[10px] font-bold text-mute"> {(() => { const I = ICON[id]; return <I size={18} /> })()}<span className="max-[350px]:sr-only">{label(id)}</span></span>
+            <span key={id} data-mod={MOD[id]} className="flex flex-col items-center gap-0.5 text-[10px] font-bold text-acc"> {(() => { const I = ICON[id]; return <I size={18} /> })()}<span className="max-[350px]:sr-only">{label(id)}</span></span>
           ) : <span key={'p' + i} className="justify-self-center w-9 h-9 rounded-xl bg-acc text-acc-ink flex items-center justify-center"><Plus size={20} /></span>)}
         </div>
       </section>
-      <section aria-label="Sekmeler" className="card px-4 py-1 flex flex-col" data-testid="nav-editor">
+      <section aria-label="Sekmeler" className="card rounded-[22px] px-3.5 py-1 flex flex-col" data-testid="nav-editor">
         {order.map((id, i) => {
           const I = ICON[id]; const off = hidden.includes(id)
           return (
             <div key={id} className={`flex items-center gap-3 min-h-[60px] ${i ? 'border-t border-line' : ''}`} data-nav-row={id}>
-              <span className={`w-9 h-9 rounded-xl bg-surface-2 flex items-center justify-center ${off ? 'opacity-40' : ''}`}><I size={18} /></span>
+              <span data-mod={MOD[id]} className={`w-10 h-10 rounded-[13px] text-acc bg-[color-mix(in_oklab,var(--color-acc)_16%,var(--color-surface-2))] flex items-center justify-center shrink-0 ${off ? 'opacity-40 grayscale' : ''}`}><I size={19} /></span>
               <span className={`flex-1 flex flex-col ${off ? 'opacity-50' : ''}`}><b className="text-[15px]">{label(id)}</b>{id === 'today' ? <span className="text-[12px] text-mute">Ana sayfa · gizlenemez</span> : off ? <span className="text-[12px] text-mute">Gizli</span> : null}</span>
-              <button type="button" aria-label={`${label(id)} yukarı`} disabled={!i} onClick={() => move(i, -1)} className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center disabled:opacity-30" data-testid="nav-up">↑</button>
-              <button type="button" aria-label={`${label(id)} aşağı`} disabled={i === order.length - 1} onClick={() => move(i, 1)} className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center disabled:opacity-30" data-testid="nav-down">↓</button>
+              <button type="button" aria-label={`${label(id)} yukarı`} disabled={!i} onClick={() => move(i, -1)} className="w-9 h-9 rounded-full bg-surface-2 flex items-center justify-center disabled:opacity-25" data-testid="nav-up">{arrow('M6 15l6-6 6 6')}</button>
+              <button type="button" aria-label={`${label(id)} aşağı`} disabled={i === order.length - 1} onClick={() => move(i, 1)} className="w-9 h-9 rounded-full bg-surface-2 flex items-center justify-center disabled:opacity-25" data-testid="nav-down">{arrow('M6 9l6 6 6-6')}</button>
               <input type="checkbox" role="switch" aria-label={`${label(id)} görünsün`} checked={!off} disabled={id === 'today'} onChange={() => toggle(id)} data-testid="nav-show"
                 className="appearance-none w-12 h-7 rounded-full bg-surface-3 relative shrink-0 transition checked:bg-acc disabled:opacity-50 before:content-[''] before:absolute before:top-1 before:left-1 before:w-5 before:h-5 before:rounded-full before:bg-white before:transition checked:before:translate-x-5" />
             </div>
@@ -56,8 +58,8 @@ export default function NavEditor({ order: initOrder, hidden: initHidden, custom
       <p className="text-[12.5px] text-mute px-1 leading-snug">Gizlediğin bölümler kaybolmaz: Bugün'deki kartlardan ve Profil'den açılır. Hızlı ekle (+) her zaman alt barda.</p>
       {msg ? <p role="status" className="text-[13px] font-bold text-ink-2 px-1">{msg}</p> : null}
       <div className="flex gap-2">
-        {custom ? <button type="button" disabled={pending} onClick={() => { setOrder(NAV_TABS.map((t) => t.id)); setHidden([]); save(null) }} className="h-12 px-4 rounded-full border border-line-2 font-bold text-[14px]">Varsayılana dön</button> : null}
-        <button type="button" disabled={pending || !changed} onClick={() => save({ order, hidden })} className="flex-1 h-12 rounded-full bg-acc text-acc-ink font-extrabold disabled:opacity-40" data-testid="nav-save">Kaydet</button>
+        {custom ? <button type="button" disabled={pending} onClick={() => { setOrder(NAV_TABS.map((t) => t.id)); setHidden([]); save(null) }} className="h-14 px-4 rounded-full bg-surface-2 border border-line-2 font-bold text-[14px]">Varsayılana dön</button> : null}
+        <button type="button" disabled={pending || !changed} onClick={() => save({ order, hidden })} className="flex-1 h-14 rounded-full bg-acc text-acc-ink font-extrabold text-[15px] disabled:opacity-40" data-testid="nav-save">Kaydet</button>
       </div>
     </>
   )

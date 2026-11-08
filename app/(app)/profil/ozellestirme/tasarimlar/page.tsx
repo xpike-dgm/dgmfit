@@ -13,7 +13,7 @@ export default async function Page() {
   const active = ds.find((d) => d.active)
   const versions = active ? await listVersions(u.id, active.id) : []
   return (
-    <div className="px-4 flex flex-col gap-3">
+    <div className="px-4 flex flex-col gap-4 pb-6">
       <StudioHeader back="/profil/ozellestirme" title="Tasarımlarım" />
       <Designs
         designs={ds.map((d) => ({ id: d.id, name: d.name, active: d.active, updatedAt: d.updatedAt.toISOString(), summary: `${d.screens} ekran · ${d.modules} renk · ${d.rules} kural`, preview: <MiniPreview design={d.design} width={64} label={`${d.name} önizlemesi`} /> }))}

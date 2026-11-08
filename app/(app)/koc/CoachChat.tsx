@@ -10,6 +10,7 @@ import { fmtNum } from '@/lib/calc'
 import { SUPPORT } from '@/lib/safety'
 import type { MessageView, StoredAction } from '@/lib/coach-data'
 import { coachDecisionAction, deleteConversationAction, saveCoachPrefsAction, sendCoachAction } from './actions'
+import { ask } from '@/components/Confirm'
 
 type Recog = { lang: string; interimResults: boolean; start: () => void; stop: () => void; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onerror: (e: { error: string }) => void; onend: () => void }
 type Conv = { id: string; title: string; updatedAt: string }
@@ -171,7 +172,7 @@ export default function CoachChat(p: {
           {p.conversations.length ? p.conversations.map((c) => (
             <li key={c.id} className="flex items-center gap-2 rounded-2xl bg-surface-2 pl-4 pr-1 py-1">
               <Link href={`/koc?s=${c.id}`} className="flex-1 py-2 text-[14px] font-semibold truncate" onClick={() => setSheet(null)}>{c.title}</Link>
-              <button type="button" className={btn.icon} aria-label={`${c.title} sohbetini sil`} onClick={() => start(async () => { if (!confirm('Bu sohbet kalıcı olarak silinsin mi?')) return; await deleteConversationAction(c.id); setSheet(null); router.push('/koc?yeni=1') })}><Trash size={18} /></button>
+              <button type="button" className={btn.icon} aria-label={`${c.title} sohbetini sil`} onClick={() => start(async () => { if (!(await ask('Bu sohbet kalıcı olarak silinsin mi?'))) return; await deleteConversationAction(c.id); setSheet(null); router.push('/koc?yeni=1') })}><Trash size={18} /></button>
             </li>
           )) : <li className="text-[14px] text-mute">Henüz sohbet yok.</li>}
         </ul>

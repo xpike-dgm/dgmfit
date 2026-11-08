@@ -79,7 +79,7 @@ const pick = (system, hasImage, text) => (/besin değeri tablosu/i.test(system) 
   await p.goto(BASE + '/yonetim/ai')
   for (const id of ['claude', 'openai']) {
     const del = p.getByTestId(`provider-${id}`).getByRole('button', { name: 'Anahtarı sil' })
-    if (await del.count()) { await del.click(); await p.getByTestId(`provider-${id}`).getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor() }
+    if (await del.count()) { await del.click(); await p.getByTestId('confirm-ok').click(); await p.getByTestId(`provider-${id}`).getByRole('status').filter({ hasText: 'Kaydedildi' }).waitFor() }
     const rs = p.getByTestId(`provider-${id}`).getByRole('button', { name: 'Beklemeyi sıfırla' })
     if (await rs.count()) { await rs.click(); await p.waitForTimeout(500) }
   }

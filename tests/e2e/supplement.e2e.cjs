@@ -71,7 +71,7 @@ const fail = (m) => { throw new Error(m) }
   if ((await p.inputValue('#supp-protein')) !== '24') fail('düzenlemede eski protein yok: ' + (await p.inputValue('#supp-protein')))
   await p.fill('#supp-protein', '25'); await p.getByTestId('supp-save').click(); await p.waitForURL(/\/yemek\/takviyeler$/)
   await p.getByTestId('supp-item').filter({ hasText: 'P 25' }).waitFor().catch(() => fail('düzenleme listeye yansımadı'))
-  await p.getByTestId('supp-item').filter({ hasText: 'Kreatin' }).click(); await p.getByRole('button', { name: 'Takviyeyi sil' }).click(); await p.waitForURL(/\/yemek\/takviyeler$/)
+  await p.getByTestId('supp-item').filter({ hasText: 'Kreatin' }).click(); await p.getByRole('button', { name: 'Takviyeyi sil' }).click(); await p.getByTestId('confirm-ok').click(); await p.waitForURL(/\/yemek\/takviyeler$/)
   if ((await p.getByTestId('supp-item').count()) !== 2) fail('silinen takviye listede')
   const search = await p.evaluate(async () => (await (await fetch('/api/food/search?q=whey')).json()))
   if (JSON.stringify(search).includes('user-supplement')) fail('takviye besin aramasında çıkıyor')

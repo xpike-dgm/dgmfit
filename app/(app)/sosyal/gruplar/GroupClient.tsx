@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
 import { SUPPORT } from '@/lib/safety'
 import { groupAction } from '../actions'
+import { ask } from '@/components/Confirm'
 
 export function NewGroup() {
   const [name, setName] = useState('')
@@ -31,7 +32,7 @@ export function GroupOp({ op, groupId, userId, label, tone = 'secondary', confir
   const cls = tone === 'primary' ? 'bg-acc text-acc-ink' : tone === 'danger' ? 'border border-line-2 text-danger' : 'border border-line-2'
   return <>
     <button type="button" disabled={pending} className={`h-9 px-3 rounded-full text-[12px] font-bold ${cls}`} onClick={() => start(async () => {
-      if (confirmText && !confirm(confirmText)) return
+      if (confirmText && !(await ask(confirmText))) return
       const r = await groupAction({ op, groupId, userId }); if (!r.ok) { setErr(r.error); return }
       if (after) router.push(after); else router.refresh()
     })}>{label}</button>

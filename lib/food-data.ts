@@ -228,3 +228,9 @@ export async function usualMeals(userId: string, before: string): Promise<Partia
   }
   return out
 }
+
+/** G1: düzenleme formu için kullanıcının kendi besini (yalnız source=user, silinmemiş). */
+export async function getUserFood(userId: string, id: number) {
+  const [f] = await db.select().from(schema.foods).where(and(eq(schema.foods.id, id), eq(schema.foods.userId, userId), eq(schema.foods.source, 'user'), isNull(schema.foods.deletedAt)))
+  return f ?? null
+}

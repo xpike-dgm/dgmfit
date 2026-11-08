@@ -5,6 +5,7 @@ import { btn } from '@/components/ui'
 import { EQUIPMENT, MUSCLES } from '@/lib/exercise-labels'
 import { ALL_EQUIPMENT } from '@/lib/programs'
 import { copyProgramAction, createAiProgramAction, createEmptyProgramAction, createFromAgProgramAction, createFromTemplateAction, createGeneratedAction, deleteProgramAction, setActiveProgramAction } from '../actions'
+import { ask } from '@/components/Confirm'
 
 type R = { ok: true; id?: string } | { ok: false; error: string }
 
@@ -21,7 +22,7 @@ export function ProgramActions({ id, active }: { id: string; active: boolean }) 
       {err ? <p role="alert" className="basis-full text-[12px] text-danger order-last">{err}</p> : null}
       {!active ? <button type="button" disabled={pending} className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={() => go(() => setActiveProgramAction(id))}>Aktif yap</button> : null}
       <button type="button" disabled={pending} className="h-9 px-3 rounded-full border border-line-2 text-[12px] font-bold" onClick={() => go(() => copyProgramAction(id))}>Kopyala</button>
-      <button type="button" disabled={pending} className="h-9 px-3 rounded-full text-[12px] font-bold text-danger" onClick={() => { if (confirm('Program silinsin mi? Geçmiş antrenmanların korunur.')) go(() => deleteProgramAction(id)) }}>Sil</button>
+      <button type="button" disabled={pending} className="h-9 px-3 rounded-full text-[12px] font-bold text-danger" onClick={async () => { if ((await ask('Program silinsin mi? Geçmiş antrenmanların korunur.'))) go(() => deleteProgramAction(id)) }}>Sil</button>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { btn } from '@/components/ui'
 import { logWeight } from '@/app/(app)/actions'
 import { applyCheckinAction, cancelBankAction, closeDayAction, createBankAction, exceptionAction, reopenDayAction } from './actions'
+import { ask } from '@/components/Confirm'
 
 const fmt = (n: number) => Math.round(n).toLocaleString('tr-TR')
 
@@ -122,7 +123,7 @@ export function CancelBank({ bankId }: { bankId: string }) {
   const { pending, run } = useAct()
   return (
     <button type="button" className={btn.ghost} disabled={pending}
-      onClick={() => { if (confirm('Etkinlik iptal edilsin mi? Henüz gelmemiş biriktirme günleri ve ekstra kalori kaldırılır.')) run(() => cancelBankAction(bankId), () => 'İptal edildi') }}>
+      onClick={async () => { if ((await ask('Etkinlik iptal edilsin mi? Henüz gelmemiş biriktirme günleri ve ekstra kalori kaldırılır.'))) run(() => cancelBankAction(bankId), () => 'İptal edildi') }}>
       İptal
     </button>
   )

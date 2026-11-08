@@ -15,6 +15,7 @@ import { EQUIPMENT } from '@/lib/exercise-labels'
 import { afterSupersetSet, supersetBlocks, supersetMembers } from '@/lib/supersets'
 import BarLoad from '@/components/BarLoad'
 import type { PlateImages } from '@/lib/licensed'
+import { ask } from '@/components/Confirm'
 
 type LSet = { kg: string; reps: string; rir: number | null; type: SetType; seconds: string; done: boolean; completedAt: string | null; feedback: string | null; ph: { kg: number; reps: number; seconds: number } }
 type LEx = Omit<LiveExercise, 'sets'> & { targetSets: number; sets: LSet[]; suggestion: Suggestion | null }
@@ -141,7 +142,7 @@ export default function LiveWorkout(p: Props) {
         <h1 className="text-[22px] font-extrabold leading-tight">Yarım kalan antrenmanın var</h1>
         <p className="text-[15px] text-ink-2 leading-relaxed"><b>{conflict.name}</b> · {done} set tamamlandı. Yeni antrenmana başlarsan o setler silinir.</p>
         <button type="button" className="h-14 rounded-2xl bg-[#E53935] text-white font-extrabold text-[17px]" onClick={() => router.replace(conflict.programDayId ? `/fitness/antrenman?gun=${conflict.programDayId}` : '/fitness/antrenman')}>Ona devam et</button>
-        <button type="button" className={btn.secondary} onClick={() => { if (confirm(`${conflict.name} antrenmanındaki ${done} set silinsin mi?`)) { setConflict(null); setD(fresh()) } }}>Sil ve yenisini başlat</button>
+        <button type="button" className={btn.secondary} onClick={async () => { if ((await ask(`${conflict.name} antrenmanındaki ${done} set silinsin mi?`))) { setConflict(null); setD(fresh()) } }}>Sil ve yenisini başlat</button>
         <Link href="/fitness" className={btn.ghost}>Vazgeç</Link>
       </div>
     )
@@ -389,9 +390,9 @@ export default function LiveWorkout(p: Props) {
             {cur.kind === 'weight_reps' ? <button type="button" className={btn.secondary} onClick={() => { update((x) => { const ex = x.exercises[sheet.ex]; const work = n(ex.sets.find((s) => s.type !== 'warmup')?.kg ?? '') || ex.sets.find((s) => s.type !== 'warmup')?.ph.kg || 0; const ws = warmupSets(work, p.gym.barKg, p.gym.increment); ex.sets = [...ws.map((w) => ({ kg: String(w.kg), reps: String(w.reps), seconds: '', rir: null, type: 'warmup' as SetType, done: false, completedAt: null, feedback: null, ph: { kg: w.kg, reps: w.reps, seconds: 0 } })), ...ex.sets.filter((s) => s.type !== 'warmup' || s.done)]; return x }); setSheet(null) }}>Isınma setleri ekle (%40 / %60 / %80)</button> : null}
             <button type="button" className={btn.secondary} onClick={async () => { setAlts(null); const ex = sheet.ex; setSheet({ kind: 'alts', ex }); const r = await alternativesAction(cur.exerciseId); setAlts(r.ok ? r.list : []) }}>İstasyon dolu: alternatifle değiştir</button>
             <Link href={`/fitness/hareketler/${cur.exerciseId}`} className={btn.secondary}><Info size={18} />Teknik ve geçmiş</Link>
-            <button type="button" className={`${btn.ghost} text-danger`} onClick={() => {
+            <button type="button" className={`${btn.ghost} text-danger`} onClick={async () => {
               const k = sheet.ex, nDone = cur.sets.filter((t) => t.done).length
-              if (nDone && !confirm(`${cur.name}: tamamlanan ${nDone} set de silinecek. Hareket çıkarılsın mı?`)) return
+              if (nDone && !(await ask(`${cur.name}: tamamlanan ${nDone} set de silinecek. Hareket çıkarılsın mı?`))) return
               update((x) => { x.exercises.splice(k, 1); return x }); setRirAt(null)
               setSel((v) => Math.max(0, v > k ? v - 1 : Math.min(v, d.exercises.length - 2))); setSheet(null)
             }}><Trash size={18} />Hareketi çıkar</button>

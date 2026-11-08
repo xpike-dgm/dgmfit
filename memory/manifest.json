@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
-  "verifiedAt": "2026-11-07",
-  "phase": "Ö6",
+  "verifiedAt": "2026-11-08",
+  "phase": "G1",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -340,7 +340,14 @@
     "app/(app)/profil/ozellestirme/stil/ColorsStyle.tsx",
     "app/(app)/profil/ozellestirme/stil/daha/page.tsx",
     "app/(app)/profil/ozellestirme/sablonlar/LibraryUse.tsx",
-    "docs/yemek-verisi/SABLON.csv"
+    "docs/yemek-verisi/SABLON.csv",
+    "components/Confirm.tsx",
+    "lib/confirm.ts",
+    "components/cards/StudioUI.tsx",
+    "app/(app)/profil/ozellestirme/layout.tsx",
+    "app/(app)/yemek/besin/[id]/page.tsx",
+    "tests/e2e/g1.e2e.cjs",
+    "tests/confirm.test.ts"
   ],
   "tables": [
     "users",
@@ -567,7 +574,8 @@
     "/profil/ozellestirme/takip",
     "/profil/ozellestirme/modlar",
     "/profil/ozellestirme/duzen",
-    "/profil/ozellestirme/stil/daha"
+    "/profil/ozellestirme/stil/daha",
+    "/yemek/besin/[id]"
   ],
   "events": [
     "profile.onboarded",
@@ -729,7 +737,11 @@
       "mealForTime",
       "per100Problem",
       "portionGrams",
-      "sumMacros"
+      "sumMacros",
+      "foodUnit",
+      "userFoodPortions",
+      "isBasePortion",
+      "baseLabel"
     ],
     "lib/food-data.ts": [
       "searchFoods",
@@ -739,7 +751,8 @@
       "dayMacros",
       "savedMealsFor",
       "userFoods",
-      "lookupBarcode"
+      "lookupBarcode",
+      "getUserFood"
     ],
     "app/(app)/yemek/actions.ts": [
       "addMealItem",
@@ -991,7 +1004,9 @@
       "hidesNav",
       "parseTheme",
       "THEME_COOKIE",
-      "THEMES"
+      "THEMES",
+      "isFocusPage",
+      "NAV_ROOTS"
     ],
     "components/ui.tsx": [
       "Band",
@@ -1236,6 +1251,9 @@
       "readModes",
       "saveModes",
       "balancePausedOn"
+    ],
+    "lib/confirm.ts": [
+      "inferOk"
     ]
   },
   "dependencies": {
