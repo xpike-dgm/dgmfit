@@ -57,7 +57,7 @@ const fail = (m) => { throw new Error(m) }
   await p.fill('#day-name', 'Gün A'); await p.getByRole('button', { name: 'Gün ekle' }).click(); await p.getByRole('region', { name: 'Gün A' }).waitFor()
   await p.fill('#day-name', 'Gün B'); await p.getByRole('button', { name: 'Gün ekle' }).click(); await p.getByRole('region', { name: 'Gün B' }).waitFor()
   if ((await nDays()) !== n0 + 2) fail('iki gün eklenmedi')
-  await p.getByRole('button', { name: 'Gün A gününü sil' }).click()
+  await p.getByRole('button', { name: 'Gün A gününü sil' }).click(); await p.getByTestId('confirm-ok').click()
   await p.getByRole('region', { name: 'Gün A' }).waitFor({ state: 'detached' }).catch(() => fail('gün silinmedi'))
   if ((await nDays()) !== n0 + 1 || !(await p.getByRole('region', { name: 'Gün B' }).count())) fail('yanlış gün silindi')
 

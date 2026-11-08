@@ -107,7 +107,7 @@ const istDay = (offset = 0) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Eur
   if ((await p.getByTestId('next-days').getByText(/Banka birikimi/).count()) !== 4) fail('4 biriktirme günü görünmüyor')
   await p.goto(BASE + '/fit/banka')
   acceptDialog = true
-  await p.getByTestId('bank-item').getByRole('button', { name: 'İptal' }).click()
+  await p.getByTestId('bank-item').getByRole('button', { name: 'İptal' }).click(); await p.getByTestId('confirm-ok').click()
   await p.getByTestId('bank-item').waitFor({ state: 'detached' }).catch(() => fail('banka iptal edilmedi'))
 
   // 6) Günü kapat / yeniden aç (500 kcal kayıt hedefin %60'ının altında → eksik kayıt)

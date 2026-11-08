@@ -205,7 +205,7 @@ function fake(port, handler) {
   await pa.goto(`${BASE}/u/${C}`).catch(() => {})
   const prof = await pa.evaluate(async (u) => (await fetch(u)).status, `/u/${C}`)
   if (prof !== 404) fail('gizli profil yabancıya açıldı: ' + prof)
-  await pc.goto(`${BASE}/u/${A}`); await pc.getByTestId('profile-actions').getByRole('button', { name: 'Engelle' }).click(); await pc.waitForTimeout(800)
+  await pc.goto(`${BASE}/u/${A}`); await pc.getByTestId('profile-actions').getByRole('button', { name: 'Engelle' }).click(); await pc.getByTestId('confirm-ok').click(); await pc.waitForTimeout(800)
   await pa.goto(BASE + '/sosyal/arkadaslar')
   if (await pa.getByText(C).count()) fail('engelleyen takipçi listede kaldı')
   if ((await pc.evaluate(async (u) => (await fetch(u)).status, `/sosyal/p/${pubPost}`)) !== 404) fail('engelleyen engellenenin gönderisini açtı')
