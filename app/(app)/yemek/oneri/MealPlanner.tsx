@@ -38,6 +38,7 @@ export default function MealPlanner({ initial, meal: meal0 }: { initial: MealSug
             <span key={f.k} className="flex flex-col"><b className="num text-[17px]">{fmtNum(Math.max(0, rem[f.k]))}</b><span className="text-[11px] text-mute">{f.l}{f.u === 'g' ? ' g' : ''}</span></span>
           ))}
         </div>
+        {s.target.kcal < rem.kcal ? <p className="text-[12.5px] text-mute -mt-1" data-testid="mp-share">Bu öğün için hedef ≈ <b className="num text-ink-2">{fmtNum(s.target.kcal)} kcal</b> (günün kalanı tek öğüne yığılmasın diye). Daha büyük öğün için kalori sınırı yaz.</p> : null}
         <span className="text-[12px] font-bold tracking-[0.06em] uppercase text-mute mt-1">En çok (isteğe bağlı)</span>
         <div className="grid grid-cols-4 gap-2">
           {FIELDS.map((f) => (

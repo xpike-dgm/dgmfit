@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-08",
-  "phase": "Y1",
+  "phase": "Y2",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -353,7 +353,15 @@
     "app/(app)/profil/gun/DayStartPicker.tsx",
     "drizzle/0032_day_start.sql",
     "tests/e2e/day.e2e.cjs",
-    "tests/time.test.ts"
+    "tests/time.test.ts",
+    "lib/meal-builder.ts",
+    "lib/meal-builder-data.ts",
+    "lib/coach-tools.ts",
+    "app/(app)/yemek/oneri/page.tsx",
+    "app/(app)/yemek/oneri/MealPlanner.tsx",
+    "drizzle/0033_coach2.sql",
+    "tests/meal-builder.test.ts",
+    "tests/e2e/mealplan.e2e.cjs"
   ],
   "tables": [
     "users",
@@ -434,7 +442,8 @@
     "card_usage",
     "trackers",
     "tracker_logs",
-    "user_modes"
+    "user_modes",
+    "coach_memories"
   ],
   "routes": [
     "/",
@@ -583,7 +592,8 @@
     "/profil/ozellestirme/stil/daha",
     "/yemek/besin/[id]",
     "/profil/gun",
-    "/api/test/day"
+    "/api/test/day",
+    "/yemek/oneri"
   ],
   "events": [
     "profile.onboarded",
@@ -624,7 +634,8 @@
     "tracker.logged",
     "usercard.created",
     "mode.focus",
-    "mode.ramadan"
+    "mode.ramadan",
+    "coach.nudge"
   ],
   "exports": {
     "lib/calc.ts": [
@@ -735,7 +746,8 @@
       "startScheduler",
       "runForUser",
       "markReminder",
-      "reminderStats"
+      "reminderStats",
+      "runCoachNudges"
     ],
     "lib/nutrition.ts": [
       "computeRecipe",
@@ -936,7 +948,10 @@
       "applyCoachAction",
       "dailyInsight",
       "weeklyReport",
-      "latestReportWeek"
+      "latestReportWeek",
+      "listMemories",
+      "addMemories",
+      "deleteMemory"
     ],
     "lib/menu.ts": [
       "scaleToKcal",
@@ -1280,6 +1295,20 @@
       "dayStartOf",
       "runWithDayStart",
       "asUserDay"
+    ],
+    "lib/meal-builder.ts": [
+      "buildMeals",
+      "mealTarget",
+      "mealShare",
+      "parseLimits",
+      "totalsOf"
+    ],
+    "lib/meal-builder-data.ts": [
+      "mealCandidates",
+      "suggestMeals"
+    ],
+    "lib/coach-tools.ts": [
+      "runLookups"
     ]
   },
   "dependencies": {
@@ -1329,6 +1358,7 @@
     "0029_card_usage.sql",
     "0030_trackers.sql",
     "0031_user_modes.sql",
-    "0032_day_start.sql"
+    "0032_day_start.sql",
+    "0033_coach2.sql"
   ]
 }

@@ -41,3 +41,11 @@ test('Y2: metinden sınırlar', () => {
   assert.deepEqual(parseLimits('en fazla 500 kcal, protein 40 g'), { kcal: 500, protein: 40 })
   assert.deepEqual(parseLimits('akşama ne yesem'), {})
 })
+
+test('Y2: öğün payı — günün kalanı tek öğüne yığılmaz', async () => {
+  const { mealShare } = await import('../lib/meal-builder.ts')
+  assert.deepEqual(mealShare({ kcal: 2725, protein: 117, carb: 393, fat: 76 }, 2725), { kcal: 1000, protein: 43, carb: 144, fat: 28 })
+  assert.deepEqual(mealShare({ kcal: 600, protein: 40, carb: 60, fat: 20 }, 2000), { kcal: 600, protein: 40, carb: 60, fat: 20 })
+  assert.equal(mealShare({ kcal: 2000, protein: 100, carb: 200, fat: 60 }, 1500).kcal, 600)
+  assert.equal(mealShare({ kcal: 2000, protein: 100, carb: 200, fat: 60 }, 3000, { kcal: 1500 }).kcal, 1500)
+})

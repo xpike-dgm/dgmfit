@@ -55,7 +55,8 @@ export default function CoachChat(p: {
     if (!r.ok) { setMsgs((m) => m.filter((x) => x.id !== 'tmp')); setText(q); setErr(r.error); setBusy(false); return }
     setMsgs((m) => [...m.filter((x) => x.id !== 'tmp'), r.user, r.reply])
     if (!conv) { setConv(r.conversationId); window.history.replaceState(null, '', `/koc?s=${r.conversationId}`) }
-    if (r.reply.provider) setLeft((n) => Math.max(0, n - 1))
+    if (r.reply.provider) setLeft((n) => Math.max(0, n - (r.calls || 1)))
+    setMems(r.memories)
     setBusy(false)
   }
   const decide = (m: MessageView, i: number, decision: 'confirm' | 'cancel') => start(async () => {

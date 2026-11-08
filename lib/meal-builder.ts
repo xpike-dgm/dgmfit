@@ -118,3 +118,14 @@ export function parseLimits(text: string): MBLimits {
   }
   return out
 }
+
+/**
+ * Tek öğün için hedef: kalan değerler günün kalanı olabilir (ör. 2.700 kcal); bir öğün bunun tamamı olmamalı.
+ * Kullanıcı kalori sınırı vermediyse öğün kalorisi günlük hedefin %40'ı ile sınırlanır (450–1.000 kcal), makrolar aynı oranda.
+ */
+export function mealShare(remaining: Macros4, dailyKcal: number, limits: MBLimits = {}): Macros4 {
+  const cap = limits.kcal ?? Math.min(1000, Math.max(450, Math.round(dailyKcal * 0.4)))
+  if (remaining.kcal <= cap) return remaining
+  const f = cap / remaining.kcal
+  return { kcal: cap, protein: Math.round(remaining.protein * f), carb: Math.round(remaining.carb * f), fat: Math.round(remaining.fat * f) }
+}

@@ -130,12 +130,17 @@ test('program günü eşleştirme ve hedef tarihi kaydırma', () => {
 
 test('koç şeması: sağlayıcıya giden JSON Schema katı, dönen yanıt doğrulanır', () => {
   const js = jsonSchemaFor('coach') as { properties: Record<string, { items?: { required?: string[]; additionalProperties?: boolean } }>; required: string[] }
-  assert.deepEqual(js.required, ['reply', 'actions', 'whatIf', 'safety'])
+  assert.deepEqual(js.required, ['reply', 'actions', 'whatIf', 'safety', 'lookups', 'mealPlan', 'remember', 'memo'])
   assert.equal(js.properties.actions.items?.additionalProperties, false)
   assert.deepEqual(js.properties.actions.items?.required, ['type', 'weeks', 'programDay', 'exercise', 'sets', 'repMin', 'repMax', 'ml', 'drink'])
-  const r = parseResult('coach', JSON.stringify({ reply: 'Tamam', actions: [{ type: 'goal_date', weeks: 2, programDay: null, exercise: null, sets: null, repMin: null, repMax: null, ml: null, drink: null }], whatIf: [], safety: 'yok' }))
+  const Y2 = { lookups: [], mealPlan: null, remember: [], memo: null }
+  const r = parseResult('coach', JSON.stringify({ reply: 'Tamam', actions: [{ type: 'goal_date', weeks: 2, programDay: null, exercise: null, sets: null, repMin: null, repMax: null, ml: null, drink: null }], whatIf: [], safety: 'yok', ...Y2 }))
   assert.equal(r.actions[0].weeks, 2)
-  assert.throws(() => parseResult('coach', JSON.stringify({ reply: 'x', actions: [{ type: 'delete_all' }], whatIf: [], safety: 'yok' })))
+  assert.throws(() => parseResult('coach', JSON.stringify({ reply: 'x', actions: [{ type: 'delete_all' }], whatIf: [], safety: 'yok', ...Y2 })))
+  // Y2: veri isteği ve öğün sınırları doğrulanır
+  const r2 = parseResult('coach', JSON.stringify({ reply: 'Bakıyorum', actions: [], whatIf: [], safety: 'yok', ...Y2, lookups: [{ kind: 'gun', date: '2026-11-07', from: null, to: null, query: null }], mealPlan: { protein: 20, carb: 230, fat: 30, kcal: null } }))
+  assert.equal(r2.lookups[0].kind, 'gun'); assert.equal(r2.mealPlan?.protein, 20)
+  assert.throws(() => parseResult('coach', JSON.stringify({ reply: 'x', actions: [], whatIf: [], safety: 'yok', ...Y2, lookups: [{ kind: 'sil', date: null, from: null, to: null, query: null }] })))
   assert.throws(() => parseResult('weekly', JSON.stringify({ summary: 'x', suggestions: [] })))
 })
 

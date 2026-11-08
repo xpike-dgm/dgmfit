@@ -134,3 +134,8 @@ Su kuralları: hedefe `effective_ml` sayılır; Bugün ekranının su hedefi `wa
 - `lib/water-data.ts`: `dayBounds(day, dayStart)` ve `sqlDay(col)`; custom/usage su sorguları da `sqlDay`.
 - Zamanlayıcı: gün kapanışı saatte bir `asUserDay` ile; öğün hatırlatması kullanıcı günüyle. Profil → `/profil/gun`; Bugün başlığında gece notu (`late-day`). Test kancası `/api/test/day` (DGFIT_TEST_HOOKS).
 
+## Y2 (2026-11-08) Akıllı Koç 2.0
+- `lib/meal-builder.ts` (saf): `buildMeals` (2'li/3'lü kombinasyon, koordinat inişiyle gram, sınır cezası, çeşitlilik), `mealTarget`, `mealShare`, `parseLimits`. `lib/meal-builder-data.ts`: adaylar (60 günde sık yenen 14 + temel besinler), `suggestMeals`.
+- `/yemek/oneri` (MealPlanner): kalan + "en çok" sınırları + öğün seçimi + "Öğüne ekle" (`addMealPlanAction`); Yemek ekranında `meal-suggest-link`.
+- Koç: `CoachResult` + `lookups`/`mealPlan`/`remember`/`memo`; `lib/coach-tools.ts` `runLookups` (gun/donem/hareket/besin); `sendCoachMessage` iki tur, NOTLAR (`coach_memories`) ve SOHBET ÖZETİ (`ai_conversations.summary`) bağlama; `ai_messages.meal_plan` → sohbette `MealPlanCard`; koç ayarlarında notlar (sil) ve `nudges` anahtarı; zamanlayıcı `runCoachNudges` (20.00–21.00, günde 1, `coach.nudge` olayı).
+

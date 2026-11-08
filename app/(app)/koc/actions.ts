@@ -9,7 +9,7 @@ import { addWater } from '../su/actions'
 
 async function uid() { const u = await getUser(); if (!u) throw new Error('Oturum yok'); return u.id }
 
-export async function sendCoachAction(input: { conversationId: string | null; text: string }): Promise<{ ok: true; conversationId: string; user: MessageView; reply: MessageView } | { ok: false; error: string }> {
+export async function sendCoachAction(input: { conversationId: string | null; text: string }): Promise<{ ok: true; conversationId: string; user: MessageView; reply: MessageView; calls: number; memories: { id: string; text: string }[] } | { ok: false; error: string }> {
   const p = z.object({ conversationId: z.string().uuid().nullable(), text: z.string().trim().min(2).max(1000) }).safeParse(input)
   if (!p.success) return { ok: false, error: 'Mesaj 2–1000 karakter olmalı' }
   try {

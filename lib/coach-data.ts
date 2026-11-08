@@ -263,7 +263,7 @@ export async function deleteConversation(userId: string, id: string) {
 }
 
 /** Kullanıcı mesajını işler: güvenlik kontrolü → bağlam → model → eylem/ne olur çözümü → kayıt. */
-export async function sendCoachMessage(userId: string, conversationId: string | null, text: string): Promise<{ conversationId: string; user: MessageView; reply: MessageView }> {
+export async function sendCoachMessage(userId: string, conversationId: string | null, text: string): Promise<{ conversationId: string; user: MessageView; reply: MessageView; calls: number; memories: { id: string; text: string }[] }> {
   const msg = text.trim().slice(0, 1000)
   if (msg.length < 2) throw new AiError('Mesaj çok kısa', 'hata')
   let conv = conversationId ? await ownConversation(userId, conversationId) : null
@@ -284,18 +284,19 @@ export async function sendCoachMessage(userId: string, conversationId: string | 
   const system = persona.prompt + (risk ? `\nUYARI: kullanıcının mesajında ${risk === 'crisis' ? 'kendine zarar verme' : 'yeme bozukluğu'} işareti var; kural 3'ü uygula.` : '') + '\n\n' + ctx.text + (extra ? '\n\n' + extra : '')
   const history = prev.reverse().map((p) => ({ role: p.role as 'user' | 'assistant', text: p.content }))
   let out: Awaited<ReturnType<typeof runTask<'coach'>>>
+  let calls = 1
   try {
     out = await runTask(userId, 'coach', { text: msg, system, history })
     // Y2: model veri istediyse sonuçlarla bir kez daha çağrılır (en çok 1 tur)
     if (out.result.lookups?.length && !risk) {
       const found = await runLookups(userId, out.result.lookups)
-      if (found.length) out = await runTask(userId, 'coach', { text: msg, system: system + '\n\nARAÇ SONUÇLARI (uygulamanın hesapladığı, bu soruya özel):\n' + found.map((f) => '- ' + f).join('\n') + '\nBu sonuçlarla tam cevabı ver; lookups boş olsun.', history })
+      if (found.length) { calls++; out = await runTask(userId, 'coach', { text: msg, system: system + '\n\nARAÇ SONUÇLARI (uygulamanın hesapladığı, bu soruya özel):\n' + found.map((f) => '- ' + f).join('\n') + '\nBu sonuçlarla tam cevabı ver; lookups boş olsun.', history }) }
     }
   } catch (e) {
     if (risk) {
       // AI yoksa bile riskli mesajda destek kartı gösterilir
       const [r] = await db.insert(schema.aiMessages).values({ conversationId: conv.id, userId, role: 'assistant', content: SUPPORT[risk].body, safety: risk, provider: null }).returning()
-      return { conversationId: conv.id, user: toView(userRow), reply: toView(r) }
+      return { conversationId: conv.id, user: toView(userRow), reply: toView(r), calls: 0, memories: [] }
     }
     await db.delete(schema.aiMessages).where(eq(schema.aiMessages.id, userRow.id))
     throw e
@@ -316,7 +317,8 @@ export async function sendCoachMessage(userId: string, conversationId: string | 
   if (res.memo?.trim()) await db.update(schema.aiConversations).set({ summary: res.memo.trim().slice(0, 600) }).where(eq(schema.aiConversations.id, conv.id))
   const [r] = await db.insert(schema.aiMessages).values({ conversationId: conv.id, userId, role: 'assistant', content: res.reply, actions, whatIf, mealPlan, safety, provider: out.provider }).returning()
   await db.update(schema.aiConversations).set({ updatedAt: new Date() }).where(eq(schema.aiConversations.id, conv.id))
-  return { conversationId: conv.id, user: toView(userRow), reply: toView(r) }
+  const memories = (await listMemories(userId)).map((m) => ({ id: m.id, text: m.text }))
+  return { conversationId: conv.id, user: toView(userRow), reply: toView(r), calls, memories }
 }
 
 /** Onaylanan eylemi yeniden doğrulayıp uygular. Su kaydı çağıran sunucu aksiyonunda yapılır (`water`). */

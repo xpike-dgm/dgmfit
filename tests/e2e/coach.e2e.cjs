@@ -14,8 +14,17 @@ const CLAUDE_KEY = 'sk-ant-test-' + 'c'.repeat(24) + 'k0c1'
 const state = { calls: [], exercise: 'Plank' }
 const lastUserText = (body) => { const m = body.messages.at(-1); return typeof m.content === 'string' ? m.content : m.content.find((c) => c.type === 'text')?.text ?? '' }
 const A = (o) => ({ type: 'log_water', weeks: null, programDay: null, exercise: null, sets: null, repMin: null, repMax: null, ml: null, drink: null, ...o })
-function coachReply(body) {
+// Y2: koç yanıtında yeni alanlar (katı şema) — varsayılanlar
+const Y2 = { lookups: [], mealPlan: null, remember: [], memo: null }
+const yestTr = () => new Date(Date.now() + 3 * 3600000 - 86400000).toISOString().slice(0, 10)
+function coachReply(body) { return { ...Y2, ...coachReply0(body) } }
+function coachReply0(body) {
   const t = lastUserText(body), sys = body.system
+  if (/dünkü öğünlerim/i.test(t)) return sys.includes('ARAÇ SONUÇLARI (uygulamanın')
+    ? { reply: 'Dün verisi alındı: ' + ((sys.match(/ARAÇ SONUÇLARI \(uygulamanın[^\n]*\n- ([^\n]{0,80})/) || [])[1] ?? '?'), actions: [], whatIf: [], safety: 'yok' }
+    : { reply: 'Bakıyorum…', actions: [], whatIf: [], safety: 'yok', lookups: [{ kind: 'gun', date: yestTr(), from: null, to: null, query: null }] }
+  if (/ne yesem/i.test(t)) return { reply: 'Sınırlarına uyan öneriler kartta.', actions: [], whatIf: [], safety: 'yok', mealPlan: { protein: 20, carb: 230, fat: 30, kcal: null } }
+  if (/laktoz/i.test(t)) return { reply: 'Not aldım, laktozsuz seçenekler önereceğim.', actions: [], whatIf: [], safety: 'yok', remember: ['Laktozu sevmiyor'], memo: 'Kullanıcı laktozu sevmediğini söyledi.' }
   const day = (sys.match(/Günler: "([^"]+)"/) || [])[1] ?? null
   if (/pizza/i.test(t)) return { reply: 'Kalan bütçene göre kartta etkisini görebilirsin.', actions: [], whatIf: [{ name: 'pizza', grams: 300 }], safety: 'yok' }
   if (/uzat/i.test(t)) return { reply: 'Hedefini 2 hafta uzatmak tempoyu rahatlatır.', actions: [A({ type: 'goal_date', weeks: 2 })], whatIf: [], safety: 'yok' }
@@ -190,7 +199,30 @@ function fake(port, handler) {
   await p.waitForTimeout(800)
   await ask('Merhaba yine')
   if (!state.calls.filter((c) => c.task === 'coach').at(-1).system.includes('Kişilik: disiplinli')) fail('kişilik değişmedi')
-  // kota: 8 koç çağrısı yapıldı
+  // 11b) Y2: veri isteme (iki tur, sonuç bağlama girer), öğün önerisi kartı (sınırlara uyar, öğüne eklenir), kalıcı not + sohbet özeti
+  const mL = await ask('Dünkü öğünlerim neydi?')
+  const lc = state.calls.filter((c) => c.task === 'coach').slice(-2)
+  if (lc[0].system.includes('ARAÇ SONUÇLARI (uygulamanın') || !lc[1].system.includes('ARAÇ SONUÇLARI (uygulamanın')) fail('veri isteğinden sonra sonuçlu ikinci çağrı yok; son mesajlar: ' + lc.map((c) => lastUserText(c) + ' / ' + c.system.slice(-160).replace(/\n/g, ' ')).join(' || ') + ' · cevap: ' + await mL.innerText())
+  if (!/Dün verisi alındı: \d{4}-\d{2}-\d{2}/.test(await mL.innerText())) fail('araç sonucu cevaba girmedi: ' + await mL.innerText())
+  const mp = await ask('Maks 20 protein maks 230 karbonhidrat maks 30 gr yağ olacak, ne yesem?')
+  await mp.getByTestId('coach-mealplan').waitFor().catch(() => fail('öğün önerisi kartı yok'))
+  const opts = mp.getByTestId('coach-mealplan-option')
+  if (!(await opts.count())) fail('öğün önerisi seçeneği yok')
+  for (let i = 0; i < await opts.count(); i++) { const tt = await opts.nth(i).innerText(); const pr = Number((tt.match(/P (\d+)/) || [])[1]); if (!(pr <= 22)) fail('öneri protein sınırını aşıyor: ' + tt) }
+  await mp.getByTestId('coach-mealplan-add').first().click(); await mp.getByText('Eklendi ✓').waitFor().catch(() => fail('öneri öğüne eklenmedi'))
+  await shot('03-ogun-onerisi')
+  await ask('Laktoz sevmiyorum')
+  await ask('Merhaba tekrar')
+  const lastSys = state.calls.filter((c) => c.task === 'coach').at(-1).system
+  if (!lastSys.includes('NOTLAR') || !lastSys.includes('Laktozu sevmiyor')) fail('kalıcı not bağlama girmedi')
+  if (!lastSys.includes('SOHBET ÖZETİ') || !lastSys.includes('laktozu sevmediğini')) fail('sohbet özeti bağlama girmedi')
+  await p.getByRole('button', { name: 'Koç ayarları' }).click()
+  await p.locator('[data-memory="Laktozu sevmiyor"]').waitFor().catch(() => fail('not koç ayarlarında yok'))
+  await p.locator('[data-memory="Laktozu sevmiyor"]').getByRole('button', { name: 'Notu sil' }).click()
+  await p.locator('[data-memory="Laktozu sevmiyor"]').waitFor({ state: 'detached' }).catch(() => fail('not silinmedi'))
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300)
+
+  // kota: koç çağrıları sayıldı
   await p.reload()
   const used = state.calls.filter((c) => c.task === 'coach').length
   if (num(await p.getByTestId('coach-left').innerText()) !== left0 - used + 0) fail(`kalan hak ${left0} − ${used} olmalı`)
