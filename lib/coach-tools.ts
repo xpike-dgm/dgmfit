@@ -14,6 +14,7 @@ import { exerciseProgress } from './fitness-stats'
 import { MEAL_LABEL, type MealId } from './food'
 
 export interface Lookup { kind: 'gun' | 'donem' | 'hareket' | 'besin'; date: string | null; from: string | null; to: string | null; query: string | null }
+// (şemada boş metin "yok" demektir; aşağıdaki kontroller boşu yok sayar)
 
 const isDay = (s: string | null | undefined): s is string => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s)
 const dn = (d: string) => `${d} ${WEEKDAY[dow(d)]}`

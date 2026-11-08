@@ -308,9 +308,10 @@ export async function sendCoachMessage(userId: string, conversationId: string | 
   const whatIf = careful ? null : await resolveWhatIf(userId, res.whatIf, ctx)
   // Y2: öğün kurucu kartı — modelin verdiği sınırlar, yoksa mesajdan okunan sınırlar
   let mealPlan: MealSuggestion | null = null
-  if (!careful && res.mealPlan) {
+  if (!careful && res.mealPlan?.want) {
     const fromText = parseLimits(msg)
-    const lim = { protein: res.mealPlan.protein ?? fromText.protein ?? null, carb: res.mealPlan.carb ?? fromText.carb ?? null, fat: res.mealPlan.fat ?? fromText.fat ?? null, kcal: res.mealPlan.kcal ?? fromText.kcal ?? null }
+    const pos = (v: number) => (v > 0 ? v : null)
+    const lim = { protein: pos(res.mealPlan.protein) ?? fromText.protein ?? null, carb: pos(res.mealPlan.carb) ?? fromText.carb ?? null, fat: pos(res.mealPlan.fat) ?? fromText.fat ?? null, kcal: pos(res.mealPlan.kcal) ?? fromText.kcal ?? null }
     mealPlan = await suggestMeals(userId, lim).catch(() => null)
   }
   if (!careful && res.remember?.length) await addMemories(userId, res.remember)

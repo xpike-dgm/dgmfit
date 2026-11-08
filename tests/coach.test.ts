@@ -158,3 +158,19 @@ test('G2: koç gün dökümü — makrolar, su, kalan/fazla', async () => {
   assert.doesNotMatch(dayLine('X', { target: 2000, eaten: 2100, items: 3, burned: 0, protein: 0, proteinTarget: 0, waterMl: 0, waterGoal: 0, workouts: 0, cardioMin: 0 }), /öğün kaydı yok/)
   assert.match(dayLine('X', { target: 2000, eaten: 2100, items: 3, burned: 0, protein: 0, proteinTarget: 0, waterMl: 0, waterGoal: 0, workouts: 0, cardioMin: 0 }), /100 kcal fazla/)
 })
+
+test('Y2: tüm AI şemaları Claude sınırında (birleşik tipli parametre ≤ 16)', async () => {
+  const { TASKS, jsonSchemaFor } = await import('../lib/ai/schemas.ts')
+  const unions = (n: unknown): number => {
+    if (!n || typeof n !== 'object') return 0
+    const o = n as Record<string, unknown>
+    let c = (Array.isArray(o.type) || Array.isArray(o.anyOf) || Array.isArray(o.oneOf)) ? 1 : 0
+    for (const v of Object.values(o)) c += Array.isArray(v) ? v.reduce((a: number, x) => a + unions(x), 0) : unions(v)
+    return c
+  }
+  for (const task of Object.keys(TASKS)) {
+    const n = unions(jsonSchemaFor(task as never))
+    assert.ok(n <= 16, `${task}: ${n} birleşik tipli parametre (Claude en çok 16 kabul ediyor)`)
+  }
+  assert.ok(unions(jsonSchemaFor('coach' as never)) <= 10, 'koç şeması 10 birleşik tip altında kalmalı (pay)')
+})

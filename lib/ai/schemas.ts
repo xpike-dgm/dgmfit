@@ -54,14 +54,15 @@ export const CoachResult = z.strictObject({
   safety: z.enum(['yok', 'yeme-bozuklugu', 'kriz', 'tibbi']).describe('Mesajda yeme bozukluğu, kendine zarar ya da tıbbi durum işareti'),
   lookups: z.array(z.strictObject({
     kind: z.enum(['gun', 'donem', 'hareket', 'besin']).describe('gun: bir günün tam dökümü ve öğünleri; donem: iki tarih arası ortalamalar; hareket: bir hareketin geçmişi; besin: veritabanında besin değeri'),
-    date: z.string().max(10).nullable().describe('gun: YYYY-MM-DD'), from: z.string().max(10).nullable().describe('donem: başlangıç YYYY-MM-DD'), to: z.string().max(10).nullable().describe('donem: bitiş YYYY-MM-DD'),
-    query: z.string().max(60).nullable().describe('hareket/besin: aranacak ad'),
+    date: z.string().max(10).describe('gun: YYYY-MM-DD; diğerlerinde boş'), from: z.string().max(10).describe('donem: başlangıç YYYY-MM-DD; diğerlerinde boş'), to: z.string().max(10).describe('donem: bitiş YYYY-MM-DD; diğerlerinde boş'),
+    query: z.string().max(60).describe('hareket/besin: aranacak ad; diğerlerinde boş'),
   })).max(4).describe('BAĞLAM\'da olmayan veriye ihtiyacın varsa iste (ör. geçen salı, geçen ay, bench press geçmişi); uygulama sonuçlarla seni yeniden çağırır. Gerekmiyorsa boş.'),
   mealPlan: z.strictObject({
-    protein: z.number().min(0).max(1000).nullable(), carb: z.number().min(0).max(2000).nullable(), fat: z.number().min(0).max(1000).nullable(), kcal: z.number().min(0).max(6000).nullable(),
-  }).nullable().describe('Kullanıcı "ne yesem", "kalanıma göre öner" ya da makro sınırlı öğün isterse: kullanıcının koyduğu üst sınırlar (yoksa null). Uygulama veritabanından öneri kartı hesaplar; reply\'da gram/kalori yazma.'),
+    want: z.boolean().describe('Kullanıcı "ne yesem", "kalanıma göre öner" ya da makro sınırlı öğün istediyse true'),
+    protein: z.number().min(0).max(1000), carb: z.number().min(0).max(2000), fat: z.number().min(0).max(1000), kcal: z.number().min(0).max(6000),
+  }).describe('Öğün önerisi: want=true ise kullanıcının koyduğu üst sınırlar (sınır yoksa 0). Uygulama veritabanından öneri kartı hesaplar; reply\'da gram/kalori yazma.'),
   remember: z.array(z.string().min(3).max(160)).max(3).describe('Kullanıcı hakkında kalıcı olarak hatırlanmaya değer yeni bilgi (tercih, alışkanlık, sağlık sınırı, program); yoksa boş. Zaten NOTLAR\'da olanı tekrar yazma.'),
-  memo: z.string().max(600).nullable().describe('Bu sohbetin şimdiye kadarki kısa özeti (kararlar, kullanıcının sınırları, konuşulan gün); uzun sohbetlerde eski mesajlar unutulmasın diye. Kısa sohbette null.'),
+  memo: z.string().max(600).describe('Bu sohbetin şimdiye kadarki kısa özeti (kararlar, kullanıcının sınırları, konuşulan gün); uzun sohbetlerde eski mesajlar unutulmasın diye. Kısa sohbette boş.'),
 })
 export type CoachResult = z.infer<typeof CoachResult>
 export const InsightResult = z.strictObject({
@@ -221,7 +222,12 @@ export function parseResult<T extends Task>(task: T, text: string): z.infer<(typ
   if (start < 0 || end < start) throw new Error('AI yanıtı JSON değil')
   const raw = JSON.parse(text.slice(start, end + 1))
   // Y2: koçun sonradan eklenen alanları eksik gelirse varsayılanla doldurulur (eski/yedek sağlayıcı yanıtı bozulmasın)
-  if (task === 'coach' && raw && typeof raw === 'object') raw.lookups ??= [], raw.mealPlan ??= null, raw.remember ??= [], raw.memo ??= null
+  if (task === 'coach' && raw && typeof raw === 'object') {
+    raw.lookups = Array.isArray(raw.lookups) ? raw.lookups.map((l: Record<string, unknown>) => ({ ...l, date: l.date ?? '', from: l.from ?? '', to: l.to ?? '', query: l.query ?? '' })) : []
+    const mp = raw.mealPlan as Record<string, unknown> | null | undefined
+    raw.mealPlan = mp ? { want: mp.want ?? true, protein: mp.protein ?? 0, carb: mp.carb ?? 0, fat: mp.fat ?? 0, kcal: mp.kcal ?? 0 } : { want: false, protein: 0, carb: 0, fat: 0, kcal: 0 }
+    raw.remember ??= []; raw.memo ??= ''
+  }
   const schema = TASKS[task].schema
   const first = schema.safeParse(raw)
   if (first.success) return first.data as never

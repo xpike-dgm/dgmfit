@@ -422,3 +422,7 @@ En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 - Y2: öğün kurucu (saf, `mealShare` ile öğün başına günlük hedefin %40'ı — ilk sürüm günün kalanını tek öğüne yığıp 440 g elma öneriyordu), `/yemek/oneri`, koç `lookups` iki tur (`coach-tools.ts`), `mealPlan` kartı, `coach_memories`, sohbet özeti, `runCoachNudges` (0033).
 - Hatalar: sahte koç ilk çağrıda 'ARAÇ SONUÇLARI' ifadesini kurallar metninde gördü → işaret 'ARAÇ SONUÇLARI (uygulamanın'; notlar sohbetten sonra ayarlarda görünmüyordu → gönderim yanıtı notları döndürür; planlama e2e sahte yanıtında yeni alanlar yoktu → ayrıştırıcı eksik alanları varsayılanla doldurur.
 - Doğrulama: verify VERIFY OK (40 e2e, 287 birim); release `2026-11-08T16-19-59-620Z` RELEASE OK (27 grup, day + mealplan dahil); 30 test kullanıcısı silindi; log hata 0.
+
+## 2026-11-08 — Koç 400 hatası (Y2 şeması) — acil düzeltme
+- Canlı ai_calls: 21.06 ve 21.13 koç çağrıları Claude 400 "Schemas contains too many parameters with union types (18 …)". OpenAI anahtarı yok → koç cevapsız. Neden: Y2'de eklenen nullable alanlar (lookups 4, mealPlan 5, memo 1).
+- Düzeltme: alanlar düz tip (boş metin/0, mealPlan.want), ayrıştırıcı eski null biçimini çevirir; yeni birim test her görev şemasında birleşik tip ≤ 16 (koç şimdi 8; label 11). Yerel koç/planlama/AI e2e OK.
