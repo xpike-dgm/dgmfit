@@ -124,7 +124,7 @@ function fake(port, handler) {
   const c1 = state.calls.filter((c) => c.task === 'coach').at(-1)
   if (!c1) fail('koç isteği gitmedi')
   if (c1.model !== 'claude-haiku-5-5') fail('koç Haiku ile gitmeli: ' + c1.model)
-  for (const needle of ['BAĞLAM', 'Güvenli kalori tabanı 1200 kcal', 'son 7 günde 3 gün çok düşük kalori', 'Aktif program:', 'Kişilik: destekleyici', 'Sayı uydurma']) if (!c1.system.includes(needle)) fail('bağlamda yok: ' + needle)
+  for (const needle of ['BAĞLAM', 'Güvenli kalori tabanı 1200 kcal', 'son 7 günde 3 gün çok düşük kalori', 'Aktif program:', 'Kişilik: destekleyici', 'Sayı uydurma', 'Dün (', 'karbonhidrat', 'yağ', 'Sohbetin akışını izle', 'Önceki günler']) if (!c1.system.includes(needle)) fail('bağlamda yok: ' + needle)
   if (c1.messages.length !== 1) fail('ilk mesajda geçmiş olmamalı')
 
   // 5) Ne olur: pizza 300 g → kalori veritabanından, kalan bütçe Fit motoru

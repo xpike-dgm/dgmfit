@@ -10,6 +10,10 @@ export interface DayFacts {
   items: number // öğün kalemi sayısı
   protein: number
   proteinTarget: number
+  carb?: number // G2: koç bağlamı için (g)
+  carbTarget?: number
+  fat?: number
+  fatTarget?: number
   burned: number // egzersiz net kcal (güç + kardiyo)
   waterMl: number // etkili ml
   waterGoal: number

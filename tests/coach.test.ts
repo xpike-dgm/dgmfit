@@ -138,3 +138,16 @@ test('koç şeması: sağlayıcıya giden JSON Schema katı, dönen yanıt doğr
   assert.throws(() => parseResult('coach', JSON.stringify({ reply: 'x', actions: [{ type: 'delete_all' }], whatIf: [], safety: 'yok' })))
   assert.throws(() => parseResult('weekly', JSON.stringify({ summary: 'x', suggestions: [] })))
 })
+
+test('G2: koç gün dökümü — makrolar, su, kalan/fazla', async () => {
+  const { dayLine } = await import('../lib/coach-calc.ts')
+  const s = dayLine('Dün (2026-11-07 Cumartesi)', { target: 3665, eaten: 2350, items: 1, burned: 0, protein: 100, proteinTarget: 120, carb: 250, carbTarget: 570, fat: 110, fatTarget: 103, waterMl: 0, waterGoal: 2050, workouts: 0, cardioMin: 0 })
+  assert.match(s, /^Dün \(2026-11-07 Cumartesi\): /)
+  assert.match(s, /kalan 1\.315 kcal/)
+  assert.match(s, /protein 100\/120 g \(kalan 20 g\)/)
+  assert.match(s, /karbonhidrat 250\/570 g \(kalan 320 g\)/)
+  assert.match(s, /yağ 110\/103 g \(7 g fazla\)/)
+  assert.match(s, /su 0\/2\.050 ml \(kalan 2\.050 ml\)/)
+  assert.doesNotMatch(dayLine('X', { target: 2000, eaten: 2100, items: 3, burned: 0, protein: 0, proteinTarget: 0, waterMl: 0, waterGoal: 0, workouts: 0, cardioMin: 0 }), /öğün kaydı yok/)
+  assert.match(dayLine('X', { target: 2000, eaten: 2100, items: 3, burned: 0, protein: 0, proteinTarget: 0, waterMl: 0, waterGoal: 0, workouts: 0, cardioMin: 0 }), /100 kcal fazla/)
+})

@@ -49,3 +49,21 @@ export function shiftGoal(endDate: string, today: string, weeks: number): { newE
   if (daysLeft > MAX_GOAL_DAYS) return { error: 'Hedef tarihi en fazla 2 yıl sonrası olabilir' }
   return { newEnd, daysLeft }
 }
+
+/**
+ * G2: koç bağlamında bir günün tam dökümü — kalori, makrolar ve su, hedef ve kalan/fazla ile (sayılar motorlardan; model
+ * hesap yapmaz). `label` ör. "Dün (2026-11-07 Cumartesi)".
+ */
+export function dayLine(label: string, d: { target: number; eaten: number; items: number; burned: number; protein: number; proteinTarget: number; carb?: number; carbTarget?: number; fat?: number; fatTarget?: number; waterMl: number; waterGoal: number; workouts: number; cardioMin: number }): string {
+  const n = (x: number) => Math.round(x).toLocaleString('tr-TR')
+  const left = (have: number, goal: number, u: string) => { const r = Math.round(goal - have); return r >= 0 ? `kalan ${n(r)} ${u}` : `${n(-r)} ${u} fazla` }
+  const kcalLeft = d.target + d.burned - d.eaten
+  const parts = [
+    `kalori hedefi ${n(d.target)} kcal, yenen ${n(d.eaten)} kcal (${d.items} kalem), egzersiz ${n(d.burned)} kcal → ${kcalLeft >= 0 ? `kalan ${n(kcalLeft)} kcal` : `${n(-kcalLeft)} kcal fazla`}`,
+    `protein ${n(d.protein)}/${n(d.proteinTarget)} g (${left(d.protein, d.proteinTarget, 'g')})`,
+  ]
+  if (d.carbTarget !== undefined) parts.push(`karbonhidrat ${n(d.carb ?? 0)}/${n(d.carbTarget)} g (${left(d.carb ?? 0, d.carbTarget, 'g')})`)
+  if (d.fatTarget !== undefined) parts.push(`yağ ${n(d.fat ?? 0)}/${n(d.fatTarget)} g (${left(d.fat ?? 0, d.fatTarget, 'g')})`)
+  parts.push(`su ${n(d.waterMl)}/${n(d.waterGoal)} ml (${left(d.waterMl, d.waterGoal, 'ml')})`, `antrenman ${d.workouts}, kardiyo ${d.cardioMin} dk`)
+  return `${label}: ${parts.join('; ')}.${d.items ? '' : ' (Bu gün için öğün kaydı yok.)'}`
+}

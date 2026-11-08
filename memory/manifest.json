@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-08",
-  "phase": "G1b",
+  "phase": "G2",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -910,7 +910,8 @@
     "lib/coach-calc.ts": [
       "whatIfImpact",
       "matchProgramDay",
-      "shiftGoal"
+      "shiftGoal",
+      "dayLine"
     ],
     "lib/coach-data.ts": [
       "coachContext",

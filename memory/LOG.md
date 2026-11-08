@@ -407,3 +407,7 @@ En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 
 ## 2026-11-08 — G1b başladı (veritabanı içecekleri ml)
 - `lib/food.ts` `isDrink(name, category)` + `drinkPortions`; `toHit` içecekte temel porsiyonu "100 ml" yapar (user kaynağı hariç). Yerel 27 206 besinde 937 içecek (419'u İçecekler kategorisi dışında: süt, kefir, meyve suyu, latte…); İçecekler kategorisinde 75 toz/katı dışarıda kaldı. FoodSheet'e gram/ml seçici.
+
+## 2026-11-08 — G1b tamamlandı, G2 başladı (koç bağlamı)
+- G1b: release `2026-11-08T14-53-35-353Z` RELEASE OK, 28 test kullanıcısı silindi, log hata 0.
+- G2: `lib/coach-calc.ts` `dayLine` (saf, testli); `gatherDays` karb/yağ toplar + hedefleri; `coachContext` bugün/dün tam döküm, önceki günler makrolu, gece notu; `COACH_RULES` 8–9; HISTORY 16.

@@ -20,13 +20,13 @@ import { getProgram, listPrograms, searchExercises, addExerciseToDay, updateProg
 import { weekStats, ruleSuggestions, numbersAllowed, dow, WEEKDAY, type DayFacts, type WeekStats } from './weekly'
 import { safetyFlags, riskyText, SUPPORT, type SafetyResult } from './safety'
 import { insightCandidates, pickInsight, type InsightFact } from './insights'
-import { matchProgramDay, shiftGoal, whatIfImpact, type WhatIf } from './coach-calc'
+import { dayLine, matchProgramDay, shiftGoal, whatIfImpact, type WhatIf } from './coach-calc'
 import { aiAvailable, AiError, runTask } from './ai/engine'
 import { PERSONAS, type CoachAction, type Persona } from './ai/schemas'
 import { publish } from './events'
 import { createMenu } from './planner-data'
 
-const HISTORY = 10 // modele giden önceki mesaj sayısı (spesifikasyon 10: uzun geçmiş yerine özet bağlam)
+const HISTORY = 16 // modele giden önceki mesaj sayısı (G2: 10 → 16; takip soruları önceki konuyu kaybetmesin)
 
 export async function coachPrefs(userId: string) {
   const [r] = await db.select().from(schema.coachPrefs).where(eq(schema.coachPrefs.userId, userId)).limit(1)
@@ -42,7 +42,7 @@ export async function gatherDays(userId: string, from: string, to: string): Prom
   const goal = await activeGoal(userId)
   const [targets, meals, wk, cardio, wTotals, wHist, wBonus] = await Promise.all([
     dayTargets(userId, from, to, goal),
-    db.execute<{ day: string; kcal: number; protein: number; n: number }>(sql`select day::text as day, coalesce(sum(kcal),0)::float as kcal, coalesce(sum(protein),0)::float as protein, count(*)::int as n from meal_items where user_id = ${userId} and day between ${from} and ${to} and deleted_at is null group by day`),
+    db.execute<{ day: string; kcal: number; protein: number; carb: number; fat: number; n: number }>(sql`select day::text as day, coalesce(sum(kcal),0)::float as kcal, coalesce(sum(protein),0)::float as protein, coalesce(sum(carb),0)::float as carb, coalesce(sum(fat),0)::float as fat, count(*)::int as n from meal_items where user_id = ${userId} and day between ${from} and ${to} and deleted_at is null group by day`),
     db.execute<{ day: string; n: number; vol: number; kcal: number }>(sql`select day::text as day, count(*)::int as n, coalesce(sum(volume_kg),0)::float as vol, coalesce(sum(kcal_net),0)::int as kcal from workouts where user_id = ${userId} and day between ${from} and ${to} and deleted_at is null group by day`),
     db.execute<{ day: string; min: number; kcal: number }>(sql`select day::text as day, coalesce(sum(minutes),0)::float as min, coalesce(sum(kcal_net),0)::int as kcal from cardio_sessions where user_id = ${userId} and day between ${from} and ${to} and deleted_at is null group by day`),
     dailyTotals(userId, from, to), goalHistory(userId), waterBonusByDay(userId, from, to),
@@ -52,6 +52,7 @@ export async function gatherDays(userId: string, from: string, to: string): Prom
     const mm = m.get(t.day), ww = w.get(t.day), cc = c.get(t.day)
     return {
       day: t.day, target: t.kcal, eaten: Math.round(Number(mm?.kcal ?? 0)), items: Number(mm?.n ?? 0), protein: Math.round(Number(mm?.protein ?? 0)), proteinTarget: t.protein,
+      carb: Math.round(Number(mm?.carb ?? 0)), carbTarget: t.carb, fat: Math.round(Number(mm?.fat ?? 0)), fatTarget: t.fat,
       burned: Number(ww?.kcal ?? 0) + Number(cc?.kcal ?? 0), waterMl: wTotals.get(t.day)?.total ?? 0,
       waterGoal: (wHist.length ? goalForDay(wHist, t.day) : goal?.waterMl ?? 2500) + (wBonus.get(t.day) ?? 0),
       workouts: Number(ww?.n ?? 0), cardioMin: Math.round(Number(cc?.min ?? 0)), volumeKg: Math.round(Number(ww?.vol ?? 0)),
@@ -114,15 +115,19 @@ export async function coachContext(userId: string): Promise<CoachContext> {
   if (checkin?.tdee.tdee) wl.push(`ölçülen günlük harcama (adaptif) ${checkin.tdee.tdee} kcal, güven ${checkin.tdee.confidence}`)
   if (checkin?.forecast.day) wl.push(`bu tempoyla hedefe tahmini varış ${checkin.forecast.day}`)
   L.push('Kilo: ' + (wl.length ? wl.join('; ') : 'tartı kaydı yok') + '.')
-  const remaining = todayFacts.target + todayFacts.burned - todayFacts.eaten
-  L.push(`Bugün: kalori hedefi ${todayFacts.target} kcal, yenen ${todayFacts.eaten} kcal (${todayFacts.items} kalem), egzersiz ${todayFacts.burned} kcal, kalan bütçe ${remaining} kcal; protein ${todayFacts.protein}/${todayFacts.proteinTarget} g; su ${fmtNum(todayFacts.waterMl)}/${fmtNum(todayFacts.waterGoal)} ml; antrenman ${todayFacts.workouts}, kardiyo ${todayFacts.cardioMin} dk.`)
+  // G2: bugün ve dün tam döküm (makrolar + su, kalan/fazla); gece yarısından sonra kullanıcı çoğu zaman hâlâ "dün"ü yaşar
+  const dayName = (d: string) => `${d} ${WEEKDAY[dow(d)]}`
+  L.push(dayLine(`Bugün (${dayName(today)})`, todayFacts))
+  const yest = past.at(-1)
+  if (yest) L.push(dayLine(`Dün (${dayName(yest.day)})`, yest))
+  if (hm < 5 * 60) L.push(`Not: saat gece yarısını yeni geçti (05.00'ten önce). Kullanıcı henüz uyumadıysa "bugün", "kalan", "şu ana kadar" derken çoğu zaman dünü (${yest?.day ?? ''}) kastediyor; mesaj belirsizse dünün değerlerini ver ve bugünün yeni başladığını kısaca belirt.`)
   const ws: string[] = [`kayıtlı ${week.loggedDays}/7 gün`]
   if (week.avgKcal !== null) ws.push(`ortalama ${week.avgKcal} kcal (hedef ort. ${week.avgTarget})`, `kalori uyumu %${week.adherencePct}`)
   if (week.proteinPct !== null) ws.push(`protein hedefinin %${week.proteinPct}'i`)
   if (week.weekendDiff !== null) ws.push(`hafta sonu − hafta içi ${signed(week.weekendDiff)} kcal`)
   ws.push(`su hedefi ${week.waterGoalDays}/7 gün${week.waterAvg !== null ? `, ortalama ${fmtNum(week.waterAvg)} ml` : ''}`, `antrenman ${week.workouts}, kardiyo ${week.cardioMin} dk, egzersiz toplam ${week.burned} kcal`, `yeni rekor ${week.prs}`)
   L.push('Son 7 gün (bugün hariç): ' + ws.join('; ') + '.')
-  L.push('Günler: ' + past.map((d) => `${WEEKDAY[dow(d.day)].slice(0, 3)} ${d.items ? `${d.eaten}/${d.target} kcal` : 'kayıt yok'}${d.workouts ? ' +antrenman' : ''}`).join(' · '))
+  L.push('Önceki günler (gün: kalori yenen/hedef · protein · karbonhidrat · yağ g · su ml): ' + past.slice(0, -1).map((d) => `${d.day} ${WEEKDAY[dow(d.day)].slice(0, 3)}: ${d.items ? `${d.eaten}/${d.target} kcal · P ${d.protein}/${d.proteinTarget} · K ${d.carb ?? 0}/${d.carbTarget ?? '?'} · Y ${d.fat ?? 0}/${d.fatTarget ?? '?'}` : 'öğün kaydı yok'} · su ${fmtNum(d.waterMl)}/${fmtNum(d.waterGoal)}${d.workouts ? ' · antrenman' : ''}`).join(' | '))
   if (program) {
     L.push(`Aktif program: ${program.name}. Günler: ` + program.days.map((d) => `"${d.name}": ${d.exercises.map((e) => `${e.name} ${e.sets}×${e.repMin}${e.repMax !== e.repMin ? '–' + e.repMax : ''}`).join(', ') || 'boş'}`).join(' | '))
   } else L.push('Aktif antrenman programı yok.')
