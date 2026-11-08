@@ -37,7 +37,7 @@ export async function importRecipeFromUrl(userId: string, raw: string): Promise<
     let grams = p.grams
     if (grams === null && hit && p.qty !== null) {
       // "1 adet soğan" → besinin adet/orta porsiyonu
-      const por = hit.portions.find((x) => /adet|orta|tane|dilim/i.test(x.label)) ?? hit.portions.find((x) => x.label !== '100 g')
+      const por = hit.portions.find((x) => /adet|orta|tane|dilim/i.test(x.label)) ?? hit.portions.find((x) => x.label !== '100 g' && x.label !== '100 ml')
       if (por) grams = Math.round(por.g * p.qty)
     }
     ingredients.push({ text: line, name: p.name, grams, food: hit ? { id: hit.id, name: hit.name, sub: hit.sub, per100: hit.per100, kcal: hit.kcal } : null })

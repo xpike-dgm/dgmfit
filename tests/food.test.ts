@@ -73,3 +73,19 @@ test('G1: ml birimli kendi besini', async () => {
   assert.equal(userFoodPortions('g', 40)[0].label, '1 porsiyon (40 g)')
   assert.ok(isBasePortion('100 ml') && isBasePortion('100 g') && !isBasePortion('1 kutu'))
 })
+
+test('G1: veritabanındaki içecekler tanınır, katılar değil', async () => {
+  const { isDrink, drinkPortions, foodUnit } = await import('../lib/food.ts')
+  for (const [n, c] of [['Ayran', 'İçecekler'], ['Fer Gazoz', 'İçecekler'], ['%3 Yağlı Süt', 'Süt ürünleri'], ['Vitaminli Süt', 'Markalı ürünler'], ['Organik Pastörize Yağlı Süt', null],
+    ['Türk Kahvesi', null], ['Vanilya Aromalı Latte Sıcak', null], ['Iced Coconut Latte', null], ['Orange juice, canned, unsweetened', 'Meyveler'], ['Vegetable juice cocktail, low sodium, canned', 'Sebzeler'],
+    ['Milk, nonfat, fluid, without added vitamin A', 'Süt ürünleri ve yumurta'], ['Coconut Milk', null], ['Şalgam Suyu', null], ['Portakal Suyu', null], ['Kefir', 'Süt ürünleri'], ['Kakaolu Süt', null], ['Çikolatalı Süt', null], ['Maden Suyu', null], ['Sıcak Çikolata', 'İçecekler'], ['Çikolatalı Soya Sütü', 'İçecekler'], ['Bademli Kahveli Laktozsuz Glutensiz İçecek', 'İçecekler'], ['Damla Sakızlı Soda', 'İçecekler'], ['Coco Tropico Beyaz Çikolatalı Süt', null]] as const)
+    assert.equal(isDrink(n, c), true, n)
+  for (const [n, c] of [['Süt Burger Kakaolu', null], ['Çilekli Süt Dilimi', null], ['Süt Mısır', null], ['Cocoa Latte Cake', null], ['Kahveli Dondurma', null], ['Ayran Aşı Çorbası', null],
+    ['Peaches, canned, juice pack, solids and liquids', 'Meyveler'], ['Puddings, rice, dry mix, prepared with whole milk', null], ['Crackers, saltines (includes oyster, soda, soup)', null],
+    ['Leavening agents, baking soda', null], ['Candies, ROLO Caramels in Milk Chocolate', null], ['Beverages, Cocoa mix, no sugar added, powder', 'İçecekler'], ['Kahve Kremalı Pasta', 'İçecekler'],
+    ['Su Paketi İçinde Şekersiz Meyve Kokteyli (Pişmiş veya Konservelenmiş)', null], ['Süzme Peyniri (Düşük Yağ, %1 Süt Yağı, Sodyumsuz)', null], ['Tavuklu Pilav', null], ['Lavi Sütlü Dolgulu Çikolata', null], ['Suyu Süzülmüş Meksika Fasulyesi', null], ['Mushroom Latte Mix', null], ['Sıcak Çikolatalı İçecek Tozu', 'İçecekler'], ['Kahve kreması (toz)', 'İçecekler'], ['Kahve Draje Bitter', 'İçecekler']] as const)
+    assert.equal(isDrink(n, c), false, n)
+  const p = drinkPortions([{ label: '1 bardak (200 g)', g: 200 }, { label: '100 g', g: 100 }])
+  assert.deepEqual(p, [{ label: '1 bardak (200 ml)', g: 200 }, { label: '100 ml', g: 100 }])
+  assert.equal(foodUnit(p), 'ml')
+})

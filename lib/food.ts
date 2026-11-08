@@ -123,3 +123,27 @@ export function foodUnit(portions: { label: string }[] | null | undefined): Food
 export function userFoodPortions(unit: FoodUnit, servingG?: number, servingLabel?: string): { label: string; g: number }[] {
   return [...(servingG ? [{ label: servingLabel || `1 porsiyon (${servingG} ${unit})`, g: servingG }] : []), { label: baseLabel(unit), g: 100 }]
 }
+
+/**
+ * G1: veritabanındaki besin içecek mi? (ml ile gösterilir.) "İçecekler" kategorisi ya da adı açıkça içecek olanlar;
+ * toz, kek, çikolata, dondurma gibi katılar hariç. İngilizce (USDA) adlarda yalnız ilk virgüle kadarki ana ad bakılır
+ * ("Peaches, canned, juice pack" katı, "Orange juice, canned" içecek).
+ */
+const SOLID = /((^|[\s(,])toz([\s),]|$)|tozu|powder|\bdry\b|\bmix\b|kek\b|kekler|cake|pasta\b|bisküvi|gofret|kraker|cracker|cips|lokum|draje|\bbar\b|granola|brownie|puding|pudding|sütlaç|peynir|dilim|burger|ekmek|kurabiye|çorba|soup|dondurma|ice cream|froyo|candies|candy|cereal|kremalı|kreması|mısır|baking|kabartma|tablet|kapsül|jelibon|reçel|bal\b|waffle|cookie|muffin|süzülmüş|fasulye)/
+const SOLID_CHOC = /(çikolata|chocolate)/
+const CHOC_DRINK = /((^|[\s(])(süt|sütü|içecek|içeceği|kahve|kahvesi|shake)([\s),]|$)|sıcak çikolata|\bmilk\b|\bdrink\b|\bsoda\b|\bbeverage)/
+const DRINK_TR = /(^|[\s(,])(süt|sütü|ayran|kefir|kola|cola|gazoz|soda|sodası|maden suyu|meyve suyu|suyu|nektar|nektarı|limonata|soğuk çay|ice tea|şalgam|boza|smoothie|milkshake|shake|içecek|içeceği|latte|kahvesi|filtre kahve|americano|cappuccino|espresso|frappe|kombucha|kımız|sahlep|salep|şıra|enerji içeceği|protein içeceği|içme suyu)([\s),.%]|$)/
+const DRINK_EN = /\b(juice|drink|smoothie|nectar|lemonade|soda|cola|tea|coffee|milk|buttermilk|kefir|beverages?|water|shake|latte|wine|beer)\b/
+export function isDrink(name: string | null | undefined, category?: string | null): boolean {
+  const n = String(name ?? '').toLocaleLowerCase('tr')
+  if (!n) return false
+  if (SOLID.test(n) || (SOLID_CHOC.test(n) && !CHOC_DRINK.test(n))) return false
+  if (category === 'İçecekler') return true
+  const head = n.split(',')[0]
+  if (n.includes(',') && /^[a-z0-9 %'&().-]+$/.test(head)) return DRINK_EN.test(head)
+  return DRINK_TR.test(n) || (/^[a-z0-9 %'&().-]+$/.test(n) && DRINK_EN.test(n))
+}
+/** İçecek için porsiyon adlarını ml'ye çevirir: "100 g" → "100 ml", "1 bardak (200 g)" → "1 bardak (200 ml)". */
+export function drinkPortions(portions: { label: string; g: number }[]): { label: string; g: number }[] {
+  return portions.map((p) => ({ ...p, label: p.label === '100 g' ? '100 ml' : p.label.replace(/(\d+(?:[.,]\d+)?)\s*(g|gr)\)/g, '$1 ml)') }))
+}

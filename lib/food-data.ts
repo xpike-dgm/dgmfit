@@ -2,7 +2,7 @@ import 'server-only'
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { normalizeSearch, searchStems } from './nutrition'
-import { mapOffProduct, sumMacros, type MealId, type Macros, MEALS } from './food'
+import { drinkPortions, foodUnit, isDrink, mapOffProduct, sumMacros, type MealId, type Macros, MEALS } from './food'
 import { usualMeal, type UsualMeal } from './habits'
 
 export interface FoodHit {
@@ -27,7 +27,9 @@ export function toHit(f: FoodRow): FoodHit {
   const sub = f.source === 'off' ? (f.brand ?? 'Paketli ürün')
     : f.source === 'user' ? 'Kendi besinin' : f.source === 'user-recipe' ? 'Kendi tarifin'
       : f.source === 'dgfit' ? `${f.category ?? 'Yemek'} · tarif (hesaplanmış)` : f.source === 'dgfit-label' ? ([f.brand, f.category].filter(Boolean).join(' · ') || null) : f.nameTr ? (f.category ?? null) : 'USDA (İngilizce ad)'
-  return { id: f.id, name, sub, source: f.source, kcal: f.kcal, protein: f.protein, carb: f.carb, fat: f.fat, portions: f.portions, approx: f.approx, attribution: f.attribution, per100: f.per100 }
+  // G1: içecekler ml ile gösterilir (değerler 100 g = 100 ml kabul edilir); kendi besininde birimi kullanıcı seçer
+  const portions = f.source !== 'user' && foodUnit(f.portions) === 'g' && isDrink(name, f.category) ? drinkPortions(f.portions) : f.portions
+  return { id: f.id, name, sub, source: f.source, kcal: f.kcal, protein: f.protein, carb: f.carb, fat: f.fat, portions, approx: f.approx, attribution: f.attribution, per100: f.per100 }
 }
 
 /**

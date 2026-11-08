@@ -56,6 +56,17 @@ const fail = (m) => { throw new Error(m) }
   if (!(await sheet.getByRole('button', { name: 'Mililitre' }).count())) fail('besin penceresinde "Mililitre" seçeneği yok')
   if (!(await sheet.getByText('100 ml:').count())) fail('besin penceresi 100 ml başına değerleri göstermiyor')
 
+  // 4b) Veritabanındaki içecek (Ayran): listede kcal/100 ml, pencerede Mililitre + ml seçili; gram'a çevrilebilir
+  await p.goto(BASE + '/yemek/ekle?ogun=snack')
+  await p.fill('#food-q', 'ayran'); const ay = p.getByRole('button', { name: /^Ayran/ }).first(); await ay.waitFor()
+  if (!/kcal\/100 ml/.test(await ay.innerText())) fail('Ayran listede ml ile görünmüyor: ' + await ay.innerText())
+  await ay.click(); const ays = p.getByRole('dialog', { name: /^Ayran/ }); await ays.waitFor()
+  if (!(await ays.getByRole('button', { name: 'Mililitre' }).count())) fail('Ayran penceresinde "Mililitre" yok')
+  await ays.getByRole('button', { name: 'Mililitre' }).click()
+  if ((await ays.getByTestId('fs-unit-ml').getAttribute('aria-checked')) !== 'true') fail('Ayran ml seçili açılmadı')
+  await ays.getByTestId('fs-unit-g').click(); if ((await ays.getByTestId('fs-unit-g').getAttribute('aria-checked')) !== 'true') fail('gram seçilemedi')
+  await p.screenshot({ path: `${OUT}/g1-01b-ayran.png` })
+
   // 5) Uygulama içi onay: Besinlerim'den sil → onay penceresi → Vazgeç → satır duruyor
   await p.goto(BASE + '/yemek/ekle?ogun=snack&sekme=mine')
   await p.locator('li[data-food-row]').filter({ hasText: 'Test kola' }).getByTestId('food-delete').click()

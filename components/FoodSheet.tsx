@@ -34,7 +34,8 @@ export default function FoodSheet({ food, meal: initialMeal, remaining, onAdd, p
     return isBasePortion(p.label) ? Math.round(food.lastGrams) : Math.max(0.25, Math.round((food.lastGrams / p.g) * 4) / 4)
   })
   const [meal, setMeal] = useState<MealId>(initialMeal)
-  const unit = foodUnit(food.portions)
+  // içecekler ml ile açılır; kullanıcı temel miktarda g ↔ ml değiştirebilir (1 ml ≈ 1 g)
+  const [unit, setUnit] = useState(foodUnit(food.portions))
   const portion = food.portions[pi] ?? { label: baseLabel(unit), g: 100 }
   const isGrams = isBasePortion(portion.label)
   const grams = useMemo(() => (qty > 0 ? portionGrams(portion, isGrams ? qty / 100 : qty) : 0), [portion, qty, isGrams])
@@ -65,7 +66,14 @@ export default function FoodSheet({ food, meal: initialMeal, remaining, onAdd, p
           <input id="fs-qty" inputMode="decimal" value={String(qty).replace('.', ',')}
             onChange={(e) => { const v = Number(e.target.value.replace(',', '.')); if (Number.isFinite(v) && v >= 0 && v <= (isGrams ? 5000 : 100)) setQty(v) }}
             className="w-full bg-transparent text-center num text-[44px] font-bold outline-none leading-none" />
-          <span className="text-sm text-mute">{isGrams ? (unit === 'ml' ? 'ml' : 'gram') : `× ${portion.label}`}</span>
+          {isGrams ? (
+            <span role="radiogroup" aria-label="Birim" className="mt-1 inline-flex p-0.5 rounded-full bg-surface-2">
+              {(['g', 'ml'] as const).map((u) => (
+                <button key={u} type="button" role="radio" aria-checked={unit === u} onClick={() => setUnit(u)} data-testid={`fs-unit-${u}`}
+                  className="h-7 px-3 rounded-full text-[12.5px] font-bold text-mute aria-checked:bg-ink aria-checked:text-bg">{u === 'g' ? 'gram' : 'ml'}</button>
+              ))}
+            </span>
+          ) : <span className="text-sm text-mute">{`× ${portion.label}`}</span>}
         </div>
         <button type="button" aria-label="Artır" onClick={() => setQty((q) => Math.round((q + step) * 100) / 100)} className="w-14 h-14 rounded-2xl bg-surface-2 text-2xl font-bold">+</button>
       </div>
@@ -93,7 +101,7 @@ export default function FoodSheet({ food, meal: initialMeal, remaining, onAdd, p
         ))}
       </div>
 
-      <button type="button" disabled={pending || grams <= 0} onClick={() => onAdd({ grams, portionLabel: portion.label, portionQty: isGrams ? grams : qty, meal })}
+      <button type="button" disabled={pending || grams <= 0} onClick={() => onAdd({ grams, portionLabel: isGrams ? baseLabel(unit) : portion.label, portionQty: isGrams ? grams : qty, meal })}
         className="h-14 rounded-full bg-acc text-acc-ink font-extrabold text-[17px] disabled:opacity-40">
         {pending ? 'Ekleniyor…' : TO_MEAL[meal]}
       </button>

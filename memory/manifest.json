@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-08",
-  "phase": "G1",
+  "phase": "G1b",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -741,7 +741,9 @@
       "foodUnit",
       "userFoodPortions",
       "isBasePortion",
-      "baseLabel"
+      "baseLabel",
+      "isDrink",
+      "drinkPortions"
     ],
     "lib/food-data.ts": [
       "searchFoods",
