@@ -411,3 +411,8 @@ En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 ## 2026-11-08 — G1b tamamlandı, G2 başladı (koç bağlamı)
 - G1b: release `2026-11-08T14-53-35-353Z` RELEASE OK, 28 test kullanıcısı silindi, log hata 0.
 - G2: `lib/coach-calc.ts` `dayLine` (saf, testli); `gatherDays` karb/yağ toplar + hedefleri; `coachContext` bugün/dün tam döküm, önceki günler makrolu, gece notu; `COACH_RULES` 8–9; HISTORY 16.
+
+## 2026-11-08 — G2 tamamlandı; Y1 başladı, Y2 planlandı
+- G2 release `2026-11-08T15-17-08-528Z` RELEASE OK, 28 test kullanıcısı silindi, log hata 0.
+- Kullanıcı büyük güncelleme önerilerinden 1 (Akıllı Koç 2.0) ve 2 (kişisel gün döngüsü) için "yapabilirsin" dedi → Y1, Y2. Diğer öneriler (form kontrolü kamerası A, toparlanma B, sezonlar C, PT modu D, akıllı mutfak E, döngü F, rapor G, uygulama sağlığı H, ev ölçüleri, Play Store) yalnızca önerildi, planda değil.
+- Y1 tasarım: `dayString()` 50 dosyada 118 çağrı, hepsi sunucu tarafı → istek başına sağlayıcı (React cache kutusu) ile kullanıcının gün sınırı tek yerden.
