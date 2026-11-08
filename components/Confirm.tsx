@@ -8,15 +8,18 @@ export interface AskOptions { title?: string; ok?: string; cancel?: string; dang
 interface Req extends AskOptions { message: string; input?: { placeholder?: string; initial?: string }; resolve: (v: boolean | string | null) => void }
 
 let push: ((r: Req) => void) | null = null
+/** İstek bir sonraki turda kuyruğa girer: `startTransition(async …)` içinden çağrılınca da pencere hemen açılsın
+ *  (React 19'da geçiş içindeki durum güncellemesi işlem bitene kadar ekrana yansımaz → pencere hiç açılmıyordu). */
+const enqueue = (r: Req) => { window.setTimeout(() => (push ? push(r) : r.resolve(r.input ? window.prompt(r.message) : window.confirm(r.message))), 0) }
 
 export function ask(message: string, o: AskOptions = {}): Promise<boolean> {
   if (!push) return Promise.resolve(window.confirm(message))
-  return new Promise((resolve) => push!({ message, ...o, resolve: (v) => resolve(v === true) }))
+  return new Promise((resolve) => enqueue({ message, ...o, resolve: (v) => resolve(v === true) }))
 }
 
 export function askText(message: string, o: AskOptions & { placeholder?: string; initial?: string } = {}): Promise<string | null> {
   if (!push) return Promise.resolve(window.prompt(message))
-  return new Promise((resolve) => push!({ message, ...o, input: { placeholder: o.placeholder, initial: o.initial }, resolve: (v) => resolve(typeof v === 'string' ? v : null) }))
+  return new Promise((resolve) => enqueue({ message, ...o, input: { placeholder: o.placeholder, initial: o.initial }, resolve: (v) => resolve(typeof v === 'string' ? v : null) }))
 }
 
 export default function ConfirmHost() {
