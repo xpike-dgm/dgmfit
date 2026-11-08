@@ -416,3 +416,9 @@ En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 - G2 release `2026-11-08T15-17-08-528Z` RELEASE OK, 28 test kullanıcısı silindi, log hata 0.
 - Kullanıcı büyük güncelleme önerilerinden 1 (Akıllı Koç 2.0) ve 2 (kişisel gün döngüsü) için "yapabilirsin" dedi → Y1, Y2. Diğer öneriler (form kontrolü kamerası A, toparlanma B, sezonlar C, PT modu D, akıllı mutfak E, döngü F, rapor G, uygulama sağlığı H, ev ölçüleri, Play Store) yalnızca önerildi, planda değil.
 - Y1 tasarım: `dayString()` 50 dosyada 118 çağrı, hepsi sunucu tarafı → istek başına sağlayıcı (React cache kutusu) ile kullanıcının gün sınırı tek yerden.
+
+## 2026-11-08 — Y1 + Y2 tamamlandı
+- Y1: gün sınırı (profiles.day_start_min, 0032), istek kapsamı (Next workAsyncStorage anahtarlı WeakMap; React cache API rotalarında paylaşılmıyordu — yerel day e2e ile bulundu), su `dayBounds`/`sqlDay`, zamanlayıcı `asUserDay`, Profil → Günün bitişi, gece notu, `atTime` Türkçe saat eki.
+- Y2: öğün kurucu (saf, `mealShare` ile öğün başına günlük hedefin %40'ı — ilk sürüm günün kalanını tek öğüne yığıp 440 g elma öneriyordu), `/yemek/oneri`, koç `lookups` iki tur (`coach-tools.ts`), `mealPlan` kartı, `coach_memories`, sohbet özeti, `runCoachNudges` (0033).
+- Hatalar: sahte koç ilk çağrıda 'ARAÇ SONUÇLARI' ifadesini kurallar metninde gördü → işaret 'ARAÇ SONUÇLARI (uygulamanın'; notlar sohbetten sonra ayarlarda görünmüyordu → gönderim yanıtı notları döndürür; planlama e2e sahte yanıtında yeni alanlar yoktu → ayrıştırıcı eksik alanları varsayılanla doldurur.
+- Doğrulama: verify VERIFY OK (40 e2e, 287 birim); release `2026-11-08T16-19-59-620Z` RELEASE OK (27 grup, day + mealplan dahil); 30 test kullanıcısı silindi; log hata 0.
