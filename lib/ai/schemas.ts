@@ -220,6 +220,8 @@ export function parseResult<T extends Task>(task: T, text: string): z.infer<(typ
   const start = text.indexOf('{'), end = text.lastIndexOf('}')
   if (start < 0 || end < start) throw new Error('AI yanıtı JSON değil')
   const raw = JSON.parse(text.slice(start, end + 1))
+  // Y2: koçun sonradan eklenen alanları eksik gelirse varsayılanla doldurulur (eski/yedek sağlayıcı yanıtı bozulmasın)
+  if (task === 'coach' && raw && typeof raw === 'object') raw.lookups ??= [], raw.mealPlan ??= null, raw.remember ??= [], raw.memo ??= null
   const schema = TASKS[task].schema
   const first = schema.safeParse(raw)
   if (first.success) return first.data as never

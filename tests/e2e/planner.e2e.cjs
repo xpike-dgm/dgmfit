@@ -40,7 +40,7 @@ function route(body) {
     const ex = (i) => ({ name: names[i % names.length], sets: 8, repMin: 8, repMax: 12, rir: 0, rest: 90 })
     return { task: 'program', out: { name: 'Test AI programı', days: Array.from({ length: n + 1 }, (_, d) => ({ name: `AI Gün ${d + 1}`, focus: 'Tam vücut', exercises: [ex(d * 3), ex(d * 3 + 1), ex(d * 3 + 2), { name: 'Uçan halı', sets: 3, repMin: 8, repMax: 12, rir: 2, rest: 60 }] })), notes: ['Isınmayı atlama.'] } }
   }
-  if (props.includes('reply')) return { task: 'coach', out: { reply: 'Yarın için menünü hazırlayabilirim.', actions: [{ type: 'plan_menu', weeks: null, programDay: null, exercise: null, sets: null, repMin: null, repMax: null, ml: null, drink: null }], whatIf: [], safety: 'yok' } }
+  if (props.includes('reply')) return { task: 'coach', out: { lookups: [], mealPlan: null, remember: [], memo: null, reply: 'Yarın için menünü hazırlayabilirim.', actions: [{ type: 'plan_menu', weeks: null, programDay: null, exercise: null, sets: null, repMin: null, repMax: null, ml: null, drink: null }], whatIf: [], safety: 'yok' } }
   if (props.includes('title')) return { task: 'insight', out: { title: 'x', body: 'y' } }
   return { task: 'other', out: { items: [], note: null } }
 }
