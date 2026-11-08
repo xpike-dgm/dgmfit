@@ -8,6 +8,7 @@ import { goalForDay, parseHm } from './water'
 import { dayBounds, goalHistory, minuteOfDay } from './water-data'
 import { addDays, dayString, TZ } from './time'
 import { closePendingDays } from './fit-data'
+import { asUserDay, dayStartOf } from './day-context'
 import { waterBonusByDay } from './burn'
 
 const ACT_WINDOW_MIN = 20
@@ -38,14 +39,16 @@ async function tick() {
   if (!s || s.running) return
   s.running = true
   try {
-    // Fit: her gün 03.00'ten sonra dünü (ve kapanmamış son 7 günü) kapat
+    // Fit: saatte bir, her kullanıcı için kendi gün sınırına göre kapanabilecek günleri kapat (Y1: sınır kişiye özel;
+    // yeni gün başladıktan 3 saat sonra dün kapanır)
     const now = new Date(), today = dayString(now)
-    if (s.closedFor !== today && minuteOfDay(now) >= 180) {
-      s.closedFor = today
+    const hourKey = `${today}T${Math.floor(minuteOfDay(now) / 60)}`
+    if (s.closedFor !== hourKey) {
+      s.closedFor = hourKey
       const active = await db.selectDistinct({ userId: schema.goals.userId }).from(schema.goals).where(eq(schema.goals.active, true))
       let n = 0
       for (const u of active) {
-        try { n += await closePendingDays(u.userId, now) } catch (e) { console.error('[dgfit] gün kapanış hatası', e) }
+        try { n += await asUserDay(u.userId, () => closePendingDays(u.userId, now)) } catch (e) { console.error('[dgfit] gün kapanış hatası', e) }
       }
       if (n) console.log(`[dgfit] ${n} gün kapatıldı`)
     }
@@ -60,7 +63,7 @@ async function tick() {
       .innerJoin(schema.waterSettings, eq(schema.waterSettings.userId, schema.pushSubscriptions.userId))
       .where(eq(schema.waterSettings.remindersEnabled, true))
     for (const u of users) {
-      try { await runForUser(u.userId) } catch (e) { console.error('[dgfit] hatırlatma hatası', e) }
+      try { await asUserDay(u.userId, () => runForUser(u.userId)) } catch (e) { console.error('[dgfit] hatırlatma hatası', e) }
     }
   } finally {
     s.running = false
@@ -177,12 +180,13 @@ const habitCache = new Map<string, { day: string; habit: Partial<Record<string, 
 /** P-7: alışkanlık saatinden 1 saat sonra hâlâ kayıt olmayan öğün için günde bir hatırlatma (ayar: coach_prefs.meal_reminders). */
 export async function runMealReminders(now = new Date(), onlyUser?: string): Promise<number> {
   const { habitMinute, decideMealReminder } = await import('./habits')
-  const today = dayString(now), minute = minuteOfDay(now)
+  const minute = minuteOfDay(now)
   const subs = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
     .leftJoin(schema.coachPrefs, eq(schema.coachPrefs.userId, schema.pushSubscriptions.userId))
     .where(and(sql`coalesce(${schema.coachPrefs.mealReminders}, true)`, onlyUser ? eq(schema.pushSubscriptions.userId, onlyUser) : undefined))
   let n = 0
   for (const { userId } of subs) {
+    const today = dayString(now, await dayStartOf(userId)) // Y1: kullanıcının günü
     let c = habitCache.get(userId)
     if (!c || c.day !== today) {
       const rows = await db.execute<{ meal: string; m: number }>(sql`

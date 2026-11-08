@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
-  pgTable, uuid, text, timestamp, real, integer, date, jsonb, boolean, bigserial, bigint, index, uniqueIndex, primaryKey, customType,
+  pgTable, uuid, text, timestamp, real, integer, date, jsonb, boolean, bigserial, bigint, index, uniqueIndex, primaryKey, customType, smallint,
 } from 'drizzle-orm/pg-core'
 
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' })
@@ -91,6 +91,8 @@ export const profiles = pgTable('profiles', {
   allergies: jsonb('allergies').$type<string[]>(),
   wakeTime: text('wake_time'),
   sleepTime: text('sleep_time'),
+  /** Y1: gün sınırı (00.00'dan sonraki dakika; 240 = 04.00'e kadar dünün devamı) */
+  dayStartMin: smallint('day_start_min').notNull().default(240),
   waistCm: real('waist_cm'),
   uiAdvanced: boolean('ui_advanced').notNull().default(false), // Sadeleştirme (2026-11-06): false = sade mod
   onboardedAt: timestamp('onboarded_at', { withTimezone: true }),

@@ -1,7 +1,7 @@
 {
   "$comment": "scripts/memory-check.mjs bu dosyadaki her iddiayı koda karşı doğrular. Kod değişince burası da güncellenir.",
   "verifiedAt": "2026-11-08",
-  "phase": "G2",
+  "phase": "Y1",
   "files": [
     "CLAUDE.md",
     "memory/STATE.md",
@@ -347,7 +347,13 @@
     "app/(app)/profil/ozellestirme/layout.tsx",
     "app/(app)/yemek/besin/[id]/page.tsx",
     "tests/e2e/g1.e2e.cjs",
-    "tests/confirm.test.ts"
+    "tests/confirm.test.ts",
+    "lib/day-context.ts",
+    "app/(app)/profil/gun/page.tsx",
+    "app/(app)/profil/gun/DayStartPicker.tsx",
+    "drizzle/0032_day_start.sql",
+    "tests/e2e/day.e2e.cjs",
+    "tests/time.test.ts"
   ],
   "tables": [
     "users",
@@ -575,7 +581,9 @@
     "/profil/ozellestirme/modlar",
     "/profil/ozellestirme/duzen",
     "/profil/ozellestirme/stil/daha",
-    "/yemek/besin/[id]"
+    "/yemek/besin/[id]",
+    "/profil/gun",
+    "/api/test/day"
   ],
   "events": [
     "profile.onboarded",
@@ -655,7 +663,15 @@
       "diffDays",
       "longDate",
       "shortDate",
-      "greeting"
+      "greeting",
+      "logicalDay",
+      "inLateWindow",
+      "currentDayStart",
+      "setDayOffsetProvider",
+      "clampDayStart",
+      "atTime",
+      "DAY_START_DEFAULT",
+      "DAY_START_OPTIONS"
     ],
     "lib/water.ts": [
       "DRINKS",
@@ -683,7 +699,8 @@
       "minuteOfDay",
       "dayBounds",
       "getWaterInsights",
-      "dailyDetail"
+      "dailyDetail",
+      "sqlDay"
     ],
     "app/(app)/su/actions.ts": [
       "addWater",
@@ -1257,6 +1274,12 @@
     ],
     "lib/confirm.ts": [
       "inferOk"
+    ],
+    "lib/day-context.ts": [
+      "setRequestDayStart",
+      "dayStartOf",
+      "runWithDayStart",
+      "asUserDay"
     ]
   },
   "dependencies": {
@@ -1305,6 +1328,7 @@
     "0028_designer_follows.sql",
     "0029_card_usage.sql",
     "0030_trackers.sql",
-    "0031_user_modes.sql"
+    "0031_user_modes.sql",
+    "0032_day_start.sql"
   ]
 }

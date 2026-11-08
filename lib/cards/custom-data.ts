@@ -11,6 +11,7 @@ import { SCREENS, type ScreenId } from './registry'
 import { PERIODS, USER_CARDS_MAX, daysUntil, isUserCard, newUserCardId, normalizeTracker, normalizeUserCard, summarize, type Metric, type TrackerDef, type UserCard } from './custom'
 import { addItem, normalizeScreen, removeItem, resolveScreen } from './layout'
 import { transformDesign, activeDesign } from './design-data'
+import { sqlDay } from '../water-data'
 
 const TR = schema.trackers, TL = schema.trackerLogs
 export const TRACKERS_MAX = 12
@@ -71,7 +72,7 @@ async function metricDays(userId: string, metric: Metric, days: string[]): Promi
   const from = days[0], to = days[days.length - 1]
   if (metric === 'weight') { const s = await weightSeries(userId, from, to); return days.map((d) => s.find((x) => x.day === d)?.trend ?? null) }
   const q = metric === 'water'
-    ? sql`select (logged_at at time zone 'Europe/Istanbul')::date::text as day, sum(effective_ml)::real as v from water_logs where user_id = ${userId} and deleted_at is null and (logged_at at time zone 'Europe/Istanbul')::date between ${from} and ${to} group by 1`
+    ? sql`select ${sqlDay(sql`logged_at`)} as day, sum(effective_ml)::real as v from water_logs where user_id = ${userId} and deleted_at is null and (logged_at at time zone 'Europe/Istanbul')::date between ${from} and ${to} group by 1`
     : metric === 'workouts'
       ? sql`select day::text as day, count(*)::real as v from workouts where user_id = ${userId} and deleted_at is null and day between ${from} and ${to} group by 1`
       : sql`select day::text as day, sum(${sql.raw(metric === 'kcal' ? 'kcal' : 'protein')})::real as v from meal_items where user_id = ${userId} and deleted_at is null and day between ${from} and ${to} group by 1`

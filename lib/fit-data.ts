@@ -3,7 +3,7 @@ import { carbCycleDay } from './scenario'
 import crypto from 'node:crypto'
 import { and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm'
 import { db, schema } from './db'
-import { addDays, dayString, diffDays } from './time'
+import { addDays, currentDayStart, dayString, diffDays } from './time'
 import { calorieFloor, type Sex } from './calc'
 import { balanceWindow, checkinCompute, closureDiff, dayBaseKcal, distributeDiff, exceptionDays, planAdvice, planBank, scaleMacros, targetKcal, trainingWeekdays, trendSeries, type PlanDay } from './fit'
 import { dayMacros } from './food-data'
@@ -147,12 +147,14 @@ export async function refreshClosedDay(userId: string, day: string): Promise<voi
   if (day < dayString()) await closeDay(userId, day)
 }
 
-/** Kapanmamış geçmiş günleri (en fazla 7) sırayla kapatır. Gece 03.00'ten önce dün açık kalır. */
+/** Kapanmamış geçmiş günleri (en fazla 7) sırayla kapatır. Kullanıcının yeni günü başladıktan sonraki ilk 3 saat dün
+ *  açık kalır (geç kayıt payı); Y1: gün sınırı kullanıcıya göre (varsayılan 04.00 → dün 07.00'de kapanır). */
 export async function closePendingDays(userId: string, now = new Date()): Promise<number> {
   const goal = await activeGoal(userId)
   if (!goal) return 0
   const today = dayString(now)
-  const lastClosable = minuteOfDay(now) >= 180 ? addDays(today, -1) : addDays(today, -2)
+  const intoDay = (minuteOfDay(now) - currentDayStart() + 1440) % 1440
+  const lastClosable = intoDay >= 180 ? addDays(today, -1) : addDays(today, -2)
   const from = addDays(today, -7) > goal.startDate ? addDays(today, -7) : goal.startDate
   if (lastClosable < from) return 0
   const closed = await db.select({ day: schema.dailyTargets.day }).from(schema.dailyTargets)

@@ -5,6 +5,7 @@ import { db, schema } from '../db'
 import { addDays, dayString } from '../time'
 import { cardDef, type ScreenId } from './registry'
 import { suggestLayout, experiment, type CardUsage, type Suggestion, type DayCount } from './usage'
+import { sqlDay } from '../water-data'
 
 const U = schema.cardUsage
 
@@ -47,7 +48,7 @@ export async function experimentReport(userId: string) {
   const from = addDays(changeDay, -7), to = addDays(changeDay, 7)
   // gün sütunu: öğün ve antrenmanda `day`; suda kayıt anı (İstanbul günü)
   const q = (table: 'meal_items' | 'workouts') => db.execute(sql`select day::text as day, count(*)::int as n from ${sql.raw(table)} where user_id = ${userId} and day between ${from} and ${to} and deleted_at is null group by day`)
-  const qw = db.execute(sql`select (logged_at at time zone 'Europe/Istanbul')::date::text as day, count(*)::int as n from water_logs where user_id = ${userId} and (logged_at at time zone 'Europe/Istanbul')::date between ${from} and ${to} and deleted_at is null group by 1`)
+  const qw = db.execute(sql`select ${sqlDay(sql`logged_at`)} as day, count(*)::int as n from water_logs where user_id = ${userId} and (logged_at at time zone 'Europe/Istanbul')::date between ${from} and ${to} and deleted_at is null group by 1`)
   const rs = await Promise.all([q('meal_items'), qw, q('workouts')])
   const by = new Map<string, number>()
   for (const r of rs) for (const row of r as unknown as { day: string; n: number }[]) by.set(row.day, (by.get(row.day) ?? 0) + Number(row.n))

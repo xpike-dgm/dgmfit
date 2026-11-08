@@ -8,6 +8,8 @@ import { and, eq, gt, sql } from 'drizzle-orm'
 import { db, schema } from './db'
 import { isAdmin } from './admin-list'
 import { canEnter } from './access'
+import { setRequestDayStart } from './day-context'
+import { DAY_START_DEFAULT } from './time'
 
 const scrypt = promisify(crypto.scrypt) as (pw: string, salt: Buffer, len: number, opts: crypto.ScryptOptions) => Promise<Buffer>
 const SCRYPT = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
@@ -82,6 +84,7 @@ export const getSessionUser = cache(async (): Promise<CurrentUser | null> => {
       email: schema.users.email,
       status: schema.users.status,
       onboardedAt: schema.profiles.onboardedAt,
+      dayStartMin: schema.profiles.dayStartMin,
     })
     .from(schema.sessions)
     .innerJoin(schema.users, eq(schema.users.id, schema.sessions.userId))
@@ -91,6 +94,7 @@ export const getSessionUser = cache(async (): Promise<CurrentUser | null> => {
   const r = rows[0]
   if (!r) return null
   touch(r.id)
+  setRequestDayStart(r.dayStartMin ?? DAY_START_DEFAULT) // Y1: bu istekteki dayString() kullanıcının gününü verir
   return { id: r.id, username: r.username, email: r.email, onboarded: !!r.onboardedAt, status: r.status, admin: isAdmin(r.username) }
 })
 

@@ -52,3 +52,15 @@ export async function setMealRemindersAction(on: boolean): Promise<{ ok: true }>
   await db.insert(schema.coachPrefs).values({ userId: u.id, mealReminders: !!on }).onConflictDoUpdate({ target: schema.coachPrefs.userId, set: { mealReminders: !!on, updatedAt: new Date() } })
   return { ok: true }
 }
+
+/** Y1: günün bittiği saat (gün sınırı). Seçenekler DAY_START_OPTIONS; geçmiş kayıtlar yer değiştirmez. */
+export async function setDayStartAction(min: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  const u = await requireUser()
+  const { DAY_START_OPTIONS } = await import('@/lib/time')
+  if (!DAY_START_OPTIONS.some((o) => o.min === min)) return { ok: false, error: 'Geçersiz seçim' }
+  const { db, schema } = await import('@/lib/db')
+  const { eq } = await import('drizzle-orm')
+  await db.update(schema.profiles).set({ dayStartMin: min, updatedAt: new Date() }).where(eq(schema.profiles.userId, u.id))
+  revalidatePath('/', 'layout')
+  return { ok: true }
+}

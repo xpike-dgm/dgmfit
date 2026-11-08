@@ -7,7 +7,7 @@ import { estimateBodyFat, leanMass } from './body-comp'
 // Kural: tüm sayılar motorlardan (fit, weekly, safety, insights, coach-calc); dil modeli yalnızca yorumlar.
 import { and, asc, desc, eq, gte, isNull, sql } from 'drizzle-orm'
 import { db, schema } from './db'
-import { addDays, dayString, diffDays } from './time'
+import { addDays, atTime, currentDayStart, dayString, diffDays, inLateWindow } from './time'
 import { ageFromBirthDate, calorieFloor, computePlan, fmtNum, type Activity, type GoalType, type Sex } from './calc'
 import { activeGoal, checkinData, dayTargets, sexOf, weightSeries } from './fit-data'
 import { dailyTotals, goalHistory, minuteOfDay, getWaterInsights } from './water-data'
@@ -120,7 +120,10 @@ export async function coachContext(userId: string): Promise<CoachContext> {
   L.push(dayLine(`Bugün (${dayName(today)})`, todayFacts))
   const yest = past.at(-1)
   if (yest) L.push(dayLine(`Dün (${dayName(yest.day)})`, yest))
-  if (hm < 5 * 60) L.push(`Not: saat gece yarısını yeni geçti (05.00'ten önce). Kullanıcı henüz uyumadıysa "bugün", "kalan", "şu ana kadar" derken çoğu zaman dünü (${yest?.day ?? ''}) kastediyor; mesaj belirsizse dünün değerlerini ver ve bugünün yeni başladığını kısaca belirt.`)
+  // Y1: "bugün" kullanıcının gün sınırına göre; takvim ilerlediyse koç bunu bilsin
+  const ds = currentDayStart()
+  if (inLateWindow(now, ds)) L.push(`Not: takvimde gece yarısı geçti ama kullanıcının günü ${atTime(ds)} bitiyor; şu an hâlâ ${today} günündesiniz. Kullanıcı "bugün" derken bu günü kastediyor; bu saatte eklenen kayıtlar bu güne yazılır.`)
+  else if (hm < 5 * 60) L.push(`Not: saat gece yarısını yeni geçti ve kullanıcının yeni günü (${today}) başladı. Kullanıcı henüz uyumadıysa "kalan", "şu ana kadar" derken dünü (${yest?.day ?? ''}) kastediyor olabilir; mesaj belirsizse dünün değerlerini ver.`)
   const ws: string[] = [`kayıtlı ${week.loggedDays}/7 gün`]
   if (week.avgKcal !== null) ws.push(`ortalama ${week.avgKcal} kcal (hedef ort. ${week.avgTarget})`, `kalori uyumu %${week.adherencePct}`)
   if (week.proteinPct !== null) ws.push(`protein hedefinin %${week.proteinPct}'i`)

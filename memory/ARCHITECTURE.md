@@ -128,3 +128,9 @@ Su kuralları: hedefe `effective_ml` sayılır; Bugün ekranının su hedefi `wa
 - Kart düzenleyici (CardBoard Editor): `setItems` öncesi `snap()` (belge koordinatı) → `useLayoutEffect([items])` FLIP; `probe()` ön kenar noktası + `lock`; rAF kenar kaydırması (`armed`).
 - Özelleştirme: `components/cards/StudioUI.tsx` (Group, Row, IconBox, Ico, ScreenThumb, Lead, switchClass/segClass/chipClass); `app/(app)/profil/ozellestirme/layout.tsx` data-mod=today; alt pencere Kaydet çubuğu `.sheet-actions` (globals.css).
 
+## Y1 (2026-11-08) kişisel gün döngüsü
+- `lib/time.ts`: `dayString(d?, dayStartMin?)` mantıksal gün; sağlayıcı `setDayOffsetProvider`; `logicalDay`, `inLateWindow`, `currentDayStart`, `atTime`, `DAY_START_OPTIONS`.
+- `lib/day-context.ts` (server-only): istek kapsamı (workAsyncStorage anahtarlı WeakMap + React cache), `asUserDay`/`runWithDayStart` (AsyncLocalStorage) zamanlayıcı için; `lib/auth.ts` getSessionUser profilden `day_start_min` okuyup `setRequestDayStart` çağırır.
+- `lib/water-data.ts`: `dayBounds(day, dayStart)` ve `sqlDay(col)`; custom/usage su sorguları da `sqlDay`.
+- Zamanlayıcı: gün kapanışı saatte bir `asUserDay` ile; öğün hatırlatması kullanıcı günüyle. Profil → `/profil/gun`; Bugün başlığında gece notu (`late-day`). Test kancası `/api/test/day` (DGFIT_TEST_HOOKS).
+

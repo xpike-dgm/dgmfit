@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth'
 import { getToday } from '@/lib/today'
 import { closePendingDays } from '@/lib/fit-data'
 import { todayTraining } from '@/lib/fitness-data'
-import { greeting, longDate, shortDate, addDays } from '@/lib/time'
+import { greeting, longDate, shortDate, addDays, atTime, currentDayStart, inLateWindow } from '@/lib/time'
 import { fmtNum } from '@/lib/calc'
 import { Band, Bar, Ring, hdrIcon } from '@/components/ui'
 import QuickWaterButton from '@/components/QuickWaterButton'
@@ -79,13 +79,14 @@ export default async function Today(props: { searchParams: Promise<{ duzenle?: s
   const modeCard = modes && (focusOn(modes, t.day) || ramadanOn(modes, t.day)) ? <ModeCard s={modes} day={t.day} nowMin={nowMin} protein={{ eaten: t.eaten.protein, target: t.target.protein }} /> : null
   const trained = tr.workouts || tr.cardio
 
+  const dayStart = currentDayStart(), late = inLateWindow(new Date(), dayStart) // Y1: takvim ilerledi, kullanıcı hâlâ dünde
   const ucNodes = await userNodes(user.id, layout, editing)
   const nodes: Record<string, ReactNode> = {
     'today.header': (
       <section aria-label="Kalori" className="flex flex-col" data-testid="today-state" data-left={left} data-budget={budget} data-water-goal={t.target.water} data-protein-left={ds.left.protein}>
         <Band
           title={<>{greeting()}, {user.username}</>}
-          sub={<span className="capitalize">{longDate(t.day)}</span>}
+          sub={<span className="flex flex-col items-start gap-1"><span className="capitalize">{longDate(t.day)}</span>{late ? <Link href="/profil/gun" className="text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--band-box)] whitespace-nowrap" data-testid="late-day">Gece · günün {atTime(dayStart)} bitiyor</Link> : null}</span>}
           right={
             <div className="flex gap-2 items-center">
               <Link href="/su/istatistik" className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-[var(--band-box)] text-sm font-bold" aria-label={`Su serisi: ${t.streak} gün`}>

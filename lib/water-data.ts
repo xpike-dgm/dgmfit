@@ -1,8 +1,9 @@
 import 'server-only'
 import { waterBonusByDay } from './burn'
-import { and, asc, eq, gte, isNull, lt, sql } from 'drizzle-orm'
+import { and, asc, eq, gte, isNull, lt, sql, type SQL } from 'drizzle-orm'
+import type { AnyColumn } from 'drizzle-orm'
 import { db, schema } from './db'
-import { addDays, dayString, TZ } from './time'
+import { addDays, currentDayStart, dayString, TZ } from './time'
 import {
   computeStreak, frequentAmounts, goalForDay, parseHm, predict, distributionScore, longestGap, hourlyBuckets,
   idealAt, sipMl, DEFAULT_BUTTONS, type DayLog, type GoalRow, type Prediction, type StreakInfo, type DrinkId,
@@ -23,11 +24,13 @@ export interface WaterLogView {
 
 export interface ContainerView { id: string; name: string; kind: string; capacityMl: number; lastFill: number; isDefault: boolean }
 
-/** Gün sınırları (Europe/Istanbul, UTC+3 sabit) */
-export function dayBounds(day: string): [Date, Date] {
-  const start = new Date(`${day}T00:00:00+03:00`)
+/** Gün sınırları (Europe/Istanbul, UTC+3 sabit). Y1: kullanıcının gün sınırı kadar kayar (04.00 → 04.00–04.00). */
+export function dayBounds(day: string, dayStartMin = currentDayStart()): [Date, Date] {
+  const start = new Date(new Date(`${day}T00:00:00+03:00`).getTime() + dayStartMin * 60000)
   return [start, new Date(start.getTime() + 86400000)]
 }
+/** SQL: zaman damgasının kullanıcının mantıksal günü (YYYY-MM-DD). */
+export const sqlDay = (col: SQL | AnyColumn, dayStartMin = currentDayStart()) => sql`to_char((${col} - (${dayStartMin} * interval '1 minute')) at time zone ${TZ}, 'YYYY-MM-DD')`
 
 export function minuteOfDay(d: Date): number {
   const p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(d)
@@ -65,7 +68,7 @@ export async function dailyTotals(userId: string, from: string, to: string): Pro
   const [start] = dayBounds(from)
   const [, end] = dayBounds(to)
   const rows = await db.execute<{ day: string; total: number; count: number }>(sql`
-    select to_char(logged_at at time zone ${TZ}, 'YYYY-MM-DD') as day, sum(effective_ml)::int as total, count(*)::int as count
+    select ${sqlDay(sql`logged_at`)} as day, sum(effective_ml)::int as total, count(*)::int as count
     from water_logs where user_id = ${userId} and deleted_at is null and logged_at >= ${start.toISOString()} and logged_at < ${end.toISOString()}
     group by 1`)
   return new Map(rows.map((r) => [r.day, { total: Number(r.total), count: Number(r.count) }]))
@@ -287,7 +290,7 @@ export async function dailyDetail(userId: string, from: string, to: string) {
   const [start] = dayBounds(from)
   const [, end] = dayBounds(to)
   const rows = await db.execute<{ day: string; total: number; count: number; first: number }>(sql`
-    select to_char(logged_at at time zone ${TZ}, 'YYYY-MM-DD') as day, sum(effective_ml)::int as total, count(*)::int as count,
+    select ${sqlDay(sql`logged_at`)} as day, sum(effective_ml)::int as total, count(*)::int as count,
       min(extract(hour from logged_at at time zone ${TZ}) * 60 + extract(minute from logged_at at time zone ${TZ}))::int as first
     from water_logs where user_id = ${userId} and deleted_at is null and logged_at >= ${start.toISOString()} and logged_at < ${end.toISOString()}
     group by 1`)

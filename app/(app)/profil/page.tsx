@@ -10,6 +10,8 @@ import { Logout } from '@/components/icons'
 import { unreadReplies } from '@/lib/admin-data'
 import { db, schema } from '@/lib/db'
 import { eq, sql } from 'drizzle-orm'
+import { dayStartOf } from '@/lib/day-context'
+import { DAY_START_OPTIONS } from '@/lib/time'
 
 export const metadata = { title: 'Profil' }
 
@@ -23,6 +25,7 @@ export default async function Page() {
     unreadReplies(u.id),
     u.admin ? db.select({ n: sql<number>`count(*)::int` }).from(schema.users).where(eq(schema.users.status, 'pending')).then((r) => Number(r[0]?.n ?? 0)) : 0,
   ])
+  const dayStart = await dayStartOf(u.id)
   const badge = (n: number, t: string) => (n ? <b className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-acc text-acc-ink num">{n} {t}</b> : undefined)
   return (
     <div className="px-4 flex flex-col gap-3">
@@ -40,6 +43,7 @@ export default async function Page() {
         { href: '/profil/vucut', label: 'Vücut yağ oranı', value: t?.profile.bodyFatPct ? `%${fmtNum(t.profile.bodyFatPct, 1)}` : 'ekle', testId: 'bodyfat-link' },
         { href: '/profil/ozellestirme', label: 'Özelleştirme', value: 'Yeni', testId: 'studio-link' },
         { href: '/profil/basarilar', label: 'Başarılar ve seriler', testId: 'achievements-link' },
+        { href: '/profil/gun', label: 'Günün bitişi', value: DAY_START_OPTIONS.find((o) => o.min === dayStart)?.label ?? `${Math.floor(dayStart / 60)}.00`, testId: 'day-start-link' },
         { href: '/profil/gorunum', label: 'Görünüm', value: THEMES.find((x) => x.id === theme)?.label },
         { href: '/profil/bildirimler', label: 'Bildirimler' },
         { href: '/sosyal/ayarlar', label: 'Gizlilik ve sosyal profil' },
