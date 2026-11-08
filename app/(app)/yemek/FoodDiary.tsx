@@ -120,6 +120,12 @@ export default function FoodDiary(p: {
           <span className="num text-acc font-bold">kcal</span>Hızlı kalori
         </button>
       </div>
+      {p.isToday ? (
+        <Link href={`/yemek/oneri?ogun=${p.suggested}`} className="min-h-[52px] rounded-[18px] bg-surface px-4 flex items-center gap-3 font-bold text-[14px]" data-testid="meal-suggest-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-acc shrink-0"><path d="M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3z" /><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" /></svg>
+          <span className="flex-1">Kalanıma göre öner</span><span className="text-[12px] text-mute font-semibold">makrolarına uyan öğün</span>
+        </Link>
+      ) : null}
       {msg ? <p role="status" className="text-sm text-ink-2 px-1">{msg}</p> : null}
       </div>
         ),

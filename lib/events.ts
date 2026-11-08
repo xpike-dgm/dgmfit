@@ -46,6 +46,7 @@ export type EventType =
   | 'bodyfat.updated'
   | 'coach.action'
   | 'report.pushed'
+  | 'coach.nudge'
 
 type Handler = (userId: string, payload: Record<string, unknown>) => Promise<void> | void
 

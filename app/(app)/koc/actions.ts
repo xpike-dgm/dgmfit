@@ -42,8 +42,8 @@ export async function deleteConversationAction(id: string): Promise<{ ok: boolea
   return { ok: true }
 }
 
-export async function saveCoachPrefsAction(input: { persona: string; insights: boolean; weeklyPush: boolean }): Promise<{ ok: boolean }> {
-  const p = z.object({ persona: z.enum(Object.keys(PERSONAS) as [Persona, ...Persona[]]), insights: z.boolean(), weeklyPush: z.boolean() }).safeParse(input)
+export async function saveCoachPrefsAction(input: { persona: string; insights: boolean; weeklyPush: boolean; nudges?: boolean }): Promise<{ ok: boolean }> {
+  const p = z.object({ persona: z.enum(Object.keys(PERSONAS) as [Persona, ...Persona[]]), insights: z.boolean(), weeklyPush: z.boolean(), nudges: z.boolean().optional() }).safeParse(input)
   if (!p.success) return { ok: false }
   await saveCoachPrefs(await uid(), p.data)
   revalidatePath('/koc'); revalidatePath('/')
@@ -53,5 +53,14 @@ export async function saveCoachPrefsAction(input: { persona: string; insights: b
 export async function dismissInsightAction(id: string): Promise<{ ok: boolean }> {
   if (!z.string().uuid().safeParse(id).success) return { ok: false }
   await dismissInsight(await uid(), id)
+  return { ok: true }
+}
+
+/** Y2: koçun kalıcı notunu sil. */
+export async function deleteMemoryAction(id: string): Promise<{ ok: boolean }> {
+  if (!z.string().uuid().safeParse(id).success) return { ok: false }
+  const { deleteMemory } = await import('@/lib/coach-data')
+  await deleteMemory(await uid(), id)
+  revalidatePath('/koc')
   return { ok: true }
 }

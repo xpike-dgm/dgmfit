@@ -300,3 +300,23 @@ export async function importRecipeUrlAction(url: string): Promise<R<{ name: stri
     return { ok: true, ...(await importRecipeFromUrl(userId, String(url).slice(0, 500))) }
   } catch (e) { return { ok: false, error: e instanceof Error && !/fetch failed|aborted|timeout/i.test(e.message) ? e.message : 'Sayfaya ulaşılamadı. Adresi kontrol et ya da malzemeleri elle ekle.' } }
 }
+
+/** Y2: öğün kurucu — sınırlara göre öneriler (istemciden yeniden hesaplatmak için). */
+export async function suggestMealsAction(input: { protein?: number | null; carb?: number | null; fat?: number | null; kcal?: number | null }) {
+  const userId = await uid()
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 5000 ? Math.round(v) : null)
+  const { suggestMeals } = await import('@/lib/meal-builder-data')
+  return suggestMeals(userId, { protein: n(input.protein), carb: n(input.carb), fat: n(input.fat), kcal: n(input.kcal) })
+}
+
+/** Y2: önerilen öğünün tüm kalemlerini tek seferde ekler. */
+export async function addMealPlanAction(meal: string, items: { foodId: number; grams: number }[]): Promise<R<{ n: number }>> {
+  if (!Array.isArray(items) || !items.length || items.length > 6) return { ok: false, error: 'Geçersiz öneri' }
+  let n = 0
+  for (const it of items) {
+    const r = await addMealItem({ foodId: it.foodId, grams: it.grams, portionLabel: '100 g', portionQty: it.grams, meal: meal as never, source: 'plan' })
+    if (!r.ok) return { ok: false, error: r.error }
+    n++
+  }
+  return { ok: true, n }
+}

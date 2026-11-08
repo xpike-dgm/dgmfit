@@ -745,13 +745,25 @@ export const coachPrefs = pgTable('coach_prefs', {
   weeklyPush: boolean('weekly_push').notNull().default(true),
   /** P-7 akıllı öğün hatırlatması (alışkanlık saatinden 1 saat sonra hâlâ kayıt yoksa, öğün başına günde bir) */
   mealReminders: boolean('meal_reminders').notNull().default(true),
+  /** Y2: kendiliğinden yazan koç (akşam proteini geride kaldıysa öğün önerisiyle bildirim) — isteğe bağlı */
+  nudges: boolean('nudges').notNull().default(false),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+/** Y2: koçun kalıcı notları (kullanıcı hakkında; koç ayarlarında görülür/silinir, en çok 30). */
+export const coachMemories = pgTable('coach_memories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('coach_memories_user_idx').on(t.userId, t.createdAt)])
 
 export const aiConversations = pgTable('ai_conversations', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
+  /** Y2: uzun sohbetin koç tarafından güncellenen kısa özeti (son 16 mesajın ötesi unutulmasın) */
+  summary: text('summary'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -766,6 +778,8 @@ export const aiMessages = pgTable('ai_messages', {
   content: text('content').notNull(),
   actions: jsonb('actions').$type<unknown[]>().notNull().default([]),
   whatIf: jsonb('what_if').$type<unknown>(),
+  /** Y2: öğün kurucu kartı (sınırlar + öneriler) */
+  mealPlan: jsonb('meal_plan').$type<unknown>(),
   safety: text('safety'), // null | ed | crisis | medical
   provider: text('provider'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

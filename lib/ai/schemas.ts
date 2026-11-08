@@ -52,6 +52,16 @@ export const CoachResult = z.strictObject({
   whatIf: z.array(z.strictObject({ name: z.string().min(1).max(80), grams: z.number().min(1).max(3000) })).max(5)
     .describe('Kullanıcı "şunu yersem ne olur" diye sorduysa yiyecekler ve tahmini gram; yoksa boş'),
   safety: z.enum(['yok', 'yeme-bozuklugu', 'kriz', 'tibbi']).describe('Mesajda yeme bozukluğu, kendine zarar ya da tıbbi durum işareti'),
+  lookups: z.array(z.strictObject({
+    kind: z.enum(['gun', 'donem', 'hareket', 'besin']).describe('gun: bir günün tam dökümü ve öğünleri; donem: iki tarih arası ortalamalar; hareket: bir hareketin geçmişi; besin: veritabanında besin değeri'),
+    date: z.string().max(10).nullable().describe('gun: YYYY-MM-DD'), from: z.string().max(10).nullable().describe('donem: başlangıç YYYY-MM-DD'), to: z.string().max(10).nullable().describe('donem: bitiş YYYY-MM-DD'),
+    query: z.string().max(60).nullable().describe('hareket/besin: aranacak ad'),
+  })).max(4).describe('BAĞLAM\'da olmayan veriye ihtiyacın varsa iste (ör. geçen salı, geçen ay, bench press geçmişi); uygulama sonuçlarla seni yeniden çağırır. Gerekmiyorsa boş.'),
+  mealPlan: z.strictObject({
+    protein: z.number().min(0).max(1000).nullable(), carb: z.number().min(0).max(2000).nullable(), fat: z.number().min(0).max(1000).nullable(), kcal: z.number().min(0).max(6000).nullable(),
+  }).nullable().describe('Kullanıcı "ne yesem", "kalanıma göre öner" ya da makro sınırlı öğün isterse: kullanıcının koyduğu üst sınırlar (yoksa null). Uygulama veritabanından öneri kartı hesaplar; reply\'da gram/kalori yazma.'),
+  remember: z.array(z.string().min(3).max(160)).max(3).describe('Kullanıcı hakkında kalıcı olarak hatırlanmaya değer yeni bilgi (tercih, alışkanlık, sağlık sınırı, program); yoksa boş. Zaten NOTLAR\'da olanı tekrar yazma.'),
+  memo: z.string().max(600).nullable().describe('Bu sohbetin şimdiye kadarki kısa özeti (kararlar, kullanıcının sınırları, konuşulan gün); uzun sohbetlerde eski mesajlar unutulmasın diye. Kısa sohbette null.'),
 })
 export type CoachResult = z.infer<typeof CoachResult>
 export const InsightResult = z.strictObject({
@@ -115,6 +125,7 @@ const COACH_RULES = [
   '7) Kısa yaz (en fazla 8 cümle). Madde işareti kullanabilirsin; başlık ve tablo kullanma. Kullanıcıya "sen" diye hitap et.',
   '8) Sohbetin akışını izle. Kısa takip soruları ("kalan değerler nedir", "peki yağ?", "ya protein?") önceki mesajlardaki gün ve konuya aittir: kullanıcı bir gün belirttiyse (ör. "dün") aksini söyleyene kadar o günün değerlerini ver. "Kalan besin değerleri" sorulursa kalori, protein, karbonhidrat, yağ ve suyun hepsini BAĞLAM\'daki "kalan / fazla" sayılarıyla ver.',
   '9) Kullanıcının koyduğu sınırları (ör. "en çok 20 g protein, 230 g karbonhidrat, 30 g yağ") sohbet boyunca unutma; öneri yaparken bu sınırlara uy, gerekiyorsa whatIf ile uygulamaya hesaplat. Sınır kalan değerlerle çelişiyorsa bunu açıkça söyle.',
+  '10) Veri isteme: BAĞLAM\'da olmayan bir gün, dönem, hareket ya da besin gerekiyorsa lookups doldur ve reply\'a kısa bir ara cümle yaz ("Bakıyorum…"); uygulama ARAÇ SONUÇLARI ile seni tekrar çağırır, o zaman lookups boş olsun ve tam cevabı ver. Öğün önerisi istenirse mealPlan doldur. Kalıcı bilgi için remember, uzun sohbette memo kullan.',
 ].join('\n')
 
 export const TASKS = {

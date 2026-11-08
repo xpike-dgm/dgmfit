@@ -59,6 +59,8 @@ async function tick() {
     }
     // P-7 akıllı öğün hatırlatması: 5 dakikada bir
     if (minuteOfDay(now) % 5 === 0) { try { await runMealReminders(now) } catch (e) { console.error('[dgfit] öğün hatırlatma hatası', e) } }
+    // Y2: kendiliğinden yazan koç (isteğe bağlı) — akşam 20.00–21.00 arası, günde en çok bir
+    if (minuteOfDay(now) % 10 === 0) { try { await runCoachNudges(now) } catch (e) { console.error('[dgfit] koç bildirimi hatası', e) } }
     const users = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
       .innerJoin(schema.waterSettings, eq(schema.waterSettings.userId, schema.pushSubscriptions.userId))
       .where(eq(schema.waterSettings.remindersEnabled, true))
@@ -213,6 +215,33 @@ export async function runMealReminders(now = new Date(), onlyUser?: string): Pro
     await publish(userId, 'reminder.meal', { day: today, meal }) // gönderilemese de bugün tekrar denenmez
     const ok = await sendToUser(userId, { title: 'Öğün kaydı', body: `Genelde bu saatlerde ${MEAL_TEXT[meal]} kaydediyorsun. Unutmadan ekleyelim mi?`, tag: 'meal-' + meal, url: `/yemek/ekle?ogun=${meal}` }, 'planned')
     if (ok) n++
+  }
+  return n
+}
+
+/** Y2: kendiliğinden yazan koç. Açık (coach_prefs.nudges) ve bildirimi olan kullanıcıya akşam 20.00–21.00 arasında,
+ *  proteinin en az 30 g ve kalorinin en az 300 kcal geride olduğu günlerde kalanına uygun öğün önerisi (günde en çok 1). */
+export async function runCoachNudges(now = new Date(), onlyUser?: string, force = false): Promise<number> {
+  const minute = minuteOfDay(now)
+  if (!force && (minute < 20 * 60 || minute >= 21 * 60)) return 0
+  const subs = await db.selectDistinct({ userId: schema.pushSubscriptions.userId }).from(schema.pushSubscriptions)
+    .innerJoin(schema.coachPrefs, eq(schema.coachPrefs.userId, schema.pushSubscriptions.userId))
+    .where(and(eq(schema.coachPrefs.nudges, true), onlyUser ? eq(schema.pushSubscriptions.userId, onlyUser) : undefined))
+  const { suggestMeals } = await import('./meal-builder-data')
+  let n = 0
+  for (const { userId } of subs) {
+    await asUserDay(userId, async () => {
+      const day = dayString(now)
+      const [done] = await db.select({ id: schema.events.id }).from(schema.events)
+        .where(and(eq(schema.events.userId, userId), eq(schema.events.type, 'coach.nudge'), sql`${schema.events.payload}->>'day' = ${day}`)).limit(1)
+      if (done) return
+      const s = await suggestMeals(userId, {}, day)
+      if (s.remaining.protein < 30 || s.remaining.kcal < 300 || !s.meals.length) return
+      const m = s.meals[0]
+      const ok = await sendToUser(userId, { title: `Kalan ${s.remaining.protein} g protein`, body: `Öneri: ${m.items.map((it) => `${it.name} ${it.grams} g`).join(', ')} (≈${m.totals.kcal} kcal, P ${Math.round(m.totals.protein)} g)`, tag: 'coach-nudge', url: '/yemek/oneri' })
+      await publish(userId, 'coach.nudge', { day, delivered: ok })
+      if (ok) n++
+    })
   }
   return n
 }

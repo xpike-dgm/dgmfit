@@ -9,8 +9,10 @@ import { Chat, Gear, Mic, Next, Plus, Send, Spark, Trash } from '@/components/ic
 import { fmtNum } from '@/lib/calc'
 import { SUPPORT } from '@/lib/safety'
 import type { MessageView, StoredAction } from '@/lib/coach-data'
-import { coachDecisionAction, deleteConversationAction, saveCoachPrefsAction, sendCoachAction } from './actions'
+import { coachDecisionAction, deleteConversationAction, deleteMemoryAction, saveCoachPrefsAction, sendCoachAction } from './actions'
 import { ask } from '@/components/Confirm'
+import { addMealPlanAction } from '../yemek/actions'
+import { MEALS, mealForTime, type MealId } from '@/lib/food'
 
 type Recog = { lang: string; interimResults: boolean; start: () => void; stop: () => void; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onerror: (e: { error: string }) => void; onend: () => void }
 type Conv = { id: string; title: string; updatedAt: string }
@@ -19,7 +21,7 @@ const SUGGEST = ['Bu hafta neden kilo vermedim?', 'Bu akşam 2 dilim pizza yerse
 
 export default function CoachChat(p: {
   aiOn: boolean; conversationId: string | null; initial: MessageView[]; draft: string; conversations: Conv[]; openSettings?: boolean
-  prefs: { persona: string; insights: boolean; weeklyPush: boolean }; personas: { id: string; label: string; hint: string }[]; left: number
+  prefs: { persona: string; insights: boolean; weeklyPush: boolean; nudges: boolean }; memories: { id: string; text: string }[]; personas: { id: string; label: string; hint: string }[]; left: number
 }) {
   const [conv, setConv] = useState(p.conversationId)
   const [msgs, setMsgs] = useState<MessageView[]>(p.initial)
@@ -29,6 +31,7 @@ export default function CoachChat(p: {
   const [left, setLeft] = useState(p.left)
   const [sheet, setSheet] = useState<null | 'settings' | 'history'>(p.openSettings ? 'settings' : null)
   const [prefs, setPrefs] = useState(p.prefs)
+  const [mems, setMems] = useState(p.memories)
   const [listening, setListening] = useState(false)
   const [speech, setSpeech] = useState(false)
   const [, start] = useTransition()
@@ -46,7 +49,7 @@ export default function CoachChat(p: {
     const q = t.trim()
     if (q.length < 2 || busy) return
     setBusy(true); setErr(null)
-    const temp: MessageView = { id: 'tmp', role: 'user', content: q, actions: [], whatIf: null, safety: null, provider: null, createdAt: new Date().toISOString() }
+    const temp: MessageView = { id: 'tmp', role: 'user', content: q, actions: [], whatIf: null, mealPlan: null, safety: null, provider: null, createdAt: new Date().toISOString() }
     setMsgs((m) => [...m, temp]); setText('')
     const r = await sendCoachAction({ conversationId: conv, text: q }).catch(() => ({ ok: false as const, error: 'Bağlantı yok: koç için internet gerekli.' }))
     if (!r.ok) { setMsgs((m) => m.filter((x) => x.id !== 'tmp')); setText(q); setErr(r.error); setBusy(false); return }
@@ -114,6 +117,7 @@ export default function CoachChat(p: {
               <div className="self-start rounded-[22px] rounded-tl-md bg-surface border border-line px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</div>
               {m.safety === 'medical' ? <p className="text-[12px] text-mute px-1">Sağlık sorunu, ilaç ya da sakatlık konusunda hekimine danış; koç tıbbi tavsiye vermez.</p> : null}
               {m.whatIf ? <WhatIfCard w={m.whatIf} /> : null}
+              {m.mealPlan ? <MealPlanCard p={m.mealPlan} /> : null}
               {m.actions.map((a, i) => <ActionCard key={i} a={a} onDecide={(d) => decide(m, i, d)} />)}
               {m.provider ? <span className="text-[11px] text-faint px-1">{PROVIDER[m.provider] ?? m.provider}</span> : null}
             </div>
@@ -161,6 +165,17 @@ export default function CoachChat(p: {
             <input type="checkbox" checked={prefs.insights} onChange={(e) => setPrefs({ ...prefs, insights: e.target.checked })} className="w-5 h-5" /></label>
           <label className="flex items-center justify-between gap-3 text-[14px] font-semibold">Pazar akşamı haftalık rapor bildirimi
             <input type="checkbox" checked={prefs.weeklyPush} onChange={(e) => setPrefs({ ...prefs, weeklyPush: e.target.checked })} className="w-5 h-5" /></label>
+          <label className="flex items-center justify-between gap-3 text-[14px] font-semibold"><span className="flex flex-col">Kendiliğinden yazan koç<span className="text-[12px] text-mute font-normal">Akşam proteinin geride kaldıysa kalanına uygun öğün önerisiyle bildirim (günde en çok 1)</span></span>
+            <input type="checkbox" checked={prefs.nudges} onChange={(e) => setPrefs({ ...prefs, nudges: e.target.checked })} className="w-5 h-5 shrink-0" data-testid="coach-nudges" /></label>
+          <fieldset className="flex flex-col gap-2" data-testid="coach-memories">
+            <legend className="text-[14px] font-extrabold mb-1">Koçun hakkında bildikleri</legend>
+            {mems.length ? mems.map((m) => (
+              <div key={m.id} className="flex items-center gap-2 rounded-2xl bg-surface-2 px-3 py-2" data-memory={m.text}>
+                <span className="flex-1 text-[13.5px] leading-snug">{m.text}</span>
+                <button type="button" aria-label="Notu sil" onClick={() => start(async () => { await deleteMemoryAction(m.id); setMems((x) => x.filter((y) => y.id !== m.id)) })} className="w-9 h-9 rounded-full text-mute flex items-center justify-center shrink-0"><Trash size={16} /></button>
+              </div>
+            )) : <p className="text-[12.5px] text-mute">Henüz not yok. Sohbette "laktoz sevmiyorum", "sabah antrenman yapıyorum" gibi şeyler söylediğinde koç hatırlar.</p>}
+          </fieldset>
           <p className="text-[12px] text-mute">Mesajların yalnızca sana cevap üretmek için AI sağlayıcısına gönderilir; model eğitiminde kullanılmaz. Sohbetleri istediğin zaman silebilirsin.</p>
           <button type="submit" className={btn.primary}>Kaydet</button>
           <Link href="/rapor" className={btn.secondary}>Haftalık raporlar</Link>
@@ -188,6 +203,36 @@ function SupportCard({ kind }: { kind: 'crisis' | 'ed' }) {
       <span className="font-bold text-water">{s.title}</span>
       <p className="text-[14px] leading-relaxed text-ink-2">{s.body}</p>
       {kind === 'crisis' ? <a href="tel:112" className="mt-1 self-start h-10 px-4 rounded-full bg-water text-water-ink font-bold inline-flex items-center">112'yi ara</a> : null}
+    </div>
+  )
+}
+
+/** Y2: koçun öğün önerisi kartı — veritabanından hesaplanan 2–3 besinlik öneriler, tek dokunuşla öğüne ekle. */
+function MealPlanCard({ p }: { p: NonNullable<MessageView['mealPlan']> }) {
+  const [done, setDone] = useState<number | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const [pending, start] = useTransition()
+  const nowMin = (() => { const d = new Date(); return (d.getUTCHours() * 60 + d.getUTCMinutes() + 180) % 1440 })()
+  const [meal, setMeal] = useState<MealId>(mealForTime(nowMin))
+  const lim = (['protein', 'carb', 'fat', 'kcal'] as const).filter((k) => p.limits[k] != null)
+  const qs = new URLSearchParams({ ogun: meal, ...(p.limits.protein != null ? { p: String(p.limits.protein) } : {}), ...(p.limits.carb != null ? { k: String(p.limits.carb) } : {}), ...(p.limits.fat != null ? { y: String(p.limits.fat) } : {}), ...(p.limits.kcal != null ? { kcal: String(p.limits.kcal) } : {}) })
+  if (!p.meals.length) return <p className="mt-2 rounded-2xl bg-surface-2 p-3 text-[13px] text-mute" data-testid="coach-mealplan">Bu sınırlarla uygun öneri bulunamadı.</p>
+  return (
+    <div className="mt-2 rounded-2xl bg-surface-2 p-3 flex flex-col gap-2.5" data-testid="coach-mealplan" data-mod="food">
+      <span className="text-[12px] font-bold text-mute">Öğün önerisi · veritabanından{lim.length ? ` · en çok ${lim.map((k) => `${p.limits[k]}${k === 'kcal' ? ' kcal' : ' g'} ${({ protein: 'protein', carb: 'karb.', fat: 'yağ', kcal: '' } as const)[k]}`.trim()).join(', ')}` : ''}</span>
+      {p.meals.slice(0, 2).map((m, i) => (
+        <div key={i} className="rounded-xl bg-surface p-2.5 flex flex-col gap-1.5" data-testid="coach-mealplan-option">
+          {m.items.map((it) => <span key={it.id} className="flex justify-between gap-2 text-[13.5px]"><b className="truncate">{it.name}</b><span className="num text-ink-2 shrink-0">{fmtNum(it.grams)} g</span></span>)}
+          <span className="text-[12px] text-mute num">{fmtNum(m.totals.kcal)} kcal · P {fmtNum(m.totals.protein)} · K {fmtNum(m.totals.carb)} · Y {fmtNum(m.totals.fat)} g</span>
+          <button type="button" disabled={pending || done === i} onClick={() => start(async () => { const r = await addMealPlanAction(meal, m.items.map((it) => ({ foodId: it.id, grams: it.grams }))); if (r.ok) setDone(i); else setErr(r.error) })}
+            className="h-10 rounded-full bg-acc text-acc-ink text-[13px] font-extrabold disabled:opacity-60" data-testid="coach-mealplan-add">{done === i ? 'Eklendi ✓' : `${MEALS.find((x) => x.id === meal)?.label.replace(' yemeği', '')} öğününe ekle`}</button>
+        </div>
+      ))}
+      <div className="flex items-center gap-2">
+        <select aria-label="Öğün" value={meal} onChange={(e) => setMeal(e.target.value as MealId)} className="h-9 rounded-full bg-surface border border-line px-2 text-[12.5px] font-bold">{MEALS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}</select>
+        <Link href={`/yemek/oneri?${qs}`} className="text-[12.5px] font-bold text-acc ml-auto">Tüm öneriler ›</Link>
+      </div>
+      {err ? <p role="alert" className="text-[12.5px] text-danger">{err}</p> : null}
     </div>
   )
 }

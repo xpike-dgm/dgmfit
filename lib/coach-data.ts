@@ -25,14 +25,17 @@ import { aiAvailable, AiError, runTask } from './ai/engine'
 import { PERSONAS, type CoachAction, type Persona } from './ai/schemas'
 import { publish } from './events'
 import { createMenu } from './planner-data'
+import { runLookups } from './coach-tools'
+import { suggestMeals, type MealSuggestion } from './meal-builder-data'
+import { parseLimits } from './meal-builder'
 
 const HISTORY = 16 // modele giden önceki mesaj sayısı (G2: 10 → 16; takip soruları önceki konuyu kaybetmesin)
 
 export async function coachPrefs(userId: string) {
   const [r] = await db.select().from(schema.coachPrefs).where(eq(schema.coachPrefs.userId, userId)).limit(1)
-  return r ?? { userId, persona: 'supportive', insights: true, weeklyPush: true, mealReminders: true, updatedAt: new Date() }
+  return r ?? { userId, persona: 'supportive', insights: true, weeklyPush: true, mealReminders: true, nudges: false, updatedAt: new Date() }
 }
-export async function saveCoachPrefs(userId: string, v: { persona: Persona; insights: boolean; weeklyPush: boolean }) {
+export async function saveCoachPrefs(userId: string, v: { persona: Persona; insights: boolean; weeklyPush: boolean; nudges?: boolean }) {
   await db.insert(schema.coachPrefs).values({ userId, ...v }).onConflictDoUpdate({ target: schema.coachPrefs.userId, set: { ...v, updatedAt: new Date() } })
 }
 
@@ -154,6 +157,23 @@ export async function coachContext(userId: string): Promise<CoachContext> {
   return { text: L.join('\n'), today, goal, sex, floor, safety, programDays: program ? program.days.map((d) => ({ id: d.id, name: d.name, programName: program.name })) : [], todayFacts, week }
 }
 
+// ───────────── Y2: kalıcı koç notları ─────────────
+const MEMORY_MAX = 30
+export async function listMemories(userId: string) {
+  return db.select({ id: schema.coachMemories.id, text: schema.coachMemories.text, createdAt: schema.coachMemories.createdAt }).from(schema.coachMemories)
+    .where(eq(schema.coachMemories.userId, userId)).orderBy(desc(schema.coachMemories.createdAt)).limit(MEMORY_MAX)
+}
+export async function addMemories(userId: string, texts: string[]) {
+  const have = new Set((await listMemories(userId)).map((m) => m.text.toLocaleLowerCase('tr')))
+  const fresh = [...new Set(texts.map((t) => t.replace(/\s+/g, ' ').trim().slice(0, 160)).filter((t) => t.length >= 3 && !have.has(t.toLocaleLowerCase('tr'))))].slice(0, 3)
+  if (!fresh.length) return
+  await db.insert(schema.coachMemories).values(fresh.map((text) => ({ userId, text })))
+  await db.execute(sql`delete from coach_memories where user_id = ${userId} and id not in (select id from coach_memories where user_id = ${userId} order by created_at desc limit ${MEMORY_MAX})`)
+}
+export async function deleteMemory(userId: string, id: string) {
+  await db.delete(schema.coachMemories).where(and(eq(schema.coachMemories.id, id), eq(schema.coachMemories.userId, userId)))
+}
+
 // ───────────── Sohbet ─────────────
 
 export type ActionStatus = 'pending' | 'done' | 'cancelled' | 'invalid'
@@ -161,7 +181,7 @@ export interface StoredAction {
   type: CoachAction['type']; status: ActionStatus; label: string; error?: string
   data: { weeks?: number; oldEnd?: string; newEnd?: string; dayId?: string; exerciseId?: number; exerciseName?: string; sets?: number; repMin?: number; repMax?: number; ml?: number; drink?: string }
 }
-export interface MessageView { id: string; role: 'user' | 'assistant'; content: string; actions: StoredAction[]; whatIf: WhatIf | null; safety: string | null; provider: string | null; createdAt: string }
+export interface MessageView { id: string; role: 'user' | 'assistant'; content: string; actions: StoredAction[]; whatIf: WhatIf | null; mealPlan: MealSuggestion | null; safety: string | null; provider: string | null; createdAt: string }
 
 const longTr = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
@@ -219,7 +239,7 @@ async function resolveWhatIf(userId: string, items: { name: string; grams: numbe
 }
 
 function toView(r: typeof schema.aiMessages.$inferSelect): MessageView {
-  return { id: r.id, role: r.role as 'user' | 'assistant', content: r.content, actions: (r.actions ?? []) as StoredAction[], whatIf: (r.whatIf ?? null) as WhatIf | null, safety: r.safety, provider: r.provider, createdAt: r.createdAt.toISOString() }
+  return { id: r.id, role: r.role as 'user' | 'assistant', content: r.content, actions: (r.actions ?? []) as StoredAction[], whatIf: (r.whatIf ?? null) as WhatIf | null, mealPlan: (r.mealPlan ?? null) as MealSuggestion | null, safety: r.safety, provider: r.provider, createdAt: r.createdAt.toISOString() }
 }
 
 export async function listConversations(userId: string) {
@@ -255,13 +275,22 @@ export async function sendCoachMessage(userId: string, conversationId: string | 
   const ctx = await coachContext(userId)
   const prefs = await coachPrefs(userId)
   const persona = PERSONAS[(prefs.persona as Persona) in PERSONAS ? (prefs.persona as Persona) : 'supportive']
+  // Y2: kalıcı notlar ve uzun sohbet özeti bağlama girer
+  const notes = await listMemories(userId)
+  const extra = [
+    notes.length ? 'NOTLAR (kullanıcı hakkında kalıcı, önceki sohbetlerden):\n' + notes.map((n) => '- ' + n.text).join('\n') : '',
+    conv.summary ? 'SOHBET ÖZETİ (bu sohbetin eski kısmı):\n' + conv.summary : '',
+  ].filter(Boolean).join('\n\n')
+  const system = persona.prompt + (risk ? `\nUYARI: kullanıcının mesajında ${risk === 'crisis' ? 'kendine zarar verme' : 'yeme bozukluğu'} işareti var; kural 3'ü uygula.` : '') + '\n\n' + ctx.text + (extra ? '\n\n' + extra : '')
+  const history = prev.reverse().map((p) => ({ role: p.role as 'user' | 'assistant', text: p.content }))
   let out: Awaited<ReturnType<typeof runTask<'coach'>>>
   try {
-    out = await runTask(userId, 'coach', {
-      text: msg,
-      system: persona.prompt + (risk ? `\nUYARI: kullanıcının mesajında ${risk === 'crisis' ? 'kendine zarar verme' : 'yeme bozukluğu'} işareti var; kural 3'ü uygula.` : '') + '\n\n' + ctx.text,
-      history: prev.reverse().map((p) => ({ role: p.role as 'user' | 'assistant', text: p.content })),
-    })
+    out = await runTask(userId, 'coach', { text: msg, system, history })
+    // Y2: model veri istediyse sonuçlarla bir kez daha çağrılır (en çok 1 tur)
+    if (out.result.lookups?.length && !risk) {
+      const found = await runLookups(userId, out.result.lookups)
+      if (found.length) out = await runTask(userId, 'coach', { text: msg, system: system + '\n\nARAÇ SONUÇLARI (uygulamanın hesapladığı, bu soruya özel):\n' + found.map((f) => '- ' + f).join('\n') + '\nBu sonuçlarla tam cevabı ver; lookups boş olsun.', history })
+    }
   } catch (e) {
     if (risk) {
       // AI yoksa bile riskli mesajda destek kartı gösterilir
@@ -276,7 +305,16 @@ export async function sendCoachMessage(userId: string, conversationId: string | 
   const careful = safety === 'crisis' || safety === 'ed'
   const actions = careful ? [] : await Promise.all(res.actions.slice(0, 3).map((a) => resolveAction(userId, a, ctx)))
   const whatIf = careful ? null : await resolveWhatIf(userId, res.whatIf, ctx)
-  const [r] = await db.insert(schema.aiMessages).values({ conversationId: conv.id, userId, role: 'assistant', content: res.reply, actions, whatIf, safety, provider: out.provider }).returning()
+  // Y2: öğün kurucu kartı — modelin verdiği sınırlar, yoksa mesajdan okunan sınırlar
+  let mealPlan: MealSuggestion | null = null
+  if (!careful && res.mealPlan) {
+    const fromText = parseLimits(msg)
+    const lim = { protein: res.mealPlan.protein ?? fromText.protein ?? null, carb: res.mealPlan.carb ?? fromText.carb ?? null, fat: res.mealPlan.fat ?? fromText.fat ?? null, kcal: res.mealPlan.kcal ?? fromText.kcal ?? null }
+    mealPlan = await suggestMeals(userId, lim).catch(() => null)
+  }
+  if (!careful && res.remember?.length) await addMemories(userId, res.remember)
+  if (res.memo?.trim()) await db.update(schema.aiConversations).set({ summary: res.memo.trim().slice(0, 600) }).where(eq(schema.aiConversations.id, conv.id))
+  const [r] = await db.insert(schema.aiMessages).values({ conversationId: conv.id, userId, role: 'assistant', content: res.reply, actions, whatIf, mealPlan, safety, provider: out.provider }).returning()
   await db.update(schema.aiConversations).set({ updatedAt: new Date() }).where(eq(schema.aiConversations.id, conv.id))
   return { conversationId: conv.id, user: toView(userRow), reply: toView(r) }
 }
