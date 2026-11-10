@@ -428,3 +428,7 @@ En yeni en üstte. Her kayıt: tarih · ne yapıldı · kanıt.
 - Düzeltme: alanlar düz tip (boş metin/0, mealPlan.want), ayrıştırıcı eski null biçimini çevirir; yeni birim test her görev şemasında birleşik tip ≤ 16 (koç şimdi 8; label 11). Yerel koç/planlama/AI e2e OK.
 - İlk düzeltme sürümü (`2026-11-08T21-34-35-072Z`) deploy OK ama canlı e2e'de FIT/WATER düştü (saat 00.34): Y1 sonrası gece 00.00–04.00 mantıksal gün hâlâ dün. Su: `isoAt(day, hm)` saati takvim gününe bağlıyordu → gün başından önceki saat ertesi takvim gününe (`dayStartMin` ekrana eklendi) — gerçek hata. Testler (fit, progress, water, food, custom11, coach) takvim yerine mantıksal gün hesaplar. Commit `8af4d54`.
 - Release `2026-11-08T21-55-32-352Z` RELEASE OK (23 canlı e2e gece penceresinde). Canlı gerçek-model koç duman testi OK (ai_calls coach ok=t, öğün kartı 20 g yağ sınırında). 39 test kullanıcısı silindi; log hata 0.
+
+## 2026-11-10 — Acil: canlı antrenmanda boş set silme
+- Kullanıcı antrenman sırasında: programda 3 set varken 2 set yapınca 3. boş satırı silemiyordu (tamamlanmamış setler zaten kaydedilmiyordu ama satır kaldırılamıyordu). "Set Ekle" yanına "Set sil" (son tamamlanmamış seti siler; tamamlanmış set yoksa görünmez değil, yalnız boş set varsa görünür). Commit `0736ab6`.
+- Kullanıcı isteğiyle TEST KOŞMADAN yayın: yalnız tsc OK; bundle + deploy `2026-11-10T13-20-10-744Z` DEPLOY OK; canlı /giris 200, log hata 0. e2e (fitness) sonraki verify turunda koşulmalı — PLANLANDI.
