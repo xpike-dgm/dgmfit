@@ -330,10 +330,16 @@ export default function LiveWorkout(p: Props) {
               </div>
             ) })}
           </div>
-          <button type="button" className="h-14 rounded-2xl bg-surface-3 text-[17px] font-bold text-ink flex items-center justify-center gap-2"
-            onClick={() => update((x) => { const ex = x.exercises[ei], last = ex.sets.at(-1); ex.sets.push({ kg: '', reps: '', seconds: '', rir: last?.rir ?? ex.rir, type: 'normal', done: false, completedAt: null, feedback: null, ph: last ? { kg: n(last.kg) || last.ph.kg, reps: n(last.reps) || last.ph.reps, seconds: n(last.seconds) || last.ph.seconds } : { kg: 0, reps: ex.repMin, seconds: 45 } }); return x })}>
-            <Plus size={20} />Set Ekle
-          </button>
+          <div className="flex gap-2">
+            <button type="button" className="flex-1 h-14 rounded-2xl bg-surface-3 text-[17px] font-bold text-ink flex items-center justify-center gap-2"
+              onClick={() => update((x) => { const ex = x.exercises[ei], last = ex.sets.at(-1); ex.sets.push({ kg: '', reps: '', seconds: '', rir: last?.rir ?? ex.rir, type: 'normal', done: false, completedAt: null, feedback: null, ph: last ? { kg: n(last.kg) || last.ph.kg, reps: n(last.reps) || last.ph.reps, seconds: n(last.seconds) || last.ph.seconds } : { kg: 0, reps: ex.repMin, seconds: 45 } }); return x })}>
+              <Plus size={20} />Set Ekle
+            </button>
+            {(() => { const k = (() => { for (let k = e.sets.length - 1; k >= 0; k--) if (!e.sets[k].done) return k; return -1 })(); return k >= 0 ? (
+              <button type="button" data-testid="set-remove" aria-label={`${e.name}: boş set ${k + 1} sil`} className="h-14 px-4 rounded-2xl border border-line-2 text-[15px] font-bold text-ink-2 flex items-center justify-center gap-1.5"
+                onClick={() => { setRirAt(null); update((x) => { x.exercises[ei].sets.splice(k, 1); return x }) }}><Trash size={18} />Set sil</button>
+            ) : null })()}
+          </div>
         </section>
       ) })}
 
